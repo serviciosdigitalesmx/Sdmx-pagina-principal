@@ -1,40 +1,48 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { clearSession, getAccessToken, isSessionExpired, readSession } from '@/lib/session';
 
-export default function ProtectedData({ endpoint }: { endpoint: string }) {
+type ProtectedDataProps = {
+  endpoint: string;
+  queryKey?: readonly unknown[];
+};
+
+export default function ProtectedData({ endpoint, queryKey }: ProtectedDataProps) {
   const router = useRouter();
-  const [data, setData] = useState<unknown>(null);
-  const [error, setError] = useState('');
 
   useEffect(() => {
-    const run = async () => {
-      const session = readSession();
+    const session = readSession();
+    const token = getAccessToken();
+
+    if (!session || isSessionExpired(session) || !token) {
+      clearSession();
+      router.push('/login');
+    }
+  }, [router]);
+
+  const { data, error, isLoading } = useQuery({
+    queryKey: queryKey ?? ['protected', endpoint],
+    queryFn: async () => {
       const token = getAccessToken();
-
-      if (!session || isSessionExpired(session) || !token) {
+      if (!token) {
         clearSession();
         router.push('/login');
-        return;
+        throw new Error('Sesión inválida');
       }
+      return api<unknown>(endpoint, {}, token);
+    }
+  });
 
-      try {
-        const payload = await api<unknown>(endpoint, {}, token);
-        setData(payload);
-      } catch (e) {
-        clearSession();
-        setError(e instanceof Error ? e.message : 'Error de carga');
-        router.push('/login');
-      }
-    };
+  if (isLoading) return <p>Cargando...</p>;
+  if (error) {
+    clearSession();
+    router.push('/login');
+    return <p>{error instanceof Error ? error.message : 'Error de carga'}</p>;
+  }
 
-    void run();
-  }, [endpoint, router]);
-
-  if (error) return <p>{error}</p>;
-  if (!data) return <p>Cargando...</p>;
   return <pre>{JSON.stringify(data, null, 2)}</pre>;
 }

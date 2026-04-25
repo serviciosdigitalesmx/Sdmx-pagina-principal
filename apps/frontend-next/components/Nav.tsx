@@ -10,6 +10,7 @@ export default function Nav() {
       <Link href="/cotizaciones">Cotizaciones</Link>
       <Link href="/portal">Portal</Link>
       <Link href="/evidencias">Evidencias</Link>
+      <Link href="/auditoria">Auditoría</Link>
     </nav>
   );
 }

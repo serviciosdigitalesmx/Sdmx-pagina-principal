@@ -2,6 +2,7 @@ export type ApiError = { code: string; message: string };
 export type ApiResponse<T> = { success: boolean; data?: T; error?: ApiError };
 
 export type LoginRequest = { email: string; password: string };
+export type ForgotPasswordRequest = { email: string };
 export type SessionData = {
   accessToken: string;
   refreshToken: string;

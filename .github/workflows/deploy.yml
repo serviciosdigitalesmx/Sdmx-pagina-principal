@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [work, main]
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: |
+            apps/backend-api/package.json
+            apps/frontend-next/package.json
+
+      - name: Install backend deps
+        working-directory: apps/backend-api
+        run: npm install
+
+      - name: Backend typecheck
+        working-directory: apps/backend-api
+        run: npm run build
+
+      - name: Install frontend deps
+        working-directory: apps/frontend-next
+        run: npm install
+
+      - name: Frontend typecheck
+        working-directory: apps/frontend-next
+        run: npx tsc -p tsconfig.json
+
+      - name: Validate migration files exist
+        run: test -f supabase/migrations/20260424_200000_multitenant_alignment.sql
+
+  migrations:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+      - name: Apply database migrations
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "SUPABASE_DB_URL secret is required for migration job" >&2
+            exit 1
+          fi
+          supabase db push --db-url "$SUPABASE_DB_URL"
+
+  staging-integration:
+    runs-on: ubuntu-latest
+    needs: [typecheck]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: apps/backend-api/package.json
+      - name: Install backend deps
+        working-directory: apps/backend-api
+        run: npm install
+      - name: Run staging integration suite (zero mocks)
+        working-directory: apps/backend-api
+        env:
+          STAGING_API_URL: ${{ secrets.STAGING_API_URL }}
+          STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+          STAGING_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
+          STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+          STAGING_TEST_EMAIL: ${{ secrets.STAGING_TEST_EMAIL }}
+          STAGING_TEST_PASSWORD: ${{ secrets.STAGING_TEST_PASSWORD }}
+          STAGING_TEST_TENANT_ID: ${{ secrets.STAGING_TEST_TENANT_ID }}
+        run: npm run test:staging
