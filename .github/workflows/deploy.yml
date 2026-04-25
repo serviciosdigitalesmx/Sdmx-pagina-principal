@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [work, main]
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: |
+            apps/backend-api/package.json
+            apps/frontend-next/package.json
+
+      - name: Install backend deps
+        working-directory: apps/backend-api
+        run: npm install
+
+      - name: Backend typecheck
+        working-directory: apps/backend-api
+        run: npm run build
+
+      - name: Install frontend deps
+        working-directory: apps/frontend-next
+        run: npm install
+
+      - name: Frontend typecheck
+        working-directory: apps/frontend-next
+        run: npx tsc -p tsconfig.json
+
+      - name: Validate migration files exist
+        run: test -f supabase/migrations/20260424_200000_multitenant_alignment.sql

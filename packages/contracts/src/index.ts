@@ -17,6 +17,7 @@ export type SessionDto = {
 };
 
 export type LoginRequestDto = { email: string; password: string };
+export type ForgotPasswordRequestDto = { email: string };
 
 export type ServiceOrderCreateRequestDto = {
   tenantId: string;

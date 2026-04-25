@@ -37,6 +37,7 @@ cd apps/frontend-next && npm run dev
 - `subscription`
 - `roles`
 - `permissions`
+- `POST /api/auth/forgot-password`
 
 ## Migraciones Supabase
 Se incluye delta de alineación en:
@@ -47,3 +48,10 @@ Incluye tablas, FK, RLS base, `status_transition_policy`, `tenant_counters`, `au
 
 ## Estrategia RLS
 RLS por tenant usa la función `auth_tenant_id()` definida en migración, que resuelve tenant por `auth.uid()` contra `users.auth_user_id` (sin depender de claim `tenant_id` en JWT).
+
+
+## Seguridad y observabilidad
+- Validación runtime con Zod en rutas API.
+- Rate limiting por IP + endpoint y headers de seguridad en servidor.
+- Logging estructurado con Pino.
+- CI en GitHub Actions para typecheck backend/frontend.

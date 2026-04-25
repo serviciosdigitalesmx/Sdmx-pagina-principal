@@ -30,6 +30,10 @@ export const appService = {
     };
   },
 
+  async forgotPassword(email: string): Promise<Record<string, unknown>> {
+    return supabase.authRecover(email);
+  },
+
   async sessionFromToken(accessToken: string): Promise<SessionData> {
     const authUser = await supabase.authUser(accessToken);
     const users = await supabase.query<Record<string, unknown>[]>(`users?auth_user_id=eq.${encodeURIComponent(authUser.id)}&select=*`, accessToken);
@@ -62,6 +66,14 @@ export const appService = {
     };
   },
 
+  async ensureActiveSubscription(token: string): Promise<void> {
+    const session = await this.sessionFromToken(token);
+    const status = String(session.subscription?.status ?? 'inactive').toLowerCase();
+    if (status !== 'active') {
+      throw new Error('La suscripción del tenant no está activa.');
+    }
+  },
+
   async dashboardSummary(token: string): Promise<Record<string, number>> {
     const [orders, customers, quotes] = await Promise.all([
       supabase.query<Record<string, unknown>[]>(`service_orders?select=id,status`, token),
@@ -81,6 +93,7 @@ export const appService = {
   },
 
   async createServiceOrder(token: string, request: ServiceOrderCreateRequest): Promise<Record<string, unknown>> {
+    await this.ensureActiveSubscription(token);
     const next = await supabase.rpc<{ folio: string }>('next_tenant_folio', token, { p_tenant_id: request.tenantId, p_domain: 'service_order' });
     const created = await supabase.insert<Record<string, unknown>[]>('service_orders', token, {
       tenant_id: request.tenantId,
@@ -105,6 +118,7 @@ export const appService = {
   },
 
   async updateServiceOrderStatus(token: string, serviceOrderId: string, req: ServiceOrderStatusUpdateRequest): Promise<Record<string, unknown>> {
+    await this.ensureActiveSubscription(token);
     const current = await supabase.query<Record<string, unknown>[]>(`service_orders?id=eq.${encodeURIComponent(serviceOrderId)}&select=id,tenant_id,status`, token);
     const order = current[0];
     assert(Boolean(order), 'Orden no encontrada');
@@ -135,6 +149,7 @@ export const appService = {
   },
 
   async createCustomer(token: string, request: CustomerCreateRequest): Promise<Record<string, unknown>> {
+    await this.ensureActiveSubscription(token);
     const created = await supabase.insert<Record<string, unknown>[]>('customers', token, {
       tenant_id: request.tenantId,
       branch_id: request.branchId ?? null,
@@ -161,6 +176,7 @@ export const appService = {
   },
 
   async createQuote(token: string, request: QuoteCreateRequest): Promise<Record<string, unknown>> {
+    await this.ensureActiveSubscription(token);
     const subtotal = Number(request.subtotalMxn);
     const vat = request.vatMxn > 0 ? Number(request.vatMxn) : Number((subtotal * IVA_RATE).toFixed(2));
     const total = Number((subtotal + vat).toFixed(2));
