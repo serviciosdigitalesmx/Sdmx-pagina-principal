@@ -1,4 +1,13 @@
-import type { SessionDto } from '@contracts/index';
+export type SessionDto = {
+  accessToken: string;
+  refreshToken: string;
+  expiresAt: string;
+  user: Record<string, unknown>;
+  shop: Record<string, unknown>;
+  subscription: Record<string, unknown> | null;
+  roles: Record<string, unknown>[];
+  permissions: Record<string, unknown>[];
+};
 
 const STORAGE_KEYS = {
   accessToken: 'sdmx_access_token',

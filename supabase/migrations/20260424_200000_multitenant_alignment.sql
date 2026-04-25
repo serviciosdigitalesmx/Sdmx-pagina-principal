@@ -28,6 +28,10 @@ create table if not exists users (
   created_at timestamptz not null default now()
 );
 
+alter table users add column if not exists tenant_id uuid references tenants(id) on delete cascade;
+alter table users add column if not exists branch_id uuid references branches(id) on delete set null;
+alter table users add column if not exists auth_user_id uuid unique;
+
 create table if not exists roles (
   id uuid primary key default gen_random_uuid(),
   tenant_id uuid not null references tenants(id) on delete cascade,
@@ -207,8 +211,9 @@ stable
 security definer
 set search_path = public
 as $$
-  select u.tenant_id
+  select coalesce(u.tenant_id, b.tenant_id)
   from users u
+  left join branches b on b.id = u.branch_id
   where u.auth_user_id = auth.uid()
   limit 1
 $$;
@@ -237,7 +242,21 @@ alter table tenant_counters enable row level security;
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'users' AND policyname = 'tenant_isolation_users') THEN
-    CREATE POLICY tenant_isolation_users ON users USING (tenant_id = auth_tenant_id()) WITH CHECK (tenant_id = auth_tenant_id());
+    CREATE POLICY tenant_isolation_users ON users USING (
+      coalesce(tenant_id, (
+        SELECT b.tenant_id
+        FROM branches b
+        WHERE b.id = users.branch_id
+        LIMIT 1
+      )) = auth_tenant_id()
+    ) WITH CHECK (
+      coalesce(tenant_id, (
+        SELECT b.tenant_id
+        FROM branches b
+        WHERE b.id = users.branch_id
+        LIMIT 1
+      )) = auth_tenant_id()
+    );
   END IF;
 
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'shops' AND policyname = 'tenant_isolation_shops') THEN
@@ -259,8 +278,9 @@ BEGIN
         FROM role_permissions rp
         JOIN user_roles ur ON ur.role_id = rp.role_id
         JOIN users u ON u.id = ur.user_id
+        LEFT JOIN branches b ON b.id = u.branch_id
         WHERE rp.permission_id = permissions.id
-          AND u.auth_user_id = auth.uid()
+          AND coalesce(u.tenant_id, b.tenant_id) = auth_tenant_id()
       )
     );
   END IF;
@@ -270,15 +290,17 @@ BEGIN
       EXISTS (
         SELECT 1
         FROM users u
+        LEFT JOIN branches b ON b.id = u.branch_id
         WHERE u.id = user_roles.user_id
-          AND u.tenant_id = auth_tenant_id()
+          AND coalesce(u.tenant_id, b.tenant_id) = auth_tenant_id()
       )
     ) WITH CHECK (
       EXISTS (
         SELECT 1
         FROM users u
+        LEFT JOIN branches b ON b.id = u.branch_id
         WHERE u.id = user_roles.user_id
-          AND u.tenant_id = auth_tenant_id()
+          AND coalesce(u.tenant_id, b.tenant_id) = auth_tenant_id()
       )
     );
   END IF;
