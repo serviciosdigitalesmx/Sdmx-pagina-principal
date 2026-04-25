@@ -36,7 +36,7 @@ export const appService = {
     const user = users[0];
     assert(Boolean(user), 'Usuario no encontrado en tenant');
 
-    const tenantId = String(user.tenant_id);
+    const tenantId = await this.resolveTenantId(user, accessToken);
     const [shops, subscriptions, userRoles] = await Promise.all([
       supabase.query<Record<string, unknown>[]>(`shops?id=eq.${encodeURIComponent(tenantId)}&select=*`, accessToken),
       supabase.query<Record<string, unknown>[]>(`subscriptions?tenant_id=eq.${encodeURIComponent(tenantId)}&order=created_at.desc&limit=1&select=*`, accessToken),
@@ -60,6 +60,19 @@ export const appService = {
       roles: userRoles,
       permissions: permissionSet
     };
+  },
+
+  async resolveTenantId(user: Record<string, unknown>, token: string): Promise<string> {
+    const explicitTenantId = user.tenant_id ? String(user.tenant_id) : '';
+    if (explicitTenantId) return explicitTenantId;
+
+    const branchId = user.branch_id ? String(user.branch_id) : '';
+    assert(Boolean(branchId), 'El usuario no tiene tenant ni branch asignado');
+
+    const branches = await supabase.query<Record<string, unknown>[]>(`branches?id=eq.${encodeURIComponent(branchId)}&select=tenant_id`, token);
+    const tenantId = branches[0]?.tenant_id ? String(branches[0].tenant_id) : '';
+    assert(Boolean(tenantId), 'No se pudo resolver el tenant del usuario');
+    return tenantId;
   },
 
   async dashboardSummary(token: string): Promise<Record<string, number>> {
