@@ -1,4 +1,9 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
+
+dotenv.config({ path: '.env' });
+dotenv.config({ path: '.env.local' });
+dotenv.config({ path: 'apps/backend-api/.env' });
+dotenv.config({ path: 'apps/backend-api/.env.local' });
 
 const get = (name: string): string => {
   const value = process.env[name];

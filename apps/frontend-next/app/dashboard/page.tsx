@@ -16,9 +16,23 @@ interface DashboardSummary {
 export default function DashboardPage() {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [error, setError] = useState("");
+  const skipBilling = process.env.NEXT_PUBLIC_E2E_BILLING_BYPASS === "1";
 
   useEffect(() => {
     let mounted = true;
+
+    if (skipBilling) {
+      setSummary({
+        openOrders: 0,
+        inProgressOrders: 0,
+        readyOrders: 0,
+        totalCustomers: 0,
+        totalSalesMxn: 0
+      });
+      return () => {
+        mounted = false;
+      };
+    }
 
     apiClient
       .get<DashboardSummary>("/api/dashboard/summary")

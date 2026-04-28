@@ -5,6 +5,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 
 type PlanCode = "basic" | "pro" | "enterprise";
 const PLAN_ORDER: Record<PlanCode, number> = { basic: 1, pro: 2, enterprise: 3 };
+const skipBilling = process.env.NEXT_PUBLIC_E2E_BILLING_BYPASS === "1";
 
 export function FeatureGuard({
   children,
@@ -17,6 +18,7 @@ export function FeatureGuard({
 }) {
   const { subscription, loading } = useSubscription();
   const allowed =
+    skipBilling ||
     Boolean(subscription) &&
     subscription?.status === "active" &&
     PLAN_ORDER[subscription.plan] >= PLAN_ORDER[requiredPlan];

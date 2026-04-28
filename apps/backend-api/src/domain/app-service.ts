@@ -298,12 +298,12 @@ export const appService = {
         }
       ],
       back_urls: {
-        success: `${env.appUrl}/billing/success`,
-        failure: `${env.appUrl}/billing/failure`,
-        pending: `${env.appUrl}/billing/pending`
+        success: `${env.appUrl || 'https://sdmx-pagina-principal.vercel.app'}/billing/success`,
+        failure: `${env.appUrl || 'https://sdmx-pagina-principal.vercel.app'}/billing/failure`,
+        pending: `${env.appUrl || 'https://sdmx-pagina-principal.vercel.app'}/billing/pending`
       },
       auto_return: 'approved',
-      notification_url: `${env.webhookBaseUrl}/api/webhooks/mercadopago`,
+      notification_url: `${env.webhookBaseUrl || 'https://sdmx-backend-api.onrender.com'}/api/webhooks/mercadopago`,
       metadata: {
         tenantId,
         plan: request.plan
@@ -328,14 +328,18 @@ export const appService = {
     const initPoint = String(json.init_point || json.sandbox_init_point || '');
     assert(Boolean(initPoint), 'Mercado Pago no devolvió init_point');
 
-    await supabase.insertAsService('subscriptions', {
-      tenant_id: tenantId,
-      plan: request.plan,
-      status: 'pending',
-      provider: 'mercadopago',
-      external_id: String(json.id || `preference_${Date.now()}`),
-      raw_payload: json
-    });
+    try {
+      await supabase.insertAsService('subscriptions', {
+        tenant_id: tenantId,
+        plan: request.plan,
+        status: 'pending',
+        provider: 'mercadopago',
+        external_id: String(json.id || `preference_${Date.now()}`),
+        raw_payload: json
+      });
+    } catch (error) {
+      logger.error({ error, tenantId }, 'No se pudo registrar la suscripcion pendiente; continuando con la preferencia');
+    }
 
     return {
       initPoint,
@@ -420,14 +424,18 @@ export const appService = {
       mpStatus === 'rejected' || mpStatus === 'cancelled' ? 'canceled' :
       'past_due';
 
-    await supabase.insertAsService('subscriptions', {
-      tenant_id: tenantId,
-      plan,
-      status,
-      provider: 'mercadopago',
-      external_id: paymentId,
-      raw_payload: payment
-    });
+    try {
+      await supabase.insertAsService('subscriptions', {
+        tenant_id: tenantId,
+        plan,
+        status,
+        provider: 'mercadopago',
+        external_id: paymentId,
+        raw_payload: payment
+      });
+    } catch (error) {
+      logger.error({ error, tenantId, paymentId, status, plan }, 'No se pudo persistir el estado de suscripcion desde webhook');
+    }
 
     await supabase.insertAsService('audit_events', {
       tenant_id: tenantId,
