@@ -1,16 +1,28 @@
+import dotenv from 'dotenv';
+
+dotenv.config({ path: '.env' });
+dotenv.config({ path: '.env.local' });
+dotenv.config({ path: 'apps/backend-api/.env' });
+dotenv.config({ path: 'apps/backend-api/.env.local' });
+
 const get = (name: string): string => {
   const value = process.env[name];
   if (!value) throw new Error(`Missing required env var: ${name}`);
   return value;
 };
 
+const optional = (name: string, fallback = ''): string => {
+  return process.env[name] ?? fallback;
+};
+
 export const env = {
-  port: Number(process.env.PORT ?? 5000),
+  port: Number(process.env.PORT ?? 5001),
   supabaseUrl: get('SUPABASE_URL').replace(/\/$/, ''),
   supabaseAnonKey: get('SUPABASE_ANON_KEY'),
   supabaseServiceRoleKey: get('SUPABASE_SERVICE_ROLE_KEY'),
-  corsAllowedOrigins: (process.env.CORS_ALLOWED_ORIGINS ?? 'http://localhost:3000')
-    .split(',')
-    .map((o: string) => o.trim())
-    .filter(Boolean)
+  corsAllowedOrigins: optional('CORS_ALLOWED_ORIGINS'),
+  mpAccessToken: optional('MP_ACCESS_TOKEN'),
+  mpWebhookSecret: optional('MP_WEBHOOK_SECRET'),
+  appUrl: optional('APP_URL', optional('NEXT_PUBLIC_APP_URL')).replace(/\/$/, ''),
+  webhookBaseUrl: optional('WEBHOOK_BASE_URL', optional('BACKEND_PUBLIC_URL')).replace(/\/$/, '')
 };

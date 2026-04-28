@@ -33,3 +33,5 @@ pnpm-debug.log*
 audit-*.sh
 diagnose.sh
 reset-pr-clean.sh
+legacy/
+logs/

@@ -1,68 +1,46 @@
-export type SessionDto = {
-  accessToken: string;
-  refreshToken: string;
-  expiresAt: string;
-  user: Record<string, unknown>;
-  shop: Record<string, unknown>;
-  subscription: Record<string, unknown> | null;
-  roles: Record<string, unknown>[];
-  permissions: Record<string, unknown>[];
-};
+import type { SessionDto } from "@contracts/index";
 
-const STORAGE_KEYS = {
-  accessToken: 'sdmx_access_token',
-  refreshToken: 'sdmx_refresh_token',
-  expiresAt: 'sdmx_expires_at',
-  session: 'sdmx_session'
-} as const;
+export type Session = SessionDto;
 
-export const isValidSession = (value: unknown): value is SessionDto => {
-  if (!value || typeof value !== 'object') return false;
-  const v = value as Record<string, unknown>;
+const KEY = 'session';
 
-  return typeof v.accessToken === 'string'
-    && typeof v.refreshToken === 'string'
-    && typeof v.expiresAt === 'string'
-    && !!v.user
-    && !!v.shop
-    && Array.isArray(v.roles)
-    && Array.isArray(v.permissions);
-};
-
-export const persistSession = (session: SessionDto): void => {
-  localStorage.setItem(STORAGE_KEYS.accessToken, session.accessToken);
-  localStorage.setItem(STORAGE_KEYS.refreshToken, session.refreshToken);
-  localStorage.setItem(STORAGE_KEYS.expiresAt, session.expiresAt);
-  localStorage.setItem(STORAGE_KEYS.session, JSON.stringify(session));
-};
-
-export const clearSession = (): void => {
-  localStorage.removeItem(STORAGE_KEYS.accessToken);
-  localStorage.removeItem(STORAGE_KEYS.refreshToken);
-  localStorage.removeItem(STORAGE_KEYS.expiresAt);
-  localStorage.removeItem(STORAGE_KEYS.session);
-};
-
-export const readSession = (): SessionDto | null => {
-  const raw = localStorage.getItem(STORAGE_KEYS.session);
-  if (!raw) return null;
-
+export const readSession = (): Session | null => {
   try {
-    const parsed = JSON.parse(raw);
-    return isValidSession(parsed) ? parsed : null;
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
   } catch {
     return null;
   }
 };
 
-export const isSessionExpired = (session: SessionDto): boolean => {
-  const expiresAt = Date.parse(session.expiresAt);
-  return Number.isNaN(expiresAt) || expiresAt <= Date.now();
+export const persistSession = (session: Session) => {
+  localStorage.setItem(KEY, JSON.stringify(session));
+};
+
+export const clearSession = () => {
+  localStorage.removeItem(KEY);
 };
 
 export const getAccessToken = (): string | null => {
   const session = readSession();
-  if (!session) return null;
-  if (isSessionExpired(session)) return null;
-  return session.accessToken;
+  return session?.accessToken || null;
+};
+
+export const isSessionExpired = (inputSession?: Session | null): boolean => {
+  const session = inputSession ?? readSession();
+
+  if (!session?.accessToken) return true;
+  if (!session.expiresAt) return false;
+
+  const expires = Date.parse(session.expiresAt);
+  if (!Number.isFinite(expires)) return false;
+
+  return Date.now() >= expires;
+};
+
+export const isValidSession = (inputSession?: Session | null): boolean => {
+  const session = inputSession ?? readSession();
+  if (!session?.accessToken) return false;
+  return !isSessionExpired(session);
 };
