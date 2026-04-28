@@ -9,7 +9,12 @@ const send = async <T>(path: string, method: HttpMethod, auth: AuthContext, body
     'content-type': 'application/json'
   };
 
-  if (auth.jwt) headers.authorization = `Bearer ${auth.jwt}`;
+  if (auth.jwt) {
+    headers.authorization = `Bearer ${auth.jwt}`;
+  } else if (auth.serviceRole) {
+    headers.authorization = `Bearer ${env.supabaseServiceRoleKey}`;
+  }
+  
   if (preferRepresentation) headers.Prefer = 'return=representation';
 
   const res = await fetch(`${env.supabaseUrl}${path}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
@@ -22,7 +27,7 @@ const send = async <T>(path: string, method: HttpMethod, auth: AuthContext, body
 export const supabase = {
   authLogin: (email: string, password: string) => send<{ access_token: string; refresh_token: string; expires_in?: number; user: { id: string; email: string } }>('/auth/v1/token?grant_type=password', 'POST', { serviceRole: false }, { email, password }),
   authUser: (jwt: string) => send<{ id: string; email: string }>('/auth/v1/user', 'GET', { jwt }),
-  authAdminCreate: (email: string, password: string) => send<{ id: string }>('/auth/v1/admin/users', 'POST', { serviceRole: true }, { email, password }),
+  authAdminCreate: (email: string, password: string) => send<{ id: string }>('/auth/v1/admin/users', 'POST', { serviceRole: true }, { email, password, email_confirm: true }),
   query: <T>(tableQuery: string, jwt: string) => send<T>(`/rest/v1/${tableQuery}`, 'GET', { jwt }),
   queryAsService: <T>(tableQuery: string) => send<T>(`/rest/v1/${tableQuery}`, 'GET', { serviceRole: true }),
   insert: <T>(table: string, jwt: string, payload: unknown) => send<T>(`/rest/v1/${table}?select=*`, 'POST', { jwt }, payload, true),

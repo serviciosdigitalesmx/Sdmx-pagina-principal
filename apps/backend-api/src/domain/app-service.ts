@@ -1,4 +1,7 @@
+import { randomUUID, createHmac } from 'node:crypto';
 import { supabase } from '../services/supabase.js';
+import { env } from '../config/env.js';
+import { logger } from '../core/logger.js';
 import type { CustomerContactCreateRequest, CustomerCreateRequest, EvidenceUploadRequest, QuoteCreateRequest, RegisterRequest, ServiceOrderCreateRequest, ServiceOrderStatusUpdateRequest, SessionData } from '../types/contracts.js';
 
 const IVA_RATE = 0.16;
@@ -7,15 +10,36 @@ const assert = (condition: boolean, message: string): void => { if (!condition) 
 
 export const appService = {
   async register(payload: RegisterRequest): Promise<Record<string, unknown>> {
+    // 1. Asegurar que el tenant existe (o crearlo)
+    let tenantId = payload.tenantId;
+    
+    // Si el tenantId no es un UUID válido, o si queremos ser robustos, buscamos/creamos por slug
+    const tenantSlug = payload.tenantId.toLowerCase().replace(/[^a-z0-9]/g, '-') || 'default';
+    
+    const existingTenants = await supabase.queryAsService<Record<string, unknown>[]>(`tenants?slug=eq.${encodeURIComponent(tenantSlug)}&select=id`);
+    
+    if (existingTenants && existingTenants.length > 0) {
+      tenantId = String(existingTenants[0].id);
+    } else {
+      const newTenants = await supabase.insertAsService<Record<string, unknown>[]>('tenants', {
+        name: payload.tenantId,
+        slug: tenantSlug
+      });
+      tenantId = String(newTenants[0].id);
+    }
+
+    // 2. Crear el usuario en Auth (Supabase)
     const auth = await supabase.authAdminCreate(payload.email, payload.password);
+    
+    // 3. Crear el perfil de usuario vinculado al tenant
     const profile = await supabase.insertAsService<Record<string, unknown>[]>('users', {
+      id: randomUUID(),
       auth_user_id: auth.id,
-      tenant_id: payload.tenantId,
-      branch_id: payload.branchId ?? null,
+      tenant_id: tenantId,
       full_name: payload.fullName,
-      email: payload.email,
-      is_active: true
+      email: payload.email
     });
+    
     return profile[0] ?? {};
   },
 
@@ -62,6 +86,20 @@ export const appService = {
     };
   },
 
+  async subscriptionStatus(token: string): Promise<{ subscription: Record<string, unknown> | null }> {
+    const session = await this.sessionFromToken(token);
+    const tenantId = String(session.shop.id);
+
+    const subscriptions = await supabase.query<Record<string, unknown>[]>(
+      `subscriptions?tenant_id=eq.${encodeURIComponent(tenantId)}&order=created_at.desc&limit=1&select=*`,
+      token
+    );
+
+    return {
+      subscription: subscriptions[0] ?? null
+    };
+  },
+
   async resolveTenantId(user: Record<string, unknown>, token: string): Promise<string> {
     const explicitTenantId = user.tenant_id ? String(user.tenant_id) : '';
     if (explicitTenantId) return explicitTenantId;
@@ -94,9 +132,12 @@ export const appService = {
   },
 
   async createServiceOrder(token: string, request: ServiceOrderCreateRequest): Promise<Record<string, unknown>> {
-    const next = await supabase.rpc<{ folio: string }>('next_tenant_folio', token, { p_tenant_id: request.tenantId, p_domain: 'service_order' });
+    const session = await this.sessionFromToken(token);
+    const tenantId = String(session.shop.id);
+
+    const next = await supabase.rpc<{ folio: string }>('next_tenant_folio', token, { p_tenant_id: tenantId, p_domain: 'service_order' });
     const created = await supabase.insert<Record<string, unknown>[]>('service_orders', token, {
-      tenant_id: request.tenantId,
+      tenant_id: tenantId,
       branch_id: request.branchId ?? null,
       folio: next.folio,
       customer_id: request.customerId,
@@ -105,11 +146,16 @@ export const appService = {
       device_brand: request.deviceBrand,
       device_model: request.deviceModel,
       reported_issue: request.reportedIssue,
+      estimated_cost: request.estimatedCost ?? null,
+      notes: request.notes ?? null,
+      reception_checklist: request.receptionChecklist ?? null,
+      reception_photo_base64: request.receptionPhotoBase64 ?? null,
+      source_quote_folio: request.sourceQuoteFolio ?? null,
       promised_date: request.promisedDate ?? null,
       created_at: nowIso(),
       updated_at: nowIso()
     });
-    await this.audit(token, request.tenantId, 'service_order.created', created[0] ?? {});
+    await this.audit(token, 'service_order.created', created[0] ?? {});
     return created[0] ?? {};
   },
 
@@ -135,7 +181,7 @@ export const appService = {
       created_at: nowIso()
     });
 
-    await this.audit(token, String(order.tenant_id), 'service_order.status_changed', { serviceOrderId, from: order.status, to: req.status });
+    await this.audit(token, 'service_order.status_changed', { serviceOrderId, from: order.status, to: req.status });
     return updated[0] ?? {};
   },
 
@@ -148,15 +194,18 @@ export const appService = {
   },
 
   async createCustomer(token: string, request: CustomerCreateRequest): Promise<Record<string, unknown>> {
+    const session = await this.sessionFromToken(token);
+    const tenantId = String(session.shop.id);
+
     const created = await supabase.insert<Record<string, unknown>[]>('customers', token, {
-      tenant_id: request.tenantId,
+      tenant_id: tenantId,
       branch_id: request.branchId ?? null,
       full_name: request.fullName,
       email: request.email,
       phone: request.phone ?? null,
       created_at: nowIso()
     });
-    await this.audit(token, request.tenantId, 'customer.created', created[0] ?? {});
+    await this.audit(token, 'customer.created', created[0] ?? {});
     return created[0] ?? {};
   },
 
@@ -174,6 +223,9 @@ export const appService = {
   },
 
   async createQuote(token: string, request: QuoteCreateRequest): Promise<Record<string, unknown>> {
+    const session = await this.sessionFromToken(token);
+    const tenantId = String(session.shop.id);
+
     const subtotal = Number(request.subtotalMxn);
     const vat = request.vatMxn > 0 ? Number(request.vatMxn) : Number((subtotal * IVA_RATE).toFixed(2));
     const total = Number((subtotal + vat).toFixed(2));
@@ -181,7 +233,7 @@ export const appService = {
     const balance = Number((total - advance).toFixed(2));
 
     const created = await supabase.insert<Record<string, unknown>[]>('quotations', token, {
-      tenant_id: request.tenantId,
+      tenant_id: tenantId,
       service_order_id: request.serviceOrderId,
       subtotal_mxn: subtotal,
       vat_mxn: vat,
@@ -191,7 +243,7 @@ export const appService = {
       status: 'draft',
       created_at: nowIso()
     });
-    await this.audit(token, request.tenantId, 'quote.created', created[0] ?? {});
+    await this.audit(token, 'quote.created', created[0] ?? {});
     return created[0] ?? {};
   },
 
@@ -203,8 +255,13 @@ export const appService = {
     return supabase.storageSignedUpload(request.bucket, request.path, token, request.expiresInSeconds ?? 600);
   },
 
-  async audit(token: string, tenantId: string, action: string, payload: unknown): Promise<void> {
+  listAuditEvents(token: string): Promise<Record<string, unknown>[]> {
+    return supabase.query<Record<string, unknown>[]>(`audit_events?order=created_at.desc&select=*`, token);
+  },
+
+  async audit(token: string, action: string, payload: unknown): Promise<void> {
     const session = await this.sessionFromToken(token);
+    const tenantId = String(session.shop.id);
     await supabase.insert('audit_events', token, {
       tenant_id: tenantId,
       actor_user_id: session.user.id,
@@ -212,5 +269,182 @@ export const appService = {
       payload,
       created_at: nowIso()
     });
+  },
+
+  async createCheckout(token: string, request: { plan: 'basic' | 'pro' | 'enterprise' }): Promise<{ initPoint: string; preferenceId?: string }> {
+    if (!env.mpAccessToken) throw new Error('MP_ACCESS_TOKEN no configurado');
+
+    const session = await this.sessionFromToken(token);
+    const tenantId = String((session.shop as Record<string, unknown>).id || '');
+
+    assert(Boolean(tenantId), 'No se pudo resolver tenant para checkout');
+
+    const prices: Record<string, number> = {
+      basic: 300,
+      pro: 450,
+      enterprise: 600
+    };
+
+    const amount = prices[request.plan];
+    assert(Boolean(amount), 'Plan inválido');
+
+    const preference = {
+      items: [
+        {
+          title: `Servicios Digitales MX - Plan ${request.plan}`,
+          quantity: 1,
+          currency_id: 'MXN',
+          unit_price: amount
+        }
+      ],
+      back_urls: {
+        success: `${env.appUrl}/billing/success`,
+        failure: `${env.appUrl}/billing/failure`,
+        pending: `${env.appUrl}/billing/pending`
+      },
+      auto_return: 'approved',
+      notification_url: `${env.webhookBaseUrl}/api/webhooks/mercadopago`,
+      metadata: {
+        tenantId,
+        plan: request.plan
+      }
+    };
+
+    const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${env.mpAccessToken}`,
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify(preference)
+    });
+
+    const json = await response.json().catch(() => ({})) as Record<string, unknown>;
+
+    if (!response.ok) {
+      throw new Error(String(json.message || 'Mercado Pago rechazó la preferencia'));
+    }
+
+    const initPoint = String(json.init_point || json.sandbox_init_point || '');
+    assert(Boolean(initPoint), 'Mercado Pago no devolvió init_point');
+
+    await supabase.insertAsService('subscriptions', {
+      tenant_id: tenantId,
+      plan: request.plan,
+      status: 'pending',
+      provider: 'mercadopago',
+      external_id: String(json.id || `preference_${Date.now()}`),
+      raw_payload: json
+    });
+
+    return {
+      initPoint,
+      preferenceId: json.id ? String(json.id) : undefined
+    };
+  },
+
+  async handleMercadoPagoWebhook(payload: Record<string, unknown>, signature?: string, requestId?: string): Promise<{ received: true }> {
+    if (!env.mpAccessToken) throw new Error('MP_ACCESS_TOKEN no configurado');
+
+    const type = String(payload.type || payload.action || '');
+    const data = payload.data as Record<string, unknown> | undefined;
+    const paymentId = String(data?.id || payload.id || '');
+
+    if (!paymentId || (!type.includes('payment') && !payload.action)) {
+      return { received: true };
+    }
+
+    // Validación criptográfica de firma (Mandatoria si el secreto está configurado)
+    if (env.mpWebhookSecret) {
+      if (!signature) {
+        logger.error({ paymentId, requestId }, 'Webhook rechazado: Falta x-signature header');
+        throw new Error('Missing x-signature header for authenticity validation');
+      }
+
+      try {
+        const parts = signature.split(',').reduce((acc, part) => {
+          const [k, v] = part.split('=');
+          if (k && v) acc[k.trim()] = v.trim();
+          return acc;
+        }, {} as Record<string, string>);
+
+        const ts = parts['ts'];
+        const v1 = parts['v1'];
+
+        if (!ts || !v1) throw new Error('Malformed x-signature header: missing ts or v1');
+
+        // Anti-replay: 10 minutos
+        const now = Math.floor(Date.now() / 1000);
+        if (Math.abs(now - Number(ts)) > 600) throw new Error('Webhook signature expired (anti-replay check failed)');
+
+        // Template para pagos: id:[payment_id];topic:payment;ts:[ts];
+        const topic = type.includes('payment') ? 'payment' : type;
+        const template = `id:${paymentId};topic:${topic};ts:${ts};`;
+        const calculated = createHmac('sha256', env.mpWebhookSecret).update(template).digest('hex');
+
+        if (calculated !== v1) {
+          throw new Error('Invalid cryptographic signature: HMAC mismatch');
+        }
+        logger.info({ paymentId, requestId }, 'Webhook signature verified successfully via HMAC-SHA256');
+      } catch (error) {
+        logger.error({ error: (error as Error).message, signature, paymentId }, 'Webhook signature validation failed');
+        throw error; // Bloqueamos el proceso si la firma es inválida
+      }
+    }
+
+    const response = await fetch(`https://api.mercadopago.com/v1/payments/${encodeURIComponent(paymentId)}`, {
+      method: 'GET',
+      headers: {
+        authorization: `Bearer ${env.mpAccessToken}`
+      }
+    });
+
+    const payment = await response.json().catch(() => ({})) as Record<string, unknown>;
+
+    if (!response.ok) {
+      throw new Error('No se pudo consultar pago en Mercado Pago');
+    }
+
+    const metadata = (payment.metadata || {}) as Record<string, unknown>;
+    const tenantId = String(metadata.tenant_id || metadata.tenantId || '');
+    const plan = String(metadata.plan || '');
+
+    if (!tenantId || !['basic', 'pro', 'enterprise'].includes(plan)) {
+      return { received: true };
+    }
+
+    const mpStatus = String(payment.status || '');
+    const status =
+      mpStatus === 'approved' ? 'active' :
+      mpStatus === 'pending' || mpStatus === 'in_process' ? 'pending' :
+      mpStatus === 'rejected' || mpStatus === 'cancelled' ? 'canceled' :
+      'past_due';
+
+    await supabase.insertAsService('subscriptions', {
+      tenant_id: tenantId,
+      plan,
+      status,
+      provider: 'mercadopago',
+      external_id: paymentId,
+      raw_payload: payment
+    });
+
+    await supabase.insertAsService('audit_events', {
+      tenant_id: tenantId,
+      action: 'billing.mercadopago_webhook',
+      payload: { paymentId, status, plan }
+    });
+
+    return { received: true };
+  },
+
+  async ensureActiveSubscription(token: string): Promise<void> {
+    const { subscription } = await this.subscriptionStatus(token);
+    const current = subscription;
+
+    if (!current || String(current.status) !== 'active') {
+      throw new Error('SUBSCRIPTION_REQUIRED');
+    }
   }
+
 };

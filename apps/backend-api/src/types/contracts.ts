@@ -22,6 +22,16 @@ export type ServiceOrderCreateRequest = {
   deviceBrand: string;
   deviceModel: string;
   reportedIssue: string;
+  estimatedCost?: number | null;
+  notes?: string | null;
+  receptionChecklist?: {
+    cargador: boolean;
+    pantalla: boolean;
+    prende: boolean;
+    respaldo: boolean;
+  } | null;
+  receptionPhotoBase64?: string | null;
+  sourceQuoteFolio?: string | null;
   promisedDate?: string | null;
 };
 export type ServiceOrderStatusUpdateRequest = { status: string; note?: string | null };
@@ -29,3 +39,16 @@ export type CustomerCreateRequest = { tenantId: string; branchId?: string | null
 export type CustomerContactCreateRequest = { customerId: string; name: string; role: string; email: string; phone?: string | null };
 export type QuoteCreateRequest = { tenantId: string; serviceOrderId: string; subtotalMxn: number; vatMxn: number; advanceMxn: number };
 export type EvidenceUploadRequest = { bucket: string; path: string; expiresInSeconds?: number };
+
+export type PlanCode = 'basic' | 'pro' | 'enterprise';
+
+export type CheckoutRequest = {
+  plan: PlanCode;
+};
+
+export type CheckoutResponse = {
+  initPoint: string;
+  preferenceId?: string;
+};
+
+export type SubscriptionStatus = 'pending' | 'active' | 'past_due' | 'canceled';

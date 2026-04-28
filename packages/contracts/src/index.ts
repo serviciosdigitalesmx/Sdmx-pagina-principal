@@ -19,7 +19,7 @@ export type SessionDto = {
 export type LoginRequestDto = { email: string; password: string };
 
 export type ServiceOrderCreateRequestDto = {
-  tenantId: string;
+  tenantId?: string;
   branchId?: string | null;
   customerId: string;
   deviceType: string;
@@ -27,4 +27,27 @@ export type ServiceOrderCreateRequestDto = {
   deviceModel: string;
   reportedIssue: string;
   promisedDate?: string | null;
+};
+
+export type PlanCode = 'basic' | 'pro' | 'enterprise';
+
+export type CheckoutRequestDto = {
+  plan: PlanCode;
+};
+
+export type CheckoutResponseDto = {
+  initPoint: string;
+  preferenceId?: string;
+};
+
+export type SubscriptionStatusDto = 'pending' | 'active' | 'past_due' | 'canceled';
+
+export type SubscriptionDto = {
+  id?: string;
+  tenantId?: string;
+  plan: PlanCode;
+  status: SubscriptionStatusDto;
+  provider: 'mercadopago';
+  externalId: string;
+  currentPeriodEnd?: string | null;
 };

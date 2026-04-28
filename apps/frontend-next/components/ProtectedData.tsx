@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { api } from '@/lib/api';
-import { clearSession, getAccessToken, isSessionExpired, readSession } from '@/lib/session';
+import { apiClient } from '@/lib/apiClient';
+import { clearSession } from '@/lib/session';
 
 export default function ProtectedData({ endpoint }: { endpoint: string }) {
   const router = useRouter();
@@ -12,29 +12,28 @@ export default function ProtectedData({ endpoint }: { endpoint: string }) {
 
   useEffect(() => {
     const run = async () => {
-      const session = readSession();
-      const token = getAccessToken();
-
-      if (!session || isSessionExpired(session) || !token) {
-        clearSession();
-        router.push('/login');
-        return;
-      }
-
       try {
-        const payload = await api<unknown>(endpoint, {}, token);
-        setData(payload);
+        const response = await apiClient.get<unknown>(endpoint);
+        
+        if (!response.success) {
+          if (response.error?.code === 'UNAUTHORIZED') {
+            clearSession();
+            router.push('/login');
+            return;
+          }
+          throw new Error(response.error?.message || 'Error de carga');
+        }
+
+        setData(response.data);
       } catch (e) {
-        clearSession();
         setError(e instanceof Error ? e.message : 'Error de carga');
-        router.push('/login');
       }
     };
 
     void run();
   }, [endpoint, router]);
 
-  if (error) return <p>{error}</p>;
+  if (error) return <p className="error">{error}</p>;
   if (!data) return <p>Cargando...</p>;
-  return <pre>{JSON.stringify(data, null, 2)}</pre>;
+  return <pre className="data-dump">{JSON.stringify(data, null, 2)}</pre>;
 }

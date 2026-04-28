@@ -24,6 +24,8 @@ const server = createServer(async (incoming: any, outgoing: any) => {
     incoming.on('end', () => resolve(Buffer.concat(chunks)));
   });
 
+  console.log(`[REQ] ${incoming.method} ${incoming.url} | Body size: ${body.length}`);
+
   const request = new Request(`http://${incoming.headers.host}${incoming.url}`, {
     method: incoming.method,
     headers: incoming.headers as Record<string, string>,
