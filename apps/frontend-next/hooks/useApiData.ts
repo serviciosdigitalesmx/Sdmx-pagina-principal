@@ -22,8 +22,8 @@ export function useApiData<T>(endpoint: string) {
       } else {
         setError(result.error?.message || 'Error al cargar los datos');
       }
-    } catch (e: any) {
-      setError(e.message || 'Error de red');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Error de red');
     } finally {
       setLoading(false);
     }

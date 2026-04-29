@@ -1,25 +1,23 @@
 import './globals.css';
 import { ToastProvider } from '@/components/ui/ToastProvider';
 import type { Metadata } from 'next';
-import { Inter, Orbitron, Rajdhani } from 'next/font/google';
+import { Space_Grotesk } from 'next/font/google';
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
-const orbitron = Orbitron({ subsets: ['latin'], variable: '--font-orbitron' });
-const rajdhani = Rajdhani({ 
-  subsets: ['latin'], 
-  variable: '--font-rajdhani',
-  weight: ['300', '400', '500', '600', '700'] 
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  variable: '--font-space-grotesk',
+  weight: ['400', '500', '700']
 });
 
 export const metadata: Metadata = { 
-  title: 'SDMX | Internal Suite',
-  description: 'Sistema de Gestión Sr-Fix'
+  title: 'SDMX | Premium SaaS',
+  description: 'Sistema de Gestión SDMX'
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className={`${inter.variable} ${orbitron.variable} ${rajdhani.variable}`}>
-      <body className="antialiased bg-slate-950 text-slate-200">
+    <html lang="es" className={`${spaceGrotesk.variable}`}>
+      <body className="antialiased bg-background text-textMain font-sans selection:bg-primary/30">
         <ToastProvider>{children}</ToastProvider>
       </body>
     </html>

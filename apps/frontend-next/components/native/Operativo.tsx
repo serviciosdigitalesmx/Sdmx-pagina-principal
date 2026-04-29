@@ -1,5 +1,5 @@
 'use client';
-import type { ServiceOrderCreateRequestDto } from "@contracts/index";
+import type { ServiceOrderCreateRequestDto } from "@sdmx/contracts";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { apiClient } from "@/lib/apiClient";
 import { ClipboardList, Plus, User, Smartphone, AlertCircle } from "lucide-react";

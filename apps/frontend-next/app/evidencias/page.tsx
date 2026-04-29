@@ -4,10 +4,15 @@ import { apiClient } from '@/lib/apiClient';
 import { SaasShell } from '@/components/ui/SaasShell';
 import { Database, FileUp, Link as LinkIcon, AlertCircle } from 'lucide-react';
 
+type SignedUploadResponse = {
+  signedUrl?: string;
+  url?: string;
+};
+
 export default function Page() {
   const [bucket, setBucket] = useState('evidences');
   const [path, setPath] = useState('');
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<SignedUploadResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -24,7 +29,7 @@ export default function Page() {
       });
       
       if (response.success) {
-        setResult(response.data);
+        setResult((response.data as SignedUploadResponse) ?? null);
       } else {
         setError(response.error?.message || 'Error al generar firma');
       }

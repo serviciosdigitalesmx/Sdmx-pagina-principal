@@ -1,6 +1,6 @@
 import { appService } from '../domain/app-service.js';
 import { badRequest, bearer, forbidden, notFound, ok, parseJson, unauthorized } from '../core/http.js';
-import type { CustomerContactCreateRequest, CustomerCreateRequest, EvidenceUploadRequest, LoginRequest, QuoteCreateRequest, RegisterRequest, ServiceOrderCreateRequest, ServiceOrderStatusUpdateRequest } from '../types/contracts.js';
+import type { EvidenceUploadRequest, CustomerContactCreateRequestDto as CustomerContactCreateRequest, CustomerCreateRequestDto as CustomerCreateRequest, LoginRequestDto as LoginRequest, QuoteCreateRequestDto as QuoteCreateRequest, RegisterRequestDto as RegisterRequest, ServiceOrderCreateRequestDto as ServiceOrderCreateRequest, ServiceOrderStatusUpdateRequestDto as ServiceOrderStatusUpdateRequest } from '@sdmx/contracts';
 
 import { logger } from '../core/logger.js';
 
@@ -58,7 +58,7 @@ export const handleApi = async (request: Request): Promise<Response> => {
 
   if (pathname === '/api/webhooks/mercadopago' && method === 'POST') {
     try {
-      const body = await parseJson<Record<string, unknown>>(request);
+      const body: unknown = await parseJson(request);
       const signature = request.headers.get('x-signature') || undefined;
       const requestId = request.headers.get('x-request-id') || undefined;
       return ok(await appService.handleMercadoPagoWebhook(body, signature, requestId));

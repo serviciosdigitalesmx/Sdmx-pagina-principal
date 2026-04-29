@@ -32,6 +32,7 @@ body {
     radial-gradient(circle at 84% 14%, rgba(255, 106, 42, 0.12) 0%, transparent 22%),
     linear-gradient(180deg, #0b1220 0%, #101827 100%);
   color: var(--srf-white);
+  font-family: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
 }
 
 .srf-shell {
@@ -48,6 +49,13 @@ body {
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.22);
   backdrop-filter: blur(14px);
   border-radius: 1.5rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.srf-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(47, 164, 255, 0.36);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.28);
 }
 
 .srf-card-soft {
@@ -115,6 +123,16 @@ body {
   font-weight: 800;
   border-radius: 1rem;
   transition: all 0.18s ease;
+}
+
+.srf-btn-primary:disabled,
+.btn-naranja:disabled,
+.srf-btn-blue:disabled,
+.btn-azul:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .srf-btn-primary:hover,

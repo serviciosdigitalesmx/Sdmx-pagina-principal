@@ -3,9 +3,20 @@ import { useState } from 'react';
 import { apiClient } from '@/lib/apiClient';
 import { Search, Package, Clock, ShieldCheck, MapPin, Smartphone, ArrowRight } from 'lucide-react';
 
+type PortalOrder = {
+  folio: string;
+  status: string;
+  device_type?: string;
+  device_brand?: string;
+  device_model?: string;
+  reported_issue?: string;
+  promised_date?: string;
+  updated_at?: string;
+};
+
 export default function Page() {
   const [folio, setFolio] = useState('');
-  const [order, setOrder] = useState<any>(null);
+  const [order, setOrder] = useState<PortalOrder | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -15,7 +26,7 @@ export default function Page() {
     setError('');
     setOrder(null);
     try {
-      const response = await apiClient.get<any[]>(`/api/portal/orders/${folio}`);
+      const response = await apiClient.get<PortalOrder[]>(`/api/portal/orders/${folio}`);
       if (response.success && response.data && response.data.length > 0) {
         setOrder(response.data[0]);
       } else {
@@ -147,7 +158,7 @@ export default function Page() {
                       <div>
                          <div className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500">Última Actualización</div>
                          <div className="text-base font-bold text-slate-400 mt-1 uppercase tracking-tight">
-                            {new Date(order.updated_at).toLocaleString('es-MX', { 
+                            {new Date(order.updated_at ?? Date.now()).toLocaleString('es-MX', { 
                               day: '2-digit', 
                               month: 'short', 
                               hour: '2-digit', 

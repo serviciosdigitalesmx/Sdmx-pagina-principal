@@ -8,7 +8,7 @@ const runtimeConfig = (): string => {
   return window.location.origin;
 };
 
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || runtimeConfig();
+export const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || runtimeConfig();
 
 export async function api<T>(path: string, init: RequestInit = {}, token?: string): Promise<T> {
   const headers = new Headers(init.headers ?? {});

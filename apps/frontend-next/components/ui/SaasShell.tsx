@@ -16,6 +16,7 @@ import {
   Wrench
 } from "lucide-react";
 import { clearSession, readSession } from "@/lib/session";
+import type { Session } from "@/lib/session";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
@@ -40,15 +41,9 @@ export function SaasShell({
   const router = useRouter();
   const session = readSession();
 
-  const userName =
-    typeof session?.user === "object" && session?.user
-      ? String((session.user as Record<string, unknown>).fullName || (session.user as Record<string, unknown>).email || "Usuario")
-      : "Usuario";
-
-  const shopName =
-    typeof session?.shop === "object" && session?.shop
-      ? String((session.shop as Record<string, unknown>).name || "Tenant activo")
-      : "Tenant activo";
+  const typedSession = session as Session | null;
+  const userName = typedSession?.user.full_name || typedSession?.user.email || "Usuario";
+  const shopName = typedSession?.shop.name || "Tenant activo";
 
   function logout() {
     clearSession();

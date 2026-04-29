@@ -1,4 +1,4 @@
-import type { SessionDto } from "@contracts/index";
+import type { SessionDto } from "@sdmx/contracts";
 
 export type Session = SessionDto;
 

@@ -9,10 +9,13 @@
     "dev": "tsx watch src/server.ts"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "@sdmx/contracts": "^1.0.0",
+    "cors": "^2.8.5",
     "dotenv": "^17.4.2"
   }
 }

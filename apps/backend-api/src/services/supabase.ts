@@ -32,7 +32,29 @@ export const supabase = {
   queryAsService: <T>(tableQuery: string) => send<T>(`/rest/v1/${tableQuery}`, 'GET', { serviceRole: true }),
   insert: <T>(table: string, jwt: string, payload: unknown) => send<T>(`/rest/v1/${table}?select=*`, 'POST', { jwt }, payload, true),
   insertAsService: <T>(table: string, payload: unknown) => send<T>(`/rest/v1/${table}?select=*`, 'POST', { serviceRole: true }, payload, true),
+  upsertAsService: <T>(table: string, payload: unknown, onConflict?: string) => {
+    const url = onConflict ? `/rest/v1/${table}?on_conflict=${onConflict}&select=*` : `/rest/v1/${table}?select=*`;
+    return fetch(`${env.supabaseUrl}${url}`, {
+      method: 'POST',
+      headers: {
+        apikey: env.supabaseServiceRoleKey,
+        'content-type': 'application/json',
+        authorization: `Bearer ${env.supabaseServiceRoleKey}`,
+        Prefer: 'return=representation,resolution=merge-duplicates'
+      },
+      body: JSON.stringify(payload)
+    }).then(async (res) => {
+      const text = await res.text();
+      if (!res.ok) throw new Error(text || `Supabase error ${res.status}`);
+      return JSON.parse(text) as T;
+    });
+  },
   patch: <T>(tableQuery: string, jwt: string, payload: unknown) => send<T>(`/rest/v1/${tableQuery}`, 'PATCH', { jwt }, payload, true),
   rpc: <T>(fn: string, jwt: string, payload: unknown) => send<T>(`/rest/v1/rpc/${fn}`, 'POST', { jwt }, payload),
-  storageSignedUpload: (bucket: string, path: string, jwt: string, expiresInSeconds: number) => send<Record<string, unknown>>(`/storage/v1/object/upload/sign/${bucket}/${path}`, 'POST', { jwt }, { expiresIn: expiresInSeconds })
+  storageSignedUpload: async (bucket: string, path: string, jwt: string, expiresInSeconds: number): Promise<{ signedUrl: string; url?: string }> => {
+    const response = await send<{ signedUrl?: string; url?: string }>(`/storage/v1/object/upload/sign/${bucket}/${path}`, 'POST', { jwt }, { expiresIn: expiresInSeconds });
+    const signedUrl = response.signedUrl || response.url;
+    if (!signedUrl) throw new Error('Supabase no devolvió signedUrl');
+    return { signedUrl, url: response.url };
+  }
 };
