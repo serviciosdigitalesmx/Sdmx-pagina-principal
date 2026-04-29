@@ -1,14 +1,14 @@
 import { getAccessToken } from "@/lib/session";
 import type { ApiResponse } from "@sdmx/contracts";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL;
 
 export async function fetchWithAuth<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
   if (!API_BASE_URL) {
-    throw new Error('NEXT_PUBLIC_API_BASE_URL no definido');
+    throw new Error('NEXT_PUBLIC_API_BASE_URL o NEXT_PUBLIC_API_URL no definido');
   }
 
   const token = getAccessToken();
