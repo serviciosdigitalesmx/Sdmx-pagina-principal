@@ -51,9 +51,8 @@ function isTrialStillValid(subscription: SubscriptionDto | null): boolean {
 }
 
 async function ensureTrialSubscription(token: string, tenantId: string): Promise<SubscriptionDto | null> {
-  const subscriptions = await supabase.query<RawSubscriptionRow[]>(
-    `subscriptions?tenant_id=eq.${encodeURIComponent(tenantId)}&select=*&order=created_at.desc`,
-    token
+  const subscriptions = await supabase.queryAsService<RawSubscriptionRow[]>(
+    `subscriptions?tenant_id=eq.${encodeURIComponent(tenantId)}&select=*&order=created_at.desc`
   );
 
   const current = normalizeSubscription(subscriptions.find((item) => {
@@ -87,16 +86,17 @@ export type RequestContext = {
 
 export async function loadSession(token: string): Promise<SessionDto> {
   const authUser = await supabase.authUser(token);
-  const users = await supabase.query<SessionRow[]>(`users?auth_user_id=eq.${encodeURIComponent(authUser.id)}&select=*`, token);
+  const users = await supabase.queryAsService<SessionRow[]>(
+    `users?auth_user_id=eq.${encodeURIComponent(authUser.id)}&select=*`
+  );
   const user = users[0];
   assert(Boolean(user), 'Usuario no encontrado en tenant');
 
   const tenantId = await resolveTenantId(user, token);
   const [shops, userRoles] = await Promise.all([
-    supabase.query<ShopDto[]>(`shops?id=eq.${encodeURIComponent(tenantId)}&select=*`, token),
-    supabase.query<Array<{ role_id: string; roles: RoleDto }>>(
-      `user_roles?user_id=eq.${encodeURIComponent(String(user.id))}&select=role_id,roles(*)`,
-      token
+    supabase.queryAsService<ShopDto[]>(`shops?id=eq.${encodeURIComponent(tenantId)}&select=*`),
+    supabase.queryAsService<Array<{ role_id: string; roles: RoleDto }>>(
+      `user_roles?user_id=eq.${encodeURIComponent(String(user.id))}&select=role_id,roles(*)`
     )
   ]);
   const shop = shops[0] ?? { id: tenantId, name: 'Default Shop', slug: 'default', billing_exempt: false };
@@ -165,7 +165,9 @@ async function resolveTenantId(user: SessionRow, token: string): Promise<string>
   const branchId = user.branch_id ? String(user.branch_id) : '';
   assert(Boolean(branchId), 'El usuario no tiene tenant ni branch asignado');
 
-  const branches = await supabase.query<Array<{ tenant_id: string }>>(`branches?id=eq.${encodeURIComponent(branchId)}&select=tenant_id`, token);
+  const branches = await supabase.queryAsService<Array<{ tenant_id: string }>>(
+    `branches?id=eq.${encodeURIComponent(branchId)}&select=tenant_id`
+  );
   const tenantId = branches[0]?.tenant_id ? String(branches[0].tenant_id) : '';
   assert(Boolean(tenantId), 'No se pudo resolver el tenant del usuario');
   return tenantId;
