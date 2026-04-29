@@ -64,27 +64,19 @@ async function ensureTrialSubscription(token: string, tenantId: string): Promise
   }) ?? subscriptions[0] ?? null);
 
   if (current) return current;
-
-  const currentPeriodEnd = new Date(Date.now() + env.trialDays * 24 * 60 * 60 * 1000).toISOString();
-  const inserted = await supabase.upsertAsService<RawSubscriptionRow[]>(
-    'subscriptions',
-    {
-      tenant_id: tenantId,
-      plan: TRIAL_PLAN,
-      status: 'trialing',
-      provider: 'trial',
-      external_id: `trial_${tenantId}`,
-      current_period_end: currentPeriodEnd,
-      raw_payload: {
-        trialDays: env.trialDays,
-        trialStartedAt: new Date().toISOString(),
-        trialEndsAt: currentPeriodEnd
-      }
-    },
-    'tenant_id'
-  );
-
-  return normalizeSubscription(inserted[0] ?? null);
+  return {
+    tenant_id: tenantId,
+    plan: TRIAL_PLAN,
+    status: 'trialing',
+    provider: 'trial',
+    external_id: `trial_${tenantId}`,
+    current_period_end: null,
+    raw_payload: {
+      trialDays: env.trialDays,
+      trialStartedAt: new Date().toISOString(),
+      trialEndsAt: null
+    }
+  } as SubscriptionDto;
 }
 
 export type RequestContext = {
@@ -108,7 +100,10 @@ export async function loadSession(token: string): Promise<SessionDto> {
     )
   ]);
   const shop = shops[0] ?? { id: tenantId, name: 'Default Shop', slug: 'default', billing_exempt: false };
-  const subscription = shop.billing_exempt
+  const isMaster =
+    Boolean(env.masterTenantSlug && String(shop.slug || '').toLowerCase() === env.masterTenantSlug) ||
+    Boolean(env.masterAccountEmail && String(user.email || '').toLowerCase() === env.masterAccountEmail);
+  const subscription = isMaster
     ? ({
         tenant_id: tenantId,
         plan: TRIAL_PLAN,
@@ -117,11 +112,11 @@ export async function loadSession(token: string): Promise<SessionDto> {
         external_id: `master_${tenantId}`,
         current_period_end: null,
         raw_payload: {
-          billingExempt: true,
+          masterAccount: true,
           activatedAt: new Date().toISOString()
         }
       } as SubscriptionDto)
-    : await ensureTrialSubscription(token, tenantId);
+    : (await ensureTrialSubscription(token, tenantId));
 
   return {
     accessToken: token,
