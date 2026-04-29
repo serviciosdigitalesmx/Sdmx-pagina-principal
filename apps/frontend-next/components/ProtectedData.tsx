@@ -1,9 +1,10 @@
-'use client';
+"use client";
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/apiClient';
 import { clearSession } from '@/lib/session';
+import type { ApiResponse } from '@sdmx/contracts';
 
 export default function ProtectedData({ endpoint }: { endpoint: string }) {
   const router = useRouter();
@@ -13,7 +14,7 @@ export default function ProtectedData({ endpoint }: { endpoint: string }) {
   useEffect(() => {
     const run = async () => {
       try {
-        const response = await apiClient.get<unknown>(endpoint);
+        const response = await apiClient.get<unknown>(endpoint) as ApiResponse<unknown>;
         
         if (!response.success) {
           if (response.error?.code === 'UNAUTHORIZED') {
