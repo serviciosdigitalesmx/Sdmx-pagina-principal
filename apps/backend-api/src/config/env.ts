@@ -20,7 +20,7 @@ export const env = {
   supabaseUrl: get('SUPABASE_URL').replace(/\/$/, ''),
   supabaseAnonKey: get('SUPABASE_ANON_KEY'),
   supabaseServiceRoleKey: get('SUPABASE_SERVICE_ROLE_KEY'),
-  trialDays: Number(get('TRIAL_DAYS')),
+  trialDays: Number(optional('TRIAL_DAYS', '15')),
   masterTenantSlug: optional('MASTER_TENANT_SLUG'),
   masterAccountEmail: optional('MASTER_ACCOUNT_EMAIL').toLowerCase(),
   corsAllowedOrigins: optional('CORS_ALLOWED_ORIGINS'),
