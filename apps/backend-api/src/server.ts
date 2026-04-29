@@ -3,6 +3,38 @@ import { env } from './config/env.js';
 import { handleApi } from './routes/api.js';
 import { serverError } from './core/http.js';
 
+const normalizeOrigin = (origin: string): string => origin.trim().replace(/\/$/, '');
+
+const isAllowedOrigin = (origin: string | null): boolean => {
+  if (!origin) return false;
+  const normalized = normalizeOrigin(origin);
+  const originList = env.corsAllowedOriginList;
+
+  if (originList.includes(normalized)) return true;
+  if (originList.includes('https://*.vercel.app') && normalized.endsWith('.vercel.app')) return true;
+  if (originList.includes('http://localhost:3000') && normalized.startsWith('http://localhost:')) return true;
+  if (originList.includes('https://localhost:3000') && normalized.startsWith('https://localhost:')) return true;
+  if (env.appUrl && normalized === normalizeOrigin(env.appUrl)) return true;
+
+  return false;
+};
+
+const applyCors = (response: Response, origin: string | null): Response => {
+  if (!isAllowedOrigin(origin)) return response;
+
+  const headers = new Headers(response.headers);
+  headers.set('access-control-allow-origin', normalizeOrigin(origin as string));
+  headers.set('access-control-allow-methods', 'GET,POST,PATCH,PUT,DELETE,OPTIONS');
+  headers.set('access-control-allow-headers', 'content-type,authorization');
+  headers.set('access-control-max-age', '86400');
+  headers.set('vary', 'origin');
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers
+  });
+};
+
 const server = createServer(async (incoming: IncomingMessage, outgoing: ServerResponse) => {
   const body = await new Promise<Uint8Array>((resolve) => {
     const chunks: Uint8Array[] = [];
@@ -17,32 +49,16 @@ const server = createServer(async (incoming: IncomingMessage, outgoing: ServerRe
   });
 
   try {
+    const origin = request.headers.get('origin');
+
     if (request.method === 'OPTIONS') {
-      const response = new Response(null, { status: 204 });
-      const origin = request.headers.get('origin');
-      if (origin && env.corsAllowedOrigins) {
-        const allowed = env.corsAllowedOrigins.split(',').map((item) => item.trim()).filter(Boolean);
-        if (allowed.includes(origin) || (origin.endsWith('.vercel.app') && allowed.includes('https://*.vercel.app'))) {
-          response.headers.set('access-control-allow-origin', origin);
-          response.headers.set('vary', 'origin');
-        }
-      }
-      response.headers.set('access-control-allow-methods', 'GET,POST,PATCH,PUT,DELETE,OPTIONS');
-      response.headers.set('access-control-allow-headers', 'content-type,authorization');
+      const response = applyCors(new Response(null, { status: 204 }), origin);
       outgoing.writeHead(response.status, Object.fromEntries(response.headers.entries()));
       outgoing.end();
       return;
     }
 
-    const response = await handleApi(request);
-    const origin = request.headers.get('origin');
-    if (origin && env.corsAllowedOrigins) {
-      const allowed = env.corsAllowedOrigins.split(',').map((item) => item.trim()).filter(Boolean);
-      if (allowed.includes(origin) || (origin.endsWith('.vercel.app') && allowed.includes('https://*.vercel.app'))) {
-        response.headers.set('access-control-allow-origin', origin);
-        response.headers.set('vary', 'origin');
-      }
-    }
+    const response = applyCors(await handleApi(request), origin);
     outgoing.writeHead(response.status, Object.fromEntries(response.headers.entries()));
     const bytes = await response.arrayBuffer();
     outgoing.end(Buffer.from(bytes));

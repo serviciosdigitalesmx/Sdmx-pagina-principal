@@ -24,6 +24,10 @@ export const env = {
   masterTenantSlug: optional('MASTER_TENANT_SLUG'),
   masterAccountEmail: optional('MASTER_ACCOUNT_EMAIL').toLowerCase(),
   corsAllowedOrigins: optional('CORS_ALLOWED_ORIGINS'),
+  corsAllowedOriginList: optional('CORS_ALLOWED_ORIGINS')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean),
   mpAccessToken: optional('MP_ACCESS_TOKEN'),
   mpWebhookSecret: optional('MP_WEBHOOK_SECRET'),
   appUrl: optional('APP_URL', optional('NEXT_PUBLIC_APP_URL')).replace(/\/$/, ''),
