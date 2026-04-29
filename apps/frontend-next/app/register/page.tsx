@@ -2,8 +2,14 @@
 
 import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Building2, AlertCircle, UserPlus, Mail, Lock } from 'lucide-react';
+import { Building2, AlertCircle, UserPlus, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { apiClient } from '@/lib/apiClient';
+
+const GoogleMark = () => (
+  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#1F7EDC] text-[11px] font-black leading-none text-white shadow-[0_0_12px_rgba(31,126,220,.3)]">
+    G
+  </span>
+);
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -14,6 +20,7 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -119,14 +126,14 @@ export default function RegisterPage() {
             <div className="space-y-2 md:col-span-1">
               <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Correo</label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500 pointer-events-none" />
+                {!email && <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500 pointer-events-none" />}
                 <input
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="tu@correo.com"
                   type="email"
                   required
-                  className="srf-input h-14 pl-12 text-white placeholder:text-slate-500 bg-[#101827] border-[#284b7d]"
+                  className={`srf-input h-14 text-white placeholder:text-slate-500 bg-[#101827] border-[#284b7d] ${email ? 'pl-4' : 'pl-12'}`}
                 />
               </div>
             </div>
@@ -134,15 +141,23 @@ export default function RegisterPage() {
             <div className="space-y-2 md:col-span-1">
               <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Contraseña</label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500 pointer-events-none" />
+                {!password && <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500 pointer-events-none" />}
                 <input
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   required
-                  className="srf-input h-14 pl-12 text-white placeholder:text-slate-500 bg-[#101827] border-[#284b7d]"
+                  className={`srf-input h-14 text-white placeholder:text-slate-500 bg-[#101827] border-[#284b7d] ${password ? 'pl-4 pr-12' : 'pl-12 pr-12'}`}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((current) => !current)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-2 text-slate-400 transition hover:text-white"
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
             </div>
 
@@ -179,7 +194,7 @@ export default function RegisterPage() {
               <div className="h-5 w-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
             ) : (
               <>
-                <Mail className="h-5 w-5 text-[#2FA4FF]" />
+                <GoogleMark />
                 Continuar con Google
               </>
             )}

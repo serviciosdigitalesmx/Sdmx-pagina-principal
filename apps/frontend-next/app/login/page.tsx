@@ -4,7 +4,13 @@ import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/apiClient';
 import { persistSession, isValidSession, clearSession } from '@/lib/session';
-import { LogIn, Lock, Mail, AlertCircle, ShieldCheck, Chrome } from 'lucide-react';
+import { LogIn, Lock, Mail, AlertCircle, ShieldCheck, Eye, EyeOff } from 'lucide-react';
+
+const GoogleMark = () => (
+  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#1F7EDC] text-[11px] font-black leading-none text-white shadow-[0_0_12px_rgba(31,126,220,.3)]">
+    G
+  </span>
+);
 
 export default function LoginPage() {
   const router = useRouter();
@@ -13,6 +19,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -92,14 +99,14 @@ export default function LoginPage() {
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Correo Electrónico</label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
+                {!email && <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500 pointer-events-none" />}
                 <input 
                   value={email} 
                   onChange={(e) => setEmail(e.target.value)} 
                   placeholder="tu@correo.com" 
                   type="email" 
                   required 
-                  className="srf-input pl-12 h-14"
+                  className={`srf-input h-14 ${email ? 'pl-4' : 'pl-12'}`}
                 />
               </div>
             </div>
@@ -110,15 +117,23 @@ export default function LoginPage() {
                 <a href="#" className="text-[10px] font-black uppercase tracking-widest text-blue-400 hover:text-blue-300 transition-colors">¿Olvidaste?</a>
               </div>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
+                {!password && <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500 pointer-events-none" />}
                 <input 
                   value={password} 
                   onChange={(e) => setPassword(e.target.value)} 
                   placeholder="••••••••" 
-                  type="password" 
+                  type={showPassword ? 'text' : 'password'} 
                   required 
-                  className="srf-input pl-12 h-14"
+                  className={`srf-input h-14 ${password ? 'pl-4 pr-12' : 'pl-12 pr-12'}`}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((current) => !current)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-2 text-slate-400 transition hover:text-white"
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
             </div>
 
@@ -151,7 +166,7 @@ export default function LoginPage() {
               <div className="h-5 w-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
             ) : (
               <>
-                <Chrome className="h-5 w-5 text-[#2FA4FF]" />
+                <GoogleMark />
                 Continuar con Google
               </>
             )}
