@@ -4,13 +4,14 @@ import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/apiClient';
 import { persistSession, isValidSession, clearSession } from '@/lib/session';
-import { LogIn, Lock, Mail, AlertCircle, ShieldCheck } from 'lucide-react';
+import { LogIn, Lock, Mail, AlertCircle, ShieldCheck, Chrome } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
 
   const onSubmit = async (event: FormEvent) => {
@@ -40,6 +41,25 @@ export default function LoginPage() {
       setError(e instanceof Error ? e.message : 'No se pudo iniciar sesión');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const onGoogleLogin = async () => {
+    setGoogleLoading(true);
+    setError('');
+
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      if (!supabaseUrl) throw new Error('NEXT_PUBLIC_SUPABASE_URL no definido');
+      const redirectTo = `${window.location.origin}/dashboard`;
+      const oauthUrl = new URL(`${supabaseUrl.replace(/\/$/, '')}/auth/v1/authorize`);
+      oauthUrl.searchParams.set('provider', 'google');
+      oauthUrl.searchParams.set('redirect_to', redirectTo);
+      window.location.assign(oauthUrl.toString());
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'No se pudo iniciar con Google');
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -114,6 +134,28 @@ export default function LoginPage() {
               )}
             </button>
           </form>
+
+          <div className="my-6 flex items-center gap-3">
+            <div className="h-px flex-1 bg-white/10" />
+            <span className="text-[10px] font-black uppercase tracking-[0.28em] text-slate-500">o continúa con</span>
+            <div className="h-px flex-1 bg-white/10" />
+          </div>
+
+          <button
+            type="button"
+            onClick={onGoogleLogin}
+            disabled={googleLoading}
+            className="w-full inline-flex items-center justify-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-5 py-4 font-black text-white transition hover:bg-white/10 disabled:opacity-50"
+          >
+            {googleLoading ? (
+              <div className="h-5 w-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+            ) : (
+              <>
+                <Chrome className="h-5 w-5 text-[#2FA4FF]" />
+                Continuar con Google
+              </>
+            )}
+          </button>
 
           <div className="mt-10 pt-8 border-t border-white/5 text-center">
             <p className="text-slate-500 text-sm">
