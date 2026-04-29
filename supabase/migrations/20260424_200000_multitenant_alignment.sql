@@ -5,6 +5,7 @@ create table if not exists tenants (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   slug text unique not null,
+  billing_exempt boolean not null default false,
   created_at timestamptz not null default now()
 );
 
@@ -77,6 +78,7 @@ create table if not exists shops (
   id uuid primary key references tenants(id) on delete cascade,
   name text not null,
   slug text unique not null,
+  billing_exempt boolean not null default false,
   legal_name text,
   support_email text,
   phone text,

@@ -17,11 +17,19 @@ export function FeatureGuard({
   featureName?: string;
 }) {
   const { subscription, loading } = useSubscription();
+  const hasSubscriptionAccess =
+    Boolean(subscription) &&
+    (
+      subscription?.status === "active" ||
+      (subscription?.status === "trialing" && (
+        !subscription.current_period_end ||
+        new Date(subscription.current_period_end).getTime() >= Date.now()
+      ))
+    );
+  const currentPlanLevel = subscription ? PLAN_ORDER[subscription.plan] : 0;
   const allowed =
     skipBilling ||
-    Boolean(subscription) &&
-    subscription?.status === "active" &&
-    PLAN_ORDER[subscription.plan] >= PLAN_ORDER[requiredPlan];
+    (hasSubscriptionAccess && currentPlanLevel >= PLAN_ORDER[requiredPlan]);
 
   if (loading) {
     return (
@@ -42,7 +50,7 @@ export function FeatureGuard({
 
         <h2 className="mt-5 text-2xl font-black text-white">Suscripción requerida</h2>
         <p className="mt-2 text-slate-400">
-          Para usar {featureName}, activa un plan mensual. Plan actual:{" "}
+          Para usar {featureName}, necesitas una suscripción válida. Plan actual:{" "}
           <span className="text-[#FF6A2A] font-bold">{subscription?.status || "sin suscripción"}</span>.
           {" "}
           Nivel actual: <span className="text-[#FF6A2A] font-bold">{currentPlan}</span>.

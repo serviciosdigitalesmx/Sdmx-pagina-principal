@@ -55,7 +55,7 @@ export default function LoginPage() {
              <ShieldCheck className="h-8 w-8 text-white" />
           </div>
           <h1 className="text-4xl font-black text-white tracking-tighter mb-2">SDMX</h1>
-          <p className="text-slate-400 text-sm font-medium tracking-wide uppercase">Software de Gestión para Talleres</p>
+          <p className="text-slate-400 text-sm font-medium tracking-wide uppercase">15 días de prueba gratuita con acceso completo</p>
         </div>
 
         <div className="srf-card p-8 md:p-10">

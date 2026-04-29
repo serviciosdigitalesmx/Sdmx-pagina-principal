@@ -37,6 +37,56 @@ type RawSubscriptionRow = {
   updated_at?: string;
 };
 
+const TRIAL_PLAN: PlanCode = 'enterprise';
+
+function normalizeSubscription(subscription: RawSubscriptionRow | null): SubscriptionDto | null {
+  return subscription ? (subscription as SubscriptionDto) : null;
+}
+
+function isTrialStillValid(subscription: SubscriptionDto | null): boolean {
+  if (!subscription) return false;
+  if (String(subscription.status) !== 'trialing') return false;
+  if (!subscription.current_period_end) return true;
+  return Date.now() <= new Date(subscription.current_period_end).getTime();
+}
+
+async function ensureTrialSubscription(token: string, tenantId: string): Promise<SubscriptionDto | null> {
+  const subscriptions = await supabase.query<RawSubscriptionRow[]>(
+    `subscriptions?tenant_id=eq.${encodeURIComponent(tenantId)}&select=*&order=created_at.desc`,
+    token
+  );
+
+  const current = normalizeSubscription(subscriptions.find((item) => {
+    const status = String(item.status);
+    if (status === 'active') return true;
+    if (status === 'trialing') return isTrialStillValid(item as SubscriptionDto);
+    return false;
+  }) ?? subscriptions[0] ?? null);
+
+  if (current) return current;
+
+  const currentPeriodEnd = new Date(Date.now() + env.trialDays * 24 * 60 * 60 * 1000).toISOString();
+  const inserted = await supabase.upsertAsService<RawSubscriptionRow[]>(
+    'subscriptions',
+    {
+      tenant_id: tenantId,
+      plan: TRIAL_PLAN,
+      status: 'trialing',
+      provider: 'trial',
+      external_id: `trial_${tenantId}`,
+      current_period_end: currentPeriodEnd,
+      raw_payload: {
+        trialDays: env.trialDays,
+        trialStartedAt: new Date().toISOString(),
+        trialEndsAt: currentPeriodEnd
+      }
+    },
+    'tenant_id'
+  );
+
+  return normalizeSubscription(inserted[0] ?? null);
+}
+
 export type RequestContext = {
   token: string;
   session: SessionDto;
@@ -50,22 +100,36 @@ export async function loadSession(token: string): Promise<SessionDto> {
   assert(Boolean(user), 'Usuario no encontrado en tenant');
 
   const tenantId = await resolveTenantId(user, token);
-  const [shops, subscriptions, userRoles] = await Promise.all([
+  const [shops, userRoles] = await Promise.all([
     supabase.query<ShopDto[]>(`shops?id=eq.${encodeURIComponent(tenantId)}&select=*`, token),
-    supabase.query<RawSubscriptionRow[]>(`subscriptions?tenant_id=eq.${encodeURIComponent(tenantId)}&order=created_at.desc&limit=1&select=*`, token),
     supabase.query<Array<{ role_id: string; roles: RoleDto }>>(
       `user_roles?user_id=eq.${encodeURIComponent(String(user.id))}&select=role_id,roles(*)`,
       token
     )
   ]);
+  const shop = shops[0] ?? { id: tenantId, name: 'Default Shop', slug: 'default', billing_exempt: false };
+  const subscription = shop.billing_exempt
+    ? ({
+        tenant_id: tenantId,
+        plan: TRIAL_PLAN,
+        status: 'active',
+        provider: 'trial',
+        external_id: `master_${tenantId}`,
+        current_period_end: null,
+        raw_payload: {
+          billingExempt: true,
+          activatedAt: new Date().toISOString()
+        }
+      } as SubscriptionDto)
+    : await ensureTrialSubscription(token, tenantId);
 
   return {
     accessToken: token,
     refreshToken: '',
     expiresAt: new Date(Date.now() + 3600 * 1000).toISOString(),
     user: user as UserDto,
-    shop: shops[0] ?? { id: tenantId, name: 'Default Shop', slug: 'default' },
-    subscription: subscriptions[0] ?? null,
+    shop,
+    subscription,
     roles: userRoles.map((r) => r.roles).filter(Boolean),
     permissions: []
   };
@@ -77,7 +141,12 @@ export async function loadContext(token: string): Promise<RequestContext> {
 }
 
 export function requireActiveSubscription(session: SessionDto): void {
-  if (!session.subscription || String(session.subscription.status) !== 'active') {
+  const subscription = session.subscription;
+  const status = String(subscription?.status || '');
+  const active = status === 'active';
+  const trial = status === 'trialing' && isTrialStillValid(subscription);
+
+  if (!subscription || (!active && !trial)) {
     throw new Error('SUBSCRIPTION_REQUIRED: Se requiere una suscripción activa para realizar esta acción.');
   }
 }

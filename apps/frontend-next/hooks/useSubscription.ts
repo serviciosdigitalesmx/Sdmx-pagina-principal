@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 import { apiClient } from "@/lib/apiClient";
 
 export type PlanCode = "basic" | "pro" | "enterprise";
-export type SubscriptionStatus = "pending" | "active" | "past_due" | "canceled";
+export type SubscriptionStatus = "pending" | "trialing" | "active" | "past_due" | "suspended" | "canceled";
 
 export type Subscription = {
   plan: PlanCode;
   status: SubscriptionStatus;
+  current_period_end?: string | null;
 };
 
 export function useSubscription() {

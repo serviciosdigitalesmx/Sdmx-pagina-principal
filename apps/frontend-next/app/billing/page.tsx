@@ -13,7 +13,7 @@ const plans: Array<{ code: PlanCode; name: string; price: string; description: s
     code: "basic",
     name: "Plan Essential",
     price: "$350",
-    description: "Ideal para control de servicios y agenda.",
+    description: "Ideal para control de servicios y agenda. Incluye 15 días de prueba gratuita con todo activo.",
     tag: "Inicio",
     feature: ["Recepción simple", "Clientes básicos", "Control de órdenes"]
   },
@@ -21,7 +21,7 @@ const plans: Array<{ code: PlanCode; name: string; price: string; description: s
     code: "pro",
     name: "Plan Pro",
     price: "$549",
-    description: "Para el taller que ya vende, repara y reporta.",
+    description: "Para el taller que ya vende, repara y reporta. Incluye 15 días de prueba gratuita con todo activo.",
     tag: "Recomendado",
     feature: ["Recepción + técnico", "Inventario", "Reportes"]
   },
@@ -29,7 +29,7 @@ const plans: Array<{ code: PlanCode; name: string; price: string; description: s
     code: "enterprise",
     name: "Plan Business",
     price: "$850",
-    description: "Multi-sucursal y operación a escala.",
+    description: "Multi-sucursal y operación a escala. Incluye 15 días de prueba gratuita con todo activo.",
     tag: "Escala",
     feature: ["Multi-sucursal", "Finanzas completas", "Control avanzado"]
   }
@@ -60,7 +60,7 @@ export default function BillingPage() {
             <p className="text-xs font-black uppercase tracking-[0.35em] text-orange-400">Planes de Pago</p>
             <h2 className="mt-4 text-4xl font-black md:text-5xl">Elige el plan que mejor encaje con tu operación</h2>
             <p className="mt-3 max-w-2xl text-slate-300">
-              Tres niveles claros para vender, diagnosticar, controlar inventario y cobrar con un flujo profesional.
+              Todos los planes arrancan con 15 días de prueba gratuita y acceso completo. Después eliges el plan que se mantiene activo.
             </p>
           </div>
 

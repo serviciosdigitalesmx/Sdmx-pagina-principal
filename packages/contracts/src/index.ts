@@ -10,12 +10,13 @@ export type ApiResponse<T> = {
 };
 
 export type PlanCode = "basic" | "pro" | "enterprise";
-export type SubscriptionStatusDto = "pending" | "active" | "past_due" | "canceled";
+export type SubscriptionStatusDto = "pending" | "trialing" | "active" | "past_due" | "suspended" | "canceled";
 
 export type TenantDto = {
   id: string;
   name: string;
   slug?: string | null;
+  billing_exempt?: boolean;
   created_at?: string;
   updated_at?: string;
 };
@@ -50,7 +51,7 @@ export type SubscriptionDto = {
   tenant_id: string;
   plan: PlanCode;
   status: SubscriptionStatusDto;
-  provider: "mercadopago";
+  provider: "mercadopago" | "trial";
   external_id: string;
   current_period_end?: string | null;
   raw_payload?: unknown;

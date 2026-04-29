@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { supabase } from './supabase.js';
+import { env } from '../config/env.js';
 import { loadSession } from './context.js';
 import type { RegisterRequestDto, SessionDto, UserDto } from '@sdmx/contracts';
 
@@ -11,20 +12,20 @@ export const authService = {
   async register(payload: RegisterRequestDto): Promise<UserDto> {
     let tenantId = payload.tenantId;
     const tenantSlug = payload.tenantId.toLowerCase().replace(/[^a-z0-9]/g, '-') || 'default';
+    const billingExempt =
+      Boolean(env.masterTenantSlug && tenantSlug === env.masterTenantSlug) ||
+      Boolean(env.masterAccountEmail && payload.email.toLowerCase() === env.masterAccountEmail);
 
-    const existingTenants = await supabase.queryAsService<Array<{ id: string }>>(
-      `tenants?slug=eq.${encodeURIComponent(tenantSlug)}&select=id`
-    );
-
-    if (existingTenants.length > 0) {
-      tenantId = existingTenants[0].id;
-    } else {
-      const newTenants = await supabase.insertAsService<Array<{ id: string }>>('tenants', {
+    const tenantRows = await supabase.upsertAsService<Array<{ id: string }>>(
+      'tenants',
+      {
         name: payload.tenantId,
-        slug: tenantSlug
-      });
-      tenantId = String(newTenants[0].id);
-    }
+        slug: tenantSlug,
+        billing_exempt: billingExempt
+      },
+      'slug'
+    );
+    tenantId = String(tenantRows[0].id);
 
     const auth = await supabase.authAdminCreate(payload.email, payload.password);
 
@@ -35,6 +36,25 @@ export const authService = {
       full_name: payload.fullName,
       email: payload.email
     });
+
+    const trialEndsAt = new Date(Date.now() + env.trialDays * 24 * 60 * 60 * 1000).toISOString();
+    await supabase.upsertAsService(
+      'subscriptions',
+      {
+        tenant_id: tenantId,
+        plan: 'enterprise',
+        status: 'trialing',
+        provider: 'trial',
+        external_id: `trial_${tenantId}`,
+        current_period_end: trialEndsAt,
+        raw_payload: {
+          trialDays: env.trialDays,
+          trialStartedAt: new Date().toISOString(),
+          trialEndsAt
+        }
+      },
+      'tenant_id'
+    );
 
     return profile[0];
   },

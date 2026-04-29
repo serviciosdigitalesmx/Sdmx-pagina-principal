@@ -1,4 +1,4 @@
-export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'suspended' | 'cancelled';
+export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'suspended' | 'canceled';
 
 export enum PlanLevel {
   INICIAL = 'inicial-0',
@@ -51,8 +51,12 @@ export function isAccessGranted(sub: Subscription | null): boolean {
   const periodEnd = new Date(sub.current_period_end);
   const graceEnd = sub.grace_until ? new Date(sub.grace_until) : periodEnd;
 
-  if (sub.status === 'active' || sub.status === 'trialing') {
+  if (sub.status === 'active') {
     return true;
+  }
+
+  if (sub.status === 'trialing') {
+    return now <= periodEnd;
   }
 
   if (sub.status === 'past_due') {

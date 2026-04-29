@@ -116,6 +116,17 @@ body {
   box-shadow: 0 0 0 4px rgba(255, 106, 42, 0.12);
 }
 
+.srf-input::placeholder,
+.input-srf::placeholder {
+  color: rgba(148, 163, 184, 0.8);
+}
+
+input,
+textarea,
+select {
+  color: var(--srf-white);
+}
+
 .srf-btn-primary,
 .btn-naranja {
   background: var(--srf-orange);
