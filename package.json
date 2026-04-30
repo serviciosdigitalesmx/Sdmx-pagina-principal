@@ -2,13 +2,14 @@
   "name": "sdmx",
   "private": true,
   "version": "0.1.0",
+  "packageManager": "npm@10.8.2",
   "workspaces": [
     "apps/*"
   ],
   "scripts": {
-    "dev": "concurrently -n web,api -c cyan,magenta \"pnpm --dir apps/web dev\" \"pnpm --dir apps/backend-api dev\"",
-    "build": "pnpm --dir apps/web build && pnpm --dir apps/backend-api build",
-    "lint": "pnpm --dir apps/web lint && pnpm --dir apps/backend-api lint",
+    "dev": "concurrently -n web,api -c cyan,magenta \"npm --prefix apps/web run dev\" \"npm --prefix apps/backend-api run dev\"",
+    "build": "npm --prefix apps/web run build && npm --prefix apps/backend-api run build",
+    "lint": "npm --prefix apps/web run lint && npm --prefix apps/backend-api run lint",
     "e2e:selenium": "node scripts/e2e-selenium.mjs"
   },
   "devDependencies": {
