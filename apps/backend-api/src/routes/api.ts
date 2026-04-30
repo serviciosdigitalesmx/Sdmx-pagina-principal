@@ -32,6 +32,14 @@ const safe = async (fn: () => Promise<Response>): Promise<Response> => {
   }
 };
 
+const parseReportRange = (url: URL): { from?: string | null; to?: string | null } => {
+  const from = url.searchParams.get('from');
+  const to = url.searchParams.get('to');
+  if (from && Number.isNaN(Date.parse(from))) throw new Error('Fecha inválida en from');
+  if (to && Number.isNaN(Date.parse(to))) throw new Error('Fecha inválida en to');
+  return { from, to };
+};
+
 export const handleApi = async (request: Request): Promise<Response> => {
   const url = new URL(request.url);
   const { pathname } = url;
@@ -224,6 +232,46 @@ export const handleApi = async (request: Request): Promise<Response> => {
       if (!token) return unauthorized();
       await appService.ensureActiveSubscription(token);
       return ok(await appService.listAuditEvents(token));
+    });
+  }
+
+  if (pathname === '/api/reports/operations' && method === 'GET') {
+    return safe(async () => {
+      const { from, to } = parseReportRange(url);
+      const token = bearer(request);
+      if (!token) return unauthorized();
+      await appService.ensureActiveSubscription(token);
+      return ok(await appService.operationsReport(token, from, to));
+    });
+  }
+
+  if (pathname === '/api/reports/finance' && method === 'GET') {
+    return safe(async () => {
+      const { from, to } = parseReportRange(url);
+      const token = bearer(request);
+      if (!token) return unauthorized();
+      await appService.ensureActiveSubscription(token);
+      return ok(await appService.financeReport(token, from, to));
+    });
+  }
+
+  if (pathname === '/api/reports/inventory' && method === 'GET') {
+    return safe(async () => {
+      const { from, to } = parseReportRange(url);
+      const token = bearer(request);
+      if (!token) return unauthorized();
+      await appService.ensureActiveSubscription(token);
+      return ok(await appService.inventoryReport(token, from, to));
+    });
+  }
+
+  if (pathname === '/api/reports/purchases-expenses' && method === 'GET') {
+    return safe(async () => {
+      const { from, to } = parseReportRange(url);
+      const token = bearer(request);
+      if (!token) return unauthorized();
+      await appService.ensureActiveSubscription(token);
+      return ok(await appService.purchasesExpensesReport(token, from, to));
     });
   }
 

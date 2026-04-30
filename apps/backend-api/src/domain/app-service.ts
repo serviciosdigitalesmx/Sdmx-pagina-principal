@@ -5,6 +5,7 @@ import { inventoryService } from '../services/inventory.service.js';
 import { customersService } from '../services/customers.service.js';
 import { quotesService } from '../services/quotes.service.js';
 import { purchasesService } from '../services/purchases.service.js';
+import { reportsService } from '../services/reports.service.js';
 import { serviceOrdersService } from '../services/service-orders.service.js';
 import { subscriptionService } from '../services/subscription.service.js';
 import { suppliersService } from '../services/suppliers.service.js';
@@ -34,8 +35,12 @@ import type {
   CreateExpenseRequestDto,
   ExpenseCategoryDto,
   ExpenseDto,
+  FinanceReportDto,
+  InventoryReportDto,
+  OperationsReportDto,
   PurchaseItemDto,
   PurchaseOrderDto,
+  PurchasesExpensesReportDto,
   RegisterRequestDto,
   ServiceOrderCreateRequestDto,
   ServiceOrderDto,
@@ -90,6 +95,14 @@ export const appService = {
   getExpenseById: (token: string, expenseId: string): Promise<ExpenseDto> => expensesService.getExpenseById(token, expenseId),
   createExpense: (token: string, request: CreateExpenseRequestDto): Promise<ExpenseDto> => expensesService.createExpense(token, request),
   deleteExpense: (token: string, expenseId: string): Promise<{ deleted: true }> => expensesService.deleteExpense(token, expenseId),
+  operationsReport: (token: string, from?: string | null, to?: string | null): Promise<OperationsReportDto> =>
+    reportsService.operations(token, { from, to }),
+  financeReport: (token: string, from?: string | null, to?: string | null): Promise<FinanceReportDto> =>
+    reportsService.finance(token, { from, to }),
+  inventoryReport: (token: string, from?: string | null, to?: string | null): Promise<InventoryReportDto> =>
+    reportsService.inventory(token, { from, to }),
+  purchasesExpensesReport: (token: string, from?: string | null, to?: string | null): Promise<PurchasesExpensesReportDto> =>
+    reportsService.purchasesExpenses(token, { from, to }),
   listAuditEvents: async (token: string): Promise<Array<{ id: string }>> => {
     const session = await authService.sessionFromToken(token);
     const tenantId = String(session.shop.id);

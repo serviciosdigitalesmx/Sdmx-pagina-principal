@@ -398,3 +398,53 @@ export type CreateExpenseRequestDto = {
   reference?: string | null;
   notes?: string | null;
 };
+
+export type ReportDateRangeDto = {
+  from?: string | null;
+  to?: string | null;
+};
+
+export type OperationsReportDto = {
+  range: ReportDateRangeDto;
+  totalOrders: number;
+  ordersByStatus: Array<{ status: string; count: number }>;
+  ordersCreated: Array<{ date: string; count: number }>;
+};
+
+export type FinanceReportDto = {
+  range: ReportDateRangeDto;
+  estimatedRevenueCents: number;
+  totalExpensesCents: number;
+  confirmedPurchasesCents: number;
+  estimatedBalanceCents: number;
+  revenueSource: 'quotations.total_mxn' | 'service_orders.estimated_cost' | 'mixed';
+  notes: string[];
+};
+
+export type InventoryReportDto = {
+  range: ReportDateRangeDto;
+  lowStockProducts: Array<{
+    id: string;
+    sku: string;
+    name: string;
+    current_stock: number;
+    min_stock: number;
+    category?: string | null;
+  }>;
+  recentMovements: Array<{
+    id: string;
+    product_id: string;
+    movement_type: string;
+    quantity: number;
+    unit_cost_mxn?: number | null;
+    reference_type?: string | null;
+    reference_id?: string | null;
+    created_at: string;
+  }>;
+};
+
+export type PurchasesExpensesReportDto = {
+  range: ReportDateRangeDto;
+  purchasesBySupplier: Array<{ supplier_id: string; supplier_name: string; count: number; total_amount_cents: number }>;
+  expensesByCategory: Array<{ category_id: string; category_name: string; count: number; total_amount_cents: number }>;
+};
