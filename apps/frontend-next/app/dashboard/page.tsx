@@ -38,7 +38,6 @@ export default function Dashboard() {
     <div className="p-8">
       <h1 className="text-2xl font-bold">Bienvenido, {fullName}</h1>
       <p>Tu dashboard ha sido actualizado con guard de carga.</p>
-      <p>Si tenías contenido adicional, revísalo en el backup: {DASHBOARD_FILE}.backup</p>
     </div>
   );
 }
