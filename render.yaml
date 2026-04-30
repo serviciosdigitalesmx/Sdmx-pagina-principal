@@ -4,8 +4,8 @@ services:
     env: node
     plan: starter
     rootDir: apps/backend-api
-    buildCommand: pnpm install --frozen-lockfile && pnpm build
-    startCommand: pnpm start
+    buildCommand: npm install && npm run build
+    startCommand: npm start
     autoDeploy: true
     healthCheckPath: /health
     envVars:
@@ -13,13 +13,13 @@ services:
         value: 10000
       - key: TRUST_PROXY
         value: 1
-      - key: ALLOWED_ORIGINS
+      - key: CORS_ALLOWED_ORIGINS
         sync: false
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
-      - key: NEXT_PUBLIC_APP_URL
+      - key: APP_URL
         sync: false
       - key: STRIPE_SECRET_KEY
         sync: false
@@ -27,15 +27,15 @@ services:
         sync: false
       - key: MERCADOPAGO_ACCESS_TOKEN
         sync: false
-      - key: MERCADOPAGO_BASE_URL
+      - key: MP_WEBHOOK_SECRET
         sync: false
-      - key: MERCADOPAGO_PUBLIC_KEY
+      - key: TRIAL_DAYS
         sync: false
-      - key: MERCADOPAGO_SUPPORT_PHONE
+      - key: MASTER_TENANT_SLUG
         sync: false
-      - key: MERCADOPAGO_WEBHOOK_BASE_URL
+      - key: MASTER_ACCOUNT_EMAIL
         sync: false
-      - key: SRFIX_INTERNAL_API_KEY
+      - key: ORDER_DOCUMENTS_BUCKET
         sync: false
-      - key: API_VERSION
+      - key: EVIDENCE_IMAGES_BUCKET
         sync: false
