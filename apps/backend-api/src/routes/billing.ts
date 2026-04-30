@@ -3,7 +3,7 @@ import { z } from "zod";
 import { asyncHandler, AppError } from "../core/http.js";
 import { logAuditEvent } from "../core/audit.js";
 import { logger } from "../core/logger.js";
-import { stripe } from "../core/stripe.js";
+import { getStripeClient, requireStripeClient } from "../core/stripe.js";
 import { supabaseAdmin } from "../core/supabase.js";
 import { requireAuth } from "../middleware/auth.js";
 import { resolveTenant } from "../middleware/tenant.js";
@@ -14,6 +14,12 @@ const checkoutSchema = z.object({
 });
 
 export const billingRouter = Router();
+
+function ensureBillingReady() {
+  if (!getStripeClient()) {
+    throw new AppError("Billing provider not configured", 503, "billing_provider_unavailable");
+  }
+}
 
 billingRouter.get(
   "/status",
@@ -42,6 +48,8 @@ billingRouter.post(
   requireAuth,
   resolveTenant,
   asyncHandler(async (req, res) => {
+    ensureBillingReady();
+    const stripe = requireStripeClient();
     const { priceId } = checkoutSchema.parse(req.body);
     const tenantId = req.context!.tenantId;
 
@@ -86,6 +94,8 @@ billingRouter.post(
   requireAuth,
   resolveTenant,
   asyncHandler(async (req, res) => {
+    ensureBillingReady();
+    const stripe = requireStripeClient();
     const tenantId = req.context!.tenantId;
 
     const { data: subscription, error } = await supabaseAdmin

@@ -2,7 +2,7 @@ import { Router, raw } from "express";
 import Stripe from "stripe";
 import { asyncHandler, AppError } from "../core/http.js";
 import { logAuditEvent } from "../core/audit.js";
-import { stripe } from "../core/stripe.js";
+import { requireStripeClient } from "../core/stripe.js";
 import { supabaseAdmin } from "../core/supabase.js";
 
 export const webhooksRouter = Router();
@@ -11,6 +11,7 @@ webhooksRouter.post(
   "/stripe",
   raw({ type: "application/json" }),
   asyncHandler(async (req, res) => {
+    const stripe = requireStripeClient();
     const secret = process.env.STRIPE_WEBHOOK_SECRET;
     if (!secret) throw new AppError("Missing STRIPE_WEBHOOK_SECRET", 500, "webhook_secret_missing");
 
