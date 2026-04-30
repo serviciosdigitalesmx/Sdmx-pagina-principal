@@ -73,6 +73,13 @@ export const apiClient = {
       body: body ? JSON.stringify(body) : undefined,
     }),
 
+  patch: <T>(endpoint: string, body?: unknown, options?: RequestInit) =>
+    fetchWithAuth<T>(endpoint, {
+      ...options,
+      method: 'PATCH',
+      body: body ? JSON.stringify(body) : undefined,
+    }),
+
   delete: <T>(endpoint: string, options?: RequestInit) =>
     fetchWithAuth<T>(endpoint, { ...options, method: 'DELETE' }),
 };

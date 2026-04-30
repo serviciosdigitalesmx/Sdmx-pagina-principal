@@ -1,6 +1,22 @@
 import { appService } from '../domain/app-service.js';
 import { badRequest, bearer, forbidden, notFound, ok, parseJson, unauthorized } from '../core/http.js';
-import type { EvidenceUploadRequest, CustomerContactCreateRequestDto as CustomerContactCreateRequest, CustomerCreateRequestDto as CustomerCreateRequest, LoginRequestDto as LoginRequest, QuoteCreateRequestDto as QuoteCreateRequest, RegisterRequestDto as RegisterRequest, ServiceOrderCreateRequestDto as ServiceOrderCreateRequest, ServiceOrderStatusUpdateRequestDto as ServiceOrderStatusUpdateRequest } from '@sdmx/contracts';
+import type {
+  ConfirmPurchaseRequestDto as ConfirmPurchaseRequest,
+  CreatePurchaseRequestDto as CreatePurchaseRequest,
+  CreateSupplierRequestDto as SupplierCreateRequest,
+  CustomerContactCreateRequestDto as CustomerContactCreateRequest,
+  CustomerCreateRequestDto as CustomerCreateRequest,
+  EvidenceUploadRequest,
+  InventoryMovementCreateRequestDto as InventoryMovementCreateRequest,
+  InventoryProductCreateRequestDto as InventoryProductCreateRequest,
+  InventoryProductUpdateRequestDto as InventoryProductUpdateRequest,
+  LoginRequestDto as LoginRequest,
+  QuoteCreateRequestDto as QuoteCreateRequest,
+  RegisterRequestDto as RegisterRequest,
+  ServiceOrderCreateRequestDto as ServiceOrderCreateRequest,
+  ServiceOrderStatusUpdateRequestDto as ServiceOrderStatusUpdateRequest,
+  UpdateSupplierRequestDto as SupplierUpdateRequest
+} from '@sdmx/contracts';
 
 import { logger } from '../core/logger.js';
 
@@ -206,6 +222,181 @@ export const handleApi = async (request: Request): Promise<Response> => {
       if (!token) return unauthorized();
       await appService.ensureActiveSubscription(token);
       return ok(await appService.listAuditEvents(token));
+    });
+  }
+
+  if (pathname === '/api/products' && method === 'GET') {
+    return safe(async () => {
+      const token = bearer(request);
+      if (!token) return unauthorized();
+      await appService.ensureActiveSubscription(token);
+      return ok(await appService.listInventoryProducts(token));
+    });
+  }
+
+  if (pathname === '/api/products' && method === 'POST') {
+    return safe(async () => {
+      const token = bearer(request);
+      if (!token) return unauthorized();
+      await appService.ensureActiveSubscription(token);
+      const body = await parseJson<InventoryProductCreateRequest>(request);
+      if (!body.tenantId || !body.sku || !body.name) return badRequest('VALIDATION_ERROR', 'tenantId, sku y name son obligatorios');
+      return ok(await appService.createInventoryProduct(token, body));
+    });
+  }
+
+  const productMatch = pathname.match(/^\/api\/products\/([^/]+)$/);
+  if (productMatch && method === 'PATCH') {
+    return safe(async () => {
+      const token = bearer(request);
+      if (!token) return unauthorized();
+      await appService.ensureActiveSubscription(token);
+      const body = await parseJson<InventoryProductUpdateRequest>(request);
+      return ok(await appService.updateInventoryProduct(token, productMatch[1], body));
+    });
+  }
+
+  const productMovements = pathname.match(/^\/api\/products\/([^/]+)\/movements$/);
+  if (productMovements && method === 'GET') {
+    return safe(async () => {
+      const token = bearer(request);
+      if (!token) return unauthorized();
+      await appService.ensureActiveSubscription(token);
+      return ok(await appService.listInventoryMovements(token, productMovements[1]));
+    });
+  }
+
+  const productKardex = pathname.match(/^\/api\/products\/([^/]+)\/kardex$/);
+  if (productKardex && method === 'GET') {
+    return safe(async () => {
+      const token = bearer(request);
+      if (!token) return unauthorized();
+      await appService.ensureActiveSubscription(token);
+      return ok(await appService.getInventoryKardex(token, productKardex[1]));
+    });
+  }
+
+  if (pathname === '/api/inventory/movements' && method === 'POST') {
+    return safe(async () => {
+      const token = bearer(request);
+      if (!token) return unauthorized();
+      await appService.ensureActiveSubscription(token);
+      const body = await parseJson<InventoryMovementCreateRequest>(request);
+      if (!body.tenantId || !body.productId || !body.movementType || !body.quantity) {
+        return badRequest('VALIDATION_ERROR', 'tenantId, productId, movementType y quantity son obligatorios');
+      }
+      return ok(await appService.createInventoryMovement(token, body));
+    });
+  }
+
+  if (pathname === '/api/inventory/movements' && method === 'GET') {
+    return safe(async () => {
+      const token = bearer(request);
+      if (!token) return unauthorized();
+      await appService.ensureActiveSubscription(token);
+      return ok(await appService.listInventoryMovements(token));
+    });
+  }
+
+  if (pathname === '/api/suppliers' && method === 'GET') {
+    return safe(async () => {
+      const token = bearer(request);
+      if (!token) return unauthorized();
+      await appService.ensureActiveSubscription(token);
+      return ok(await appService.listSuppliers(token));
+    });
+  }
+
+  if (pathname === '/api/suppliers' && method === 'POST') {
+    return safe(async () => {
+      const token = bearer(request);
+      if (!token) return unauthorized();
+      await appService.ensureActiveSubscription(token);
+      const body = await parseJson<SupplierCreateRequest>(request);
+      if (!body.tenantId || !body.name) return badRequest('VALIDATION_ERROR', 'tenantId y name son obligatorios');
+      return ok(await appService.createSupplier(token, body));
+    });
+  }
+
+  if (pathname === '/api/purchases' && method === 'GET') {
+    return safe(async () => {
+      const token = bearer(request);
+      if (!token) return unauthorized();
+      await appService.ensureActiveSubscription(token);
+      return ok(await appService.listPurchases(token));
+    });
+  }
+
+  if (pathname === '/api/purchases' && method === 'POST') {
+    return safe(async () => {
+      const token = bearer(request);
+      if (!token) return unauthorized();
+      await appService.ensureActiveSubscription(token);
+      const body = await parseJson<CreatePurchaseRequest>(request);
+      if (!body.supplierId || !Array.isArray(body.items) || body.items.length === 0) {
+        return badRequest('VALIDATION_ERROR', 'supplierId e items son obligatorios');
+      }
+      return ok(await appService.createPurchase(token, body));
+    });
+  }
+
+  const purchaseMatch = pathname.match(/^\/api\/purchases\/([^/]+)$/);
+  if (purchaseMatch && method === 'GET') {
+    return safe(async () => {
+      const token = bearer(request);
+      if (!token) return unauthorized();
+      await appService.ensureActiveSubscription(token);
+      return ok(await appService.getPurchaseById(token, purchaseMatch[1]));
+    });
+  }
+
+  const confirmPurchaseMatch = pathname.match(/^\/api\/purchases\/([^/]+)\/confirm$/);
+  if (confirmPurchaseMatch && method === 'POST') {
+    return safe(async () => {
+      const token = bearer(request);
+      if (!token) return unauthorized();
+      await appService.ensureActiveSubscription(token);
+      const body = await parseJson<ConfirmPurchaseRequest>(request).catch(() => null);
+      return ok(await appService.confirmPurchase(token, confirmPurchaseMatch[1], body ?? undefined));
+    });
+  }
+
+  const cancelPurchaseMatch = pathname.match(/^\/api\/purchases\/([^/]+)\/cancel$/);
+  if (cancelPurchaseMatch && method === 'POST') {
+    return safe(async () => {
+      const token = bearer(request);
+      if (!token) return unauthorized();
+      await appService.ensureActiveSubscription(token);
+      return ok(await appService.cancelPurchase(token, cancelPurchaseMatch[1]));
+    });
+  }
+
+  const supplierMatch = pathname.match(/^\/api\/suppliers\/([^/]+)$/);
+  if (supplierMatch && method === 'GET') {
+    return safe(async () => {
+      const token = bearer(request);
+      if (!token) return unauthorized();
+      await appService.ensureActiveSubscription(token);
+      return ok(await appService.getSupplierById(token, supplierMatch[1]));
+    });
+  }
+
+  if (supplierMatch && method === 'PATCH') {
+    return safe(async () => {
+      const token = bearer(request);
+      if (!token) return unauthorized();
+      await appService.ensureActiveSubscription(token);
+      const body = await parseJson<SupplierUpdateRequest>(request);
+      return ok(await appService.updateSupplier(token, supplierMatch[1], body));
+    });
+  }
+
+  if (supplierMatch && method === 'DELETE') {
+    return safe(async () => {
+      const token = bearer(request);
+      if (!token) return unauthorized();
+      await appService.ensureActiveSubscription(token);
+      return ok(await appService.deleteSupplier(token, supplierMatch[1]));
     });
   }
 

@@ -10,6 +10,7 @@ import {
   CreditCard,
   Home,
   LogOut,
+  ShoppingCart,
   ShieldCheck,
   Smartphone,
   Users,
@@ -21,6 +22,9 @@ import type { Session } from "@/lib/session";
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "/hub", label: "Hub Operativo", icon: ClipboardList },
+  { href: "/inventario", label: "Inventario", icon: Boxes },
+  { href: "/proveedores", label: "Proveedores", icon: Building2 },
+  { href: "/compras", label: "Compras", icon: ShoppingCart },
   { href: "/recepcion", label: "Recepción", icon: Smartphone },
   { href: "/tecnico", label: "Técnico", icon: Wrench },
   { href: "/clientes", label: "Clientes", icon: Users },

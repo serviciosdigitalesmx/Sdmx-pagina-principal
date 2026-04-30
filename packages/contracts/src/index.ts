@@ -214,3 +214,146 @@ export type EvidenceUploadRequest = {
   path: string;
   expiresInSeconds?: number;
 };
+
+export type InventoryProductDto = {
+  id: string;
+  tenant_id: string;
+  branch_id?: string | null;
+  sku: string;
+  name: string;
+  category?: string | null;
+  unit_cost_mxn?: number | null;
+  sale_price_mxn?: number | null;
+  current_stock: number;
+  min_stock: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type InventoryProductCreateRequestDto = {
+  tenantId: string;
+  branchId?: string | null;
+  sku: string;
+  name: string;
+  category?: string | null;
+  unitCostMxn?: number | null;
+  salePriceMxn?: number | null;
+  minStock?: number | null;
+};
+
+export type InventoryProductUpdateRequestDto = {
+  sku?: string;
+  name?: string;
+  category?: string | null;
+  unitCostMxn?: number | null;
+  salePriceMxn?: number | null;
+  minStock?: number | null;
+  isActive?: boolean;
+};
+
+export type InventoryMovementTypeDto = "in" | "out" | "adjustment" | "transfer";
+
+export type InventoryMovementDto = {
+  id: string;
+  tenant_id: string;
+  branch_id?: string | null;
+  product_id: string;
+  movement_type: InventoryMovementTypeDto;
+  quantity: number;
+  unit_cost_mxn?: number | null;
+  reference_type?: string | null;
+  reference_id?: string | null;
+  note?: string | null;
+  created_at: string;
+};
+
+export type InventoryMovementCreateRequestDto = {
+  tenantId: string;
+  branchId?: string | null;
+  productId: string;
+  movementType: InventoryMovementTypeDto;
+  quantity: number;
+  unitCostMxn?: number | null;
+  referenceType?: string | null;
+  referenceId?: string | null;
+  note?: string | null;
+};
+
+export type InventoryKardexEntryDto = {
+  movement: InventoryMovementDto;
+  product: InventoryProductDto;
+  balance: number;
+};
+
+export type SupplierDto = {
+  id: string;
+  tenant_id: string;
+  name: string;
+  contact_name?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  address?: string | null;
+  notes?: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type CreateSupplierRequestDto = {
+  tenantId: string;
+  name: string;
+  contactName?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  address?: string | null;
+  notes?: string | null;
+};
+
+export type UpdateSupplierRequestDto = {
+  name?: string;
+  contactName?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  address?: string | null;
+  notes?: string | null;
+};
+
+export type PurchaseOrderStatusDto = 'draft' | 'confirmed' | 'cancelled';
+
+export type PurchaseItemDto = {
+  id: string;
+  tenant_id: string;
+  purchase_order_id: string;
+  product_id: string;
+  quantity: number;
+  unit_cost_cents: number;
+  total_cost_cents: number;
+  created_at: string;
+};
+
+export type PurchaseOrderDto = {
+  id: string;
+  tenant_id: string;
+  supplier_id: string;
+  status: PurchaseOrderStatusDto;
+  total_amount_cents: number;
+  currency: string;
+  notes?: string | null;
+  created_at: string;
+  updated_at: string;
+  items?: PurchaseItemDto[];
+};
+
+export type CreatePurchaseRequestDto = {
+  supplierId: string;
+  notes?: string | null;
+  items: Array<{
+    productId: string;
+    quantity: number;
+    unitCostCents: number;
+  }>;
+};
+
+export type ConfirmPurchaseRequestDto = {
+  tenantId: string;
+};
