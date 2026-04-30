@@ -56,7 +56,7 @@ export default function RegisterPage() {
     try {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       if (!supabaseUrl) throw new Error('NEXT_PUBLIC_SUPABASE_URL no definido');
-      const redirectTo = `${window.location.origin}/dashboard`;
+      const redirectTo = `${window.location.origin}/auth/callback`;
       const oauthUrl = new URL(`${supabaseUrl.replace(/\/$/, '')}/auth/v1/authorize`);
       oauthUrl.searchParams.set('provider', 'google');
       oauthUrl.searchParams.set('redirect_to', redirectTo);
