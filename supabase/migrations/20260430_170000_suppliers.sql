@@ -11,6 +11,9 @@ create table if not exists public.suppliers (
   updated_at timestamptz not null default now()
 );
 
+create unique index if not exists suppliers_tenant_name_unique_idx
+  on public.suppliers (tenant_id, lower(name));
+
 create index if not exists suppliers_tenant_id_idx
   on public.suppliers (tenant_id);
 
