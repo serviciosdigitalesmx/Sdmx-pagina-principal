@@ -17,6 +17,7 @@ const envSchema = z.object({
   SRFIX_INTERNAL_API_KEY: z.string().optional(),
   API_VERSION: z.string().optional(),
   ALLOWED_ORIGINS: z.string().optional(),
+  CORS_ALLOWED_ORIGINS: z.string().optional(),
   ORDER_DOCUMENTS_BUCKET: z.string().optional(),
   EVIDENCE_IMAGES_BUCKET: z.string().optional(),
   TRUST_PROXY: z.coerce.number().int().optional()

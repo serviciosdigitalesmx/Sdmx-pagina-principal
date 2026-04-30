@@ -25,7 +25,8 @@ import { webhooksRouter } from "./routes/webhooks.js";
 
 const app = express();
 
-const allowedOrigins = env.ALLOWED_ORIGINS?.split(",").map((origin) => origin.trim()).filter(Boolean) ?? [];
+const allowedOrigins =
+  (env.ALLOWED_ORIGINS ?? env.CORS_ALLOWED_ORIGINS)?.split(",").map((origin) => origin.trim()).filter(Boolean) ?? [];
 
 if (env.TRUST_PROXY) {
   app.set("trust proxy", env.TRUST_PROXY);
