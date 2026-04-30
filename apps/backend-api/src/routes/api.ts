@@ -511,6 +511,36 @@ export const handleApi = async (request: Request): Promise<Response> => {
     });
   }
 
+  if (pathname === '/api/finance/summary' && method === 'GET') {
+    return safe(async () => {
+      const { from, to } = parseReportRange(url);
+      const token = bearer(request);
+      if (!token) return unauthorized();
+      await appService.ensureActiveSubscription(token);
+      return ok(await appService.financeSummary(token, from, to));
+    });
+  }
+
+  if (pathname === '/api/finance/monthly' && method === 'GET') {
+    return safe(async () => {
+      const { from, to } = parseReportRange(url);
+      const token = bearer(request);
+      if (!token) return unauthorized();
+      await appService.ensureActiveSubscription(token);
+      return ok(await appService.financeMonthly(token, from, to));
+    });
+  }
+
+  if (pathname === '/api/finance/transactions' && method === 'GET') {
+    return safe(async () => {
+      const { from, to } = parseReportRange(url);
+      const token = bearer(request);
+      if (!token) return unauthorized();
+      await appService.ensureActiveSubscription(token);
+      return ok(await appService.financeTransactions(token, from, to));
+    });
+  }
+
   if (pathname === '/api/admin/forbidden') return forbidden('Sin permisos');
   return notFound();
 };

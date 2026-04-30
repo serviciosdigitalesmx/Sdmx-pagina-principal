@@ -1,6 +1,7 @@
 import { authService } from '../services/auth.service.js';
 import { billingService } from '../services/billing.service.js';
 import { expensesService } from '../services/expenses.service.js';
+import { financeService } from '../services/finance.service.js';
 import { inventoryService } from '../services/inventory.service.js';
 import { customersService } from '../services/customers.service.js';
 import { quotesService } from '../services/quotes.service.js';
@@ -35,6 +36,9 @@ import type {
   CreateExpenseRequestDto,
   ExpenseCategoryDto,
   ExpenseDto,
+  FinanceMonthlyDto,
+  FinanceSummaryDto,
+  FinanceTransactionDto,
   FinanceReportDto,
   InventoryReportDto,
   OperationsReportDto,
@@ -95,6 +99,12 @@ export const appService = {
   getExpenseById: (token: string, expenseId: string): Promise<ExpenseDto> => expensesService.getExpenseById(token, expenseId),
   createExpense: (token: string, request: CreateExpenseRequestDto): Promise<ExpenseDto> => expensesService.createExpense(token, request),
   deleteExpense: (token: string, expenseId: string): Promise<{ deleted: true }> => expensesService.deleteExpense(token, expenseId),
+  financeSummary: (token: string, from?: string | null, to?: string | null): Promise<FinanceSummaryDto> =>
+    financeService.summary(token, { from, to }),
+  financeMonthly: (token: string, from?: string | null, to?: string | null): Promise<FinanceMonthlyDto> =>
+    financeService.monthly(token, { from, to }),
+  financeTransactions: (token: string, from?: string | null, to?: string | null): Promise<FinanceTransactionDto[]> =>
+    financeService.transactions(token, { from, to }),
   operationsReport: (token: string, from?: string | null, to?: string | null): Promise<OperationsReportDto> =>
     reportsService.operations(token, { from, to }),
   financeReport: (token: string, from?: string | null, to?: string | null): Promise<FinanceReportDto> =>

@@ -28,6 +28,7 @@ const navItems = [
   { href: "/compras", label: "Compras", icon: ShoppingCart },
   { href: "/gastos", label: "Gastos", icon: Receipt },
   { href: "/reportes", label: "Reportes", icon: BarChart3 },
+  { href: "/finanzas", label: "Finanzas", icon: CreditCard },
   { href: "/recepcion", label: "Recepción", icon: Smartphone },
   { href: "/tecnico", label: "Técnico", icon: Wrench },
   { href: "/clientes", label: "Clientes", icon: Users },

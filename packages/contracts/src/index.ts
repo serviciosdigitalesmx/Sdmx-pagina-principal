@@ -448,3 +448,44 @@ export type PurchasesExpensesReportDto = {
   purchasesBySupplier: Array<{ supplier_id: string; supplier_name: string; count: number; total_amount_cents: number }>;
   expensesByCategory: Array<{ category_id: string; category_name: string; count: number; total_amount_cents: number }>;
 };
+
+export type FinanceTransactionTypeDto = 'revenue' | 'expense' | 'purchase' | 'receivable';
+
+export type FinanceTransactionDto = {
+  id: string;
+  type: FinanceTransactionTypeDto;
+  source: string;
+  reference_id?: string | null;
+  description: string;
+  amount_cents: number;
+  currency: string;
+  date: string;
+  category?: string | null;
+};
+
+export type FinanceSummaryDto = {
+  range: ReportDateRangeDto;
+  totalIncomeCents: number;
+  totalExpensesCents: number;
+  totalPurchasesCents: number;
+  accountsReceivableCents: number;
+  balanceCents: number;
+  revenueSource: 'quotations.total_mxn' | 'service_orders.estimated_cost' | 'mixed' | 'none';
+  notes: string[];
+};
+
+export type FinanceMonthlyDto = {
+  range: ReportDateRangeDto;
+  months: Array<{
+    month: string;
+    incomeCents: number;
+    expensesCents: number;
+    purchasesCents: number;
+    receivablesCents: number;
+    balanceCents: number;
+  }>;
+};
+
+export type FinanceSummaryRequestDto = ReportDateRangeDto;
+export type FinanceMonthlyRequestDto = ReportDateRangeDto;
+export type FinanceTransactionsRequestDto = ReportDateRangeDto;
