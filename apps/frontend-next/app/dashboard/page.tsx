@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 
 export default function Dashboard() {
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<any>(null);
   const router = useRouter();
 
   useEffect(() => {
