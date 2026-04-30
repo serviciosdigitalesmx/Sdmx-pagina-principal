@@ -3,6 +3,8 @@ import { badRequest, bearer, forbidden, notFound, ok, parseJson, unauthorized } 
 import type {
   ConfirmPurchaseRequestDto as ConfirmPurchaseRequest,
   CreatePurchaseRequestDto as CreatePurchaseRequest,
+  CreateExpenseCategoryRequestDto as CreateExpenseCategoryRequest,
+  CreateExpenseRequestDto as CreateExpenseRequest,
   CreateSupplierRequestDto as SupplierCreateRequest,
   CustomerContactCreateRequestDto as CustomerContactCreateRequest,
   CustomerCreateRequestDto as CustomerCreateRequest,
@@ -397,6 +399,67 @@ export const handleApi = async (request: Request): Promise<Response> => {
       if (!token) return unauthorized();
       await appService.ensureActiveSubscription(token);
       return ok(await appService.deleteSupplier(token, supplierMatch[1]));
+    });
+  }
+
+  if (pathname === '/api/expense-categories' && method === 'GET') {
+    return safe(async () => {
+      const token = bearer(request);
+      if (!token) return unauthorized();
+      await appService.ensureActiveSubscription(token);
+      return ok(await appService.listExpenseCategories(token));
+    });
+  }
+
+  if (pathname === '/api/expense-categories' && method === 'POST') {
+    return safe(async () => {
+      const token = bearer(request);
+      if (!token) return unauthorized();
+      await appService.ensureActiveSubscription(token);
+      const body = await parseJson<CreateExpenseCategoryRequest>(request);
+      if (!body.tenantId || !body.name) return badRequest('VALIDATION_ERROR', 'tenantId y name son obligatorios');
+      return ok(await appService.createExpenseCategory(token, body));
+    });
+  }
+
+  if (pathname === '/api/expenses' && method === 'GET') {
+    return safe(async () => {
+      const token = bearer(request);
+      if (!token) return unauthorized();
+      await appService.ensureActiveSubscription(token);
+      return ok(await appService.listExpenses(token));
+    });
+  }
+
+  if (pathname === '/api/expenses' && method === 'POST') {
+    return safe(async () => {
+      const token = bearer(request);
+      if (!token) return unauthorized();
+      await appService.ensureActiveSubscription(token);
+      const body = await parseJson<CreateExpenseRequest>(request);
+      if (!body.tenantId || !body.categoryId || !body.description || body.amountCents === undefined) {
+        return badRequest('VALIDATION_ERROR', 'tenantId, categoryId, description y amountCents son obligatorios');
+      }
+      return ok(await appService.createExpense(token, body));
+    });
+  }
+
+  const expenseMatch = pathname.match(/^\/api\/expenses\/([^/]+)$/);
+  if (expenseMatch && method === 'GET') {
+    return safe(async () => {
+      const token = bearer(request);
+      if (!token) return unauthorized();
+      await appService.ensureActiveSubscription(token);
+      return ok(await appService.getExpenseById(token, expenseMatch[1]));
+    });
+  }
+
+  if (expenseMatch && method === 'DELETE') {
+    return safe(async () => {
+      const token = bearer(request);
+      if (!token) return unauthorized();
+      await appService.ensureActiveSubscription(token);
+      return ok(await appService.deleteExpense(token, expenseMatch[1]));
     });
   }
 

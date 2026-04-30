@@ -357,3 +357,44 @@ export type CreatePurchaseRequestDto = {
 export type ConfirmPurchaseRequestDto = {
   tenantId: string;
 };
+
+export type ExpenseCategoryDto = {
+  id: string;
+  tenant_id: string;
+  name: string;
+  description?: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type CreateExpenseCategoryRequestDto = {
+  tenantId: string;
+  name: string;
+  description?: string | null;
+};
+
+export type ExpenseDto = {
+  id: string;
+  tenant_id: string;
+  category_id: string;
+  expense_date: string;
+  description: string;
+  amount_cents: number;
+  payment_method: string;
+  reference?: string | null;
+  notes?: string | null;
+  created_at: string;
+  updated_at: string;
+  category?: ExpenseCategoryDto;
+};
+
+export type CreateExpenseRequestDto = {
+  tenantId: string;
+  categoryId: string;
+  expenseDate?: string;
+  description: string;
+  amountCents: number;
+  paymentMethod?: string;
+  reference?: string | null;
+  notes?: string | null;
+};

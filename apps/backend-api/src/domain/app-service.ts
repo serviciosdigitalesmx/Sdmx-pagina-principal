@@ -1,5 +1,6 @@
 import { authService } from '../services/auth.service.js';
 import { billingService } from '../services/billing.service.js';
+import { expensesService } from '../services/expenses.service.js';
 import { inventoryService } from '../services/inventory.service.js';
 import { customersService } from '../services/customers.service.js';
 import { quotesService } from '../services/quotes.service.js';
@@ -29,6 +30,10 @@ import type {
   QuoteDto,
   ConfirmPurchaseRequestDto,
   CreatePurchaseRequestDto,
+  CreateExpenseCategoryRequestDto,
+  CreateExpenseRequestDto,
+  ExpenseCategoryDto,
+  ExpenseDto,
   PurchaseItemDto,
   PurchaseOrderDto,
   RegisterRequestDto,
@@ -78,6 +83,13 @@ export const appService = {
     purchasesService.confirmPurchase(token, purchaseOrderId, request),
   cancelPurchase: (token: string, purchaseOrderId: string): Promise<PurchaseOrderDto> =>
     purchasesService.cancelPurchase(token, purchaseOrderId),
+  listExpenseCategories: (token: string): Promise<ExpenseCategoryDto[]> => expensesService.listCategories(token),
+  createExpenseCategory: (token: string, request: CreateExpenseCategoryRequestDto): Promise<ExpenseCategoryDto> =>
+    expensesService.createCategory(token, request),
+  listExpenses: (token: string): Promise<ExpenseDto[]> => expensesService.listExpenses(token),
+  getExpenseById: (token: string, expenseId: string): Promise<ExpenseDto> => expensesService.getExpenseById(token, expenseId),
+  createExpense: (token: string, request: CreateExpenseRequestDto): Promise<ExpenseDto> => expensesService.createExpense(token, request),
+  deleteExpense: (token: string, expenseId: string): Promise<{ deleted: true }> => expensesService.deleteExpense(token, expenseId),
   listAuditEvents: async (token: string): Promise<Array<{ id: string }>> => {
     const session = await authService.sessionFromToken(token);
     const tenantId = String(session.shop.id);
