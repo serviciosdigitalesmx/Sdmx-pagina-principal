@@ -49,6 +49,7 @@ app.use(
 );
 
 app.use("/health", healthRouter);
+app.use("/api/health", healthRouter);
 app.use("/api/setup", setupRouter);
 app.use("/v1/setup", setupRouter);
 app.use("/v1/webhooks", webhooksRouter);
