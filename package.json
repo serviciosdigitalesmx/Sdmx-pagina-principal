@@ -1,18 +1,18 @@
 {
-  "name": "sdmx-monorepo",
+  "name": "sdmx",
   "private": true,
-  "packageManager": "npm@10.8.2",
+  "version": "0.1.0",
   "workspaces": [
-    "apps/*",
-    "packages/*"
+    "apps/*"
   ],
   "scripts": {
-    "dev": "turbo run dev",
-    "build": "turbo run build",
-    "dev:frontend": "turbo run dev --filter=sdmx-frontend-next",
-    "dev:backend": "turbo run dev --filter=backend-api"
+    "dev": "concurrently -n web,api -c cyan,magenta \"pnpm --dir apps/web dev\" \"pnpm --dir apps/backend-api dev\"",
+    "build": "pnpm --dir apps/web build && pnpm --dir apps/backend-api build",
+    "lint": "pnpm --dir apps/web lint && pnpm --dir apps/backend-api lint",
+    "e2e:selenium": "node scripts/e2e-selenium.mjs"
   },
   "devDependencies": {
-    "turbo": "^2.9.6"
+    "concurrently": "^9.0.1",
+    "selenium-webdriver": "^4.31.0"
   }
 }

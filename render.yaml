@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: sdmx-backend-api
+    env: node
+    plan: starter
+    rootDir: apps/backend-api
+    buildCommand: pnpm install --frozen-lockfile && pnpm build
+    startCommand: pnpm start
+    autoDeploy: true
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: TRUST_PROXY
+        value: 1
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: NEXT_PUBLIC_APP_URL
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: MERCADOPAGO_ACCESS_TOKEN
+        sync: false
+      - key: MERCADOPAGO_BASE_URL
+        sync: false
+      - key: MERCADOPAGO_PUBLIC_KEY
+        sync: false
+      - key: MERCADOPAGO_SUPPORT_PHONE
+        sync: false
+      - key: MERCADOPAGO_WEBHOOK_BASE_URL
+        sync: false
+      - key: SRFIX_INTERNAL_API_KEY
+        sync: false
+      - key: API_VERSION
+        sync: false
