@@ -7,6 +7,7 @@ function tenantSlugFromHost(host: string | null) {
   if (!host) return null;
   const normalized = (host.split(":")[0] ?? "").toLowerCase();
   if (normalized === "localhost" || normalized === "127.0.0.1") return null;
+  if (normalized.endsWith(".vercel.app")) return null;
   const parts = normalized.split(".");
   if (parts.length < 3) return null;
   const [subdomain] = parts;
