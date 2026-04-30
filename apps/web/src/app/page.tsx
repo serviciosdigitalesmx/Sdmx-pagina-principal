@@ -39,7 +39,23 @@ export default function HomePage() {
 
   return (
     <main className="shell landing-shell">
-      <section className="hero hero-grid">
+      <header className="topbar">
+        <div className="topbar-brand">
+          <span className="brand-mark">S</span>
+          <div>
+            <strong>SDMX</strong>
+            <div className="muted">Software de gestión para talleres</div>
+          </div>
+        </div>
+        <nav className="topbar-nav" aria-label="Navegación principal">
+          <a href="/pricing">Planes</a>
+          <a href="/hub">Hub</a>
+          <a href="/consultar">Portal</a>
+          <a href="/login" className="topbar-cta">Entrar</a>
+        </nav>
+      </header>
+
+      <section className="hero hero-grid hero-premium">
         <div className="hero-copy">
           <div className="eyebrow-row">
             <p className="eyebrow">SDMX</p>
