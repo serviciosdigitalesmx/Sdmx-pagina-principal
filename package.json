@@ -10,7 +10,10 @@
     "dev": "turbo run dev",
     "build": "turbo run build",
     "dev:frontend": "turbo run dev --filter=sdmx-frontend-next",
-    "dev:backend": "turbo run dev --filter=backend-api"
+    "dev:backend": "turbo run dev --filter=backend-api",
+    "audit:source-of-truth": "bash scripts/audit-source-of-truth.sh",
+    "audit:auth-boundaries": "bash scripts/audit-auth-boundaries.sh",
+    "audit:production-bundle": "bash scripts/audit-production-bundle.sh"
   },
   "devDependencies": {
     "turbo": "^2.9.6"
