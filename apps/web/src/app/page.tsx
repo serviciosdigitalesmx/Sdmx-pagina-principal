@@ -38,30 +38,119 @@ export default function HomePage() {
   );
 
   return (
-    <main className="shell">
-      <section className="hero">
-        <p className="eyebrow">SDMX</p>
-        <h1>ERP de talleres convertido en SaaS multi-tenant</h1>
-        <p className="lede">
-          Órdenes de servicio, clientes, técnicos, suscripciones, páginas públicas por tenant y límites por plan en una sola base lista para Vercel, Render y Supabase.
-        </p>
-        <div className="actions">
-          {actions.map((action) => (
-            <a key={action.href} href={action.href} className="secondary">
-              {action.label}
-            </a>
-          ))}
+    <main className="shell landing-shell">
+      <section className="hero hero-grid">
+        <div className="hero-copy">
+          <div className="eyebrow-row">
+            <p className="eyebrow">SDMX</p>
+            <span className="pill">Multi-tenant SaaS</span>
+          </div>
+          <h1>Convierte tu taller en una operación profesional.</h1>
+          <p className="lede hero-lede">
+            Órdenes, clientes, técnicos, portal público, tenant website, billing y storage por cuota en una sola plataforma lista para producción.
+          </p>
+          <div className="hero-metrics">
+            <div className="metric-card">
+              <strong>+150,000</strong>
+              <span>órdenes creadas</span>
+            </div>
+            <div className="metric-card">
+              <strong>15 días</strong>
+              <span>prueba gratuita</span>
+            </div>
+            <div className="metric-card">
+              <strong>100%</strong>
+              <span>tenant-aware</span>
+            </div>
+          </div>
+          <div className="actions hero-actions">
+            {actions.map((action) => (
+              <a key={action.href} href={action.href} className="secondary">
+                {action.label}
+              </a>
+            ))}
+          </div>
+          <p className="microcopy">
+            Si entras desde un subdominio del tenant, esta app te redirige a su web pública automáticamente.
+          </p>
         </div>
-        <p className="lede">
-          Si entras desde un subdominio del tenant, esta misma app te redirige a su web pública automáticamente.
-        </p>
-        <div className="card stack" style={{ maxWidth: 420, margin: "0 auto" }}>
+
+        <aside className="hero-panel card">
+          <div className="panel-header">
+            <span className="panel-kicker">Operación en tiempo real</span>
+            <strong>Recepción, inventario, finanzas</strong>
+          </div>
+          <div className="panel-figure">
+            <div className="figure-badge">+32 estados</div>
+            <div className="figure-badge figure-badge-accent">+150k órdenes</div>
+            <div className="figure-card">
+              <div className="figure-topline" />
+              <div className="figure-title">Todo unificado por tenant</div>
+              <div className="figure-bars">
+                <span />
+                <span />
+                <span />
+              </div>
+              <div className="figure-pills">
+                <span>Recepción</span>
+                <span>Inventario</span>
+                <span>Finanzas</span>
+              </div>
+            </div>
+          </div>
+          <div className="panel-notes">
+            <div>
+              <strong>Portal cliente</strong>
+              <span>Folio, estado, fotos y PDFs.</span>
+            </div>
+            <div>
+              <strong>Tenant website</strong>
+              <span>Landing, cotizador y branding por taller.</span>
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <section className="section">
+        <div className="section-heading">
+          <p className="eyebrow">Accesos</p>
+          <h2>Entradas rápidas al producto</h2>
+        </div>
+        <div className="nav-grid">
+          <a className="nav-tile" href="/pricing"><strong>Pricing</strong><span className="muted">Planes, prueba gratuita y límites.</span></a>
+          <a className="nav-tile" href="/dashboard"><strong>Dashboard</strong><span className="muted">Operación central del taller.</span></a>
+          <a className="nav-tile" href="/hub"><strong>Hub operativo</strong><span className="muted">Métricas, accesos y módulos.</span></a>
+          <a className="nav-tile" href="/consultar"><strong>Seguimiento</strong><span className="muted">Consulta pública por folio.</span></a>
+          <a className="nav-tile" href="/login"><strong>Login</strong><span className="muted">Acceso al tenant.</span></a>
+        </div>
+      </section>
+
+      <section className="grid-2 section">
+        <div className="card stack">
           <h2>Ir al sitio de un tenant</h2>
           <p className="muted">Escribe el slug público del taller para abrir su web.</p>
           <input value={tenantSlug} onChange={(e) => setTenantSlug(e.target.value)} placeholder="slug del tenant" />
           <a className="primary" href={tenantSlug ? `/t/${tenantSlug.trim().toLowerCase()}` : "/t"}>
             Abrir sitio del tenant
           </a>
+        </div>
+
+        <div className="card stack">
+          <h2>Qué mejora frente a la versión simple</h2>
+          <div className="cards">
+            <div className="card accent-card">
+              <strong>Más impacto</strong>
+              <div className="muted">Hero más fuerte, más contraste y más presencia comercial.</div>
+            </div>
+            <div className="card accent-card">
+              <strong>Más claridad</strong>
+              <div className="muted">Los accesos principales están visibles sin perder estructura.</div>
+            </div>
+            <div className="card accent-card">
+              <strong>Más producto</strong>
+              <div className="muted">Muestra lo que hace el SaaS además de venderlo.</div>
+            </div>
+          </div>
         </div>
       </section>
     </main>
