@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -15,6 +16,12 @@ function tenantSlugFromHost(host: string | null) {
   return subdomain;
 }
 
+const tenantExamples = [
+  { slug: "taller-alfa", name: "Taller Alfa", status: "Recepción activa" },
+  { slug: "taller-beta", name: "Taller Beta", status: "Inventario y compras" },
+  { slug: "taller-gamma", name: "Taller Gamma", status: "Portal público" },
+];
+
 export default function HomePage() {
   const router = useRouter();
   const [tenantSlug, setTenantSlug] = useState("");
@@ -26,13 +33,53 @@ export default function HomePage() {
     }
   }, [router]);
 
-  const actions = useMemo(
+  const quickAccess = useMemo(
     () => [
-      { href: "/pricing", label: "Ver pricing" },
-      { href: "/dashboard", label: "Ir al dashboard" },
-      { href: "/hub", label: "Hub operativo" },
-      { href: "/consultar", label: "Seguimiento público" },
+      { href: "/pricing", label: "Planes" },
+      { href: "/dashboard", label: "Dashboard" },
+      { href: "/hub", label: "Hub" },
+      { href: "/consultar", label: "Consultar" },
       { href: "/login", label: "Login" },
+    ],
+    [],
+  );
+
+  const howItWorks = useMemo(
+    () => [
+      {
+        title: "Crea el taller",
+        body: "Define nombre, branding y parámetros operativos. El tenant queda listo con su espacio y sus reglas.",
+      },
+      {
+        title: "Activa su sitio público",
+        body: "Cada taller obtiene su propia página pública en /t/[slug] para mostrar servicios, contacto y cotizador.",
+      },
+      {
+        title: "Gestiona desde un solo panel",
+        body: "Alterna entre talleres sin mezclar datos. Operas órdenes, inventario y billing desde una sola cuenta.",
+      },
+    ],
+    [],
+  );
+
+  const differentiators = useMemo(
+    () => [
+      {
+        title: "Panel para varios talleres",
+        body: "Unifica la operación sin duplicar estructura ni perder control por tenant.",
+      },
+      {
+        title: "Sitios públicos por taller",
+        body: "Cada negocio tiene su landing, su branding y su acceso a portal.",
+      },
+      {
+        title: "Roles y permisos",
+        body: "Define quién ve, quién cobra y quién opera en cada taller.",
+      },
+      {
+        title: "Métricas unificadas",
+        body: "Visión rápida de órdenes, inventario, soporte y billing en un solo lugar.",
+      },
     ],
     [],
   );
@@ -49,8 +96,8 @@ export default function HomePage() {
         </div>
         <nav className="topbar-nav" aria-label="Navegación principal">
           <a href="/pricing">Planes</a>
+          <a href="/dashboard">Dashboard</a>
           <a href="/hub">Hub</a>
-          <a href="/consultar">Portal</a>
           <a href="/login" className="topbar-cta">Entrar</a>
         </nav>
       </header>
@@ -61,44 +108,44 @@ export default function HomePage() {
             <p className="eyebrow">SDMX</p>
             <span className="pill">Multi-tenant SaaS</span>
           </div>
-          <h1>Convierte tu taller en una operación profesional.</h1>
+          <h1>Cada taller bajo control, desde un solo lugar.</h1>
           <p className="lede hero-lede">
-            Órdenes, clientes, técnicos, portal público, tenant website, billing y storage por cuota en una sola plataforma lista para producción.
+            SDMX unifica la operación de talleres con tenant websites, portal público, billing, storage por cuota y un panel listo para producción.
           </p>
+          <div className="hero-actions">
+            <Link href="/pricing" className="primary">
+              Ver planes y empezar
+            </Link>
+            <Link href="/login" className="secondary">
+              Acceder a mi panel
+            </Link>
+          </div>
+          <p className="microcopy">Sin tarjeta de crédito · Configura tu primer taller en menos de 2 minutos</p>
+
           <div className="hero-metrics">
             <div className="metric-card">
-              <strong>+150,000</strong>
-              <span>órdenes creadas</span>
+              <strong>Prueba gratis</strong>
+              <span>15 días con acceso completo</span>
             </div>
             <div className="metric-card">
-              <strong>15 días</strong>
-              <span>prueba gratuita</span>
+              <strong>Tenant-aware</strong>
+              <span>Datos aislados por taller</span>
             </div>
             <div className="metric-card">
-              <strong>100%</strong>
-              <span>tenant-aware</span>
+              <strong>Panel real</strong>
+              <span>Órdenes, clientes y billing</span>
             </div>
           </div>
-          <div className="actions hero-actions">
-            {actions.map((action) => (
-              <a key={action.href} href={action.href} className="secondary">
-                {action.label}
-              </a>
-            ))}
-          </div>
-          <p className="microcopy">
-            Si entras desde un subdominio del tenant, esta app te redirige a su web pública automáticamente.
-          </p>
         </div>
 
         <aside className="hero-panel card">
           <div className="panel-header">
-            <span className="panel-kicker">Operación en tiempo real</span>
-            <strong>Recepción, inventario, finanzas</strong>
+            <span className="panel-kicker">Vista real del panel de operaciones</span>
+            <strong>Recepción, inventario y finanzas</strong>
           </div>
           <div className="panel-figure">
-            <div className="figure-badge">+32 estados</div>
-            <div className="figure-badge figure-badge-accent">+150k órdenes</div>
+            <div className="figure-badge">Tenant: SR FIX</div>
+            <div className="figure-badge figure-badge-accent">+32 estados</div>
             <div className="figure-card">
               <div className="figure-topline" />
               <div className="figure-title">Todo unificado por tenant</div>
@@ -133,42 +180,108 @@ export default function HomePage() {
           <h2>Entradas rápidas al producto</h2>
         </div>
         <div className="nav-grid">
-          <a className="nav-tile" href="/pricing"><strong>Pricing</strong><span className="muted">Planes, prueba gratuita y límites.</span></a>
-          <a className="nav-tile" href="/dashboard"><strong>Dashboard</strong><span className="muted">Operación central del taller.</span></a>
-          <a className="nav-tile" href="/hub"><strong>Hub operativo</strong><span className="muted">Métricas, accesos y módulos.</span></a>
-          <a className="nav-tile" href="/consultar"><strong>Seguimiento</strong><span className="muted">Consulta pública por folio.</span></a>
-          <a className="nav-tile" href="/login"><strong>Login</strong><span className="muted">Acceso al tenant.</span></a>
+          {quickAccess.map((item) => (
+            <a key={item.href} className="nav-tile" href={item.href}>
+              <strong>{item.label}</strong>
+              <span className="muted">
+                {item.href === "/pricing" && "Planes, prueba gratuita y límites."}
+                {item.href === "/dashboard" && "Operación central del taller."}
+                {item.href === "/hub" && "Métricas, accesos y módulos."}
+                {item.href === "/consultar" && "Consulta pública por folio."}
+                {item.href === "/login" && "Acceso al tenant."}
+              </span>
+            </a>
+          ))}
         </div>
       </section>
 
       <section className="grid-2 section">
         <div className="card stack">
-          <h2>Ir al sitio de un tenant</h2>
-          <p className="muted">Escribe el slug público del taller para abrir su web.</p>
-          <input value={tenantSlug} onChange={(e) => setTenantSlug(e.target.value)} placeholder="slug del tenant" />
-          <a className="primary" href={tenantSlug ? `/t/${tenantSlug.trim().toLowerCase()}` : "/t"}>
-            Abrir sitio del tenant
-          </a>
+          <div>
+            <p className="eyebrow-subtle">Cómo funciona</p>
+            <h2>Multitenancy real, sin duplicar operación.</h2>
+          </div>
+          <div className="cards">
+            {howItWorks.map((step, index) => (
+              <div key={step.title} className="card accent-card">
+                <div className="eyebrow-subtle">0{index + 1}</div>
+                <strong>{step.title}</strong>
+                <div className="muted">{step.body}</div>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="card stack">
-          <h2>Qué mejora frente a la versión simple</h2>
+          <div>
+            <p className="eyebrow-subtle">Tenant website</p>
+            <h2>Abre un sitio público por taller.</h2>
+            <p className="muted">Usa el slug real del negocio para entrar a su landing pública y cotizador.</p>
+          </div>
+          <input
+            value={tenantSlug}
+            onChange={(e) => setTenantSlug(e.target.value)}
+            placeholder="slug del tenant"
+          />
+          <a className="primary" href={tenantSlug ? `/t/${tenantSlug.trim().toLowerCase()}` : "/t"}>
+            Abrir sitio del tenant
+          </a>
           <div className="cards">
-            <div className="card accent-card">
-              <strong>Más impacto</strong>
-              <div className="muted">Hero más fuerte, más contraste y más presencia comercial.</div>
-            </div>
-            <div className="card accent-card">
-              <strong>Más claridad</strong>
-              <div className="muted">Los accesos principales están visibles sin perder estructura.</div>
-            </div>
-            <div className="card accent-card">
-              <strong>Más producto</strong>
-              <div className="muted">Muestra lo que hace el SaaS además de venderlo.</div>
-            </div>
+            {tenantExamples.map((tenant) => (
+              <div key={tenant.slug} className="card accent-card">
+                <strong>{tenant.name}</strong>
+                <div className="muted">{tenant.status}</div>
+                <div className="muted">/t/{tenant.slug}</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
+
+      <section className="section">
+        <div className="section-heading">
+          <p className="eyebrow">Diferenciadores</p>
+          <h2>Más que marketing: control real.</h2>
+        </div>
+        <div className="cards">
+          {differentiators.map((item) => (
+            <div key={item.title} className="card accent-card">
+              <strong>{item.title}</strong>
+              <div className="muted">{item.body}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="section card stack" style={{ textAlign: "center" }}>
+        <p className="eyebrow-subtle">Empieza ahora</p>
+        <h2>Levanta tu primer taller gratis y súbelo cuando crezcas.</h2>
+        <p className="muted">
+          Todos los planes incluyen tenant websites, portal público y panel multi-taller.
+        </p>
+        <div className="actions" style={{ justifyContent: "center" }}>
+          <Link href="/pricing" className="primary">
+            Ver planes y empezar
+          </Link>
+          <Link href="/consultar" className="secondary">
+            Rastrear una orden
+          </Link>
+        </div>
+      </section>
+
+      <footer className="footer">
+        <div>
+          <strong>SDMX</strong>
+          <div className="muted">ERP de talleres convertido en SaaS multi-tenant</div>
+        </div>
+        <div className="footer-links">
+          <Link href="/pricing">Pricing</Link>
+          <Link href="/dashboard">Dashboard</Link>
+          <Link href="/hub">Hub</Link>
+          <Link href="/consultar">Consultar</Link>
+          <Link href="/login">Login</Link>
+        </div>
+      </footer>
     </main>
   );
 }
