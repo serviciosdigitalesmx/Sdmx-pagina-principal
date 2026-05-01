@@ -101,6 +101,14 @@ export const handleApi = async (request: Request): Promise<Response> => {
     });
   }
 
+  if (pathname === '/api/auth/oauth/bootstrap' && method === 'POST') {
+    return safe(async () => {
+      const token = bearer(request);
+      if (!token) return unauthorized();
+      return ok(await appService.bootstrapOAuth(token));
+    });
+  }
+
   if (pathname === '/api/dashboard/summary' && method === 'GET') {
     return safe(async () => {
       const token = bearer(request);

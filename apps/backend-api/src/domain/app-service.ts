@@ -60,6 +60,7 @@ import type {
 export const appService = {
   register: (payload: RegisterRequestDto): Promise<UserDto> => authService.register(payload),
   login: (email: string, password: string): Promise<SessionDto> => authService.login(email, password),
+  bootstrapOAuth: (token: string): Promise<SessionDto> => authService.bootstrapOAuth(token),
   sessionFromToken: (token: string): Promise<SessionDto> => authService.sessionFromToken(token),
   subscriptionStatus: (token: string): Promise<{ subscription: SubscriptionDto | null }> => subscriptionService.subscriptionStatus(token),
   ensureActiveSubscription: (token: string): Promise<void> => subscriptionService.ensureActiveSubscription(token),

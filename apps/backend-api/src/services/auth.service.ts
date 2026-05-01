@@ -47,6 +47,46 @@ export const authService = {
     };
   },
 
+  async bootstrapOAuth(token: string): Promise<SessionDto> {
+    const auth = await supabase.authUser(token);
+    const existingUsers = await supabase.queryAsService<UserDto[]>(
+      `users?auth_user_id=eq.${encodeURIComponent(auth.id)}&select=*`
+    );
+
+    if (existingUsers[0]) {
+      return this.sessionFromToken(token);
+    }
+
+    const email = String(auth.email || '').trim().toLowerCase();
+    if (!email) throw new Error('No se pudo resolver el correo del usuario OAuth');
+
+    const localPart = email.split('@')[0] || 'google';
+    const tenantSlug = `${localPart.replace(/[^a-z0-9]/g, '-') || 'google'}-${auth.id.slice(0, 8)}`;
+    const tenantName = localPart || email;
+
+    const tenantRows = await supabase.upsertAsService<Array<{ id: string }>>(
+      'tenants',
+      {
+        name: tenantName,
+        slug: tenantSlug
+      },
+      'slug'
+    );
+
+    const tenantId = String(tenantRows[0].id);
+    const fullName = localPart.replace(/[._-]+/g, ' ').trim() || email;
+
+    await supabase.insertAsService<UserDto[]>('users', {
+      id: randomUUID(),
+      auth_user_id: auth.id,
+      tenant_id: tenantId,
+      full_name: fullName,
+      email
+    });
+
+    return this.sessionFromToken(token);
+  },
+
   async sessionFromToken(accessToken: string): Promise<SessionDto> {
     const session = await loadSession(accessToken);
     assert(Boolean(session.user), 'Usuario no encontrado');

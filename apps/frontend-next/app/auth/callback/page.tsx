@@ -1,43 +1,104 @@
 'use client';
-export const dynamic = 'force-dynamic';
-import { useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
 
-export default function AuthCallback() {
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { apiClient } from '@/lib/apiClient';
+import { clearSession, persistSession, type Session } from '@/lib/session';
+
+const parseHash = (hash: string): URLSearchParams => {
+  const raw = hash.startsWith('#') ? hash.slice(1) : hash;
+  return new URLSearchParams(raw);
+};
+
+const buildExpiry = (expiresAt: string | null, expiresIn: string | null): string => {
+  if (expiresAt) {
+    const parsed = Number(expiresAt);
+    if (Number.isFinite(parsed)) return new Date(parsed * 1000).toISOString();
+  }
+
+  if (expiresIn) {
+    const parsed = Number(expiresIn);
+    if (Number.isFinite(parsed)) return new Date(Date.now() + parsed * 1000).toISOString();
+  }
+
+  return new Date(Date.now() + 3600 * 1000).toISOString();
+};
+
+export default function AuthCallbackPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const [message, setMessage] = useState('Procesando autenticación...');
 
   useEffect(() => {
-    const handleCallback = async () => {
-      const access_token = searchParams.get('access_token');
-      const refresh_token = searchParams.get('refresh_token');
+    const run = async () => {
+      try {
+        const params = parseHash(window.location.hash);
+        const error = params.get('error_description') || params.get('error');
 
-      if (access_token && refresh_token) {
-        const { error } = await supabase.auth.setSession({
-          access_token,
-          refresh_token,
-        });
         if (error) {
-          console.error('Error al establecer sesión:', error);
-          router.push('/login?error=session_failed');
-        } else {
-          router.push('/dashboard');
+          clearSession();
+          setMessage(error);
+          return;
         }
-      } else {
-        router.push('/login?error=missing_tokens');
+
+        const accessToken = params.get('access_token');
+        const refreshToken = params.get('refresh_token');
+
+        if (!accessToken) {
+          clearSession();
+          setMessage('No se recibió access_token en el callback OAuth.');
+          return;
+        }
+
+        const sessionSeed = {
+          accessToken,
+          refreshToken: refreshToken || '',
+          expiresAt: buildExpiry(params.get('expires_at'), params.get('expires_in')),
+          user: {
+            id: '',
+            email: ''
+          },
+          shop: {
+            id: '',
+            name: ''
+          },
+          subscription: null,
+          roles: [],
+          permissions: []
+        } as unknown as Session;
+
+        persistSession(sessionSeed);
+
+        const meResponse = await apiClient.post<Session>('/api/auth/oauth/bootstrap', undefined, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        });
+        if (meResponse.success && meResponse.data) {
+          persistSession({
+            ...sessionSeed,
+            ...meResponse.data,
+            accessToken,
+            refreshToken: refreshToken || meResponse.data.refreshToken || '',
+            expiresAt: meResponse.data.expiresAt || sessionSeed.expiresAt
+          });
+        }
+
+        window.history.replaceState({}, document.title, '/hub');
+        router.replace('/hub');
+      } catch (error) {
+        clearSession();
+        setMessage(error instanceof Error ? error.message : 'No se pudo completar la autenticación.');
       }
     };
 
-    handleCallback();
-  }, [router, searchParams]);
+    void run();
+  }, [router]);
 
   return (
-    <div className="flex items-center justify-center h-screen">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-        <p className="mt-4 text-gray-600">Verificando acceso...</p>
+    <main className="flex min-h-screen items-center justify-center bg-[#05080F] p-6">
+      <div className="rounded-2xl border border-white/10 bg-white/5 px-6 py-5 text-white">
+        {message}
       </div>
-    </div>
+    </main>
   );
 }
