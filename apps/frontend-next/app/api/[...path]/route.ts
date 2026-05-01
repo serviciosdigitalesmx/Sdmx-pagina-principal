@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { randomUUID } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 
 type SupabaseAuth = { access_token?: string; refresh_token?: string };
@@ -277,9 +278,6 @@ async function writeEntity(request: Request, endpoint: string, tenantId: string,
     return supabase.from('inventory_movements').insert({ ...body, tenant_id: tenantId }).select('*').single();
   }
   if (endpoint === 'customers') {
-<<<<<<< HEAD
-    return supabase.from('customers').insert({ ...body, tenant_id: tenantId }).select('*').single();
-=======
     return supabase.from('customers').insert({
       tenant_id: tenantId,
       branch_id: body.branchId ?? null,
@@ -288,7 +286,6 @@ async function writeEntity(request: Request, endpoint: string, tenantId: string,
       phone: body.phone ?? null,
       created_at: body.createdAt ?? new Date().toISOString()
     }).select('*').single();
->>>>>>> a75c7d2 (refactor(frontend): remove render dependency)
   }
   if (endpoint === 'expense-categories') {
     return supabase.from('expense_categories').insert({ ...body, tenant_id: tenantId }).select('*').single();
@@ -318,12 +315,23 @@ async function writeEntity(request: Request, endpoint: string, tenantId: string,
   if (endpoint === 'service-orders') {
     const { data: customer } = await supabase.from('customers').select('id,tenant_id').eq('id', body.customerId).maybeSingle();
     if (!customer || customer.tenant_id !== tenantId) throw new Error('Cliente fuera del tenant');
-<<<<<<< HEAD
-    return supabase.from('service_orders').insert({ ...body, tenant_id: tenantId }).select('*').single();
-=======
+    let folio = `SO-${tenantId.replace(/[^a-z0-9]/gi, '').slice(0, 6).toUpperCase()}-${Date.now().toString().slice(-8)}`;
+    try {
+      const { data: next } = await supabase.rpc('next_tenant_folio', {
+        p_tenant_id: tenantId,
+        p_domain: 'service_order'
+      });
+      if (next && typeof next.folio === 'string' && next.folio.trim()) {
+        folio = next.folio.trim();
+      }
+    } catch {
+      // Fallback folio keeps the flow working if the RPC is unavailable.
+    }
     return supabase.from('service_orders').insert({
+      id: randomUUID(),
       tenant_id: tenantId,
       branch_id: body.branchId ?? null,
+      folio,
       customer_id: body.customerId,
       status: body.status ?? 'recibido',
       device_type: body.deviceType ?? '',
@@ -339,7 +347,6 @@ async function writeEntity(request: Request, endpoint: string, tenantId: string,
       created_at: body.createdAt ?? new Date().toISOString(),
       updated_at: body.updatedAt ?? new Date().toISOString()
     }).select('*').single();
->>>>>>> a75c7d2 (refactor(frontend): remove render dependency)
   }
   throw new Error('No soportado');
 }
