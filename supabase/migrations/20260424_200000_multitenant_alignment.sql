@@ -213,11 +213,33 @@ stable
 security definer
 set search_path = public
 as $$
-  select coalesce(u.tenant_id, b.tenant_id)
-  from users u
-  left join branches b on b.id = u.branch_id
-  where u.auth_user_id = auth.uid()
-  limit 1
+  select nullif(
+    coalesce(
+      nullif((
+        select au.raw_app_meta_data ->> 'tenant_id'
+        from auth.users au
+        where au.id = auth.uid()
+        limit 1
+      ), ''),
+      nullif(auth.jwt() -> 'app_metadata' ->> 'tenant_id', ''),
+      nullif(auth.jwt() -> 'user_metadata' ->> 'tenant_id', ''),
+      nullif(auth.jwt() -> 'app_metadata' -> 'tenant' ->> 'id', '')
+    ),
+    ''
+  )::uuid
+$$;
+
+create or replace function sync_user_auth_metadata(p_auth_user_id uuid, p_tenant_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+begin
+  update auth.users
+  set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb) || jsonb_build_object('tenant_id', p_tenant_id::text)
+  where id = p_auth_user_id;
+end;
 $$;
 
 alter table tenants enable row level security;

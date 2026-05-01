@@ -8,6 +8,14 @@ const assert = (condition: boolean, message: string): void => {
   if (!condition) throw new Error(message);
 };
 
+const syncAuthTenantMetadata = async (authUserId: string, tenantId: string): Promise<void> => {
+  await supabase.authAdminUpdate(authUserId, {
+    app_metadata: {
+      tenant_id: tenantId
+    }
+  });
+};
+
 export const authService = {
   async register(payload: RegisterRequestDto): Promise<UserDto> {
     let tenantId = payload.tenantId;
@@ -33,6 +41,8 @@ export const authService = {
       email: payload.email
     });
 
+    await syncAuthTenantMetadata(auth.id, tenantId);
+
     return profile[0];
   },
 
@@ -54,6 +64,7 @@ export const authService = {
     );
 
     if (existingUsers[0]) {
+      await syncAuthTenantMetadata(auth.id, String(existingUsers[0].tenant_id));
       return this.sessionFromToken(token);
     }
 
@@ -83,6 +94,7 @@ export const authService = {
       full_name: fullName,
       email
     });
+    await syncAuthTenantMetadata(auth.id, tenantId);
 
     const trialEndsAt = new Date();
     trialEndsAt.setDate(trialEndsAt.getDate() + env.trialDays);
