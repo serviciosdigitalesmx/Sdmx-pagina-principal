@@ -1,166 +1,181 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, BadgeCheck, BarChart3, Boxes, CreditCard, LayoutGrid, LineChart, Smartphone, Users, Wrench } from "lucide-react";
+import { ArrowRight, BadgeCheck, Boxes, CreditCard, LayoutGrid, LineChart, Smartphone, Users, Wrench } from "lucide-react";
 
-const features = [
-  "Recepción profesional y panel técnico",
-  "Portal del cliente por falla automática",
-  "Control de refacciones, stock y compras",
-  "Finanzas completas con Mercado Pago",
-  "Sistema de referidos para todos los planes"
+const featurePills = [
+  "Formas de pago",
+  "Productos",
+  "Status",
+  "Fechas de entrega",
+  "Finanzas",
+  "Categorías",
+  "Contacto",
+  "Gastos",
+  "Órdenes",
+  "Mensajería",
+  "Estadísticas",
+  "Existencias",
+  "Garantías",
+  "Alertas"
 ];
 
-const plans = [
-  {
-    name: "Plan Esencial",
-    price: "$350",
-    tag: "Inicio",
-    blurb: "Para orden, agenda y control de servicios.",
-    cta: "Comenzar ahora"
-  },
-  {
-    name: "Plan Pro",
-    price: "$549",
-    tag: "Recomendado",
-    blurb: "Operación completa para talleres en crecimiento.",
-    cta: "Lo quiero ya"
-  },
-  {
-    name: "Plan Business",
-    price: "$850",
-    tag: "Escala",
-    blurb: "Multi-sucursal, finanzas y control avanzado.",
-    cta: "Hablar con ventas"
-  }
-];
-
-const stats = [
-  { label: "Estados en México", value: "+32" },
-  { label: "Órdenes creadas", value: "+150,000" }
-];
+const tabs = ["Órdenes", "Inventario", "Reportes", "Clientes"];
 
 export default function RootPage() {
   return (
-    <main className="min-h-screen bg-[#071225] text-white">
-      <header className="sticky top-0 z-30 border-b border-white/10 bg-[#071225]/90 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 md:px-8">
+    <main className="min-h-screen bg-[#f4f5f7] text-slate-700">
+      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-[1500px] items-center justify-between px-4 py-4 md:px-8">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-blue-500/20 border border-blue-400/30 flex items-center justify-center">
-              <LayoutGrid className="h-5 w-5 text-blue-400" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#8256f3] text-white shadow-[0_8px_24px_rgba(130,86,243,.28)]">
+              <LayoutGrid className="h-5 w-5" />
             </div>
             <div>
-              <div className="text-sm font-black tracking-[0.2em] text-blue-400">FIXI</div>
-              <div className="text-[10px] uppercase tracking-[0.28em] text-slate-400">SaaS para talleres</div>
+              <div className="text-[14px] font-black tracking-[-0.03em] text-[#8256f3]">Fixi</div>
             </div>
           </div>
 
-          <nav className="hidden gap-6 text-sm font-semibold text-slate-300 md:flex">
-            <a href="#caracteristicas" className="hover:text-white">Características</a>
-            <a href="#planes" className="hover:text-white">Planes</a>
-            <a href="#impacto" className="hover:text-white">Impacto</a>
-            <a href="#testimonios" className="hover:text-white">Testimonios</a>
+          <nav className="hidden items-center gap-10 text-[15px] text-slate-500 md:flex">
+            <a href="#inicio" className="transition hover:text-slate-800">Inicio</a>
+            <a href="#caracteristicas" className="transition hover:text-slate-800">Características</a>
+            <a href="#planes" className="transition hover:text-slate-800">Planes</a>
+            <a href="#contacto" className="transition hover:text-slate-800">Contacto</a>
           </nav>
 
-          <Link href="/login" className="rounded-full bg-blue-500 px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-blue-500/25">
-            Entrar
+          <Link
+            href="/login"
+            className="rounded-lg bg-[#8256f3] px-5 py-3 text-sm font-semibold text-white shadow-[0_10px_26px_rgba(130,86,243,.25)] transition hover:bg-[#7446ea]"
+          >
+            Iniciar sesión
           </Link>
         </div>
       </header>
 
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,.24),transparent_35%),radial-gradient(circle_at_80%_10%,rgba(255,106,42,.15),transparent_25%)]" />
-        <div className="mx-auto grid max-w-7xl gap-14 px-4 py-20 md:px-8 lg:grid-cols-2 lg:items-center lg:py-28">
-          <div className="relative z-10 max-w-2xl">
-            <p className="mb-4 inline-flex rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[10px] font-black uppercase tracking-[0.28em] text-slate-300">
-              Sistema de gestión para talleres modernos
-            </p>
-            <h1 className="text-5xl font-black uppercase leading-[0.92] md:text-7xl">
-              Convierte tu taller en una
-              <span className="mt-3 block text-orange-400">operación profesional</span>
-            </h1>
-            <p className="mt-6 max-w-xl text-lg text-slate-300">
-              Recepción, seguimiento técnico, clientes, inventario y finanzas en una sola plataforma.
-            </p>
-
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/billing" className="rounded-full bg-blue-500 px-6 py-3 font-black text-white shadow-lg shadow-blue-500/25">
-                Ver planes
-              </Link>
-              <Link href="/login" className="rounded-full border border-white/10 bg-white/5 px-6 py-3 font-black text-white">
-                Acceder al panel
-              </Link>
-            </div>
-
-            <div className="mt-10 flex flex-wrap gap-3">
-              {["WhatsApp", "Google", "TikTok", "Facebook", "Web", "CRM", "Stock", "SPEI"].map((tag) => (
-                <span key={tag} className="rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-black uppercase tracking-[0.18em] text-slate-200">
-                  {tag}
+      <section id="inicio" className="mx-auto max-w-[1500px] px-4 py-10 md:px-8 md:py-12">
+        <div className="rounded-[28px] border border-slate-200 bg-white px-4 py-10 shadow-[0_20px_50px_rgba(15,23,42,.08)] md:px-10 md:py-14">
+          <div className="mx-auto max-w-6xl text-center">
+            <div className="mb-10 flex flex-wrap justify-center gap-3">
+              {tabs.map((tab, index) => (
+                <span
+                  key={tab}
+                  className={`rounded-[14px] px-9 py-3 text-sm font-semibold shadow-sm ${
+                    index === 0
+                      ? "border-2 border-slate-900 bg-white text-slate-900"
+                      : "border border-slate-200 bg-[#fbfbfc] text-slate-500"
+                  }`}
+                >
+                  {tab}
                 </span>
               ))}
             </div>
-          </div>
 
-          <div className="relative z-10">
-            <div className="rounded-[2rem] border border-white/10 bg-[#0d1630]/90 p-4 shadow-[0_30px_100px_rgba(0,0,0,.35)]">
-              <div className="rounded-[1.5rem] bg-[#101a36] p-6">
-                <div className="grid gap-4 md:grid-cols-2">
-                  {stats.map((stat) => (
-                    <div key={stat.label} className="rounded-3xl border border-white/10 bg-white/5 p-6">
-                      <div className="text-4xl font-black text-blue-400">{stat.value}</div>
-                      <div className="mt-2 text-xs font-black uppercase tracking-[0.3em] text-slate-400">{stat.label}</div>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-4 rounded-3xl border border-white/10 bg-white/5 p-5">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-sm font-black text-white">Operación completa para talleres modernos</div>
-                      <div className="text-xs text-slate-400">Recepción, inventario, clientes y finanzas</div>
-                    </div>
-                    <div className="h-12 w-12 rounded-2xl bg-blue-500/20 flex items-center justify-center">
-                      <BarChart3 className="h-5 w-5 text-blue-400" />
-                    </div>
-                  </div>
-                  <div className="mt-5 grid grid-cols-3 gap-3 text-center">
-                    {["Recepción", "Inventario", "Finanzas"].map((item) => (
-                      <div key={item} className="rounded-2xl border border-white/10 bg-[#071225] px-3 py-4 text-xs font-black uppercase tracking-[0.22em] text-slate-300">
-                        {item}
-                      </div>
-                    ))}
-                  </div>
-                </div>
+            <div className="mx-auto max-w-5xl">
+              <h1 className="text-4xl font-semibold tracking-[-0.05em] text-slate-700 md:text-6xl lg:text-7xl">
+                Te presentamos el mejor software
+                <span className="mx-3 inline-flex align-middle text-4xl md:text-6xl">🛠️</span>
+                <br />
+                para administrar tu <span className="font-black text-slate-900">taller de reparación</span>
+              </h1>
+              <p className="mt-6 text-lg font-medium text-slate-400 md:text-xl">
+                Toma el control de tu negocio con una sola aplicación.
+              </p>
+            </div>
+
+            <div className="mt-10 flex justify-center">
+              <div className="inline-flex items-center gap-4 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(15,23,42,.08)]">
+                <button className="rounded-xl bg-[#8256f3] px-8 py-3 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(130,86,243,.24)]">
+                  Pruebalo gratis
+                </button>
+                <button className="rounded-xl border border-slate-200 bg-white px-8 py-3 text-sm font-semibold text-slate-700">
+                  Conoce mas
+                </button>
               </div>
             </div>
+
+            <p className="mt-5 text-sm font-medium text-slate-400">
+              Inicia tu prueba gratuita de 15 dias. Sin necesidad de ingresar tu tarjeta de credito.
+            </p>
           </div>
         </div>
       </section>
 
-      <section id="caracteristicas" className="mx-auto max-w-7xl px-4 pb-24 md:px-8">
-        <div className="grid gap-8 lg:grid-cols-[1.1fr_.9fr]">
-          <div className="rounded-[2rem] border border-white/10 bg-[#0d1630]/90 p-8">
-            <p className="text-xs font-black uppercase tracking-[0.35em] text-blue-400">Características</p>
-            <h2 className="mt-4 text-4xl font-black leading-tight md:text-5xl">
-              Te presentamos nuestras <span className="text-blue-400">características</span>
-            </h2>
-            <p className="mt-4 max-w-xl text-slate-300">
-              Toma el control de tu negocio con una sola aplicación. Visualiza órdenes, clientes, servicios y pagos en un mismo flujo.
-            </p>
+      <section id="caracteristicas" className="mx-auto max-w-[1500px] px-4 pb-8 md:px-8">
+        <div className="grid gap-3">
+          <div className="flex flex-wrap justify-center gap-4">
+            {featurePills.slice(0, 7).map((pill, index) => (
+              <span
+                key={pill}
+                className={`rounded-full px-8 py-2 text-sm font-medium shadow-sm ${
+                  index === 2 || index === 3 || index === 6
+                    ? "bg-gradient-to-r from-[#8f5be7] to-[#f0a23a] text-white"
+                    : index === 4
+                      ? "bg-[#efe3ff] text-slate-500"
+                      : "bg-[#f7dede] text-slate-400"
+                }`}
+              >
+                {pill}
+              </span>
+            ))}
+          </div>
+          <div className="flex flex-wrap justify-center gap-4">
+            {featurePills.slice(7).map((pill, index) => (
+              <span
+                key={pill}
+                className={`rounded-full px-8 py-2 text-sm font-medium shadow-sm ${
+                  index === 1 || index === 5
+                    ? "bg-gradient-to-r from-[#8f5be7] to-[#f0a23a] text-white"
+                    : index === 2
+                      ? "bg-[#fbefcf] text-slate-500"
+                      : "bg-[#e9ddff] text-slate-400"
+                }`}
+              >
+                {pill}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
 
-            <div className="mt-8 space-y-4">
-              {features.map((feature) => (
-                <div key={feature} className="flex items-center gap-3 text-slate-200">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-500/20 text-blue-400">
-                    <BadgeCheck className="h-4 w-4" />
-                  </span>
-                  <span className="font-semibold">{feature}</span>
-                </div>
-              ))}
-            </div>
+      <section className="mx-auto max-w-[1500px] px-4 py-10 md:px-8">
+        <div className="relative overflow-hidden rounded-[28px] bg-white px-6 py-10 shadow-[0_18px_50px_rgba(15,23,42,.1)] md:px-10 md:py-12">
+          <div className="mx-auto flex max-w-4xl justify-center gap-4">
+            <Link
+              href="/login"
+              className="rounded-lg bg-[#8256f3] px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(130,86,243,.25)]"
+            >
+              Pruebalo gratis
+            </Link>
+            <Link
+              href="/billing"
+              className="rounded-lg border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700"
+            >
+              Conoce mas
+            </Link>
           </div>
 
-          <div className="rounded-[2rem] border border-white/10 bg-[#0d1630]/90 p-8">
-            <div className="grid gap-4 sm:grid-cols-2">
+          <p className="mt-8 text-center text-sm font-medium text-slate-400">
+            Inicia tu prueba gratuita de 15 dias. Sin necesidad de ingresar tu tarjeta de credito.
+          </p>
+
+          <div className="pointer-events-none absolute inset-x-0 bottom-[-2.2rem] text-center text-[clamp(3rem,12vw,10rem)] font-black tracking-[-0.08em] text-slate-100">
+            TODO EL CONTROL
+          </div>
+        </div>
+      </section>
+
+      <section id="planes" className="mx-auto max-w-[1500px] px-4 pb-20 md:px-8">
+        <div className="grid gap-8 lg:grid-cols-[1.1fr_.9fr]">
+          <div className="rounded-[28px] border border-slate-200 bg-white p-8 shadow-[0_18px_50px_rgba(15,23,42,.08)]">
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#8256f3]">Caracteristicas</p>
+            <h2 className="mt-4 max-w-2xl text-4xl font-semibold tracking-[-0.05em] text-slate-700 md:text-5xl">
+              Toma el control de tu negocio con una sola aplicacion.
+            </h2>
+            <p className="mt-4 max-w-2xl text-lg text-slate-400">
+              Recepción, inventario, clientes, reportes y finanzas en una sola plataforma lista para producción.
+            </p>
+
+            <div className="mt-8 grid gap-4 sm:grid-cols-2">
               {[
                 { label: "Recepción", icon: Smartphone },
                 { label: "Técnico", icon: Wrench },
@@ -169,94 +184,42 @@ export default function RootPage() {
                 { label: "Finanzas", icon: CreditCard },
                 { label: "Reportes", icon: LineChart }
               ].map(({ label, icon: Icon }) => (
-                <div key={label} className="rounded-3xl border border-white/10 bg-white/5 p-5">
-                  <div className="h-10 w-10 rounded-2xl bg-blue-500/15 flex items-center justify-center text-blue-400">
+                <div key={label} className="rounded-3xl border border-slate-200 bg-[#fbfbfc] p-5">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#ece3ff] text-[#8256f3]">
                     <Icon className="h-5 w-5" />
                   </div>
-                  <div className="mt-4 text-lg font-black">{label}</div>
+                  <div className="mt-4 text-lg font-semibold text-slate-700">{label}</div>
                   <div className="mt-1 text-sm text-slate-400">Módulo listo para operación real.</div>
                 </div>
               ))}
             </div>
           </div>
-        </div>
-      </section>
 
-      <section id="planes" className="mx-auto max-w-7xl px-4 pb-24 md:px-8">
-        <div className="mb-8 max-w-2xl">
-          <p className="text-xs font-black uppercase tracking-[0.35em] text-orange-400">Planes de pago</p>
-          <h2 className="mt-4 text-4xl font-black md:text-5xl">Elige el nivel de control que necesita tu taller</h2>
-          <p className="mt-3 text-slate-300">Tres planes claros, pensados para subir de nivel sin cambiar de sistema.</p>
-        </div>
-
-        <div className="grid gap-6 lg:grid-cols-3">
-          {plans.map((plan, index) => (
-            <article
-              key={plan.name}
-              className={`rounded-[2rem] border p-6 shadow-[0_20px_70px_rgba(0,0,0,.25)] ${
-                index === 1
-                  ? "border-orange-400/60 bg-[#101a36] ring-1 ring-orange-400/30"
-                  : "border-white/10 bg-[#0d1630]/90"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <h3 className="text-2xl font-black uppercase">{plan.name}</h3>
-                <span className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.28em] ${index === 1 ? "bg-orange-400/15 text-orange-300" : "bg-blue-500/15 text-blue-300"}`}>
-                  {plan.tag}
-                </span>
+          <div className="rounded-[28px] border border-slate-200 bg-[#fbfbfc] p-8 shadow-[0_18px_50px_rgba(15,23,42,.08)]">
+            <div className="mx-auto max-w-sm rounded-[28px] border border-slate-200 bg-white p-8 text-center shadow-[0_18px_40px_rgba(15,23,42,.06)]">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#8256f3] text-white shadow-[0_12px_28px_rgba(130,86,243,.25)]">
+                <BadgeCheck className="h-8 w-8" />
               </div>
-              <div className="mt-6 text-6xl font-black leading-none">{plan.price}</div>
-              <div className="mt-2 text-xs font-black uppercase tracking-[0.28em] text-slate-400">MXN / mes</div>
-              <p className="mt-4 text-slate-300">{plan.blurb}</p>
-              <ul className="mt-6 space-y-3 text-sm text-slate-200">
-                {["Flujo operativo completo", "Soporte para tu equipo", "Actualizaciones constantes"].map((item) => (
-                  <li key={item} className="flex items-center gap-2">
-                    <span className="text-blue-400">•</span> {item}
-                  </li>
-                ))}
-              </ul>
+              <h3 className="mt-6 text-2xl font-semibold tracking-[-0.04em] text-slate-700">Todo listo para producción</h3>
+              <p className="mt-3 text-slate-400">
+                Acceso real, tenant real y flujo completo para taller de reparación.
+              </p>
               <Link
-                href="/billing"
-                className={`mt-8 inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 font-black ${
-                  index === 1 ? "bg-white text-[#071225]" : "bg-blue-500 text-white"
-                }`}
+                href="/login"
+                className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-[#8256f3] px-5 py-3 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(130,86,243,.25)]"
               >
-                {plan.cta}
-                <ArrowRight className="h-4 w-4" />
+                Iniciar sesión
               </Link>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section id="impacto" className="mx-auto max-w-7xl px-4 pb-24 md:px-8">
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="rounded-[2rem] border border-white/10 bg-[#0d1630]/90 p-8 lg:col-span-2">
-            <p className="text-xs font-black uppercase tracking-[0.35em] text-slate-400">Impacto</p>
-            <div className="mt-4 grid gap-4 md:grid-cols-3">
-              <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-                <div className="text-5xl font-black text-white">100%</div>
-                <div className="mt-2 text-xs font-black uppercase tracking-[0.28em] text-slate-400">Operación visible</div>
-              </div>
-              <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-                <div className="text-5xl font-black text-white">24/7</div>
-                <div className="mt-2 text-xs font-black uppercase tracking-[0.28em] text-slate-400">Seguimiento</div>
-              </div>
-              <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-                <div className="text-5xl font-black text-white">380°</div>
-                <div className="mt-2 text-xs font-black uppercase tracking-[0.28em] text-slate-400">Control total</div>
-              </div>
             </div>
           </div>
+        </div>
+      </section>
 
-          <div className="rounded-[2rem] border border-white/10 bg-[#0d1630]/90 p-8">
-            <p className="text-xs font-black uppercase tracking-[0.35em] text-slate-400">Acción</p>
-            <h3 className="mt-4 text-3xl font-black">Entra al panel y arranca hoy</h3>
-            <p className="mt-3 text-slate-300">El SaaS ya está listo para que conectes recepción, técnico y finanzas.</p>
-            <Link href="/billing" className="mt-8 inline-flex w-full items-center justify-center rounded-full bg-blue-500 px-5 py-3 font-black text-white">
-              Ver planes
-            </Link>
-          </div>
+      <section id="contacto" className="mx-auto max-w-[1500px] px-4 pb-24 md:px-8">
+        <div className="rounded-[28px] border border-slate-200 bg-white p-8 text-center shadow-[0_18px_50px_rgba(15,23,42,.08)]">
+          <p className="text-sm font-semibold uppercase tracking-[0.28em] text-[#8256f3]">Contacto</p>
+          <h2 className="mt-4 text-4xl font-semibold tracking-[-0.05em] text-slate-700">Fixi para tu taller</h2>
+          <p className="mt-3 text-slate-400">Una landing más limpia, más clara y más parecida al diseño que compartiste.</p>
         </div>
       </section>
     </main>
