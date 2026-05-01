@@ -42,7 +42,7 @@ export default function LoginPage() {
       }
 
       persistSession(typedSession);
-      router.push('/dashboard');
+      router.push('/hub');
     } catch (e: unknown) {
       clearSession();
       setError(e instanceof Error ? e.message : 'No se pudo iniciar sesión');

@@ -84,6 +84,22 @@ export const authService = {
       email
     });
 
+    const trialEndsAt = new Date();
+    trialEndsAt.setDate(trialEndsAt.getDate() + env.trialDays);
+    await supabase.insertAsService('subscriptions', {
+      tenant_id: tenantId,
+      plan: 'enterprise',
+      status: 'trialing',
+      provider: 'trial',
+      external_id: `trial_${tenantId}`,
+      current_period_end: trialEndsAt.toISOString(),
+      raw_payload: {
+        trialDays: env.trialDays,
+        trialStartedAt: new Date().toISOString(),
+        trialEndsAt: trialEndsAt.toISOString()
+      }
+    });
+
     return this.sessionFromToken(token);
   },
 

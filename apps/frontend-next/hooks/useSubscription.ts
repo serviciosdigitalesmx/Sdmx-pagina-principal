@@ -10,6 +10,7 @@ export type Subscription = {
   plan: PlanCode;
   status: SubscriptionStatus;
   current_period_end?: string | null;
+  provider?: 'mercadopago' | 'trial';
 };
 
 export function useSubscription() {
@@ -31,8 +32,13 @@ export function useSubscription() {
 
     void load();
 
+    const timeout = window.setTimeout(() => {
+      if (mounted) setLoading(false);
+    }, 8000);
+
     return () => {
       mounted = false;
+      window.clearTimeout(timeout);
     };
   }, []);
 

@@ -50,6 +50,12 @@ function isTrialStillValid(subscription: SubscriptionDto | null): boolean {
   return Date.now() <= new Date(subscription.current_period_end).getTime();
 }
 
+function trialExpiryFromNow(): string {
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + env.trialDays);
+  return expiresAt.toISOString();
+}
+
 async function ensureTrialSubscription(token: string, tenantId: string): Promise<SubscriptionDto | null> {
   const subscriptions = await supabase.queryAsService<RawSubscriptionRow[]>(
     `subscriptions?tenant_id=eq.${encodeURIComponent(tenantId)}&select=*&order=created_at.desc`
@@ -63,17 +69,18 @@ async function ensureTrialSubscription(token: string, tenantId: string): Promise
   }) ?? subscriptions[0] ?? null);
 
   if (current) return current;
+  const trialEndsAt = trialExpiryFromNow();
   return {
     tenant_id: tenantId,
     plan: TRIAL_PLAN,
     status: 'trialing',
     provider: 'trial',
     external_id: `trial_${tenantId}`,
-    current_period_end: null,
+    current_period_end: trialEndsAt,
     raw_payload: {
       trialDays: env.trialDays,
       trialStartedAt: new Date().toISOString(),
-      trialEndsAt: null
+      trialEndsAt
     }
   } as SubscriptionDto;
 }
