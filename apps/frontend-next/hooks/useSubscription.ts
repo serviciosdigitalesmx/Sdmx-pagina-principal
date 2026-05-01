@@ -29,32 +29,20 @@ export function useSubscription() {
         const supabase = getSupabaseClient();
         const { data: sessionData } = await supabase.auth.getSession();
         const tenantId = sessionData.session?.user.user_metadata?.tenant_id || sessionData.session?.user.app_metadata?.tenant_id || "";
-        const email = String(sessionData.session?.user.email || "").toLowerCase();
         if (!tenantId) {
           if (mounted) setSubscription(null);
           return;
         }
 
-        if (email === "srfix@taller.com") {
-          if (mounted) {
-            setSubscription({
-              plan: "enterprise",
-              status: "active",
-              provider: "trial"
-            });
-          }
-          return;
-        }
-
-        const { data: shopData, error: shopError } = await supabase
-          .from("shops")
+        const { data: tenantData, error: tenantError } = await supabase
+          .from("tenants")
           .select("billing_exempt")
           .eq("id", tenantId)
           .maybeSingle<ShopRow>();
 
-        if (shopError) throw shopError;
+        if (tenantError) throw tenantError;
 
-        if (shopData?.billing_exempt) {
+        if (tenantData?.billing_exempt) {
           if (mounted) {
             setSubscription({
               plan: "enterprise",

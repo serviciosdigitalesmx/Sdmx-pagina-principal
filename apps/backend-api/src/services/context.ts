@@ -112,17 +112,16 @@ export async function loadSession(token: string): Promise<SessionDto> {
   assert(Boolean(user), 'Usuario no encontrado en tenant');
 
   const tenantId = await resolveTenantId(user, token);
-  const [shops, userRoles] = await Promise.all([
+  const [shops, tenants, userRoles] = await Promise.all([
     supabase.queryAsService<ShopDto[]>(`shops?id=eq.${encodeURIComponent(tenantId)}&select=*`),
+    supabase.queryAsService<Array<{ id: string; billing_exempt: boolean }>>(`tenants?id=eq.${encodeURIComponent(tenantId)}&select=id,billing_exempt`),
     supabase.queryAsService<Array<{ role_id: string; roles: RoleDto }>>(
       `user_roles?user_id=eq.${encodeURIComponent(String(user.id))}&select=role_id,roles(*)`
     )
   ]);
   const shop = shops[0] ?? { id: tenantId, name: 'Default Shop', slug: 'default', billing_exempt: false };
-  const isMaster =
-    Boolean(env.masterTenantSlug && String(shop.slug || '').toLowerCase() === env.masterTenantSlug) ||
-    Boolean(env.masterAccountEmail && String(user.email || '').toLowerCase() === env.masterAccountEmail);
-  const subscription = isMaster
+  const isBillingExempt = Boolean(tenants[0]?.billing_exempt);
+  const subscription = isBillingExempt
     ? ({
         tenant_id: tenantId,
         plan: TRIAL_PLAN,
@@ -131,7 +130,7 @@ export async function loadSession(token: string): Promise<SessionDto> {
         external_id: `master_${tenantId}`,
         current_period_end: null,
         raw_payload: {
-          masterAccount: true,
+          billingExempt: true,
           activatedAt: new Date().toISOString()
         }
       } as SubscriptionDto)

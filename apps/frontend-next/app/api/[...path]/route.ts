@@ -37,8 +37,8 @@ async function getLocalUser(supabase: ReturnType<typeof createAuthedClient>, aut
 }
 
 async function getLatestSubscription(supabase: ReturnType<typeof createAuthedClient>, tenantId: string) {
-  const shop = await getLatestShop(supabase, tenantId);
-  if (shop?.billing_exempt) {
+  const { data: tenant } = await supabase.from('tenants').select('billing_exempt').eq('id', tenantId).maybeSingle();
+  if (tenant?.billing_exempt) {
     return {
       tenant_id: tenantId,
       plan: 'enterprise',
