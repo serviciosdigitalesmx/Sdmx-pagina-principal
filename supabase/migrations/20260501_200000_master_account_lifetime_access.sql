@@ -35,7 +35,7 @@ begin
   from auth.users au
   left join public.users u on u.auth_user_id = au.id
   left join public.tenants t on t.id = u.tenant_id
-  where au.id = v_tenant_id;
+  where au.id = v_auth_user_id;
 
   update public.tenants
   set billing_exempt = true,
