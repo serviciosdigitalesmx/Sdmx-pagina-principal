@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getSupabaseClient } from "@/lib/supabase";
+import { fetchAuthedSessionApi } from "@/lib/sessionApi";
 
 export type PlanCode = "basic" | "pro" | "enterprise";
 export type SubscriptionStatus = "pending" | "trialing" | "active" | "past_due" | "suspended" | "canceled";
@@ -23,44 +23,14 @@ export function useSubscription() {
 
     const load = async () => {
       try {
-        const supabase = getSupabaseClient();
-        const { data: sessionData } = await supabase.auth.getSession();
-        const tenantId = sessionData.session?.user.user_metadata?.tenant_id || sessionData.session?.user.app_metadata?.tenant_id || "";
-        if (!tenantId) {
-          if (mounted) setSubscription(null);
-          return;
-        }
+        const response = await fetchAuthedSessionApi<{
+          accessGranted: boolean;
+          subscription: Subscription | null;
+        }>("subscription/status");
 
-        const { data: accessAllowed, error: accessError } = await (supabase as any).rpc('has_active_access', {
-          p_tenant_id: tenantId
-        } as { p_tenant_id: string });
-
-        if (accessError) throw accessError;
-
-        if (accessAllowed) {
-          if (mounted) {
-            setAccessGranted(true);
-            setSubscription({
-              plan: "enterprise",
-              status: "active",
-              provider: "trial"
-            });
-          }
-          return;
-        }
-
-        const { data, error } = await supabase
-          .from("subscriptions")
-          .select("plan,status,current_period_end,provider")
-          .eq("tenant_id", tenantId)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        if (error) throw error;
         if (!mounted) return;
-        setAccessGranted(false);
-        setSubscription((data as Subscription | null) ?? null);
+        setAccessGranted(Boolean(response.accessGranted));
+        setSubscription(response.subscription ?? null);
       } finally {
         if (mounted) setLoading(false);
       }
