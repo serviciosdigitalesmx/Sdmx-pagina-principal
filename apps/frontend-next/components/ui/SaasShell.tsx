@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   BarChart3,
@@ -45,9 +46,13 @@ export function SaasShell({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const session = readSession();
+  const [session, setSession] = useState<Session | null>(null);
 
-  const typedSession = session as Session | null;
+  useEffect(() => {
+    setSession(readSession());
+  }, []);
+
+  const typedSession = session;
   const userName = typedSession?.user.full_name || typedSession?.user.email || "Usuario";
   const shopName = typedSession?.shop.name || "Tenant activo";
 

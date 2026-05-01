@@ -157,14 +157,14 @@ export default function Page() {
                       </div>
                       <div>
                          <div className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500">Última Actualización</div>
-                         <div className="text-base font-bold text-slate-400 mt-1 uppercase tracking-tight">
-                            {new Date(order.updated_at ?? Date.now()).toLocaleString('es-MX', { 
-                              day: '2-digit', 
-                              month: 'short', 
-                              hour: '2-digit', 
-                              minute: '2-digit' 
-                            })}
-                         </div>
+                           <div className="text-base font-bold text-slate-400 mt-1 uppercase tracking-tight">
+                            {order.updated_at ? new Date(order.updated_at).toLocaleString('es-MX', {
+                              day: '2-digit',
+                              month: 'short',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            }) : 'Sin actualización'}
+                          </div>
                       </div>
                    </div>
                 </div>

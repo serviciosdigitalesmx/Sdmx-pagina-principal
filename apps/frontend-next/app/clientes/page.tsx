@@ -16,8 +16,7 @@ interface Customer {
 
 export default function ClientesPage() {
   const { session: authSession, loading: authLoading } = useAuth();
-  const session = authSession ?? readSession();
-  const tenantId = session?.shop.id ?? '';
+  const [tenantId, setTenantId] = useState('');
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -27,6 +26,10 @@ export default function ClientesPage() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+
+  useEffect(() => {
+    setTenantId(authSession?.shop.id ?? readSession()?.shop.id ?? '');
+  }, [authSession]);
 
   const loadData = async () => {
     setLoading(true);

@@ -20,8 +20,7 @@ const emptyItem: ItemForm = {
 };
 
 export default function ComprasPage() {
-  const session = readSession();
-  const tenantId = session?.shop.id ?? '';
+  const [tenantId, setTenantId] = useState('');
 
   const [suppliers, setSuppliers] = useState<SupplierDto[]>([]);
   const [products, setProducts] = useState<InventoryProductDto[]>([]);
@@ -35,6 +34,10 @@ export default function ComprasPage() {
 
   const supplierMap = useMemo(() => new Map(suppliers.map((supplier) => [supplier.id, supplier])), [suppliers]);
   const productMap = useMemo(() => new Map(products.map((product) => [product.id, product])), [products]);
+
+  useEffect(() => {
+    setTenantId(readSession()?.shop.id ?? '');
+  }, []);
 
   const loadData = async () => {
     setLoading(true);

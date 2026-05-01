@@ -11,9 +11,6 @@ import type {
   PurchasesExpensesReportDto
 } from '@sdmx/contracts';
 
-const today = new Date().toISOString().slice(0, 10);
-const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-
 type ReportResponse =
   | { kind: 'operations'; data: OperationsReportDto }
   | { kind: 'finance'; data: FinanceReportDto }
@@ -21,8 +18,8 @@ type ReportResponse =
   | { kind: 'purchases-expenses'; data: PurchasesExpensesReportDto };
 
 export default function ReportesPage() {
-  const [from, setFrom] = useState(thirtyDaysAgo);
-  const [to, setTo] = useState(today);
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
@@ -30,6 +27,14 @@ export default function ReportesPage() {
   const [finance, setFinance] = useState<FinanceReportDto | null>(null);
   const [inventory, setInventory] = useState<InventoryReportDto | null>(null);
   const [purchasesExpenses, setPurchasesExpenses] = useState<PurchasesExpensesReportDto | null>(null);
+
+  useEffect(() => {
+    const current = new Date();
+    const todayIso = current.toISOString().slice(0, 10);
+    const thirtyDaysAgo = new Date(current.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    setFrom(thirtyDaysAgo);
+    setTo(todayIso);
+  }, []);
 
   const query = useMemo(() => {
     const params = new URLSearchParams();
@@ -94,6 +99,7 @@ export default function ReportesPage() {
   };
 
   useEffect(() => {
+    if (!from || !to) return;
     void loadReports();
   }, [query]);
 

@@ -26,8 +26,7 @@ const emptyForm: SupplierForm = {
 };
 
 export default function ProveedoresPage() {
-  const session = readSession();
-  const tenantId = session?.shop.id ?? '';
+  const [tenantId, setTenantId] = useState('');
 
   const [suppliers, setSuppliers] = useState<SupplierDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,6 +39,10 @@ export default function ProveedoresPage() {
     () => suppliers.find((item) => item.id === editingId) ?? null,
     [editingId, suppliers]
   );
+
+  useEffect(() => {
+    setTenantId(readSession()?.shop.id ?? '');
+  }, []);
 
   const loadSuppliers = async () => {
     setLoading(true);

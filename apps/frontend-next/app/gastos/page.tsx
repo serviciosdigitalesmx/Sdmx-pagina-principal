@@ -34,8 +34,7 @@ const emptyExpenseForm: ExpenseForm = {
 };
 
 export default function GastosPage() {
-  const session = readSession();
-  const tenantId = session?.shop.id ?? '';
+  const [tenantId, setTenantId] = useState('');
 
   const [categories, setCategories] = useState<ExpenseCategoryDto[]>([]);
   const [expenses, setExpenses] = useState<ExpenseDto[]>([]);
@@ -46,6 +45,10 @@ export default function GastosPage() {
   const [expenseForm, setExpenseForm] = useState<ExpenseForm>(emptyExpenseForm);
 
   const categoryMap = useMemo(() => new Map(categories.map((category) => [category.id, category])), [categories]);
+
+  useEffect(() => {
+    setTenantId(readSession()?.shop.id ?? '');
+  }, []);
 
   const loadData = async () => {
     setLoading(true);

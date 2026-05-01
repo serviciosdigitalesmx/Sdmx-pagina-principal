@@ -51,8 +51,7 @@ const emptyMovementForm: MovementForm = {
 };
 
 export default function InventarioPage() {
-  const session = readSession();
-  const tenantId = session?.shop.id ?? '';
+  const [tenantId, setTenantId] = useState('');
 
   const [products, setProducts] = useState<InventoryProductDto[]>([]);
   const [movements, setMovements] = useState<InventoryMovementDto[]>([]);
@@ -69,6 +68,10 @@ export default function InventarioPage() {
     () => products.find((item) => item.id === selectedProductId) ?? null,
     [products, selectedProductId]
   );
+
+  useEffect(() => {
+    setTenantId(readSession()?.shop.id ?? '');
+  }, []);
 
   const loadData = async () => {
     setLoading(true);
