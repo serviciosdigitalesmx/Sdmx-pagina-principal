@@ -41,27 +41,50 @@ export default function ReportesPage() {
   const loadReports = async () => {
     setError('');
     try {
-      const [operationsRes, financeRes, inventoryRes, purchasesExpensesRes] = await Promise.all([
+      const [operationsRes, financeRes, inventoryRes, purchasesExpensesRes] = await Promise.allSettled([
         apiClient.get<OperationsReportDto>(`/api/reports/operations?${query}`),
         apiClient.get<FinanceReportDto>(`/api/reports/finance?${query}`),
         apiClient.get<InventoryReportDto>(`/api/reports/inventory?${query}`),
         apiClient.get<PurchasesExpensesReportDto>(`/api/reports/purchases-expenses?${query}`)
       ]);
 
-      if (!operationsRes.success || !financeRes.success || !inventoryRes.success || !purchasesExpensesRes.success) {
-        throw new Error(
-          operationsRes.error?.message ||
-            financeRes.error?.message ||
-            inventoryRes.error?.message ||
-            purchasesExpensesRes.error?.message ||
-            'No se pudieron cargar los reportes'
-        );
+      const messages: string[] = [];
+
+      if (operationsRes.status === 'fulfilled' && operationsRes.value.success) {
+        setOperations(operationsRes.value.data || null);
+      } else {
+        messages.push(operationsRes.status === 'fulfilled' ? operationsRes.value.error?.message || 'No se pudo cargar reporte operativo' : 'No se pudo cargar reporte operativo');
+        setOperations(null);
       }
 
-      setOperations(operationsRes.data || null);
-      setFinance(financeRes.data || null);
-      setInventory(inventoryRes.data || null);
-      setPurchasesExpenses(purchasesExpensesRes.data || null);
+      if (financeRes.status === 'fulfilled' && financeRes.value.success) {
+        setFinance(financeRes.value.data || null);
+      } else {
+        messages.push(financeRes.status === 'fulfilled' ? financeRes.value.error?.message || 'No se pudo cargar reporte financiero' : 'No se pudo cargar reporte financiero');
+        setFinance(null);
+      }
+
+      if (inventoryRes.status === 'fulfilled' && inventoryRes.value.success) {
+        setInventory(inventoryRes.value.data || null);
+      } else {
+        messages.push(inventoryRes.status === 'fulfilled' ? inventoryRes.value.error?.message || 'No se pudo cargar reporte de inventario' : 'No se pudo cargar reporte de inventario');
+        setInventory(null);
+      }
+
+      if (purchasesExpensesRes.status === 'fulfilled' && purchasesExpensesRes.value.success) {
+        setPurchasesExpenses(purchasesExpensesRes.value.data || null);
+      } else {
+        messages.push(
+          purchasesExpensesRes.status === 'fulfilled'
+            ? purchasesExpensesRes.value.error?.message || 'No se pudo cargar reporte de compras y gastos'
+            : 'No se pudo cargar reporte de compras y gastos'
+        );
+        setPurchasesExpenses(null);
+      }
+
+      if (messages.length > 0) {
+        setError(messages[0]);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudieron cargar los reportes');
     } finally {

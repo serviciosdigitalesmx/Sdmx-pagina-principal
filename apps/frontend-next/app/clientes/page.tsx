@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { SaasShell } from '@/components/ui/SaasShell';
 import { apiClient } from '@/lib/apiClient';
+import { readSession } from '@/lib/session';
 import { Users, UserPlus, Phone, Mail, Calendar, Search, MoreVertical, X } from 'lucide-react';
 
 interface Customer {
@@ -13,6 +14,8 @@ interface Customer {
 }
 
 export default function ClientesPage() {
+  const session = readSession();
+  const tenantId = session?.shop.id ?? '';
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -45,6 +48,7 @@ export default function ClientesPage() {
     e.preventDefault();
     try {
       const response = await apiClient.post('/api/customers', {
+        tenantId,
         fullName,
         email,
         phone

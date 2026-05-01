@@ -74,34 +74,48 @@ export default function InventarioPage() {
     setLoading(true);
     setError('');
     try {
-      const [productsRes, movementsRes] = await Promise.all([
+      const [productsRes, movementsRes] = await Promise.allSettled([
         apiClient.get<InventoryProductDto[]>('/api/products'),
         apiClient.get<InventoryMovementDto[]>('/api/inventory/movements')
       ]);
 
-      if (productsRes.success && productsRes.data) {
-        setProducts(productsRes.data);
-        if (!selectedProductId && productsRes.data[0]?.id) {
-          setSelectedProductId(productsRes.data[0].id);
-        }
-      } else if (!productsRes.success) {
-        setError(productsRes.error?.message || 'No se pudo cargar inventario');
-      }
+      const messages: string[] = [];
 
-      if (movementsRes.success && movementsRes.data) {
-        setMovements(movementsRes.data);
-      } else if (!movementsRes.success && !error) {
-        setError(movementsRes.error?.message || 'No se pudo cargar movimientos');
-      }
-
-      if (selectedProductId || productsRes.data?.[0]?.id) {
-        const productId = selectedProductId || productsRes.data?.[0]?.id || '';
-        if (productId) {
-          const kardexRes = await apiClient.get<InventoryKardexEntryDto[]>(`/api/products/${productId}/kardex`);
-          if (kardexRes.success && kardexRes.data) {
-            setKardex(kardexRes.data);
+      if (productsRes.status === 'fulfilled') {
+        if (productsRes.value.success && productsRes.value.data) {
+          setProducts(productsRes.value.data);
+          if (!selectedProductId && productsRes.value.data[0]?.id) {
+            setSelectedProductId(productsRes.value.data[0].id);
           }
+        } else {
+          messages.push(productsRes.value.error?.message || 'No se pudo cargar inventario');
         }
+      } else {
+        messages.push('No se pudo cargar inventario');
+      }
+
+      if (movementsRes.status === 'fulfilled') {
+        if (movementsRes.value.success && movementsRes.value.data) {
+          setMovements(movementsRes.value.data);
+        } else {
+          messages.push(movementsRes.value.error?.message || 'No se pudo cargar movimientos');
+        }
+      } else {
+        messages.push('No se pudo cargar movimientos');
+      }
+
+      const productId = selectedProductId || (productsRes.status === 'fulfilled' && productsRes.value.success ? productsRes.value.data?.[0]?.id : '') || '';
+      if (productId) {
+        const kardexRes = await apiClient.get<InventoryKardexEntryDto[]>(`/api/products/${productId}/kardex`);
+        if (kardexRes.success && kardexRes.data) {
+          setKardex(kardexRes.data);
+        } else {
+          messages.push(kardexRes.error?.message || 'No se pudo cargar kardex');
+        }
+      }
+
+      if (messages.length > 0) {
+        setError(messages[0]);
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error cargando inventario');
@@ -438,4 +452,3 @@ export default function InventarioPage() {
     </SaasShell>
   );
 }
-

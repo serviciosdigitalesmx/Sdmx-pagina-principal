@@ -21,7 +21,6 @@ import { clearSession, readSession } from "@/lib/session";
 import type { Session } from "@/lib/session";
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "/hub", label: "Hub Operativo", icon: ClipboardList },
   { href: "/inventario", label: "Inventario", icon: Boxes },
   { href: "/proveedores", label: "Proveedores", icon: Building2 },
@@ -32,8 +31,7 @@ const navItems = [
   { href: "/recepcion", label: "Recepción", icon: Smartphone },
   { href: "/tecnico", label: "Técnico", icon: Wrench },
   { href: "/clientes", label: "Clientes", icon: Users },
-  { href: "/billing", label: "Planes / Billing", icon: CreditCard },
-  { href: "/auditoria", label: "Auditoría", icon: ShieldCheck }
+  { href: "/billing", label: "Planes / Billing", icon: CreditCard }
 ];
 
 export function SaasShell({
@@ -62,7 +60,7 @@ export function SaasShell({
     <div className="srf-shell min-h-screen">
       <div className="flex min-h-screen">
         <aside className="srf-sidebar hidden lg:flex w-80 shrink-0 flex-col px-5 py-6">
-          <Link href="/dashboard" className="flex items-center gap-3 px-3">
+          <Link href="/hub" className="flex items-center gap-3 px-3">
             <div className="h-12 w-12 rounded-2xl bg-[#1F7EDC] flex items-center justify-center shadow-[0_0_28px_rgba(31,126,220,.35)]">
               <Building2 className="h-6 w-6 text-white" />
             </div>

@@ -1,13 +1,9 @@
 'use client';
 import type { ServiceOrderCreateRequestDto } from "@sdmx/contracts";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { apiClient } from "@/lib/apiClient";
-import { ClipboardList, Plus, User, Smartphone, AlertCircle } from "lucide-react";
-
-interface Customer {
-  id: string;
-  fullName: string;
-}
+import { ClipboardList, Plus, Smartphone, AlertCircle } from "lucide-react";
+import { readSession } from "@/lib/session";
 
 interface Order {
   id: string;
@@ -19,13 +15,16 @@ interface Order {
 }
 
 export function Operativo() {
-  const [customers, setCustomers] = useState<Customer[]>([]);
+  const session = readSession();
+  const tenantId = session?.shop.id ?? '';
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const [form, setForm] = useState({
-    customerId: "",
+    customerFullName: "",
+    customerEmail: "",
+    customerPhone: "",
     deviceType: "",
     deviceBrand: "",
     deviceModel: "",
@@ -37,15 +36,10 @@ export function Operativo() {
     setError("");
 
     try {
-      const [customersRes, ordersRes] = await Promise.all([
-        apiClient.get<Customer[]>("/api/customers"),
-        apiClient.get<Order[]>("/api/service-orders")
-      ]);
+      const ordersRes = await apiClient.get<Order[]>("/api/service-orders");
 
-      if (!customersRes.success) throw new Error(customersRes.error?.message);
       if (!ordersRes.success) throw new Error(ordersRes.error?.message);
 
-      setCustomers(customersRes.data || []);
       setOrders(ordersRes.data || []);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Error cargando datos");
@@ -61,7 +55,8 @@ export function Operativo() {
   async function handleCreate(e: FormEvent) {
     e.preventDefault();
 
-    if (!form.customerId) return setError("Selecciona un cliente");
+    if (!form.customerFullName.trim()) return setError("Falta nombre del cliente");
+    if (!form.customerEmail.trim()) return setError("Falta correo del cliente");
     if (!form.deviceType) return setError("Falta tipo de equipo");
     if (!form.reportedIssue) return setError("Falla reportada es obligatoria");
 
@@ -69,11 +64,31 @@ export function Operativo() {
     setError("");
 
     try {
-      const res = await apiClient.post("/api/service-orders", form);
-      if (!res.success) throw new Error(res.error?.message);
+      const customerRes = await apiClient.post<{ id: string }>("/api/customers", {
+        tenantId,
+        fullName: form.customerFullName.trim(),
+        email: form.customerEmail.trim(),
+        phone: form.customerPhone.trim() || null
+      });
+      if (!customerRes.success || !customerRes.data?.id) {
+        throw new Error(customerRes.error?.message || "No se pudo crear el cliente");
+      }
+
+      const orderPayload: ServiceOrderCreateRequestDto = {
+        customerId: customerRes.data.id,
+        deviceType: form.deviceType,
+        deviceBrand: form.deviceBrand,
+        deviceModel: form.deviceModel,
+        reportedIssue: form.reportedIssue
+      };
+
+      const res = await apiClient.post("/api/service-orders", orderPayload);
+      if (!res.success) throw new Error(res.error?.message || "No se pudo crear la orden");
 
       setForm({
-        customerId: "",
+        customerFullName: "",
+        customerEmail: "",
+        customerPhone: "",
         deviceType: "",
         deviceBrand: "",
         deviceModel: "",
@@ -108,18 +123,38 @@ export function Operativo() {
       )}
 
       <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-1">
-          <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Cliente</label>
-          <select
-            className="srf-input bg-slate-950/50"
-            value={form.customerId}
-            onChange={(e) => setForm({ ...form, customerId: e.target.value })}
-          >
-            <option value="">Seleccionar cliente...</option>
-            {customers.map((c) => (
-              <option key={c.id} value={c.id}>{c.fullName}</option>
-            ))}
-          </select>
+        <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4 rounded-3xl border border-white/5 bg-white/5 p-4">
+          <div className="space-y-1 md:col-span-3">
+            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Cliente nuevo</label>
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Nombre</label>
+            <input
+              className="srf-input"
+              placeholder="Ej. Juan Pérez"
+              value={form.customerFullName}
+              onChange={(e) => setForm({ ...form, customerFullName: e.target.value })}
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Correo</label>
+            <input
+              className="srf-input"
+              placeholder="juan@correo.com"
+              type="email"
+              value={form.customerEmail}
+              onChange={(e) => setForm({ ...form, customerEmail: e.target.value })}
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Teléfono</label>
+            <input
+              className="srf-input"
+              placeholder="8112345678"
+              value={form.customerPhone}
+              onChange={(e) => setForm({ ...form, customerPhone: e.target.value })}
+            />
+          </div>
         </div>
 
         <div className="space-y-1">

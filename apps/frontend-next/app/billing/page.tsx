@@ -41,7 +41,7 @@ export default function BillingPage() {
 
   async function checkout(plan: PlanCode) {
     if (skipBilling) {
-      router.push("/dashboard");
+      router.push("/hub");
       return;
     }
 
@@ -137,8 +137,8 @@ export default function BillingPage() {
             Si estás probando el flujo localmente, puedes volver al panel. En producción, este botón dirige al checkout real.
           </p>
           <div className="mt-6 flex gap-3">
-            <Link href="/dashboard" className="inline-flex items-center justify-center rounded-full bg-white px-5 py-3 font-black text-[#071225]">
-              Ir al dashboard
+            <Link href="/hub" className="inline-flex items-center justify-center rounded-full bg-white px-5 py-3 font-black text-[#071225]">
+              Ir al hub
             </Link>
             <Link href="/login" className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-5 py-3 font-black text-white">
               Ver sesión

@@ -29,19 +29,38 @@ export default function FinanzasPage() {
   const loadFinance = async () => {
     setError('');
     try {
-      const [summaryRes, monthlyRes, transactionsRes] = await Promise.all([
+      const [summaryRes, monthlyRes, transactionsRes] = await Promise.allSettled([
         apiClient.get<FinanceSummaryDto>(`/api/finance/summary?${query}`),
         apiClient.get<FinanceMonthlyDto>(`/api/finance/monthly?${query}`),
         apiClient.get<FinanceTransactionDto[]>(`/api/finance/transactions?${query}`)
       ]);
 
-      if (!summaryRes.success || !monthlyRes.success || !transactionsRes.success) {
-        throw new Error(summaryRes.error?.message || monthlyRes.error?.message || transactionsRes.error?.message || 'No se pudo cargar finanzas');
+      const messages: string[] = [];
+
+      if (summaryRes.status === 'fulfilled' && summaryRes.value.success) {
+        setSummary(summaryRes.value.data || null);
+      } else {
+        messages.push(summaryRes.status === 'fulfilled' ? summaryRes.value.error?.message || 'No se pudo cargar resumen financiero' : 'No se pudo cargar resumen financiero');
+        setSummary(null);
       }
 
-      setSummary(summaryRes.data || null);
-      setMonthly(monthlyRes.data || null);
-      setTransactions(transactionsRes.data || []);
+      if (monthlyRes.status === 'fulfilled' && monthlyRes.value.success) {
+        setMonthly(monthlyRes.value.data || null);
+      } else {
+        messages.push(monthlyRes.status === 'fulfilled' ? monthlyRes.value.error?.message || 'No se pudo cargar resumen mensual' : 'No se pudo cargar resumen mensual');
+        setMonthly(null);
+      }
+
+      if (transactionsRes.status === 'fulfilled' && transactionsRes.value.success) {
+        setTransactions(transactionsRes.value.data || []);
+      } else {
+        messages.push(transactionsRes.status === 'fulfilled' ? transactionsRes.value.error?.message || 'No se pudieron cargar movimientos' : 'No se pudieron cargar movimientos');
+        setTransactions([]);
+      }
+
+      if (messages.length > 0) {
+        setError(messages[0]);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo cargar finanzas');
     } finally {
