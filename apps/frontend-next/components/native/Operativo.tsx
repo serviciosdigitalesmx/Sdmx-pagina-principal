@@ -75,6 +75,7 @@ export function Operativo() {
       }
 
       const orderPayload: ServiceOrderCreateRequestDto = {
+        tenantId,
         customerId: customerRes.data.id,
         deviceType: form.deviceType,
         deviceBrand: form.deviceBrand,
