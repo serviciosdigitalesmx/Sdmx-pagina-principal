@@ -94,7 +94,7 @@ export default function RecepcionPage() {
         setError(response.error?.message || 'Error al procesar el ingreso del equipo');
       }
     } catch (e) {
-      setError('Error de comunicación con el centro de control');
+      setError(e instanceof Error ? e.message : 'Error de comunicación con el centro de control');
     }
   };
 
