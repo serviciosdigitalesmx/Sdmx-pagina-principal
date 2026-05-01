@@ -77,12 +77,12 @@ export default function RootPage() {
                 >
                   Pruebalo gratis
                 </Link>
-                <Link
-                  href="/billing"
+                <a
+                  href="#planes"
                   className="rounded-full border border-slate-200 bg-white px-7 py-3.5 text-sm font-semibold text-slate-700"
                 >
                   Conoce más
-                </Link>
+                </a>
               </div>
             </div>
 
@@ -181,12 +181,12 @@ export default function RootPage() {
             >
               Pruebalo gratis
             </Link>
-            <Link
-              href="/billing"
-              className="rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700"
-            >
-              Conoce mas
-            </Link>
+              <a
+                href="#planes"
+                className="rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700"
+              >
+                Conoce mas
+              </a>
           </div>
 
           <p className="mt-8 text-center text-sm font-medium text-slate-400">

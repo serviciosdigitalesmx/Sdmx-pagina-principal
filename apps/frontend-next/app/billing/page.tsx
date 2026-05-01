@@ -37,7 +37,7 @@ const plans: Array<{ code: PlanCode; name: string; price: string; description: s
 
 export default function BillingPage() {
   const router = useRouter();
-  const skipBilling = process.env.NEXT_PUBLIC_E2E_BILLING_BYPASS === "1";
+  const skipBilling = process.env.NODE_ENV !== "production" && process.env.NEXT_PUBLIC_E2E_BILLING_BYPASS === "1";
 
   async function checkout(plan: PlanCode) {
     if (skipBilling) {
