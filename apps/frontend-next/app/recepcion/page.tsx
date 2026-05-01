@@ -22,13 +22,14 @@ interface Customer {
 
 export default function RecepcionPage() {
   const [orders, setOrders] = useState<ServiceOrder[]>([]);
-  const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState('');
 
   // Form State
-  const [customerId, setCustomerId] = useState('');
+  const [customerFullName, setCustomerFullName] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
   const [deviceType, setDeviceType] = useState('');
   const [deviceBrand, setDeviceBrand] = useState('');
   const [deviceModel, setDeviceModel] = useState('');
@@ -37,13 +38,9 @@ export default function RecepcionPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [ordersRes, customersRes] = await Promise.all([
-        apiClient.get<ServiceOrder[]>('/api/service-orders'),
-        apiClient.get<Customer[]>('/api/customers')
-      ]);
+      const ordersRes = await apiClient.get<ServiceOrder[]>('/api/service-orders');
 
       if (ordersRes.success && ordersRes.data) setOrders(ordersRes.data);
-      if (customersRes.success && customersRes.data) setCustomers(customersRes.data);
       
     } catch (e) {
       setError('Error al sincronizar datos de recepción');
@@ -58,9 +55,25 @@ export default function RecepcionPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!customerFullName.trim()) return setError('Falta nombre del cliente');
+    if (!customerEmail.trim()) return setError('Falta correo del cliente');
+    if (!deviceType.trim()) return setError('Falta tipo de equipo');
+    if (!reportedIssue.trim()) return setError('Falla reportada es obligatoria');
+
     try {
+      const customerRes = await apiClient.post<{ id: string }>('/api/customers', {
+        fullName: customerFullName.trim(),
+        email: customerEmail.trim(),
+        phone: customerPhone.trim() || null
+      });
+
+      if (!customerRes.success || !customerRes.data?.id) {
+        throw new Error(customerRes.error?.message || 'No se pudo crear el cliente');
+      }
+
       const response = await apiClient.post('/api/service-orders', {
-        customerId,
+        customerId: customerRes.data.id,
         deviceType,
         deviceBrand,
         deviceModel,
@@ -70,7 +83,9 @@ export default function RecepcionPage() {
       if (response.success) {
         setShowForm(false);
         void loadData();
-        setCustomerId('');
+        setCustomerFullName('');
+        setCustomerEmail('');
+        setCustomerPhone('');
         setDeviceType('');
         setDeviceBrand('');
         setDeviceModel('');
@@ -110,19 +125,40 @@ export default function RecepcionPage() {
             <section className="srf-card p-8 animate-in fade-in slide-in-from-top-4 duration-300">
                <h2 className="text-xl font-black text-white mb-6">Nueva Orden de Servicio</h2>
                <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Seleccionar Cliente</label>
-                    <select 
-                      value={customerId} 
-                      onChange={(e) => setCustomerId(e.target.value)} 
-                      required
-                      className="srf-input appearance-none bg-slate-950/50"
-                    >
-                      <option value="">Buscar cliente...</option>
-                      {customers.map(c => (
-                        <option key={c.id} value={c.id}>{c.full_name}</option>
-                      ))}
-                    </select>
+                  <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4 rounded-3xl border border-white/5 bg-white/5 p-4">
+                    <div className="space-y-1 md:col-span-3">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Cliente nuevo</label>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Nombre</label>
+                      <input 
+                        value={customerFullName} 
+                        onChange={(e) => setCustomerFullName(e.target.value)} 
+                        placeholder="Ej. Juan Pérez" 
+                        className="srf-input" 
+                        required 
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Correo</label>
+                      <input 
+                        value={customerEmail} 
+                        onChange={(e) => setCustomerEmail(e.target.value)} 
+                        placeholder="juan@correo.com" 
+                        type="email" 
+                        className="srf-input" 
+                        required 
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Teléfono</label>
+                      <input 
+                        value={customerPhone} 
+                        onChange={(e) => setCustomerPhone(e.target.value)} 
+                        placeholder="8112345678" 
+                        className="srf-input" 
+                      />
+                    </div>
                   </div>
 
                   <div className="space-y-2">
@@ -188,7 +224,7 @@ export default function RecepcionPage() {
                             <td className="px-8 py-6">
                                <div className="flex items-center gap-2 text-sm text-slate-300 font-bold">
                                   <User className="h-3.5 w-3.5 text-slate-500" />
-                                  {customers.find(c => c.id === o.customer_id)?.full_name || 'Desconocido'}
+                                  Cliente nuevo
                                </div>
                             </td>
                             <td className="px-8 py-6">

@@ -15,6 +15,8 @@ const nowIso = () => new Date().toISOString();
 const assert = (condition: boolean, message: string): void => {
   if (!condition) throw new Error(message);
 };
+const fallbackFolio = (tenantId: string): string =>
+  `SO-${tenantId.replace(/[^a-z0-9]/gi, '').slice(0, 6).toUpperCase()}-${Date.now().toString().slice(-8)}`;
 
 type StatusRow = { id: string; status: string };
 type QuoteRow = { status: string; total_mxn?: number | null };
@@ -51,11 +53,19 @@ export const serviceOrdersService = {
       enforcePlanLimits(session.subscription.plan, orders.length, 'maxServiceOrders');
     }
 
-    const next = await supabase.rpc<{ folio: string }>('next_tenant_folio', token, { p_tenant_id: tenantId, p_domain: 'service_order' });
+    let folio = fallbackFolio(tenantId);
+    try {
+      const next = await supabase.rpc<{ folio: string }>('next_tenant_folio', token, { p_tenant_id: tenantId, p_domain: 'service_order' });
+      if (next && typeof next.folio === 'string' && next.folio.trim()) {
+        folio = next.folio.trim();
+      }
+    } catch (error) {
+      console.warn({ error, tenantId }, 'next_tenant_folio failed; using fallback folio');
+    }
     const created = await supabase.insert<ServiceOrderDto[]>('service_orders', token, {
       tenant_id: tenantId,
       branch_id: request.branchId ?? null,
-      folio: next.folio,
+      folio,
       customer_id: request.customerId,
       status: 'recibido',
       device_type: request.deviceType,
