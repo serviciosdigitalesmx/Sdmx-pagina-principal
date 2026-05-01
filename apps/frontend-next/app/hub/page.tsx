@@ -10,6 +10,7 @@ import { Solicitudes } from "@/components/native/Solicitudes";
 import FeatureGuard from "@/components/native/FeatureGuard";
 import { Boxes, ClipboardList, DollarSign, Wrench, Link2, Copy, type LucideIcon } from "lucide-react";
 import { useAuth } from "@/components/native/AuthGuard";
+import { apiClient } from "@/lib/apiClient";
 
 type ModuleKey = "recepcion" | "solicitudes" | "tecnico" | "stock" | "finanzas";
 
@@ -26,10 +27,43 @@ export default function HubPage() {
   const [active, setActive] = useState<ModuleKey>("recepcion");
   const [copyState, setCopyState] = useState("");
   const [landingUrl, setLandingUrl] = useState("");
+  const [landingError, setLandingError] = useState("");
 
   useEffect(() => {
-    const slug = session?.shop?.slug || session?.shop?.id || "";
-    setLandingUrl(slug ? `${window.location.origin}/landing/${slug}` : "");
+    let mounted = true;
+
+    const resolveLanding = async () => {
+      const slug = String(session?.shop?.slug || "").trim();
+      if (!slug) {
+        if (mounted) {
+          setLandingUrl("");
+          setLandingError("No se pudo resolver el slug del tenant.");
+        }
+        return;
+      }
+
+      try {
+        const response = await apiClient.get<{ landingUrl: string }>(`/api/public/tenants/${encodeURIComponent(slug)}`);
+        if (!response.success || !response.data?.landingUrl) {
+          throw new Error(response.error?.message || "No se pudo resolver la landing");
+        }
+        if (mounted) {
+          setLandingUrl(`${window.location.origin}${response.data.landingUrl}`);
+          setLandingError("");
+        }
+      } catch (error) {
+        if (mounted) {
+          setLandingUrl("");
+          setLandingError(error instanceof Error ? error.message : "No se pudo resolver la landing");
+        }
+      }
+    };
+
+    void resolveLanding();
+
+    return () => {
+      mounted = false;
+    };
   }, [session]);
 
   async function copyLandingUrl() {
@@ -70,7 +104,10 @@ export default function HubPage() {
               href={landingUrl || "#"}
               target="_blank"
               rel="noreferrer"
-              className="srf-btn-primary px-5 py-3 text-sm font-black inline-flex items-center justify-center gap-2"
+              aria-disabled={!landingUrl}
+              className={`srf-btn-primary px-5 py-3 text-sm font-black inline-flex items-center justify-center gap-2 ${
+                !landingUrl ? "pointer-events-none opacity-50" : ""
+              }`}
             >
               <Link2 className="h-4 w-4" />
               Abrir landing
@@ -82,6 +119,12 @@ export default function HubPage() {
           </div>
         </div>
         {copyState && <div className="mt-3 text-xs font-bold text-emerald-400">{copyState}</div>}
+        {landingError && <div className="mt-3 text-xs font-bold text-amber-400">{landingError}</div>}
+        {landingUrl && (
+          <div className="mt-3 text-[11px] font-mono text-slate-400 break-all">
+            {landingUrl}
+          </div>
+        )}
       </section>
 
       <section className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">

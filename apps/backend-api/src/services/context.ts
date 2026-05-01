@@ -101,7 +101,13 @@ export async function loadSession(token: string): Promise<SessionDto> {
       `user_roles?user_id=eq.${encodeURIComponent(String(user.id))}&select=role_id,roles(*)`
     )
   ]);
-  const shop = shops[0] ?? { id: tenantId, name: 'Default Shop', slug: 'default', billing_exempt: false };
+  const shop = shops[0];
+  if (!shop) {
+    throw new Error('El tenant no tiene shop configurado');
+  }
+  if (!String(shop.slug || '').trim()) {
+    throw new Error('El tenant no tiene slug configurado');
+  }
   const access = await hasActiveAccess(tenantId);
   const latestSubscription = await getLatestSubscription(tenantId);
   const subscription = access
