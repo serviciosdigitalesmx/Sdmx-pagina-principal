@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, BadgeCheck, Boxes, CreditCard, LayoutGrid, LineChart, Smartphone, Users, Wrench } from "lucide-react";
+import { ArrowRight, BadgeCheck, BarChart3, Boxes, CreditCard, LayoutGrid, LineChart, Smartphone, Users, Wrench } from "lucide-react";
 
 const featurePills = [
   "Formas de pago",
@@ -131,8 +131,9 @@ export default function RootPage() {
                 </div>
               </div>
             </div>
+          </div>
         </div>
-      </section>
+        </section>
 
       <section id="caracteristicas" className="mx-auto max-w-[1500px] px-4 pb-8 md:px-8">
         <div className="grid gap-3">

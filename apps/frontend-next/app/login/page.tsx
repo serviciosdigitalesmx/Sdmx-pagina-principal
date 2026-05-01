@@ -73,8 +73,8 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen bg-[#05080F] flex items-center justify-center p-6 relative overflow-hidden">
       {/* Decorative background elements */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#1F7EDC]/10 blur-[120px] rounded-full" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-orange-500/5 blur-[120px] rounded-full" />
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#8256f3]/10 blur-[120px] rounded-full" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#f0a23a]/5 blur-[120px] rounded-full" />
       
       <section className="w-full max-w-md z-10">
         <div className="text-center mb-10">
@@ -143,7 +143,7 @@ export default function LoginPage() {
               className="w-full srf-btn-primary py-5 text-lg font-black uppercase tracking-[0.1em] shadow-xl shadow-orange-500/20 disabled:opacity-50 transition-all flex items-center justify-center gap-3"
             >
               {loading ? (
-                <div className="w-6 h-6 border-4 border-white/30 border-t-white rounded-full animate-spin" />
+            <div className="w-6 h-6 border-4 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <><LogIn className="h-5 w-5" /> Acceder al Panel</>
               )}
