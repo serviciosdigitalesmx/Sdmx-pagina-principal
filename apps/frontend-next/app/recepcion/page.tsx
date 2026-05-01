@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { SaasShell } from '@/components/ui/SaasShell';
 import { apiClient } from '@/lib/apiClient';
-import { ClipboardList, PlusCircle, Smartphone, User, Settings, Clock, Search, X } from 'lucide-react';
+import { ClipboardList, PlusCircle, Smartphone, User, Settings, Clock, Search, X, Link2, FileText, Copy } from 'lucide-react';
 
 interface ServiceOrder {
   id: string;
@@ -20,11 +20,16 @@ interface Customer {
   full_name: string;
 }
 
+type CreatedOrderResponse = {
+  folio?: string;
+};
+
 export default function RecepcionPage() {
   const [orders, setOrders] = useState<ServiceOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState('');
+  const [lastCreatedFolio, setLastCreatedFolio] = useState('');
 
   // Form State
   const [customerFullName, setCustomerFullName] = useState('');
@@ -72,7 +77,7 @@ export default function RecepcionPage() {
         throw new Error(customerRes.error?.message || 'No se pudo crear el cliente');
       }
 
-      const response = await apiClient.post('/api/service-orders', {
+      const response = await apiClient.post<CreatedOrderResponse>('/api/service-orders', {
         customerId: customerRes.data.id,
         deviceType,
         deviceBrand,
@@ -81,6 +86,7 @@ export default function RecepcionPage() {
       });
 
       if (response.success) {
+        setLastCreatedFolio(response.data?.folio || '');
         setShowForm(false);
         void loadData();
         setCustomerFullName('');
@@ -97,6 +103,19 @@ export default function RecepcionPage() {
       setError(e instanceof Error ? e.message : 'Error de comunicación con el centro de control');
     }
   };
+
+  const [sharePortalLink, setSharePortalLink] = useState('');
+
+  useEffect(() => {
+    setSharePortalLink(lastCreatedFolio ? `${window.location.origin}/portal?folio=${encodeURIComponent(lastCreatedFolio)}` : '');
+  }, [lastCreatedFolio]);
+
+  async function copyPortalLink() {
+    if (!sharePortalLink) return;
+    await navigator.clipboard.writeText(sharePortalLink);
+    setError('Enlace del portal copiado al portapapeles');
+    window.setTimeout(() => setError(''), 1800);
+  }
 
   return (
     <SaasShell title="Recepción de Equipos" subtitle="Ingreso de nuevas órdenes de servicio y seguimiento operativo.">
@@ -119,6 +138,31 @@ export default function RecepcionPage() {
               <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
               {error}
             </div>
+          )}
+
+          {lastCreatedFolio && (
+            <section className="srf-card-soft p-5 md:p-6 space-y-4">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <div className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">Última orden creada</div>
+                  <div className="text-white font-black text-2xl mt-1">{lastCreatedFolio}</div>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  <a href={sharePortalLink} target="_blank" rel="noreferrer" className="srf-btn-primary px-4 py-3 text-sm font-black inline-flex items-center gap-2">
+                    <Link2 className="h-4 w-4" />
+                    Abrir portal del cliente
+                  </a>
+                  <button type="button" onClick={copyPortalLink} className="srf-btn-secondary px-4 py-3 text-sm font-black inline-flex items-center gap-2">
+                    <Copy className="h-4 w-4" />
+                    Copiar link
+                  </button>
+                  <a href={`/api/public/orders/${encodeURIComponent(lastCreatedFolio)}/pdf`} target="_blank" rel="noreferrer" className="srf-btn-secondary px-4 py-3 text-sm font-black inline-flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Generar PDF
+                  </a>
+                </div>
+              </div>
+            </section>
           )}
 
           {showForm && (
