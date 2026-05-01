@@ -19,6 +19,7 @@ import {
   Wrench
 } from "lucide-react";
 import { clearSession } from "@/lib/session";
+import { clearClientState } from "@/lib/debug";
 import { getSupabaseClient } from "@/lib/supabase";
 
 const navItems = [
@@ -103,6 +104,18 @@ export function SaasShell({
     }
   }
 
+  async function debugReset() {
+    try {
+      await getSupabaseClient().auth.signOut();
+    } catch {
+      // ignore sign out errors
+    }
+
+    await clearClientState();
+    clearSession();
+    window.location.assign("/login");
+  }
+
   return (
     <div className="srf-shell min-h-screen">
       <div className="flex min-h-screen">
@@ -143,6 +156,12 @@ export function SaasShell({
           </nav>
 
           <div className="mt-auto pt-6">
+            <button
+              onClick={debugReset}
+              className="w-full mb-3 flex items-center justify-center gap-2 rounded-2xl border border-amber-500/20 bg-amber-500/10 py-3 text-sm font-black text-amber-200 hover:bg-amber-500/20"
+            >
+              Modo debug
+            </button>
             <button
               onClick={logout}
               className="w-full flex items-center justify-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/10 py-3 text-sm font-black text-red-300 hover:bg-red-500/20"
