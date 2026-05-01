@@ -37,6 +37,21 @@ async function getLocalUser(supabase: ReturnType<typeof createAuthedClient>, aut
 }
 
 async function getLatestSubscription(supabase: ReturnType<typeof createAuthedClient>, tenantId: string) {
+  const shop = await getLatestShop(supabase, tenantId);
+  if (shop?.billing_exempt) {
+    return {
+      tenant_id: tenantId,
+      plan: 'enterprise',
+      status: 'active',
+      provider: 'trial',
+      external_id: `lifetime_${tenantId}`,
+      current_period_end: null,
+      raw_payload: {
+        lifetimeAccess: true,
+        billingExempt: true
+      }
+    };
+  }
   const { data } = await supabase.from('subscriptions').select('*').eq('tenant_id', tenantId).order('created_at', { ascending: false }).limit(1);
   return data?.[0] || null;
 }

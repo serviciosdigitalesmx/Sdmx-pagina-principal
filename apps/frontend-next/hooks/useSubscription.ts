@@ -13,6 +13,10 @@ export type Subscription = {
   provider?: 'mercadopago' | 'trial';
 };
 
+type ShopRow = {
+  billing_exempt: boolean;
+};
+
 export function useSubscription() {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
@@ -27,6 +31,25 @@ export function useSubscription() {
         const tenantId = sessionData.session?.user.user_metadata?.tenant_id || sessionData.session?.user.app_metadata?.tenant_id || "";
         if (!tenantId) {
           if (mounted) setSubscription(null);
+          return;
+        }
+
+        const { data: shopData, error: shopError } = await supabase
+          .from("shops")
+          .select("billing_exempt")
+          .eq("id", tenantId)
+          .maybeSingle<ShopRow>();
+
+        if (shopError) throw shopError;
+
+        if (shopData?.billing_exempt) {
+          if (mounted) {
+            setSubscription({
+              plan: "enterprise",
+              status: "active",
+              provider: "trial"
+            });
+          }
           return;
         }
 
