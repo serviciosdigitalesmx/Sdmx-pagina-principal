@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { SaasShell } from '@/components/ui/SaasShell';
 import { apiClient } from '@/lib/apiClient';
 import { readSession } from '@/lib/session';
+import { useAuth } from '@/components/native/AuthGuard';
 import { Users, UserPlus, Phone, Mail, Calendar, Search, MoreVertical, X } from 'lucide-react';
 
 interface Customer {
@@ -14,7 +15,8 @@ interface Customer {
 }
 
 export default function ClientesPage() {
-  const session = readSession();
+  const { session: authSession, loading: authLoading } = useAuth();
+  const session = authSession ?? readSession();
   const tenantId = session?.shop.id ?? '';
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,12 +30,15 @@ export default function ClientesPage() {
 
   const loadData = async () => {
     setLoading(true);
+    setError('');
     try {
       const response = await apiClient.get<Customer[]>('/api/customers');
       if (response.success && response.data) {
         setCustomers(response.data);
+      } else {
+        setError(response.error?.message || 'No se pudo cargar el listado de clientes');
       }
-    } catch (e) {
+    } catch {
       setError('No se pudo cargar el listado de clientes');
     } finally {
       setLoading(false);
@@ -41,11 +46,21 @@ export default function ClientesPage() {
   };
 
   useEffect(() => {
+    if (authLoading) return;
+    if (!tenantId) {
+      setLoading(false);
+      setError('No se pudo resolver el tenant activo');
+      return;
+    }
     void loadData();
-  }, []);
+  }, [authLoading, tenantId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!tenantId) {
+      setError('No se pudo resolver el tenant activo');
+      return;
+    }
     try {
       const response = await apiClient.post('/api/customers', {
         tenantId,
@@ -63,7 +78,7 @@ export default function ClientesPage() {
       } else {
         setError(response.error?.message || 'Error al crear cliente');
       }
-    } catch (e) {
+    } catch {
       setError('Error crítico al crear cliente');
     }
   };
@@ -71,6 +86,12 @@ export default function ClientesPage() {
   return (
     <SaasShell title="Directorio de Clientes" subtitle="Gestión centralizada de contactos y cuentas.">
       <div className="space-y-6">
+        {!tenantId && !authLoading && (
+          <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-sm font-bold">
+            No se pudo resolver el tenant activo. Vuelve a iniciar sesión o verifica la sesión actual.
+          </div>
+        )}
+
         <header className="flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-900/40 p-4 rounded-2xl border border-white/5">
           <div className="relative w-full md:w-80">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
