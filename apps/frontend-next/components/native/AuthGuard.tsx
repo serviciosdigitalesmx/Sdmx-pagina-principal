@@ -2,7 +2,8 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { apiClient } from "@/lib/apiClient";
-import { isValidSession, readSession, clearSession, persistSession, type Session } from "@/lib/session";
+import { clearSession, type Session } from "@/lib/session";
+import { getSupabaseClient } from "@/lib/supabase";
 
 const AuthContext = createContext<{ session: Session | null; loading: boolean }>({ session: null, loading: true });
 
@@ -16,10 +17,9 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const checkAuth = async () => {
-      // 1. Check local session
-      const localSession = readSession();
-      
-      if (!localSession || !isValidSession(localSession)) {
+      const supabase = getSupabaseClient();
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
         if (!PUBLIC_PATHS.some(p => pathname.startsWith(p))) {
           clearSession();
           router.push('/login');
@@ -28,15 +28,12 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // 2. Verify with backend (Source of Truth)
+      // Verify with backend (Source of Truth)
       try {
         const response = await apiClient.get<Session>('/api/auth/me');
         if (response.success && response.data) {
           setSession(response.data);
-          // Sync local session
-          persistSession({ ...localSession, ...response.data });
         } else {
-          // Token invalid or expired according to backend
           if (!PUBLIC_PATHS.some(p => pathname.startsWith(p))) {
             clearSession();
             router.push('/login');

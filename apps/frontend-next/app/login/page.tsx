@@ -1,10 +1,8 @@
 'use client';
-import type { Session } from "@/lib/session";
 import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { persistSession, isValidSession, clearSession } from '@/lib/session';
+import { clearSession } from '@/lib/session';
 import { getSupabaseClient } from '@/lib/supabase';
-import { hydrateSessionFromSupabase } from '@/lib/hydrateSession';
 import { LogIn, Lock, Mail, AlertCircle, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 
 const GoogleMark = () => (
@@ -32,10 +30,6 @@ export default function LoginPage() {
       const { error: signInError, data } = await supabase.auth.signInWithPassword({ email, password });
       if (signInError) throw signInError;
       if (!data.session) throw new Error('No se recibió sesión de Supabase.');
-
-      const typedSession = await hydrateSessionFromSupabase();
-      if (!isValidSession(typedSession)) throw new Error('La sesión recibida es inválida.');
-      persistSession(typedSession);
       router.push('/hub');
     } catch (e: unknown) {
       clearSession();

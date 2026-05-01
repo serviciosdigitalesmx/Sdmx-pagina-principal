@@ -1,10 +1,7 @@
-import { getAccessToken } from "@/lib/session";
+import { getSupabaseClient } from "@/lib/supabase";
 import type { ApiResponse } from "@sdmx/contracts";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL;
-
 function resolveBaseUrl() {
-  if (API_BASE_URL) return API_BASE_URL;
   if (typeof window !== 'undefined') return window.location.origin;
   return '';
 }
@@ -19,7 +16,9 @@ export async function fetchWithAuth<T>(
     throw new Error('No se pudo resolver la URL base de la API');
   }
 
-  const token = getAccessToken();
+  const supabase = getSupabaseClient();
+  const { data: authSession } = await supabase.auth.getSession();
+  const token = authSession.session?.access_token || null;
 
   const headers = new Headers(options.headers);
   headers.set('Content-Type', 'application/json');

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { getSupabaseClient } from "@/lib/supabase";
-import { readSession } from "@/lib/session";
 
 export type PlanCode = "basic" | "pro" | "enterprise";
 export type SubscriptionStatus = "pending" | "trialing" | "active" | "past_due" | "suspended" | "canceled";
@@ -24,8 +23,8 @@ export function useSubscription() {
     const load = async () => {
       try {
         const supabase = getSupabaseClient();
-        const session = readSession();
-        const tenantId = session?.shop.id || (await supabase.auth.getUser()).data.user?.user_metadata?.tenant_id || "";
+        const { data: sessionData } = await supabase.auth.getSession();
+        const tenantId = sessionData.session?.user.user_metadata?.tenant_id || sessionData.session?.user.app_metadata?.tenant_id || "";
         if (!tenantId) {
           if (mounted) setSubscription(null);
           return;

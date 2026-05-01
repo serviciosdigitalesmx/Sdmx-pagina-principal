@@ -3,7 +3,7 @@ import type { ServiceOrderCreateRequestDto } from "@sdmx/contracts";
 import { FormEvent, useEffect, useState } from "react";
 import { apiClient } from "@/lib/apiClient";
 import { ClipboardList, Plus, Smartphone, AlertCircle } from "lucide-react";
-import { readSession } from "@/lib/session";
+import { getSupabaseClient } from "@/lib/supabase";
 
 interface Order {
   id: string;
@@ -15,8 +15,7 @@ interface Order {
 }
 
 export function Operativo() {
-  const session = readSession();
-  const tenantId = session?.shop.id ?? '';
+  const [tenantId, setTenantId] = useState('');
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -49,6 +48,14 @@ export function Operativo() {
   }
 
   useEffect(() => {
+    const resolveTenant = async () => {
+      const supabase = getSupabaseClient();
+      const { data } = await supabase.auth.getSession();
+      const tenant = data.session?.user.user_metadata?.tenant_id || data.session?.user.app_metadata?.tenant_id || '';
+      setTenantId(tenant);
+    };
+
+    void resolveTenant();
     loadData();
   }, []);
 

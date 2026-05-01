@@ -3,8 +3,8 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { SaasShell } from '@/components/ui/SaasShell';
 import { apiClient } from '@/lib/apiClient';
-import { readSession } from '@/lib/session';
 import { Boxes, ArrowDownRight, ArrowUpRight, RefreshCw, Plus, History } from 'lucide-react';
+import { getSupabaseClient } from '@/lib/supabase';
 import type {
   InventoryKardexEntryDto,
   InventoryMovementDto,
@@ -70,7 +70,13 @@ export default function InventarioPage() {
   );
 
   useEffect(() => {
-    setTenantId(readSession()?.shop.id ?? '');
+    const resolveTenant = async () => {
+      const supabase = getSupabaseClient();
+      const { data } = await supabase.auth.getSession();
+      setTenantId(data.session?.user.user_metadata?.tenant_id || data.session?.user.app_metadata?.tenant_id || '');
+    };
+
+    void resolveTenant();
   }, []);
 
   const loadData = async () => {

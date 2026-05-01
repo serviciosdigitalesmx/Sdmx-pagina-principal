@@ -4,8 +4,6 @@ import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Building2, AlertCircle, UserPlus, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { getSupabaseClient } from '@/lib/supabase';
-import { hydrateSessionFromSupabase } from '@/lib/hydrateSession';
-import { persistSession } from '@/lib/session';
 
 const GoogleMark = () => (
   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#1F7EDC] text-[11px] font-black leading-none text-white shadow-[0_0_12px_rgba(31,126,220,.3)]">
@@ -46,8 +44,6 @@ export default function RegisterPage() {
       });
       if (error) throw error;
       if (data.session) {
-        const session = await hydrateSessionFromSupabase();
-        persistSession(session);
         router.push('/hub');
         return;
       }

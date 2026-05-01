@@ -1,5 +1,4 @@
 const runtimeConfig = (): string => {
-  if (process.env.NEXT_PUBLIC_API_BASE_URL) return process.env.NEXT_PUBLIC_API_BASE_URL;
   if (typeof window === 'undefined') return '';
 
   const fromWindow = (window as Window & { __SDMX_CONFIG__?: { apiUrl?: string } }).__SDMX_CONFIG__?.apiUrl;

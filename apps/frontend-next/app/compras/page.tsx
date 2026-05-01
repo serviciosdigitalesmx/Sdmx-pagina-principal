@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Plus, RefreshCw, ShoppingCart, CheckCircle2, XCircle, Package } from 'lucide-react';
 import { SaasShell } from '@/components/ui/SaasShell';
 import { apiClient } from '@/lib/apiClient';
-import { readSession } from '@/lib/session';
+import { getSupabaseClient } from '@/lib/supabase';
 import type { InventoryProductDto, PurchaseOrderDto, SupplierDto } from '@sdmx/contracts';
 
 type ItemForm = {
@@ -36,7 +36,13 @@ export default function ComprasPage() {
   const productMap = useMemo(() => new Map(products.map((product) => [product.id, product])), [products]);
 
   useEffect(() => {
-    setTenantId(readSession()?.shop.id ?? '');
+    const resolveTenant = async () => {
+      const supabase = getSupabaseClient();
+      const { data } = await supabase.auth.getSession();
+      setTenantId(data.session?.user.user_metadata?.tenant_id || data.session?.user.app_metadata?.tenant_id || '');
+    };
+
+    void resolveTenant();
   }, []);
 
   const loadData = async () => {

@@ -18,8 +18,8 @@ import {
   Users,
   Wrench
 } from "lucide-react";
-import { clearSession, readSession } from "@/lib/session";
-import type { Session } from "@/lib/session";
+import { clearSession } from "@/lib/session";
+import { getSupabaseClient } from "@/lib/supabase";
 
 const navItems = [
   { href: "/hub", label: "Hub Operativo", icon: ClipboardList },
@@ -46,19 +46,61 @@ export function SaasShell({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession] = useState<{
+    userName: string;
+    shopName: string;
+  } | null>(null);
 
   useEffect(() => {
-    setSession(readSession());
+    let mounted = true;
+    const supabase = getSupabaseClient();
+
+    const syncSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!mounted) return;
+      const authSession = data.session;
+      if (!authSession) {
+        setSession(null);
+        return;
+      }
+
+      setSession({
+        userName:
+          authSession.user.user_metadata?.full_name ||
+          authSession.user.user_metadata?.name ||
+          authSession.user.email ||
+          "Usuario",
+        shopName:
+          authSession.user.user_metadata?.shop_name ||
+          authSession.user.user_metadata?.tenant_name ||
+          "Tenant activo",
+      });
+    };
+
+    void syncSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(() => {
+      void syncSession();
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const typedSession = session;
-  const userName = typedSession?.user.full_name || typedSession?.user.email || "Usuario";
-  const shopName = typedSession?.shop.name || "Tenant activo";
+  const userName = session?.userName || "Usuario";
+  const shopName = session?.shopName || "Tenant activo";
 
-  function logout() {
-    clearSession();
-    router.push("/login");
+  async function logout() {
+    try {
+      await getSupabaseClient().auth.signOut();
+    } finally {
+      clearSession();
+      router.push("/login");
+    }
   }
 
   return (

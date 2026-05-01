@@ -2,27 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { clearSession, persistSession, type Session } from '@/lib/session';
+import { clearSession } from '@/lib/session';
 import { getSupabaseClient } from '@/lib/supabase';
-import { hydrateSessionFromSupabase } from '@/lib/hydrateSession';
 
 const parseHash = (hash: string): URLSearchParams => {
   const raw = hash.startsWith('#') ? hash.slice(1) : hash;
   return new URLSearchParams(raw);
-};
-
-const buildExpiry = (expiresAt: string | null, expiresIn: string | null): string => {
-  if (expiresAt) {
-    const parsed = Number(expiresAt);
-    if (Number.isFinite(parsed)) return new Date(parsed * 1000).toISOString();
-  }
-
-  if (expiresIn) {
-    const parsed = Number(expiresIn);
-    if (Number.isFinite(parsed)) return new Date(Date.now() + parsed * 1000).toISOString();
-  }
-
-  return new Date(Date.now() + 3600 * 1000).toISOString();
 };
 
 export default function AuthCallbackPage() {
@@ -56,15 +41,6 @@ export default function AuthCallbackPage() {
           refresh_token: refreshToken || ''
         });
         if (sessionError) throw sessionError;
-
-        const hydrated = await hydrateSessionFromSupabase();
-        const sessionSeed = {
-          ...hydrated,
-          accessToken,
-          refreshToken: refreshToken || hydrated.refreshToken || '',
-          expiresAt: buildExpiry(params.get('expires_at'), params.get('expires_in'))
-        } as Session;
-        persistSession(sessionSeed);
 
         window.history.replaceState({}, document.title, '/hub');
         router.replace('/hub');

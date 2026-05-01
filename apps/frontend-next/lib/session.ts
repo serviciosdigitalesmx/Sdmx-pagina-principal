@@ -15,7 +15,8 @@ export const readSession = (): Session | null => {
 };
 
 export const persistSession = (session: Session) => {
-  localStorage.setItem(KEY, JSON.stringify(session));
+  const { accessToken, refreshToken, ...safeSession } = session;
+  localStorage.setItem(KEY, JSON.stringify(safeSession));
 };
 
 export const clearSession = () => {
@@ -23,8 +24,7 @@ export const clearSession = () => {
 };
 
 export const getAccessToken = (): string | null => {
-  const session = readSession();
-  return session?.accessToken || null;
+  return null;
 };
 
 export const isSessionExpired = (inputSession?: Session | null): boolean => {
