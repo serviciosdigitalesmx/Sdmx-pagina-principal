@@ -37,8 +37,8 @@ async function getLocalUser(supabase: ReturnType<typeof createAuthedClient>, aut
 }
 
 async function getLatestSubscription(supabase: ReturnType<typeof createAuthedClient>, tenantId: string) {
-  const { data: tenant } = await supabase.from('tenants').select('billing_exempt').eq('id', tenantId).maybeSingle();
-  if (tenant?.billing_exempt) {
+  const { data: accessAllowed } = await (supabase as any).rpc('has_active_access', { p_tenant_id: tenantId });
+  if (accessAllowed) {
     return {
       tenant_id: tenantId,
       plan: 'enterprise',
@@ -117,6 +117,7 @@ export async function GET(request: Request, context: { params: Promise<{ path: s
       const { data: user } = await supabase.auth.getUser(token);
       const localUser = await getLocalUser(supabase, user.user?.id || '');
       const shop = await getLatestShop(supabase, tenantId);
+      const { data: accessAllowed } = await (supabase as any).rpc('has_active_access', { p_tenant_id: tenantId });
       const subscription = await getLatestSubscription(supabase, tenantId);
       return NextResponse.json({
         success: true,
@@ -124,6 +125,7 @@ export async function GET(request: Request, context: { params: Promise<{ path: s
           accessToken: token,
           refreshToken: '',
           expiresAt: new Date(Date.now() + 3600 * 1000).toISOString(),
+          accessGranted: Boolean(accessAllowed),
           user: localUser || null,
           shop: shop || null,
           subscription,
@@ -134,8 +136,9 @@ export async function GET(request: Request, context: { params: Promise<{ path: s
     }
 
     if (endpoint === 'subscription/status') {
+      const { data: accessAllowed } = await (supabase as any).rpc('has_active_access', { p_tenant_id: tenantId });
       const { data } = await supabase.from('subscriptions').select('*').eq('tenant_id', tenantId).order('created_at', { ascending: false }).limit(1);
-      return NextResponse.json({ success: true, data: { subscription: data?.[0] || null } });
+      return NextResponse.json({ success: true, data: { accessGranted: Boolean(accessAllowed), subscription: data?.[0] || null } });
     }
 
     if (endpoint === 'suppliers') {
@@ -415,7 +418,8 @@ export async function POST(request: Request, context: { params: Promise<{ path: 
       const localUser = await getLocalUser(supabase, user.user?.id || '');
       const shop = await getLatestShop(supabase, tenantId);
       const subscription = await getLatestSubscription(supabase, tenantId);
-      return NextResponse.json({ success: true, data: { accessToken: token, refreshToken: '', expiresAt: new Date(Date.now() + 3600 * 1000).toISOString(), user: localUser, shop, subscription, roles: [], permissions: [] } });
+      const { data: accessAllowed } = await supabase.rpc('has_active_access', { p_tenant_id: tenantId });
+      return NextResponse.json({ success: true, data: { accessToken: token, refreshToken: '', expiresAt: new Date(Date.now() + 3600 * 1000).toISOString(), accessGranted: Boolean(accessAllowed), user: localUser, shop, subscription, roles: [], permissions: [] } });
     }
 
     const body = ['suppliers', 'products', 'inventory/movements', 'customers', 'expense-categories', 'expenses', 'service-orders', 'purchases'].includes(endpoint)

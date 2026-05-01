@@ -53,6 +53,7 @@ export const supabase = {
   },
   patch: <T>(tableQuery: string, jwt: string, payload: unknown) => send<T>(`/rest/v1/${tableQuery}`, 'PATCH', { jwt }, payload, true),
   rpc: <T>(fn: string, jwt: string, payload: unknown) => send<T>(`/rest/v1/rpc/${fn}`, 'POST', { jwt }, payload),
+  rpcAsService: <T>(fn: string, payload: unknown) => send<T>(`/rest/v1/rpc/${fn}`, 'POST', { serviceRole: true }, payload),
   storageSignedUpload: async (bucket: string, path: string, jwt: string, expiresInSeconds: number): Promise<{ signedUrl: string; url?: string }> => {
     const response = await send<{ signedUrl?: string; url?: string }>(`/storage/v1/object/upload/sign/${bucket}/${path}`, 'POST', { jwt }, { expiresIn: expiresInSeconds });
     const signedUrl = response.signedUrl || response.url;

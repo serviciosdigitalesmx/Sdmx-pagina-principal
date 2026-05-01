@@ -38,28 +38,16 @@ type RawSubscriptionRow = {
 };
 
 const TRIAL_PLAN: PlanCode = 'enterprise';
-const PAID_PERIOD_DAYS = 30;
 
 function normalizeSubscription(subscription: RawSubscriptionRow | null): SubscriptionDto | null {
   return subscription ? (subscription as SubscriptionDto) : null;
 }
 
-function isTrialStillValid(subscription: SubscriptionDto | null): boolean {
-  if (!subscription) return false;
-  if (String(subscription.status) !== 'trialing') return false;
-  if (!subscription.current_period_end) return true;
-  return Date.now() <= new Date(subscription.current_period_end).getTime();
-}
-
-function isPaidStillValid(subscription: SubscriptionDto | null): boolean {
-  if (!subscription) return false;
-  if (String(subscription.status) !== 'active') return false;
-  if (!subscription.current_period_end) return false;
-  return Date.now() <= new Date(subscription.current_period_end).getTime();
-}
-
-function isSubscriptionCurrentlyValid(subscription: SubscriptionDto | null): boolean {
-  return isTrialStillValid(subscription) || isPaidStillValid(subscription);
+async function hasActiveAccess(tenantId: string): Promise<boolean> {
+  const result = await supabase.rpcAsService<Array<{ has_active_access: boolean }>>('has_active_access', {
+    p_tenant_id: tenantId
+  });
+  return Boolean(result?.[0]?.has_active_access);
 }
 
 function trialExpiryFromNow(): string {
@@ -68,19 +56,14 @@ function trialExpiryFromNow(): string {
   return expiresAt.toISOString();
 }
 
-async function ensureTrialSubscription(token: string, tenantId: string): Promise<SubscriptionDto | null> {
+async function getLatestSubscription(tenantId: string): Promise<SubscriptionDto | null> {
   const subscriptions = await supabase.queryAsService<RawSubscriptionRow[]>(
     `subscriptions?tenant_id=eq.${encodeURIComponent(tenantId)}&select=*&order=created_at.desc`
   );
+  return normalizeSubscription(subscriptions[0] ?? null);
+}
 
-  const current = normalizeSubscription(subscriptions.find((item) => {
-    const status = String(item.status);
-    if (status === 'active') return isPaidStillValid(item as SubscriptionDto);
-    if (status === 'trialing') return isTrialStillValid(item as SubscriptionDto);
-    return false;
-  }) ?? subscriptions[0] ?? null);
-
-  if (current) return current;
+async function createInitialTrialSubscription(tenantId: string): Promise<SubscriptionDto> {
   const trialEndsAt = trialExpiryFromNow();
   return {
     tenant_id: tenantId,
@@ -112,16 +95,16 @@ export async function loadSession(token: string): Promise<SessionDto> {
   assert(Boolean(user), 'Usuario no encontrado en tenant');
 
   const tenantId = await resolveTenantId(user, token);
-  const [shops, tenants, userRoles] = await Promise.all([
+  const [shops, userRoles] = await Promise.all([
     supabase.queryAsService<ShopDto[]>(`shops?id=eq.${encodeURIComponent(tenantId)}&select=*`),
-    supabase.queryAsService<Array<{ id: string; billing_exempt: boolean }>>(`tenants?id=eq.${encodeURIComponent(tenantId)}&select=id,billing_exempt`),
     supabase.queryAsService<Array<{ role_id: string; roles: RoleDto }>>(
       `user_roles?user_id=eq.${encodeURIComponent(String(user.id))}&select=role_id,roles(*)`
     )
   ]);
   const shop = shops[0] ?? { id: tenantId, name: 'Default Shop', slug: 'default', billing_exempt: false };
-  const isBillingExempt = Boolean(tenants[0]?.billing_exempt);
-  const subscription = isBillingExempt
+  const access = await hasActiveAccess(tenantId);
+  const latestSubscription = await getLatestSubscription(tenantId);
+  const subscription = access
     ? ({
         tenant_id: tenantId,
         plan: TRIAL_PLAN,
@@ -134,12 +117,13 @@ export async function loadSession(token: string): Promise<SessionDto> {
           activatedAt: new Date().toISOString()
         }
       } as SubscriptionDto)
-    : (await ensureTrialSubscription(token, tenantId));
+    : (latestSubscription ?? (await createInitialTrialSubscription(tenantId)));
 
   return {
     accessToken: token,
     refreshToken: '',
     expiresAt: new Date(Date.now() + 3600 * 1000).toISOString(),
+    accessGranted: access,
     user: user as UserDto,
     shop,
     subscription,
@@ -154,8 +138,7 @@ export async function loadContext(token: string): Promise<RequestContext> {
 }
 
 export function requireActiveSubscription(session: SessionDto): void {
-  const subscription = session.subscription;
-  if (!isSubscriptionCurrentlyValid(subscription)) {
+  if (session.accessGranted !== true) {
     throw new Error('SUBSCRIPTION_REQUIRED: Se requiere una suscripción activa para realizar esta acción.');
   }
 }

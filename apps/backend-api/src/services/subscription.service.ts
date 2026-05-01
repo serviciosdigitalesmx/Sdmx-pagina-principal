@@ -9,11 +9,8 @@ export const subscriptionService = {
   },
 
   async ensureActiveSubscription(token: string): Promise<void> {
-    const { subscription } = await this.subscriptionStatus(token);
-    const status = String(subscription?.status || '');
-    const trialEndsAt = subscription?.current_period_end ? new Date(subscription.current_period_end).getTime() : 0;
-    const trialStillValid = status === 'trialing' && (!trialEndsAt || Date.now() <= trialEndsAt);
-    if (!subscription || (status !== 'active' && !trialStillValid)) {
+    const session = await loadSession(token);
+    if (session.accessGranted !== true) {
       throw new Error('SUBSCRIPTION_REQUIRED: Se requiere una suscripción activa para realizar esta acción.');
     }
   },

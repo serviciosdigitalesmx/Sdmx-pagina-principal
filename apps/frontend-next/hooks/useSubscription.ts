@@ -13,12 +13,9 @@ export type Subscription = {
   provider?: 'mercadopago' | 'trial';
 };
 
-type ShopRow = {
-  billing_exempt: boolean;
-};
-
 export function useSubscription() {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [accessGranted, setAccessGranted] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -34,16 +31,15 @@ export function useSubscription() {
           return;
         }
 
-        const { data: tenantData, error: tenantError } = await supabase
-          .from("tenants")
-          .select("billing_exempt")
-          .eq("id", tenantId)
-          .maybeSingle<ShopRow>();
+        const { data: accessAllowed, error: accessError } = await (supabase as any).rpc('has_active_access', {
+          p_tenant_id: tenantId
+        } as { p_tenant_id: string });
 
-        if (tenantError) throw tenantError;
+        if (accessError) throw accessError;
 
-        if (tenantData?.billing_exempt) {
+        if (accessAllowed) {
           if (mounted) {
+            setAccessGranted(true);
             setSubscription({
               plan: "enterprise",
               status: "active",
@@ -63,6 +59,7 @@ export function useSubscription() {
 
         if (error) throw error;
         if (!mounted) return;
+        setAccessGranted(false);
         setSubscription((data as Subscription | null) ?? null);
       } finally {
         if (mounted) setLoading(false);
@@ -81,5 +78,5 @@ export function useSubscription() {
     };
   }, []);
 
-  return { subscription, loading };
+  return { subscription, accessGranted, loading };
 }

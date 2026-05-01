@@ -63,6 +63,7 @@ export type SessionDto = {
   accessToken: string;
   refreshToken: string;
   expiresAt: string;
+  accessGranted?: boolean;
   user: UserDto;
   shop: ShopDto;
   subscription: SubscriptionDto | null;

@@ -13,7 +13,6 @@ type ShopRow = {
   id: string;
   name: string;
   slug: string;
-  billing_exempt: boolean;
 };
 
 type SubscriptionRow = {
@@ -32,15 +31,17 @@ export async function hydrateSessionFromSupabase(): Promise<AppSession> {
   if (authError) throw authError;
   if (!authData.user) throw new Error("Usuario no autenticado");
 
-  const [{ data: users, error: userError }, { data: shops, error: shopError }, { data: subscriptions, error: subscriptionError }] = await Promise.all([
+  const [{ data: users, error: userError }, { data: shops, error: shopError }, { data: subscriptions, error: subscriptionError }, { data: accessGranted, error: accessError }] = await Promise.all([
     supabase.from("users").select("id,auth_user_id,tenant_id,full_name,email").eq("auth_user_id", authData.user.id).limit(1),
-    supabase.from("shops").select("id,name,slug,billing_exempt").eq("id", authData.user.user_metadata?.tenant_id || authData.user.app_metadata?.tenant_id || "").limit(1),
-    supabase.from("subscriptions").select("tenant_id,plan,status,provider,external_id,current_period_end,raw_payload").eq("tenant_id", authData.user.user_metadata?.tenant_id || authData.user.app_metadata?.tenant_id || "").order("created_at", { ascending: false }).limit(1)
+    supabase.from("shops").select("id,name,slug").eq("id", authData.user.user_metadata?.tenant_id || authData.user.app_metadata?.tenant_id || "").limit(1),
+    supabase.from("subscriptions").select("tenant_id,plan,status,provider,external_id,current_period_end,raw_payload").eq("tenant_id", authData.user.user_metadata?.tenant_id || authData.user.app_metadata?.tenant_id || "").order("created_at", { ascending: false }).limit(1),
+    (supabase as any).rpc("has_active_access", { p_tenant_id: authData.user.user_metadata?.tenant_id || authData.user.app_metadata?.tenant_id || "" })
   ]);
 
   if (userError) throw userError;
   if (shopError) throw shopError;
   if (subscriptionError) throw subscriptionError;
+  if (accessError) throw accessError;
 
   const user = users?.[0] as UserRow | undefined;
   const shop = shops?.[0] as ShopRow | undefined;
@@ -53,6 +54,7 @@ export async function hydrateSessionFromSupabase(): Promise<AppSession> {
     expiresAt: (await supabase.auth.getSession()).data.session?.expires_at
       ? new Date((await supabase.auth.getSession()).data.session!.expires_at! * 1000).toISOString()
       : new Date(Date.now() + 3600 * 1000).toISOString(),
+    accessGranted: Boolean(accessGranted),
     user: {
       id: user.id,
       auth_user_id: user.auth_user_id,
