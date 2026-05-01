@@ -46,6 +46,11 @@ async function getLatestShop(supabase: ReturnType<typeof createAuthedClient>, te
   return data || null;
 }
 
+async function getDefaultBranchId(supabase: ReturnType<typeof createAuthedClient>, tenantId: string) {
+  const { data } = await supabase.from('branches').select('id').eq('tenant_id', tenantId).order('created_at', { ascending: true }).limit(1);
+  return data?.[0]?.id || null;
+}
+
 function parseRange(url: URL) {
   const from = url.searchParams.get('from') || undefined;
   const to = url.searchParams.get('to') || undefined;
@@ -278,9 +283,10 @@ async function writeEntity(request: Request, endpoint: string, tenantId: string,
     return supabase.from('inventory_movements').insert({ ...body, tenant_id: tenantId }).select('*').single();
   }
   if (endpoint === 'customers') {
+    const branchId = body.branchId ?? await getDefaultBranchId(supabase, tenantId);
     return supabase.from('customers').insert({
       tenant_id: tenantId,
-      branch_id: body.branchId ?? null,
+      branch_id: branchId,
       full_name: body.fullName ?? body.name ?? '',
       email: body.email ?? null,
       phone: body.phone ?? null,
@@ -315,6 +321,7 @@ async function writeEntity(request: Request, endpoint: string, tenantId: string,
   if (endpoint === 'service-orders') {
     const { data: customer } = await supabase.from('customers').select('id,tenant_id').eq('id', body.customerId).maybeSingle();
     if (!customer || customer.tenant_id !== tenantId) throw new Error('Cliente fuera del tenant');
+    const branchId = body.branchId ?? await getDefaultBranchId(supabase, tenantId);
     let folio = `SO-${tenantId.replace(/[^a-z0-9]/gi, '').slice(0, 6).toUpperCase()}-${Date.now().toString().slice(-8)}`;
     try {
       const { data: next } = await supabase.rpc('next_tenant_folio', {
@@ -330,7 +337,7 @@ async function writeEntity(request: Request, endpoint: string, tenantId: string,
     return supabase.from('service_orders').insert({
       id: randomUUID(),
       tenant_id: tenantId,
-      branch_id: body.branchId ?? null,
+      branch_id: branchId,
       folio,
       customer_id: body.customerId,
       status: body.status ?? 'recibido',

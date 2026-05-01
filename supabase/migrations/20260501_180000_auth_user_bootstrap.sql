@@ -10,6 +10,7 @@ declare
   v_tenant_name text;
   v_tenant_slug text;
   v_tenant_id uuid;
+  v_branch_id uuid;
   v_full_name text;
   v_email text;
   v_trial_ends_at timestamptz;
@@ -28,6 +29,9 @@ begin
   values (v_tenant_id, v_tenant_name, v_tenant_slug, false)
   on conflict (id) do update set name = excluded.name, slug = excluded.slug;
 
+  select public.ensure_tenant_default_branch(v_tenant_id, v_tenant_name)
+    into v_branch_id;
+
   insert into public.users (id, auth_user_id, tenant_id, full_name, email, is_active)
   values (
     gen_random_uuid(),
@@ -42,6 +46,10 @@ begin
         full_name = excluded.full_name,
         email = excluded.email,
         is_active = true;
+
+  update public.users
+  set branch_id = coalesce(branch_id, v_branch_id)
+  where auth_user_id = new.id;
 
   perform public.sync_user_auth_metadata(new.id, v_tenant_id);
 
