@@ -30,7 +30,7 @@ begin
       into v_status, v_current_period_end
     from public.subscriptions s
     where s.tenant_id = p_tenant_id
-    order by s.created_at desc
+    order by s.current_period_end desc nulls last, s.created_at desc
     limit 1;
 
     return (
@@ -45,6 +45,12 @@ end;
 $$;
 
 comment on function public.has_active_access(uuid) is 'Single source of truth for tenant access: tenant.billing_exempt or a non-expired active/trial subscription; fail closed on any error.';
+
+create index if not exists idx_subscriptions_tenant_status
+  on public.subscriptions (tenant_id, status);
+
+create index if not exists idx_subscriptions_period
+  on public.subscriptions (current_period_end);
 
 drop trigger if exists trg_sync_tenant_billing_exempt_to_shops on public.tenants;
 drop function if exists public.sync_tenant_billing_exempt_to_shops();

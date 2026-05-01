@@ -34,7 +34,7 @@ export async function hydrateSessionFromSupabase(): Promise<AppSession> {
   const [{ data: users, error: userError }, { data: shops, error: shopError }, { data: subscriptions, error: subscriptionError }, { data: accessGranted, error: accessError }] = await Promise.all([
     supabase.from("users").select("id,auth_user_id,tenant_id,full_name,email").eq("auth_user_id", authData.user.id).limit(1),
     supabase.from("shops").select("id,name,slug").eq("id", authData.user.user_metadata?.tenant_id || authData.user.app_metadata?.tenant_id || "").limit(1),
-    supabase.from("subscriptions").select("tenant_id,plan,status,provider,external_id,current_period_end,raw_payload").eq("tenant_id", authData.user.user_metadata?.tenant_id || authData.user.app_metadata?.tenant_id || "").order("created_at", { ascending: false }).limit(1),
+    supabase.from("subscriptions").select("tenant_id,plan,status,provider,external_id,current_period_end,raw_payload").eq("tenant_id", authData.user.user_metadata?.tenant_id || authData.user.app_metadata?.tenant_id || "").order("current_period_end", { ascending: false, nullsFirst: false }).order("created_at", { ascending: false }).limit(1),
     (supabase as any).rpc("has_active_access", { p_tenant_id: authData.user.user_metadata?.tenant_id || authData.user.app_metadata?.tenant_id || "" })
   ]);
 

@@ -52,7 +52,7 @@ async function getLatestSubscription(supabase: ReturnType<typeof createAuthedCli
       }
     };
   }
-  const { data } = await supabase.from('subscriptions').select('*').eq('tenant_id', tenantId).order('created_at', { ascending: false }).limit(1);
+  const { data } = await supabase.from('subscriptions').select('*').eq('tenant_id', tenantId).order('current_period_end', { ascending: false, nullsFirst: false }).order('created_at', { ascending: false }).limit(1);
   return data?.[0] || null;
 }
 
@@ -137,7 +137,7 @@ export async function GET(request: Request, context: { params: Promise<{ path: s
 
     if (endpoint === 'subscription/status') {
       const { data: accessAllowed } = await (supabase as any).rpc('has_active_access', { p_tenant_id: tenantId });
-      const { data } = await supabase.from('subscriptions').select('*').eq('tenant_id', tenantId).order('created_at', { ascending: false }).limit(1);
+      const { data } = await supabase.from('subscriptions').select('*').eq('tenant_id', tenantId).order('current_period_end', { ascending: false, nullsFirst: false }).order('created_at', { ascending: false }).limit(1);
       return NextResponse.json({ success: true, data: { accessGranted: Boolean(accessAllowed), subscription: data?.[0] || null } });
     }
 
