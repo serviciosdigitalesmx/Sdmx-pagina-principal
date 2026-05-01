@@ -16,22 +16,11 @@ export function FeatureGuard({
   requiredPlan?: PlanCode;
   featureName?: string;
 }) {
-  const { subscription, loading } = useSubscription();
-  const hasSubscriptionAccess =
-    Boolean(subscription) &&
-    (
-      (
-        (subscription?.status === "active" || subscription?.status === "trialing") &&
-        (
-          !subscription.current_period_end ||
-          new Date(subscription.current_period_end).getTime() >= Date.now()
-        )
-      )
-    );
+  const { subscription, accessGranted, loading } = useSubscription();
   const currentPlanLevel = subscription ? PLAN_ORDER[subscription.plan] : 0;
   const allowed =
     skipBilling ||
-    (hasSubscriptionAccess && currentPlanLevel >= PLAN_ORDER[requiredPlan]);
+    (accessGranted && currentPlanLevel >= PLAN_ORDER[requiredPlan]);
 
   if (loading) {
     return (
