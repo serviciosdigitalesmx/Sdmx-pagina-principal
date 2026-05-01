@@ -2,8 +2,9 @@
 import type { Session } from "@/lib/session";
 import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiClient } from '@/lib/apiClient';
 import { persistSession, isValidSession, clearSession } from '@/lib/session';
+import { getSupabaseClient } from '@/lib/supabase';
+import { hydrateSessionFromSupabase } from '@/lib/hydrateSession';
 import { LogIn, Lock, Mail, AlertCircle, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 
 const GoogleMark = () => (
@@ -27,20 +28,13 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const response = await apiClient.post<Session>('/api/auth/login', {
-        email,
-        password
-      });
+      const supabase = getSupabaseClient();
+      const { error: signInError, data } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInError) throw signInError;
+      if (!data.session) throw new Error('No se recibió sesión de Supabase.');
 
-      if (!response.success || !response.data) {
-        throw new Error(response.error?.message || 'Credenciales inválidas');
-      }
-
-      const typedSession = response.data;
-      if (!isValidSession(typedSession)) {
-        throw new Error('La sesión recibida es inválida.');
-      }
-
+      const typedSession = await hydrateSessionFromSupabase();
+      if (!isValidSession(typedSession)) throw new Error('La sesión recibida es inválida.');
       persistSession(typedSession);
       router.push('/hub');
     } catch (e: unknown) {
@@ -56,13 +50,12 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      if (!supabaseUrl) throw new Error('NEXT_PUBLIC_SUPABASE_URL no definido');
-      const redirectTo = `${window.location.origin}/auth/callback`;
-      const oauthUrl = new URL(`${supabaseUrl.replace(/\/$/, '')}/auth/v1/authorize`);
-      oauthUrl.searchParams.set('provider', 'google');
-      oauthUrl.searchParams.set('redirect_to', redirectTo);
-      window.location.assign(oauthUrl.toString());
+      const supabase = getSupabaseClient();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: `${window.location.origin}/auth/callback` }
+      });
+      if (error) throw error;
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'No se pudo iniciar con Google');
     } finally {

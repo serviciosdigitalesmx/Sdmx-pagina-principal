@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { apiClient } from "@/lib/apiClient";
+import { getSupabaseClient } from "@/lib/supabase";
+import { readSession } from "@/lib/session";
 
 export type PlanCode = "basic" | "pro" | "enterprise";
 export type SubscriptionStatus = "pending" | "trialing" | "active" | "past_due" | "suspended" | "canceled";
@@ -22,9 +23,25 @@ export function useSubscription() {
 
     const load = async () => {
       try {
-        const res = await apiClient.get<{ subscription?: Subscription | null }>("/api/subscription/status");
+        const supabase = getSupabaseClient();
+        const session = readSession();
+        const tenantId = session?.shop.id || (await supabase.auth.getUser()).data.user?.user_metadata?.tenant_id || "";
+        if (!tenantId) {
+          if (mounted) setSubscription(null);
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from("subscriptions")
+          .select("plan,status,current_period_end,provider")
+          .eq("tenant_id", tenantId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (error) throw error;
         if (!mounted) return;
-        setSubscription(res.success ? (res.data?.subscription ?? null) : null);
+        setSubscription((data as Subscription | null) ?? null);
       } finally {
         if (mounted) setLoading(false);
       }

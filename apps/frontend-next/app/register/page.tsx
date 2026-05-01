@@ -3,7 +3,9 @@
 import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Building2, AlertCircle, UserPlus, Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import { apiClient } from '@/lib/apiClient';
+import { getSupabaseClient } from '@/lib/supabase';
+import { hydrateSessionFromSupabase } from '@/lib/hydrateSession';
+import { persistSession } from '@/lib/session';
 
 const GoogleMark = () => (
   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#1F7EDC] text-[11px] font-black leading-none text-white shadow-[0_0_12px_rgba(31,126,220,.3)]">
@@ -28,19 +30,28 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const tenantId = shopName.trim().toLowerCase().replace(/[^a-z0-9]/g, '-') || 'default';
-      const response = await apiClient.post('/api/auth/register', {
+      const supabase = getSupabaseClient();
+      const tenantSlug = shopName.trim().toLowerCase().replace(/[^a-z0-9]/g, '-') || 'default';
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        fullName,
-        tenantId
+        options: {
+          data: {
+            full_name: fullName,
+            shop_name: shopName,
+            shop_slug: tenantSlug,
+            tenant_slug: tenantSlug
+          }
+        }
       });
-
-      if (!response.success) {
-        throw new Error(response.error?.message || 'Error al registrar');
+      if (error) throw error;
+      if (data.session) {
+        const session = await hydrateSessionFromSupabase();
+        persistSession(session);
+        router.push('/hub');
+        return;
       }
-
-      alert('Usuario creado con éxito. Tu prueba gratuita de 15 días ya quedó iniciada.');
+      alert('Usuario creado con éxito. Revisa tu correo o inicia sesión para entrar al panel.');
       router.push('/login');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error al registrar');
@@ -54,13 +65,12 @@ export default function RegisterPage() {
     setError('');
 
     try {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      if (!supabaseUrl) throw new Error('NEXT_PUBLIC_SUPABASE_URL no definido');
-      const redirectTo = `${window.location.origin}/auth/callback`;
-      const oauthUrl = new URL(`${supabaseUrl.replace(/\/$/, '')}/auth/v1/authorize`);
-      oauthUrl.searchParams.set('provider', 'google');
-      oauthUrl.searchParams.set('redirect_to', redirectTo);
-      window.location.assign(oauthUrl.toString());
+      const supabase = getSupabaseClient();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: `${window.location.origin}/auth/callback` }
+      });
+      if (error) throw error;
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'No se pudo registrar con Google');
     } finally {

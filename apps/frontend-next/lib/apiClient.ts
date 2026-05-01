@@ -3,12 +3,20 @@ import type { ApiResponse } from "@sdmx/contracts";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL;
 
+function resolveBaseUrl() {
+  if (API_BASE_URL) return API_BASE_URL;
+  if (typeof window !== 'undefined') return window.location.origin;
+  return '';
+}
+
 export async function fetchWithAuth<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
-  if (!API_BASE_URL) {
-    throw new Error('NEXT_PUBLIC_API_BASE_URL o NEXT_PUBLIC_API_URL no definido');
+  const baseUrl = resolveBaseUrl();
+
+  if (!baseUrl) {
+    throw new Error('No se pudo resolver la URL base de la API');
   }
 
   const token = getAccessToken();
@@ -22,7 +30,7 @@ export async function fetchWithAuth<T>(
 
   const url = endpoint.startsWith('http')
     ? endpoint
-    : `${API_BASE_URL}${endpoint}`;
+    : `${baseUrl}${endpoint}`;
 
   try {
     const response = await fetch(url, {

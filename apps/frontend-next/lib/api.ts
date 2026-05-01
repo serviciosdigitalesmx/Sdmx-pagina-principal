@@ -1,4 +1,5 @@
 const runtimeConfig = (): string => {
+  if (process.env.NEXT_PUBLIC_API_BASE_URL) return process.env.NEXT_PUBLIC_API_BASE_URL;
   if (typeof window === 'undefined') return '';
 
   const fromWindow = (window as Window & { __SDMX_CONFIG__?: { apiUrl?: string } }).__SDMX_CONFIG__?.apiUrl;
@@ -8,7 +9,7 @@ const runtimeConfig = (): string => {
   return window.location.origin;
 };
 
-export const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || runtimeConfig();
+export const API_URL = runtimeConfig();
 
 export async function api<T>(path: string, init: RequestInit = {}, token?: string): Promise<T> {
   const headers = new Headers(init.headers ?? {});

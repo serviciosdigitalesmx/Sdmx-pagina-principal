@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, BadgeCheck, CreditCard, Sparkles } from "lucide-react";
 import { SaasShell } from "@/components/ui/SaasShell";
-import { apiClient } from "@/lib/apiClient";
 
 type PlanCode = "basic" | "pro" | "enterprise";
 
@@ -45,11 +44,16 @@ export default function BillingPage() {
       return;
     }
 
-    const res = await apiClient.post<{ initPoint: string }>("/api/billing/checkout", { plan });
-    if (!res.success || !res.data?.initPoint) {
-      throw new Error(res.error?.message || "No se pudo crear checkout");
+    const response = await fetch("/api/billing/checkout", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ plan })
+    });
+    const res = await response.json().catch(() => null);
+    if (!response.ok || !res?.initPoint) {
+      throw new Error(res?.error?.message || "No se pudo crear checkout");
     }
-    window.location.href = res.data.initPoint;
+    window.location.href = res.initPoint;
   }
 
   return (

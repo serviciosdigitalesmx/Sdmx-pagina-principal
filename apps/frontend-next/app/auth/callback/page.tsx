@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiClient } from '@/lib/apiClient';
 import { clearSession, persistSession, type Session } from '@/lib/session';
+import { getSupabaseClient } from '@/lib/supabase';
+import { hydrateSessionFromSupabase } from '@/lib/hydrateSession';
 
 const parseHash = (hash: string): URLSearchParams => {
   const raw = hash.startsWith('#') ? hash.slice(1) : hash;
@@ -49,39 +50,21 @@ export default function AuthCallbackPage() {
           return;
         }
 
-        const sessionSeed = {
-          accessToken,
-          refreshToken: refreshToken || '',
-          expiresAt: buildExpiry(params.get('expires_at'), params.get('expires_in')),
-          user: {
-            id: '',
-            email: ''
-          },
-          shop: {
-            id: '',
-            name: ''
-          },
-          subscription: null,
-          roles: [],
-          permissions: []
-        } as unknown as Session;
-
-        persistSession(sessionSeed);
-
-        const meResponse = await apiClient.post<Session>('/api/auth/oauth/bootstrap', undefined, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`
-          }
+        const supabase = getSupabaseClient();
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken || ''
         });
-        if (meResponse.success && meResponse.data) {
-          persistSession({
-            ...sessionSeed,
-            ...meResponse.data,
-            accessToken,
-            refreshToken: refreshToken || meResponse.data.refreshToken || '',
-            expiresAt: meResponse.data.expiresAt || sessionSeed.expiresAt
-          });
-        }
+        if (sessionError) throw sessionError;
+
+        const hydrated = await hydrateSessionFromSupabase();
+        const sessionSeed = {
+          ...hydrated,
+          accessToken,
+          refreshToken: refreshToken || hydrated.refreshToken || '',
+          expiresAt: buildExpiry(params.get('expires_at'), params.get('expires_in'))
+        } as Session;
+        persistSession(sessionSeed);
 
         window.history.replaceState({}, document.title, '/hub');
         router.replace('/hub');
