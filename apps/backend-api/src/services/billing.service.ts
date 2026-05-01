@@ -14,6 +14,12 @@ const prices: Record<PlanCode, number> = {
   enterprise: 600
 };
 
+const addPaidPeriod = (base: Date): string => {
+  const expires = new Date(base);
+  expires.setDate(expires.getDate() + 30);
+  return expires.toISOString();
+};
+
 export const billingService = {
   async createCheckout(token: string, request: CheckoutRequestDto): Promise<CheckoutResponseDto> {
     const settings = mpSettings();
@@ -118,6 +124,7 @@ export const billingService = {
     const metadata = payment.metadata ?? {};
     const tenantId = String(metadata.tenantId || '');
     const plan = (metadata.plan || 'basic') as PlanCode;
+    const currentPeriodEnd = payment.status === 'approved' ? addPaidPeriod(new Date()) : null;
 
     if (tenantId) {
       await supabase.upsertAsService(
@@ -128,6 +135,7 @@ export const billingService = {
           status: this.mapPaymentStatus(String(payment.status || 'pending')),
           provider: 'mercadopago',
           external_id: String(payment.id || paymentId),
+          current_period_end: currentPeriodEnd,
           raw_payload: payment
         },
         'tenant_id,provider'

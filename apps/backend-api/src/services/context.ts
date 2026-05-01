@@ -38,6 +38,7 @@ type RawSubscriptionRow = {
 };
 
 const TRIAL_PLAN: PlanCode = 'enterprise';
+const PAID_PERIOD_DAYS = 30;
 
 function normalizeSubscription(subscription: RawSubscriptionRow | null): SubscriptionDto | null {
   return subscription ? (subscription as SubscriptionDto) : null;
@@ -48,6 +49,17 @@ function isTrialStillValid(subscription: SubscriptionDto | null): boolean {
   if (String(subscription.status) !== 'trialing') return false;
   if (!subscription.current_period_end) return true;
   return Date.now() <= new Date(subscription.current_period_end).getTime();
+}
+
+function isPaidStillValid(subscription: SubscriptionDto | null): boolean {
+  if (!subscription) return false;
+  if (String(subscription.status) !== 'active') return false;
+  if (!subscription.current_period_end) return false;
+  return Date.now() <= new Date(subscription.current_period_end).getTime();
+}
+
+function isSubscriptionCurrentlyValid(subscription: SubscriptionDto | null): boolean {
+  return isTrialStillValid(subscription) || isPaidStillValid(subscription);
 }
 
 function trialExpiryFromNow(): string {
@@ -63,7 +75,7 @@ async function ensureTrialSubscription(token: string, tenantId: string): Promise
 
   const current = normalizeSubscription(subscriptions.find((item) => {
     const status = String(item.status);
-    if (status === 'active') return true;
+    if (status === 'active') return isPaidStillValid(item as SubscriptionDto);
     if (status === 'trialing') return isTrialStillValid(item as SubscriptionDto);
     return false;
   }) ?? subscriptions[0] ?? null);
@@ -144,11 +156,7 @@ export async function loadContext(token: string): Promise<RequestContext> {
 
 export function requireActiveSubscription(session: SessionDto): void {
   const subscription = session.subscription;
-  const status = String(subscription?.status || '');
-  const active = status === 'active';
-  const trial = status === 'trialing' && isTrialStillValid(subscription);
-
-  if (!subscription || (!active && !trial)) {
+  if (!isSubscriptionCurrentlyValid(subscription)) {
     throw new Error('SUBSCRIPTION_REQUIRED: Se requiere una suscripción activa para realizar esta acción.');
   }
 }

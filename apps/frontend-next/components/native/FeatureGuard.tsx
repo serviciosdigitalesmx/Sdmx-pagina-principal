@@ -20,11 +20,13 @@ export function FeatureGuard({
   const hasSubscriptionAccess =
     Boolean(subscription) &&
     (
-      subscription?.status === "active" ||
-      (subscription?.status === "trialing" && (
-        !subscription.current_period_end ||
-        new Date(subscription.current_period_end).getTime() >= Date.now()
-      ))
+      (
+        (subscription?.status === "active" || subscription?.status === "trialing") &&
+        (
+          !subscription.current_period_end ||
+          new Date(subscription.current_period_end).getTime() >= Date.now()
+        )
+      )
     );
   const currentPlanLevel = subscription ? PLAN_ORDER[subscription.plan] : 0;
   const allowed =

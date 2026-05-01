@@ -39,6 +39,12 @@ function mapPaymentStatus(status: string): 'pending' | 'active' | 'past_due' | '
   return 'past_due';
 }
 
+function addPaidPeriod(base: Date): string {
+  const expires = new Date(base);
+  expires.setDate(expires.getDate() + 30);
+  return expires.toISOString();
+}
+
 export async function POST(request: Request) {
   try {
     if (!mpAccessToken) throw new Error('MP_ACCESS_TOKEN no configurado');
@@ -76,6 +82,7 @@ export async function POST(request: Request) {
     const metadata = payment.metadata ?? {};
     const tenantId = String(metadata.tenantId || '');
     const plan = (metadata.plan || 'basic') as PlanCode;
+    const currentPeriodEnd = payment.status === 'approved' ? addPaidPeriod(new Date()) : null;
 
     if (tenantId) {
       const service = serviceClient();
@@ -85,6 +92,7 @@ export async function POST(request: Request) {
         status: mapPaymentStatus(String(payment.status || 'pending')),
         provider: 'mercadopago',
         external_id: String(payment.id || paymentId),
+        current_period_end: currentPeriodEnd,
         raw_payload: payment
       }, { onConflict: 'tenant_id,provider' });
 
