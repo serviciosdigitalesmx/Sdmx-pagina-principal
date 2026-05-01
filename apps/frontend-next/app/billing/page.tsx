@@ -12,7 +12,7 @@ const plans: Array<{ code: PlanCode; name: string; price: string; description: s
   {
     code: "basic",
     name: "Plan Essential",
-    price: "$350",
+    price: "$300",
     description: "Ideal para control de servicios y agenda. Incluye 15 días de prueba gratuita con todo activo.",
     tag: "Inicio",
     feature: ["Recepción simple", "Clientes básicos", "Control de órdenes"]
@@ -20,7 +20,7 @@ const plans: Array<{ code: PlanCode; name: string; price: string; description: s
   {
     code: "pro",
     name: "Plan Pro",
-    price: "$549",
+    price: "$450",
     description: "Para el taller que ya vende, repara y reporta. Incluye 15 días de prueba gratuita con todo activo.",
     tag: "Recomendado",
     feature: ["Recepción + técnico", "Inventario", "Reportes"]
@@ -28,7 +28,7 @@ const plans: Array<{ code: PlanCode; name: string; price: string; description: s
   {
     code: "enterprise",
     name: "Plan Business",
-    price: "$850",
+    price: "$600",
     description: "Multi-sucursal y operación a escala. Incluye 15 días de prueba gratuita con todo activo.",
     tag: "Escala",
     feature: ["Multi-sucursal", "Finanzas completas", "Control avanzado"]
@@ -111,7 +111,7 @@ export default function BillingPage() {
                 index === 1 ? "bg-white text-[#071225]" : "bg-blue-500 text-white"
               }`}
             >
-              {skipBilling ? "Ir al dashboard" : "Pagar y activar"}
+              {skipBilling ? "Ir al hub" : "Pagar y activar"}
               <ArrowRight className="h-4 w-4" />
             </button>
           </article>

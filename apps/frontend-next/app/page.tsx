@@ -20,7 +20,29 @@ const featurePills = [
   "Alertas"
 ];
 
-const tabs = ["Órdenes", "Inventario", "Reportes", "Clientes"];
+const plans = [
+  {
+    name: "Plan Esencial",
+    price: "$300",
+    description: "Base operativa para recepción, clientes y seguimiento de servicios.",
+    accent: "bg-[#121826]",
+    button: "Pruebalo gratis"
+  },
+  {
+    name: "Plan Pro",
+    price: "$450",
+    description: "Para inventario, reportes y control más sólido de tu operación diaria.",
+    accent: "bg-[#8256f3]",
+    button: "Pruebalo gratis"
+  },
+  {
+    name: "Plan Total",
+    price: "$600",
+    description: "Acceso completo para talleres que necesitan finanzas y control avanzado.",
+    accent: "bg-[#f0a23a]",
+    button: "Hablar con ventas"
+  }
+];
 
 export default function RootPage() {
   return (
@@ -31,9 +53,7 @@ export default function RootPage() {
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#121826] text-[#a78bfa] shadow-[0_8px_24px_rgba(15,23,42,.18)]">
               <LayoutGrid className="h-5 w-5" />
             </div>
-            <div>
-              <div className="text-[14px] font-black tracking-[-0.03em] text-[#121826]">Fixi</div>
-            </div>
+            <div className="text-[14px] font-black tracking-[-0.03em] text-[#121826]">Fixi</div>
           </div>
 
           <nav className="hidden items-center gap-10 text-[15px] text-slate-500 md:flex">
@@ -122,7 +142,11 @@ export default function RootPage() {
                     </div>
                   </div>
                   <div className="mt-4 grid grid-cols-3 gap-3">
-                    {["Órdenes", "Inventario", "Finanzas"].map((item) => (
+                    {[
+                      "Órdenes",
+                      "Inventario",
+                      "Finanzas"
+                    ].map((item) => (
                       <div key={item} className="rounded-2xl border border-slate-200 bg-[#fafafa] px-3 py-4 text-center text-xs font-semibold text-slate-500">
                         {item}
                       </div>
@@ -132,8 +156,32 @@ export default function RootPage() {
               </div>
             </div>
           </div>
+
+          <div id="planes" className="mt-10 grid gap-4 lg:grid-cols-3">
+            {plans.map((plan, index) => (
+              <article
+                key={plan.name}
+                className={`rounded-[28px] border p-6 text-left shadow-[0_14px_38px_rgba(15,23,42,.08)] ${
+                  index === 1 ? "border-slate-900 bg-white" : "border-slate-200 bg-[#fbfbfc]"
+                }`}
+              >
+                <div className={`inline-flex h-10 w-10 items-center justify-center rounded-2xl ${plan.accent} text-white`}>
+                  <CreditCard className="h-5 w-5" />
+                </div>
+                <div className="mt-5 text-3xl font-black tracking-[-0.05em] text-slate-800">{plan.name}</div>
+                <div className="mt-2 text-5xl font-black tracking-[-0.08em] text-slate-900">{plan.price}</div>
+                <p className="mt-3 text-sm text-slate-500">{plan.description}</p>
+                <Link
+                  href="/login"
+                  className={`mt-6 inline-flex rounded-full px-5 py-3 text-sm font-semibold text-white ${plan.accent}`}
+                >
+                  {plan.button}
+                </Link>
+              </article>
+            ))}
+          </div>
         </div>
-        </section>
+      </section>
 
       <section id="caracteristicas" className="mx-auto max-w-[1500px] px-4 pb-8 md:px-8">
         <div className="grid gap-3">
@@ -172,34 +220,7 @@ export default function RootPage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1500px] px-4 py-10 md:px-8">
-        <div className="relative overflow-hidden rounded-[28px] bg-white px-6 py-10 shadow-[0_18px_50px_rgba(15,23,42,.1)] md:px-10 md:py-12">
-          <div className="mx-auto flex max-w-4xl justify-center gap-4">
-            <Link
-              href="/login"
-              className="rounded-xl bg-[#121826] px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(15,23,42,.18)]"
-            >
-              Pruebalo gratis
-            </Link>
-              <a
-                href="#planes"
-                className="rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700"
-              >
-                Conoce mas
-              </a>
-          </div>
-
-          <p className="mt-8 text-center text-sm font-medium text-slate-400">
-            Inicia tu prueba gratuita de 15 dias. Sin necesidad de ingresar tu tarjeta de credito.
-          </p>
-
-          <div className="pointer-events-none absolute inset-x-0 bottom-[-2.2rem] text-center text-[clamp(3rem,12vw,10rem)] font-black tracking-[-0.08em] text-slate-100/70">
-            OPERACION REAL
-          </div>
-        </div>
-      </section>
-
-      <section id="planes" className="mx-auto max-w-[1500px] px-4 pb-20 md:px-8">
+      <section className="mx-auto max-w-[1500px] px-4 pb-20 md:px-8">
         <div className="grid gap-8 lg:grid-cols-[1.1fr_.9fr]">
           <div className="rounded-[28px] border border-slate-200 bg-white p-8 shadow-[0_18px_50px_rgba(15,23,42,.08)]">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#8256f3]">Caracteristicas</p>
@@ -254,7 +275,7 @@ export default function RootPage() {
         <div className="rounded-[28px] border border-slate-200 bg-white p-8 text-center shadow-[0_18px_50px_rgba(15,23,42,.08)]">
           <p className="text-sm font-semibold uppercase tracking-[0.28em] text-[#8256f3]">Contacto</p>
           <h2 className="mt-4 text-4xl font-semibold tracking-[-0.05em] text-slate-700">Fixi para tu taller</h2>
-          <p className="mt-3 text-slate-400">Una landing más limpia, más clara y más parecida al diseño que compartiste.</p>
+          <p className="mt-3 text-slate-400">Una landing más limpia, más clara y pensada para operación real.</p>
         </div>
       </section>
     </main>
