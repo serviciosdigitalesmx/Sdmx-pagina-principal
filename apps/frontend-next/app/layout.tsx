@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className={`${spaceGrotesk.variable}`}>
+    <html lang="es" className={`${spaceGrotesk.variable}`} suppressHydrationWarning>
       <body className="antialiased bg-background text-textMain font-sans selection:bg-primary/30">
         <ToastProvider>{children}</ToastProvider>
       </body>
