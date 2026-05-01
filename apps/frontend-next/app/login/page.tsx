@@ -1,7 +1,6 @@
 'use client';
 import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { clearSession } from '@/lib/session';
 import { getSupabaseClient } from '@/lib/supabase';
 import { LogIn, Lock, Mail, AlertCircle, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 
@@ -32,7 +31,6 @@ export default function LoginPage() {
       if (!data.session) throw new Error('No se recibió sesión de Supabase.');
       router.push('/hub');
     } catch (e: unknown) {
-      clearSession();
       setError(e instanceof Error ? e.message : 'No se pudo iniciar sesión');
     } finally {
       setLoading(false);

@@ -99,7 +99,6 @@ export function SaasShell({
     try {
       await getSupabaseClient().auth.signOut();
     } finally {
-      clearSession();
       router.push("/login");
     }
   }
@@ -112,7 +111,6 @@ export function SaasShell({
     }
 
     await clearClientState();
-    clearSession();
     window.location.assign("/login");
   }
 

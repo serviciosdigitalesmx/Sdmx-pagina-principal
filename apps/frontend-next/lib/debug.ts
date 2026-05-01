@@ -2,18 +2,6 @@
 
 export async function clearClientState() {
   try {
-    localStorage.clear();
-  } catch {
-    // ignore storage errors
-  }
-
-  try {
-    sessionStorage.clear();
-  } catch {
-    // ignore storage errors
-  }
-
-  try {
     if ("caches" in window) {
       const cacheKeys = await caches.keys();
       await Promise.all(cacheKeys.map((key) => caches.delete(key)));

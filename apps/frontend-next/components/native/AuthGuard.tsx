@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { apiClient } from "@/lib/apiClient";
-import { clearSession, type Session } from "@/lib/session";
+import type { Session } from "@/lib/session";
 import { getSupabaseClient } from "@/lib/supabase";
 
 const AuthContext = createContext<{ session: Session | null; loading: boolean }>({ session: null, loading: true });
@@ -21,7 +21,6 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData.session) {
         if (!PUBLIC_PATHS.some(p => pathname.startsWith(p))) {
-          clearSession();
           router.push('/login');
         }
         setLoading(false);
@@ -35,12 +34,14 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
           setSession(response.data);
         } else {
           if (!PUBLIC_PATHS.some(p => pathname.startsWith(p))) {
-            clearSession();
             router.push('/login');
           }
         }
       } catch (e) {
         console.error("Auth Verification Error:", e);
+        if (!PUBLIC_PATHS.some(p => pathname.startsWith(p))) {
+          router.push('/login');
+        }
       } finally {
         setLoading(false);
       }

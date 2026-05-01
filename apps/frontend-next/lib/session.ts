@@ -2,25 +2,16 @@ import type { SessionDto } from "@sdmx/contracts";
 
 export type Session = SessionDto;
 
-const KEY = 'session';
-
 export const readSession = (): Session | null => {
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
+  return null;
 };
 
 export const persistSession = (session: Session) => {
-  const { accessToken, refreshToken, ...safeSession } = session;
-  localStorage.setItem(KEY, JSON.stringify(safeSession));
+  return session;
 };
 
 export const clearSession = () => {
-  localStorage.removeItem(KEY);
+  return;
 };
 
 export const getAccessToken = (): string | null => {
@@ -28,7 +19,7 @@ export const getAccessToken = (): string | null => {
 };
 
 export const isSessionExpired = (inputSession?: Session | null): boolean => {
-  const session = inputSession ?? readSession();
+  const session = inputSession ?? null;
 
   if (!session?.accessToken) return true;
   if (!session.expiresAt) return false;
@@ -40,7 +31,7 @@ export const isSessionExpired = (inputSession?: Session | null): boolean => {
 };
 
 export const isValidSession = (inputSession?: Session | null): boolean => {
-  const session = inputSession ?? readSession();
+  const session = inputSession ?? null;
   if (!session?.accessToken) return false;
   return !isSessionExpired(session);
 };

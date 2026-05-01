@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/apiClient';
-import { clearSession } from '@/lib/session';
 import type { ApiResponse } from '@sdmx/contracts';
 
 export default function ProtectedData({ endpoint }: { endpoint: string }) {
@@ -18,7 +17,6 @@ export default function ProtectedData({ endpoint }: { endpoint: string }) {
         
         if (!response.success) {
           if (response.error?.code === 'UNAUTHORIZED') {
-            clearSession();
             router.push('/login');
             return;
           }

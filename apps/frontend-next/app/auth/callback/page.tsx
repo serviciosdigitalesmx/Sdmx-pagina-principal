@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { clearSession } from '@/lib/session';
 import { getSupabaseClient } from '@/lib/supabase';
 
 const parseHash = (hash: string): URLSearchParams => {
@@ -21,7 +20,6 @@ export default function AuthCallbackPage() {
         const error = params.get('error_description') || params.get('error');
 
         if (error) {
-          clearSession();
           setMessage(error);
           return;
         }
@@ -30,7 +28,6 @@ export default function AuthCallbackPage() {
         const refreshToken = params.get('refresh_token');
 
         if (!accessToken) {
-          clearSession();
           setMessage('No se recibió access_token en el callback OAuth.');
           return;
         }
@@ -45,7 +42,6 @@ export default function AuthCallbackPage() {
         window.history.replaceState({}, document.title, '/hub');
         router.replace('/hub');
       } catch (error) {
-        clearSession();
         setMessage(error instanceof Error ? error.message : 'No se pudo completar la autenticación.');
       }
     };
