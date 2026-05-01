@@ -50,7 +50,7 @@ export default function Page() {
             <h1 className="text-5xl md:text-6xl font-black text-white tracking-tighter">
               Rastreo de <span className="text-blue-500">Orden</span>
             </h1>
-            <p className="text-slate-400 text-lg md:text-xl font-medium">Servicios Digitales MX · Centro de Soporte Técnico</p>
+            <p className="text-slate-400 text-lg md:text-xl font-medium">Fixi · Centro de Soporte Técnico</p>
           </div>
         </header>
 
@@ -179,7 +179,7 @@ export default function Page() {
               <div className="h-1 w-12 bg-slate-800 rounded-full" />
            </div>
            <p className="text-slate-600 text-[10px] font-black uppercase tracking-[0.4em]">
-             Sdmx Command Center · Enterprise Grade Infrastructure
+             Fixi Command Center · Enterprise Grade Infrastructure
            </p>
         </footer>
       </div>

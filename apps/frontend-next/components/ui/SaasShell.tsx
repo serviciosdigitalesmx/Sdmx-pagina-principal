@@ -65,8 +65,8 @@ export function SaasShell({
               <Building2 className="h-6 w-6 text-white" />
             </div>
             <div>
-              <div className="text-white font-black tracking-[0.18em] text-sm">SDMX</div>
-              <div className="text-slate-500 text-[10px] uppercase tracking-[0.22em]">Servicios Digitales</div>
+              <div className="text-white font-black tracking-[0.18em] text-sm">Fixi</div>
+              <div className="text-slate-500 text-[10px] uppercase tracking-[0.22em]">SaaS operativo</div>
             </div>
           </Link>
 

@@ -50,7 +50,7 @@ export default function RootPage() {
               <LayoutGrid className="h-5 w-5 text-blue-400" />
             </div>
             <div>
-              <div className="text-sm font-black tracking-[0.2em] text-blue-400">SERVICIOS DIGITALES MX</div>
+              <div className="text-sm font-black tracking-[0.2em] text-blue-400">FIXI</div>
               <div className="text-[10px] uppercase tracking-[0.28em] text-slate-400">SaaS para talleres</div>
             </div>
           </div>

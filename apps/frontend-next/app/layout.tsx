@@ -10,8 +10,8 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = { 
-  title: 'SDMX | Premium SaaS',
-  description: 'Sistema de Gestión SDMX'
+  title: 'Fixi | Premium SaaS',
+  description: 'Sistema de Gestión Fixi'
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

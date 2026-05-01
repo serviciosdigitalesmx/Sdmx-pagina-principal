@@ -81,7 +81,7 @@ export default function LoginPage() {
           <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#1F7EDC] to-[#2FA4FF] shadow-lg shadow-blue-500/20 mb-6">
              <ShieldCheck className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-4xl font-black text-white tracking-tighter mb-2">SDMX</h1>
+          <h1 className="text-4xl font-black text-white tracking-tighter mb-2">Fixi</h1>
           <p className="text-slate-400 text-sm font-medium tracking-wide uppercase">15 días de prueba gratuita con acceso completo</p>
         </div>
 
