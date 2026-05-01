@@ -7,7 +7,7 @@ import { persistSession, isValidSession, clearSession } from '@/lib/session';
 import { LogIn, Lock, Mail, AlertCircle, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 
 const GoogleMark = () => (
-  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#1F7EDC] text-[11px] font-black leading-none text-white shadow-[0_0_12px_rgba(31,126,220,.3)]">
+  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#8256f3] text-[11px] font-black leading-none text-white shadow-[0_0_12px_rgba(130,86,243,.28)]">
     G
   </span>
 );
@@ -78,7 +78,7 @@ export default function LoginPage() {
       
       <section className="w-full max-w-md z-10">
         <div className="text-center mb-10">
-          <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#1F7EDC] to-[#2FA4FF] shadow-lg shadow-blue-500/20 mb-6">
+          <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#121826] to-[#8256f3] shadow-lg shadow-violet-500/20 mb-6">
              <ShieldCheck className="h-8 w-8 text-white" />
           </div>
           <h1 className="text-4xl font-black text-white tracking-tighter mb-2">Fixi</h1>
@@ -114,7 +114,7 @@ export default function LoginPage() {
             <div className="space-y-2">
               <div className="flex justify-between items-center ml-2">
                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Contraseña</label>
-                <a href="#" className="text-[10px] font-black uppercase tracking-widest text-blue-400 hover:text-blue-300 transition-colors">¿Olvidaste?</a>
+                <a href="#" className="text-[10px] font-black uppercase tracking-widest text-violet-400 hover:text-violet-300 transition-colors">¿Olvidaste?</a>
               </div>
               <div className="relative">
                 {!password && <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500 pointer-events-none" />}
