@@ -277,7 +277,18 @@ async function writeEntity(request: Request, endpoint: string, tenantId: string,
     return supabase.from('inventory_movements').insert({ ...body, tenant_id: tenantId }).select('*').single();
   }
   if (endpoint === 'customers') {
+<<<<<<< HEAD
     return supabase.from('customers').insert({ ...body, tenant_id: tenantId }).select('*').single();
+=======
+    return supabase.from('customers').insert({
+      tenant_id: tenantId,
+      branch_id: body.branchId ?? null,
+      full_name: body.fullName ?? body.name ?? '',
+      email: body.email ?? null,
+      phone: body.phone ?? null,
+      created_at: body.createdAt ?? new Date().toISOString()
+    }).select('*').single();
+>>>>>>> a75c7d2 (refactor(frontend): remove render dependency)
   }
   if (endpoint === 'expense-categories') {
     return supabase.from('expense_categories').insert({ ...body, tenant_id: tenantId }).select('*').single();
@@ -307,7 +318,28 @@ async function writeEntity(request: Request, endpoint: string, tenantId: string,
   if (endpoint === 'service-orders') {
     const { data: customer } = await supabase.from('customers').select('id,tenant_id').eq('id', body.customerId).maybeSingle();
     if (!customer || customer.tenant_id !== tenantId) throw new Error('Cliente fuera del tenant');
+<<<<<<< HEAD
     return supabase.from('service_orders').insert({ ...body, tenant_id: tenantId }).select('*').single();
+=======
+    return supabase.from('service_orders').insert({
+      tenant_id: tenantId,
+      branch_id: body.branchId ?? null,
+      customer_id: body.customerId,
+      status: body.status ?? 'recibido',
+      device_type: body.deviceType ?? '',
+      device_brand: body.deviceBrand ?? null,
+      device_model: body.deviceModel ?? null,
+      reported_issue: body.reportedIssue ?? '',
+      estimated_cost: body.estimatedCost ?? null,
+      notes: body.notes ?? null,
+      reception_checklist: body.receptionChecklist ?? null,
+      reception_photo_base64: body.receptionPhotoBase64 ?? null,
+      source_quote_folio: body.sourceQuoteFolio ?? null,
+      promised_date: body.promisedDate ?? null,
+      created_at: body.createdAt ?? new Date().toISOString(),
+      updated_at: body.updatedAt ?? new Date().toISOString()
+    }).select('*').single();
+>>>>>>> a75c7d2 (refactor(frontend): remove render dependency)
   }
   throw new Error('No soportado');
 }
