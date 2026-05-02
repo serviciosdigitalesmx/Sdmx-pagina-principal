@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { apiClient } from '@/lib/apiClient';
 import { SaasShell } from '@/components/ui/SaasShell';
 import { Search, Clock, ArrowRight } from 'lucide-react';
+import { formatDate } from '@/lib/format';
 
 interface TimelineEntry {
   id: string;
@@ -100,10 +101,7 @@ export default function Page() {
                         </span>
                       </div>
                       <time className="text-xs font-medium text-slate-500">
-                        {new Date(entry.created_at).toLocaleString('es-MX', { 
-                          dateStyle: 'long', 
-                          timeStyle: 'short' 
-                        })}
+                        {formatDate(entry.created_at, { dateStyle: 'long', timeStyle: 'short' })}
                       </time>
                     </div>
 

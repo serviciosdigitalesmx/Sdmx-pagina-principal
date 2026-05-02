@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { apiClient } from "@/lib/apiClient";
+import { formatDate } from "@/lib/format";
 import { Search, Package, Clock, ShieldCheck, MapPin, Smartphone, ArrowRight, FileText } from "lucide-react";
 
 type PortalOrder = {
@@ -155,7 +156,7 @@ export function PortalClient() {
                   <div>
                     <div className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500">Entrega Estimada</div>
                     <div className="text-xl font-black text-white mt-1">
-                      {order.promised_date ? new Date(order.promised_date).toLocaleDateString("es-MX", { dateStyle: "full" }) : "Evaluando fecha..."}
+                      {order.promised_date ? formatDate(order.promised_date, { dateStyle: "full" }) : "Evaluando fecha..."}
                     </div>
                   </div>
                 </div>
@@ -167,7 +168,7 @@ export function PortalClient() {
                   <div>
                     <div className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500">Última Actualización</div>
                     <div className="text-base font-bold text-slate-400 mt-1 uppercase tracking-tight">
-                      {order.updated_at ? new Date(order.updated_at).toLocaleString("es-MX", {
+                      {order.updated_at ? formatDate(order.updated_at, {
                         day: "2-digit",
                         month: "short",
                         hour: "2-digit",

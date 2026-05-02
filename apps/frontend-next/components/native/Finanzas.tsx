@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { apiClient } from "@/lib/apiClient";
 import { DollarSign, TrendingUp, TrendingDown, Wallet, CreditCard, Activity } from "lucide-react";
+import { formatCurrency } from "@/lib/format";
 
 interface FinanceSummary {
   totalSalesMxn: number;
@@ -37,7 +38,7 @@ export function Finanzas() {
   const stats = [
     { 
       label: "Ingresos Totales", 
-      value: data ? `$${data.totalSalesMxn.toLocaleString()} MXN` : "—", 
+      value: data ? `$${formatCurrency(data.totalSalesMxn)} MXN` : "—",
       icon: Wallet, 
       color: "text-green-400",
       bg: "bg-green-500/10",

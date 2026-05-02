@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { apiClient } from "@/lib/apiClient";
+import { formatDate } from "@/lib/format";
 import { Inbox, RefreshCw, ExternalLink } from "lucide-react";
 
 type RequestRow = {
@@ -90,7 +91,7 @@ export function Solicitudes() {
 
               <div className="flex items-center justify-between pt-2 border-t border-white/5">
                 <div className="text-[10px] uppercase tracking-widest text-slate-500">
-                  {item.updated_at ? new Date(item.updated_at).toLocaleString("es-MX") : "Sin actualización"}
+                  {item.updated_at ? formatDate(item.updated_at, { dateStyle: "medium", timeStyle: "short" }) : "Sin actualización"}
                 </div>
                 <a
                   href={`/portal?folio=${encodeURIComponent(item.folio)}`}

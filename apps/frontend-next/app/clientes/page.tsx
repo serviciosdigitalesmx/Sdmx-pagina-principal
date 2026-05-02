@@ -5,6 +5,7 @@ import { apiClient } from '@/lib/apiClient';
 import { useAuth } from '@/components/native/AuthGuard';
 import { getSupabaseClient } from '@/lib/supabase';
 import { tenantIdFromAuthUser } from '@/lib/tenant';
+import { formatDate } from '@/lib/format';
 import { Users, UserPlus, Phone, Mail, Calendar, Search, MoreVertical, X } from 'lucide-react';
 
 interface Customer {
@@ -191,7 +192,7 @@ export default function ClientesPage() {
                       <td className="px-8 py-6">
                         <div className="flex items-center gap-2.5 text-xs text-slate-500 font-bold uppercase tracking-tighter">
                           <Calendar className="h-3.5 w-3.5 text-blue-500/50" />
-                          {new Date(c.created_at).toLocaleDateString('es-MX', { dateStyle: 'long' })}
+                          {formatDate(c.created_at, { dateStyle: 'long' })}
                         </div>
                       </td>
                       <td className="px-8 py-6 text-right">

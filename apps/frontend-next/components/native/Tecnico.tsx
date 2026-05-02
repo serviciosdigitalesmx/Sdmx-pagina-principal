@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { apiClient } from "@/lib/apiClient";
 import { Wrench, Clock, CheckCircle2, AlertTriangle, ArrowRight } from "lucide-react";
+import { formatDate } from "@/lib/format";
 
 interface ServiceOrder {
   id: string;
@@ -73,7 +74,7 @@ export function Tecnico() {
                   <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black flex items-center gap-2">
                     {item.device_type}
                     <span className="w-1 h-1 rounded-full bg-slate-700" />
-                    Actualizado {new Date(item.updated_at).toLocaleDateString()}
+                    Actualizado {formatDate(item.updated_at, { dateStyle: 'medium' })}
                   </p>
                 </div>
               </div>

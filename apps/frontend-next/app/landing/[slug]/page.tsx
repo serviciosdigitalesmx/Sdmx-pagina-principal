@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Sparkles, Send, LayoutGrid, Smartphone, ShieldCheck, Clock3 } from "lucide-react";
 import { apiClient } from "@/lib/apiClient";
+import { formatCurrency } from "@/lib/format";
 
 type TenantData = {
   id: string;
@@ -139,21 +140,21 @@ export default function TenantLandingPage({ params }: { params: { slug: string }
                   <Sparkles className="h-5 w-5 text-[#8256f3]" />
                   <div>
                     <div className="text-sm font-semibold text-slate-700">Subtotal</div>
-                    <div className="text-slate-400">${quote.subtotal.toLocaleString("es-MX")} MXN</div>
+                    <div className="text-slate-400">${formatCurrency(quote.subtotal)} MXN</div>
                   </div>
                 </div>
                 <div className="flex items-start gap-3 rounded-3xl border border-slate-200 bg-white p-4">
                   <ShieldCheck className="h-5 w-5 text-[#f0a23a]" />
                   <div>
                     <div className="text-sm font-semibold text-slate-700">IVA</div>
-                    <div className="text-slate-400">${quote.vat.toLocaleString("es-MX")} MXN</div>
+                    <div className="text-slate-400">${formatCurrency(quote.vat)} MXN</div>
                   </div>
                 </div>
                 <div className="flex items-start gap-3 rounded-3xl border border-slate-200 bg-white p-4">
                   <Clock3 className="h-5 w-5 text-[#121826]" />
                   <div>
                     <div className="text-sm font-semibold text-slate-700">Total estimado</div>
-                    <div className="text-slate-400">${quote.total.toLocaleString("es-MX")} MXN</div>
+                    <div className="text-slate-400">${formatCurrency(quote.total)} MXN</div>
                   </div>
                 </div>
               </div>
