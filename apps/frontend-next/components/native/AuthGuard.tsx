@@ -3,7 +3,6 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { apiClient } from "@/lib/apiClient";
 import type { Session } from "@/lib/session";
-import { getSupabaseClient } from "@/lib/supabase";
 
 const AuthContext = createContext<{ session: Session | null; loading: boolean }>({ session: null, loading: true });
 
@@ -17,19 +16,8 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const supabase = getSupabaseClient();
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData.session) {
-        if (!PUBLIC_PATHS.some(p => pathname.startsWith(p))) {
-          router.push('/login');
-        }
-        setLoading(false);
-        return;
-      }
-
-      // Verify with backend (Source of Truth)
       try {
-        const response = await apiClient.get<Session>('/api/auth/me');
+        const response = await apiClient.get<Session>('/auth/me');
         if (response.success && response.data) {
           setSession(response.data);
         } else {

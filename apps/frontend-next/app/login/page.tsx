@@ -2,8 +2,7 @@
 import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSupabaseClient } from '@/lib/supabase';
-import { buildAppUrl } from '@/lib/app-url';
-import { buildApiUrl } from '@/lib/api-base';
+import { apiClient } from '@/lib/apiClient';
 import { LogIn, Lock, Mail, AlertCircle, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 
 const GoogleMark = () => (
@@ -27,14 +26,9 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const response = await fetch(buildApiUrl('/api/auth/login'), {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-      const payload = await response.json();
-      if (!response.ok || !payload?.success) {
-        throw new Error(payload?.error?.message || 'No se pudo iniciar sesión');
+      const payload = await apiClient.post<{ accessToken: string; refreshToken: string; expiresAt: string }>('/auth/login', { email, password });
+      if (!payload.success || !payload.data) {
+        throw new Error(payload.error?.message || 'No se pudo iniciar sesión');
       }
 
       const session = payload.data;
@@ -48,6 +42,7 @@ export default function LoginPage() {
         refresh_token: session.refreshToken
       });
       if (sessionError) throw sessionError;
+
       router.push('/hub');
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'No se pudo iniciar sesión');
@@ -61,12 +56,11 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const supabase = getSupabaseClient();
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: { redirectTo: buildAppUrl('/auth/callback') }
-      });
-      if (error) throw error;
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, '');
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') || window.location.origin;
+      if (!supabaseUrl) throw new Error('NEXT_PUBLIC_SUPABASE_URL no definido');
+      const redirectTo = encodeURIComponent(`${appUrl}/auth/callback`);
+      window.location.href = `${supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${redirectTo}`;
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'No se pudo iniciar con Google');
     } finally {

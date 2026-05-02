@@ -18,10 +18,18 @@ export function getApiBaseUrl() {
 }
 
 export function buildApiUrl(path: string) {
+  if (path.startsWith("http")) {
+    return path;
+  }
+
   const baseUrl = getApiBaseUrl();
   if (!baseUrl) {
     throw new Error("No se pudo resolver la URL base del API");
   }
 
-  return path.startsWith("http") ? path : `${baseUrl}${path}`;
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  const apiPath = cleanPath.startsWith("/api/") || cleanPath === "/api"
+    ? cleanPath
+    : `/api${cleanPath}`;
+  return `${baseUrl}${apiPath}`;
 }

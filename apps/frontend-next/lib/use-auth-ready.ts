@@ -1,32 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getSupabaseClient } from "@/lib/supabase";
+import { apiClient } from "@/lib/apiClient";
 
 export function useAuthReady() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     let mounted = true;
-    const supabase = getSupabaseClient();
 
     const sync = async () => {
-      const { data } = await supabase.auth.getSession();
+      const data = await apiClient.get("/auth/me");
       if (!mounted) return;
-      setReady(Boolean(data.session?.access_token));
+      setReady(Boolean(data.success && data.data));
     };
 
     void sync();
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(() => {
-      void sync();
-    });
-
     return () => {
       mounted = false;
-      subscription.unsubscribe();
     };
   }, []);
 

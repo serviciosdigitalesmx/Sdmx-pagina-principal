@@ -4,7 +4,6 @@ import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Building2, AlertCircle, UserPlus, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { getSupabaseClient } from '@/lib/supabase';
-import { buildAppUrl } from '@/lib/app-url';
 import { buildApiUrl } from '@/lib/api-base';
 
 const GoogleMark = () => (
@@ -80,12 +79,11 @@ export default function RegisterPage() {
     setError('');
 
     try {
-      const supabase = getSupabaseClient();
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: { redirectTo: buildAppUrl('/auth/callback') }
-      });
-      if (error) throw error;
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, '');
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') || window.location.origin;
+      if (!supabaseUrl) throw new Error('NEXT_PUBLIC_SUPABASE_URL no definido');
+      const redirectTo = encodeURIComponent(`${appUrl}/auth/callback`);
+      window.location.href = `${supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${redirectTo}`;
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'No se pudo registrar con Google');
     } finally {
