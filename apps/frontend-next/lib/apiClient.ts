@@ -20,6 +20,27 @@ function unauthorizedResponse<T>(message = 'No autorizado'): ApiResponse<T> {
   };
 }
 
+async function resolveBearerToken(endpoint: string): Promise<string | null> {
+  if (isPublicEndpoint(endpoint)) {
+    return null;
+  }
+
+  const supabase = getSupabaseClient();
+  const maxAttempts = 10;
+  const delayMs = 150;
+
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token || null;
+    if (token) return token;
+    if (attempt < maxAttempts - 1) {
+      await new Promise((resolve) => window.setTimeout(resolve, delayMs));
+    }
+  }
+
+  return null;
+}
+
 export async function fetchWithAuth<T>(
   endpoint: string,
   options: RequestInit = {}
@@ -30,12 +51,9 @@ export async function fetchWithAuth<T>(
     throw new Error('No se pudo resolver la URL base de la API');
   }
 
-  const supabase = getSupabaseClient();
-  const { data: authSession } = await supabase.auth.getSession();
-  const token = authSession.session?.access_token || null;
-  const requiresAuth = !isPublicEndpoint(endpoint);
+  const token = await resolveBearerToken(endpoint);
 
-  if (requiresAuth && !token) {
+  if (!isPublicEndpoint(endpoint) && !token) {
     return unauthorizedResponse<T>('This endpoint requires a valid Bearer token');
   }
 
