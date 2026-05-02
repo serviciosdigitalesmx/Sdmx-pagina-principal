@@ -18,9 +18,9 @@ import {
   Users,
   Wrench
 } from "lucide-react";
-import { clearSession } from "@/lib/session";
 import { clearClientState } from "@/lib/debug";
 import { getSupabaseClient } from "@/lib/supabase";
+import { tenantIdFromAuthUser } from "@/lib/tenant";
 
 const navItems = [
   { href: "/hub", label: "Hub Operativo", icon: ClipboardList },
@@ -49,7 +49,7 @@ export function SaasShell({
   const router = useRouter();
   const [session, setSession] = useState<{
     userName: string;
-    shopName: string;
+    tenantName: string;
   } | null>(null);
 
   useEffect(() => {
@@ -71,10 +71,7 @@ export function SaasShell({
           authSession.user.user_metadata?.name ||
           authSession.user.email ||
           "Usuario",
-        shopName:
-          authSession.user.user_metadata?.shop_name ||
-          authSession.user.user_metadata?.tenant_name ||
-          "Tenant activo",
+        tenantName: tenantIdFromAuthUser(authSession.user) || "Tenant activo",
       });
     };
 
@@ -93,7 +90,7 @@ export function SaasShell({
   }, []);
 
   const userName = session?.userName || "Usuario";
-  const shopName = session?.shopName || "Tenant activo";
+  const tenantName = session?.tenantName || "Tenant activo";
 
   async function logout() {
     try {
@@ -130,7 +127,7 @@ export function SaasShell({
 
           <div className="mt-8 srf-card-soft p-4">
             <div className="text-[10px] uppercase tracking-[0.22em] text-slate-500 font-black">Negocio</div>
-            <div className="text-white font-bold mt-1 truncate">{shopName}</div>
+            <div className="text-white font-bold mt-1 truncate">{tenantName}</div>
             <div className="mt-3 inline-flex px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest srf-badge-green">
               Tenant activo
             </div>

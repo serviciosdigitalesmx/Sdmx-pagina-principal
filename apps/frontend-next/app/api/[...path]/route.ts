@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { randomUUID } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
+import { tenantIdFromAuthUser } from '@/lib/tenant';
 
 type SupabaseAuth = { access_token?: string; refresh_token?: string };
 
@@ -25,7 +26,7 @@ async function getTenantId(token: string) {
   const { data, error } = await client.auth.getUser(token);
   if (error) throw error;
   const user = data.user;
-  const tenantId = user?.user_metadata?.tenant_id || user?.app_metadata?.tenant_id;
+  const tenantId = tenantIdFromAuthUser(user);
   if (!tenantId) throw new Error('No se pudo resolver tenant');
   return String(tenantId);
 }
@@ -57,8 +58,15 @@ async function getLatestSubscription(supabase: ReturnType<typeof createAuthedCli
 }
 
 async function getLatestShop(supabase: ReturnType<typeof createAuthedClient>, tenantId: string) {
-  const { data } = await supabase.from('shops').select('*').eq('id', tenantId).maybeSingle();
-  return data || null;
+  const { data } = await supabase.from('tenants').select('id,name,slug,billing_exempt').eq('id', tenantId).maybeSingle();
+  if (!data) return null;
+  if (!String(data.slug || '').trim()) return null;
+  return {
+    id: data.id,
+    name: data.name,
+    slug: data.slug,
+    billing_exempt: Boolean(data.billing_exempt)
+  };
 }
 
 async function getDefaultBranchId(supabase: ReturnType<typeof createAuthedClient>, tenantId: string) {
@@ -117,6 +125,8 @@ export async function GET(request: Request, context: { params: Promise<{ path: s
       const { data: user } = await supabase.auth.getUser(token);
       const localUser = await getLocalUser(supabase, user.user?.id || '');
       const shop = await getLatestShop(supabase, tenantId);
+      if (!shop) throw new Error('El tenant no tiene shop configurado');
+      if (!String(shop.slug || '').trim()) throw new Error('El tenant no tiene slug configurado');
       const { data: accessAllowed } = await (supabase as any).rpc('has_active_access', { p_tenant_id: tenantId });
       const subscription = await getLatestSubscription(supabase, tenantId);
       return NextResponse.json({
@@ -127,7 +137,7 @@ export async function GET(request: Request, context: { params: Promise<{ path: s
           expiresAt: new Date(Date.now() + 3600 * 1000).toISOString(),
           accessGranted: Boolean(accessAllowed),
           user: localUser || null,
-          shop: shop || null,
+          shop,
           subscription,
           roles: [],
           permissions: []

@@ -1,10 +1,10 @@
 import { supabase } from './supabase.js';
 import { env } from '../config/env.js';
+import { tenantIdFromSession } from './tenant.js';
 import {
   PlanCode,
   RoleDto,
   SessionDto,
-  ShopDto,
   SubscriptionDto,
   UserDto
 } from '@sdmx/contracts';
@@ -63,6 +63,20 @@ async function getLatestSubscription(tenantId: string): Promise<SubscriptionDto 
   return normalizeSubscription(subscriptions[0] ?? null);
 }
 
+type TenantRow = {
+  id: string;
+  name: string;
+  slug: string;
+  billing_exempt?: boolean | null;
+};
+
+async function getTenantById(tenantId: string): Promise<TenantRow | null> {
+  const tenants = await supabase.queryAsService<TenantRow[]>(
+    `tenants?id=eq.${encodeURIComponent(tenantId)}&select=id,name,slug,billing_exempt`
+  );
+  return tenants[0] ?? null;
+}
+
 async function createInitialTrialSubscription(tenantId: string): Promise<SubscriptionDto> {
   const trialEndsAt = trialExpiryFromNow();
   return {
@@ -87,25 +101,25 @@ export type RequestContext = {
 };
 
 export async function loadSession(token: string): Promise<SessionDto> {
-  const authUser = await supabase.authUser(token);
+  const authUser = (await supabase.authUser(token)) as unknown as { id: string; app_metadata?: { tenant_id?: string } };
+  const tenantId = String(authUser?.app_metadata?.tenant_id || '');
+  assert(Boolean(tenantId), 'El tenant no está definido en auth.users.app_metadata');
   const users = await supabase.queryAsService<SessionRow[]>(
     `users?auth_user_id=eq.${encodeURIComponent(authUser.id)}&select=*`
   );
   const user = users[0];
   assert(Boolean(user), 'Usuario no encontrado en tenant');
-
-  const tenantId = await resolveTenantId(user, token);
-  const [shops, userRoles] = await Promise.all([
-    supabase.queryAsService<ShopDto[]>(`shops?id=eq.${encodeURIComponent(tenantId)}&select=*`),
+  assert(String(user.tenant_id || '') === tenantId, 'El tenant del usuario no coincide con auth.users.app_metadata');
+  const [tenant, userRoles] = await Promise.all([
+    getTenantById(tenantId),
     supabase.queryAsService<Array<{ role_id: string; roles: RoleDto }>>(
       `user_roles?user_id=eq.${encodeURIComponent(String(user.id))}&select=role_id,roles(*)`
     )
   ]);
-  const shop = shops[0];
-  if (!shop) {
-    throw new Error('El tenant no tiene shop configurado');
+  if (!tenant) {
+    throw new Error('El tenant no existe');
   }
-  if (!String(shop.slug || '').trim()) {
+  if (!String(tenant.slug || '').trim()) {
     throw new Error('El tenant no tiene slug configurado');
   }
   const access = await hasActiveAccess(tenantId);
@@ -131,7 +145,12 @@ export async function loadSession(token: string): Promise<SessionDto> {
     expiresAt: new Date(Date.now() + 3600 * 1000).toISOString(),
     accessGranted: access,
     user: user as UserDto,
-    shop,
+    shop: {
+      id: tenant.id,
+      name: tenant.name,
+      slug: tenant.slug,
+      billing_exempt: Boolean(tenant.billing_exempt)
+    },
     subscription,
     roles: userRoles.map((r) => r.roles).filter(Boolean),
     permissions: []
@@ -140,7 +159,7 @@ export async function loadSession(token: string): Promise<SessionDto> {
 
 export async function loadContext(token: string): Promise<RequestContext> {
   const session = await loadSession(token);
-  return { token, session, tenantId: String(session.shop.id) };
+  return { token, session, tenantId: tenantIdFromSession(session) };
 }
 
 export function requireActiveSubscription(session: SessionDto): void {
@@ -161,23 +180,8 @@ export function planOrder(plan: PlanCode): number {
   return order[plan];
 }
 
-async function resolveTenantId(user: SessionRow, token: string): Promise<string> {
-  const explicitTenantId = user.tenant_id ? String(user.tenant_id) : '';
-  if (explicitTenantId) return explicitTenantId;
-
-  const branchId = user.branch_id ? String(user.branch_id) : '';
-  assert(Boolean(branchId), 'El usuario no tiene tenant ni branch asignado');
-
-  const branches = await supabase.queryAsService<Array<{ tenant_id: string }>>(
-    `branches?id=eq.${encodeURIComponent(branchId)}&select=tenant_id`
-  );
-  const tenantId = branches[0]?.tenant_id ? String(branches[0].tenant_id) : '';
-  assert(Boolean(tenantId), 'No se pudo resolver el tenant del usuario');
-  return tenantId;
-}
-
 export function resolveTenantIdFromSession(session: SessionDto): string {
-  return String(session.shop.id);
+  return tenantIdFromSession(session);
 }
 
 export function mpSettings() {

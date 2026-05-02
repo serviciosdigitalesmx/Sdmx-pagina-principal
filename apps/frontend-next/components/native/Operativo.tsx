@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { apiClient } from "@/lib/apiClient";
 import { ClipboardList, Plus, Smartphone, AlertCircle } from "lucide-react";
 import { getSupabaseClient } from "@/lib/supabase";
+import { tenantIdFromAuthUser } from "@/lib/tenant";
 
 interface Order {
   id: string;
@@ -51,7 +52,7 @@ export function Operativo() {
     const resolveTenant = async () => {
       const supabase = getSupabaseClient();
       const { data } = await supabase.auth.getSession();
-      const tenant = data.session?.user.user_metadata?.tenant_id || data.session?.user.app_metadata?.tenant_id || '';
+      const tenant = tenantIdFromAuthUser(data.session?.user ?? null);
       setTenantId(tenant);
     };
 

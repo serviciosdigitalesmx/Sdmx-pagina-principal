@@ -22,9 +22,9 @@ security definer
 set search_path = public
 as $$
 declare
+  v_tenant_id uuid;
   v_tenant_name text;
   v_tenant_slug text;
-  v_tenant_id uuid;
   v_branch_id uuid;
   v_full_name text;
   v_email text;
@@ -32,15 +32,24 @@ declare
   v_billing_exempt boolean;
 begin
   v_email := coalesce(new.email, '');
-  v_billing_exempt := coalesce((new.raw_user_meta_data ->> 'billing_exempt')::boolean, false);
+  v_tenant_id := nullif(coalesce(new.raw_app_meta_data ->> 'tenant_id', new.raw_user_meta_data ->> 'tenant_id'), '')::uuid;
+  if v_tenant_id is null then
+    raise exception 'auth.users.app_metadata.tenant_id es obligatorio';
+  end if;
+  v_billing_exempt := coalesce((select billing_exempt from public.tenants where id = v_tenant_id), false);
   v_full_name := nullif(coalesce(new.raw_user_meta_data ->> 'full_name', new.raw_user_meta_data ->> 'name', ''), '');
-  v_tenant_name := nullif(coalesce(new.raw_user_meta_data ->> 'shop_name', new.raw_user_meta_data ->> 'tenant_name', v_full_name, split_part(v_email, '@', 1), 'Default Shop'), '');
-  v_tenant_slug := nullif(coalesce(new.raw_user_meta_data ->> 'tenant_slug', new.raw_user_meta_data ->> 'shop_slug', regexp_replace(lower(coalesce(new.raw_user_meta_data ->> 'shop_name', split_part(v_email, '@', 1), 'default')), '[^a-z0-9]+', '-', 'g')), '');
+  select t.name, t.slug
+    into v_tenant_name, v_tenant_slug
+  from public.tenants t
+  where t.id = v_tenant_id;
 
-  insert into public.tenants (id, name, slug, billing_exempt)
-  values (gen_random_uuid(), v_tenant_name, v_tenant_slug, v_billing_exempt)
-  on conflict (slug) do update set name = excluded.name, billing_exempt = excluded.billing_exempt
-  returning id into v_tenant_id;
+  if v_tenant_name is null or btrim(v_tenant_name) = '' then
+    raise exception 'El tenant no existe o no tiene nombre';
+  end if;
+
+  if v_tenant_slug is null or btrim(v_tenant_slug) = '' then
+    raise exception 'El tenant no existe o no tiene slug';
+  end if;
 
   insert into public.shops (id, name, slug, billing_exempt)
   values (v_tenant_id, v_tenant_name, v_tenant_slug, v_billing_exempt)

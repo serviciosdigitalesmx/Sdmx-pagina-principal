@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createHmac } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
+import { tenantIdFromAuthUser } from '@/lib/tenant';
 
 type PlanCode = 'basic' | 'pro' | 'enterprise';
 
@@ -33,7 +34,7 @@ async function resolveTenantId(token: string) {
   if (userError) throw userError;
   const user = userRes.user;
   if (!user) throw new Error('Usuario no autenticado');
-  const tenantId = user.user_metadata?.tenant_id || user.app_metadata?.tenant_id;
+  const tenantId = tenantIdFromAuthUser(user);
   if (!tenantId) throw new Error('No se pudo resolver tenant');
   return String(tenantId);
 }

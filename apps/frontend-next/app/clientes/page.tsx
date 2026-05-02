@@ -4,6 +4,7 @@ import { SaasShell } from '@/components/ui/SaasShell';
 import { apiClient } from '@/lib/apiClient';
 import { useAuth } from '@/components/native/AuthGuard';
 import { getSupabaseClient } from '@/lib/supabase';
+import { tenantIdFromAuthUser } from '@/lib/tenant';
 import { Users, UserPlus, Phone, Mail, Calendar, Search, MoreVertical, X } from 'lucide-react';
 
 interface Customer {
@@ -31,12 +32,9 @@ export default function ClientesPage() {
     const resolveTenant = async () => {
       const supabase = getSupabaseClient();
       const { data } = await supabase.auth.getSession();
-      setTenantId(
-        authSession?.shop.id ||
-        data.session?.user.user_metadata?.tenant_id ||
-        data.session?.user.app_metadata?.tenant_id ||
-        ''
-      );
+      const sessionUser = data.session?.user ?? null;
+      const authUser = authSession?.user ?? null;
+      setTenantId(tenantIdFromAuthUser(sessionUser) || tenantIdFromAuthUser(authUser));
     };
 
     void resolveTenant();
