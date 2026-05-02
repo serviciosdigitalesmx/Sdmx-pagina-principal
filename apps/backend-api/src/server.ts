@@ -25,7 +25,10 @@ const applyCors = (response: Response, origin: string | null): Response => {
   const headers = new Headers(response.headers);
   headers.set('access-control-allow-origin', normalizeOrigin(origin as string));
   headers.set('access-control-allow-methods', 'GET,POST,PATCH,PUT,DELETE,OPTIONS');
-  headers.set('access-control-allow-headers', 'content-type,authorization');
+  headers.set(
+    'access-control-allow-headers',
+    'content-type,authorization,apikey,x-client-info,x-supabase-api-version,x-supabase-auth-token,x-supabase-refresh-token'
+  );
   headers.set('access-control-max-age', '86400');
   headers.set('vary', 'origin');
   return new Response(response.body, {
