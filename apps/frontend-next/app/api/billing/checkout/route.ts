@@ -14,7 +14,7 @@ const prices: Record<PlanCode, number> = {
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const mpAccessToken = process.env.MP_ACCESS_TOKEN;
+const mpAccessToken = process.env.MP_ACCESS_TOKEN || process.env.MERCADOPAGO_ACCESS_TOKEN;
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL;
 const webhookBaseUrl = process.env.WEBHOOK_BASE_URL || process.env.BACKEND_PUBLIC_URL || appUrl;
 

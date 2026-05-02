@@ -26,7 +26,7 @@ export const env = {
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean),
-  mpAccessToken: optional('MP_ACCESS_TOKEN'),
+  mpAccessToken: optional('MP_ACCESS_TOKEN', optional('MERCADOPAGO_ACCESS_TOKEN')),
   mpWebhookSecret: optional('MP_WEBHOOK_SECRET'),
   appUrl: optional('APP_URL', optional('NEXT_PUBLIC_APP_URL')).replace(/\/$/, ''),
   webhookBaseUrl: optional('WEBHOOK_BASE_URL', optional('BACKEND_PUBLIC_URL')).replace(/\/$/, '')
