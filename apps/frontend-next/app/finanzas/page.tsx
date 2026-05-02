@@ -4,12 +4,14 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { CreditCard, Loader2, RefreshCw, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
 import { SaasShell } from '@/components/ui/SaasShell';
 import { apiClient } from '@/lib/apiClient';
+import { useAuthReady } from '@/lib/use-auth-ready';
 import type { FinanceMonthlyDto, FinanceSummaryDto, FinanceTransactionDto } from '@sdmx/contracts';
 
 const today = new Date().toISOString().slice(0, 10);
 const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
 export default function FinanzasPage() {
+  const authReady = useAuthReady();
   const [from, setFrom] = useState(thirtyDaysAgo);
   const [to, setTo] = useState(today);
   const [loading, setLoading] = useState(true);
@@ -70,8 +72,9 @@ export default function FinanzasPage() {
   };
 
   useEffect(() => {
+    if (!authReady) return;
     void loadFinance();
-  }, [query]);
+  }, [authReady, query]);
 
   const handleRefresh = (event?: FormEvent) => {
     event?.preventDefault();

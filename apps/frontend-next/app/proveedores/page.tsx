@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Building2, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { SaasShell } from '@/components/ui/SaasShell';
 import { apiClient } from '@/lib/apiClient';
+import { useAuthReady } from '@/lib/use-auth-ready';
 import { getSupabaseClient } from '@/lib/supabase';
 import type { SupplierDto } from '@sdmx/contracts';
 
@@ -26,6 +27,7 @@ const emptyForm: SupplierForm = {
 };
 
 export default function ProveedoresPage() {
+  const authReady = useAuthReady();
   const [tenantId, setTenantId] = useState('');
 
   const [suppliers, setSuppliers] = useState<SupplierDto[]>([]);
@@ -68,8 +70,9 @@ export default function ProveedoresPage() {
   };
 
   useEffect(() => {
+    if (!authReady) return;
     void loadSuppliers();
-  }, []);
+  }, [authReady]);
 
   useEffect(() => {
     if (!editingSupplier) return;

@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { SaasShell } from '@/components/ui/SaasShell';
 import { apiClient } from '@/lib/apiClient';
+import { useAuthReady } from '@/lib/use-auth-ready';
 import { Boxes, ArrowDownRight, ArrowUpRight, RefreshCw, Plus, History } from 'lucide-react';
 import { getSupabaseClient } from '@/lib/supabase';
 import { formatDate } from '@/lib/format';
@@ -52,6 +53,7 @@ const emptyMovementForm: MovementForm = {
 };
 
 export default function InventarioPage() {
+  const authReady = useAuthReady();
   const [tenantId, setTenantId] = useState('');
 
   const [products, setProducts] = useState<InventoryProductDto[]>([]);
@@ -135,10 +137,12 @@ export default function InventarioPage() {
   };
 
   useEffect(() => {
+    if (!authReady) return;
     void loadData();
-  }, []);
+  }, [authReady]);
 
   useEffect(() => {
+    if (!authReady) return;
     const loadKardex = async () => {
       if (!selectedProductId) {
         setKardex([]);
@@ -150,7 +154,7 @@ export default function InventarioPage() {
       }
     };
     void loadKardex();
-  }, [selectedProductId]);
+  }, [authReady, selectedProductId]);
 
   const handleCreateProduct = async (event: FormEvent) => {
     event.preventDefault();

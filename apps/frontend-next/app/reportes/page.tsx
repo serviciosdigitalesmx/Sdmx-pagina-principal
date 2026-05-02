@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { BarChart3, Loader2, RefreshCw } from 'lucide-react';
 import { SaasShell } from '@/components/ui/SaasShell';
 import { apiClient } from '@/lib/apiClient';
+import { useAuthReady } from '@/lib/use-auth-ready';
 import type {
   FinanceReportDto,
   InventoryReportDto,
@@ -18,6 +19,7 @@ type ReportResponse =
   | { kind: 'purchases-expenses'; data: PurchasesExpensesReportDto };
 
 export default function ReportesPage() {
+  const authReady = useAuthReady();
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [loading, setLoading] = useState(true);
@@ -99,9 +101,9 @@ export default function ReportesPage() {
   };
 
   useEffect(() => {
-    if (!from || !to) return;
+    if (!authReady || !from || !to) return;
     void loadReports();
-  }, [query]);
+  }, [authReady, query]);
 
   const handleRefresh = (event?: FormEvent) => {
     event?.preventDefault();
