@@ -3,20 +3,15 @@
 import Link from "next/link";
 import { useSubscription } from "@/hooks/useSubscription";
 
-type PlanCode = "basic" | "pro" | "enterprise";
-const PLAN_ORDER: Record<PlanCode, number> = { basic: 1, pro: 2, enterprise: 3 };
 export function FeatureGuard({
   children,
-  requiredPlan = "basic",
   featureName = "este módulo"
 }: {
   children: React.ReactNode;
-  requiredPlan?: PlanCode;
   featureName?: string;
 }) {
   const { subscription, accessGranted, loading } = useSubscription();
-  const currentPlanLevel = subscription ? PLAN_ORDER[subscription.plan] : 0;
-  const allowed = accessGranted && currentPlanLevel >= PLAN_ORDER[requiredPlan];
+  const allowed = accessGranted;
 
   if (loading) {
     return (
@@ -37,10 +32,10 @@ export function FeatureGuard({
 
         <h2 className="mt-5 text-2xl font-black text-white">Suscripción requerida</h2>
         <p className="mt-2 text-slate-400">
-          Para usar {featureName}, necesitas una suscripción válida. Plan actual:{" "}
+          Para usar {featureName}, necesitas una suscripción válida. Estado actual:{" "}
           <span className="text-[#FF6A2A] font-bold">{subscription?.status || "sin suscripción"}</span>.
           {" "}
-          Nivel actual: <span className="text-[#FF6A2A] font-bold">{currentPlan}</span>.
+          Plan actual: <span className="text-[#FF6A2A] font-bold">{currentPlan}</span>.
         </p>
 
         <Link href="/billing" className="mt-6 inline-flex srf-btn-primary px-6 py-3">
