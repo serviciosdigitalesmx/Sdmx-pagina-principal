@@ -8,6 +8,7 @@ type SupabaseAuth = { access_token?: string; refresh_token?: string };
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, '') || '';
 
 function createAuthedClient(token: string) {
   if (!supabaseUrl || !supabaseAnonKey) throw new Error('Supabase environment variables are required');
@@ -395,23 +396,32 @@ export async function POST(request: Request, context: { params: Promise<{ path: 
   const publicPostEndpoints = new Set(['auth/login', 'auth/register']);
   if (publicPostEndpoints.has(endpoint)) {
     try {
-      const supabase = createAuthedClient(token);
       if (endpoint === 'auth/login') {
         const body = await request.json();
-        const { data, error } = await supabase.auth.signInWithPassword({ email: body.email, password: body.password });
-        if (error) throw error;
-        if (!data.session) throw new Error('No se recibió sesión');
-        return NextResponse.json({ success: true, data: { accessToken: data.session.access_token, refreshToken: data.session.refresh_token, expiresAt: new Date((data.session.expires_at || 0) * 1000).toISOString() } });
+        if (!apiBaseUrl) throw new Error('NEXT_PUBLIC_API_BASE_URL no definido');
+        const response = await fetch(`${apiBaseUrl}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ email: body.email, password: body.password })
+        });
+        const payload = await response.json();
+        return NextResponse.json(payload, { status: response.status });
       }
 
       const body = await request.json();
-      const { data, error } = await supabase.auth.signUp({
-        email: body.email,
-        password: body.password,
-        options: { data: { full_name: body.fullName, shop_name: body.tenantId, tenant_slug: body.tenantId } }
+      if (!apiBaseUrl) throw new Error('NEXT_PUBLIC_API_BASE_URL no definido');
+      const response = await fetch(`${apiBaseUrl}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          email: body.email,
+          password: body.password,
+          fullName: body.fullName,
+          tenantId: body.tenantId
+        })
       });
-      if (error) throw error;
-      return NextResponse.json({ success: true, data: data.user });
+      const payload = await response.json();
+      return NextResponse.json(payload, { status: response.status });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Error interno';
       return NextResponse.json({ success: false, error: { code: 'DOMAIN_ERROR', message } }, { status: 400 });

@@ -3,6 +3,7 @@ import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSupabaseClient } from '@/lib/supabase';
 import { buildAppUrl } from '@/lib/app-url';
+import { buildApiUrl } from '@/lib/api-base';
 import { LogIn, Lock, Mail, AlertCircle, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 
 const GoogleMark = () => (
@@ -26,10 +27,27 @@ export default function LoginPage() {
     setError('');
 
     try {
+      const response = await fetch(buildApiUrl('/api/auth/login'), {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const payload = await response.json();
+      if (!response.ok || !payload?.success) {
+        throw new Error(payload?.error?.message || 'No se pudo iniciar sesión');
+      }
+
+      const session = payload.data;
+      if (!session?.accessToken || !session?.refreshToken) {
+        throw new Error('La respuesta del backend no contiene credenciales válidas.');
+      }
+
       const supabase = getSupabaseClient();
-      const { error: signInError, data } = await supabase.auth.signInWithPassword({ email, password });
-      if (signInError) throw signInError;
-      if (!data.session) throw new Error('No se recibió sesión de Supabase.');
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: session.accessToken,
+        refresh_token: session.refreshToken
+      });
+      if (sessionError) throw sessionError;
       router.push('/hub');
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'No se pudo iniciar sesión');

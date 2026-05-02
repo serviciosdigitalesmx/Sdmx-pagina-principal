@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Building2, AlertCircle, UserPlus, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { getSupabaseClient } from '@/lib/supabase';
 import { buildAppUrl } from '@/lib/app-url';
+import { buildApiUrl } from '@/lib/api-base';
 
 const GoogleMark = () => (
   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#1F7EDC] text-[11px] font-black leading-none text-white shadow-[0_0_12px_rgba(31,126,220,.3)]">
@@ -29,27 +30,44 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const supabase = getSupabaseClient();
-      const tenantSlug = shopName.trim().toLowerCase().replace(/[^a-z0-9]/g, '-') || 'default';
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-            shop_name: shopName,
-            shop_slug: tenantSlug,
-            tenant_slug: tenantSlug
-          }
-        }
+      const registerResponse = await fetch(buildApiUrl('/api/auth/register'), {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          password,
+          fullName,
+          tenantId: shopName
+        })
       });
-      if (error) throw error;
-      if (data.session) {
-        router.push('/hub');
-        return;
+      const registerPayload = await registerResponse.json();
+      if (!registerResponse.ok || !registerPayload?.success) {
+        throw new Error(registerPayload?.error?.message || 'Error al registrar');
       }
-      alert('Usuario creado con éxito. Revisa tu correo o inicia sesión para entrar al panel.');
-      router.push('/login');
+
+      const loginResponse = await fetch(buildApiUrl('/api/auth/login'), {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const loginPayload = await loginResponse.json();
+      if (!loginResponse.ok || !loginPayload?.success) {
+        throw new Error(loginPayload?.error?.message || 'No se pudo iniciar sesión después del registro');
+      }
+
+      const session = loginPayload.data;
+      if (!session?.accessToken || !session?.refreshToken) {
+        throw new Error('La respuesta del backend no contiene credenciales válidas.');
+      }
+
+      const supabase = getSupabaseClient();
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: session.accessToken,
+        refresh_token: session.refreshToken
+      });
+      if (sessionError) throw sessionError;
+
+      router.push('/hub');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error al registrar');
     } finally {
