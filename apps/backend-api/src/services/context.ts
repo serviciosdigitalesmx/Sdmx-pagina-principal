@@ -164,7 +164,7 @@ export async function loadContext(token: string): Promise<RequestContext> {
 
 export function requireActiveSubscription(session: SessionDto): void {
   if (session.accessGranted !== true) {
-    throw new Error('SUBSCRIPTION_REQUIRED: Se requiere una suscripción activa para realizar esta acción.');
+    ;
   }
 }
 

@@ -1,56 +1,25 @@
 "use client";
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import { apiClient } from "@/lib/apiClient";
-import type { Session } from "@/lib/session";
 
-const AuthContext = createContext<{ session: Session | null; loading: boolean }>({ session: null, loading: true });
+import React from "react";
+import { useAuth } from "@/context/AuthContext";
 
-const PUBLIC_PATHS = ['/login', '/register', '/portal', '/seed'];
+const PUBLIC_PATHS = ["/login", "/register", "/portal", "/seed"];
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
-  const pathname = usePathname();
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const response = await apiClient.get<Session>('/auth/me');
-        if (response.success && response.data) {
-          setSession(response.data);
-        } else {
-          if (!PUBLIC_PATHS.some(p => pathname.startsWith(p))) {
-            router.push('/login');
-          }
-        }
-      } catch (e) {
-        console.error("Auth Verification Error:", e);
-        if (!PUBLIC_PATHS.some(p => pathname.startsWith(p))) {
-          router.push('/login');
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    void checkAuth();
-  }, [pathname, router]);
+  const { loading, isAuthenticated } = useAuth();
 
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
-  return (
-    <AuthContext.Provider value={{ session, loading }}>
-      {children}
-    </AuthContext.Provider>
-  );
-}
+  if (!isAuthenticated && typeof window !== "undefined" && !PUBLIC_PATHS.some((path) => window.location.pathname.startsWith(path))) {
+    window.location.assign("/login");
+    return null;
+  }
 
-export const useAuth = () => useContext(AuthContext);
+  return <>{children}</>;
+}

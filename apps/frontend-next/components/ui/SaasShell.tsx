@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   BarChart3,
   Boxes,
@@ -10,17 +9,14 @@ import {
   ClipboardList,
   CreditCard,
   Receipt,
-  Home,
   LogOut,
   ShoppingCart,
-  ShieldCheck,
   Smartphone,
   Users,
   Wrench
 } from "lucide-react";
 import { clearClientState } from "@/lib/debug";
-import { getSupabaseClient } from "@/lib/supabase";
-import { tenantIdFromAuthUser } from "@/lib/tenant";
+import { useAuth } from "@/context/AuthContext";
 
 const navItems = [
   { href: "/hub", label: "Hub Operativo", icon: ClipboardList },
@@ -36,77 +32,14 @@ const navItems = [
   { href: "/billing", label: "Planes / Billing", icon: CreditCard }
 ];
 
-export function SaasShell({
-  title,
-  subtitle,
-  children
-}: {
-  title: string;
-  subtitle?: string;
-  children: React.ReactNode;
-}) {
+export function SaasShell({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
-  const [session, setSession] = useState<{
-    userName: string;
-    tenantName: string;
-  } | null>(null);
-
-  useEffect(() => {
-    let mounted = true;
-    const supabase = getSupabaseClient();
-
-    const syncSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!mounted) return;
-      const authSession = data.session;
-      if (!authSession) {
-        setSession(null);
-        return;
-      }
-
-      setSession({
-        userName:
-          authSession.user.user_metadata?.full_name ||
-          authSession.user.user_metadata?.name ||
-          authSession.user.email ||
-          "Usuario",
-        tenantName: tenantIdFromAuthUser(authSession.user) || "Tenant activo",
-      });
-    };
-
-    void syncSession();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(() => {
-      void syncSession();
-    });
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  const userName = session?.userName || "Usuario";
-  const tenantName = session?.tenantName || "Tenant activo";
-
-  async function logout() {
-    try {
-      await getSupabaseClient().auth.signOut();
-    } finally {
-      router.push("/login");
-    }
-  }
+  const { session, logout } = useAuth();
+  const userName = session?.user?.full_name || session?.user?.email || "Usuario";
+  const tenantName = session?.shop?.name || "Tenant activo";
 
   async function debugReset() {
-    try {
-      await getSupabaseClient().auth.signOut();
-    } catch {
-      // ignore sign out errors
-    }
-
+    await logout().catch(() => undefined);
     await clearClientState();
     window.location.assign("/login");
   }
@@ -138,11 +71,7 @@ export function SaasShell({
               const Icon = item.icon;
               const active = pathname === item.href;
               return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`srf-nav-item ${active ? "srf-nav-item-active" : ""} flex items-center gap-3 px-4 py-3 text-sm font-bold`}
-                >
+                <Link key={item.href} href={item.href} className={`srf-nav-item ${active ? "srf-nav-item-active" : ""} flex items-center gap-3 px-4 py-3 text-sm font-bold`}>
                   <Icon className="h-4 w-4" />
                   {item.label}
                 </Link>
@@ -151,16 +80,10 @@ export function SaasShell({
           </nav>
 
           <div className="mt-auto pt-6">
-            <button
-              onClick={debugReset}
-              className="w-full mb-3 flex items-center justify-center gap-2 rounded-2xl border border-amber-500/20 bg-amber-500/10 py-3 text-sm font-black text-amber-200 hover:bg-amber-500/20"
-            >
+            <button onClick={debugReset} className="w-full mb-3 flex items-center justify-center gap-2 rounded-2xl border border-amber-500/20 bg-amber-500/10 py-3 text-sm font-black text-amber-200 hover:bg-amber-500/20">
               Modo debug
             </button>
-            <button
-              onClick={logout}
-              className="w-full flex items-center justify-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/10 py-3 text-sm font-black text-red-300 hover:bg-red-500/20"
-            >
+            <button onClick={logout} className="w-full flex items-center justify-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/10 py-3 text-sm font-black text-red-300 hover:bg-red-500/20">
               <LogOut className="h-4 w-4" />
               Cerrar sesión
             </button>

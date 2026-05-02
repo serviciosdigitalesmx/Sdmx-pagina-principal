@@ -45,7 +45,7 @@ export default function BillingPage() {
       return;
     }
 
-    const response = await fetch(buildApiUrl("/api/billing/checkout"), {
+    const response = await fetch(buildApiUrl("/billing/checkout"), {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ plan })

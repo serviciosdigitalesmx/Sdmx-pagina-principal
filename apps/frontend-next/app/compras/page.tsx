@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Plus, RefreshCw, ShoppingCart, CheckCircle2, XCircle, Package } from 'lucide-react';
 import { SaasShell } from '@/components/ui/SaasShell';
 import { apiClient } from '@/lib/apiClient';
-import { getSupabaseClient } from '@/lib/supabase';
+import { useAuth } from '@/context/AuthContext';
 import type { InventoryProductDto, PurchaseOrderDto, SupplierDto } from '@sdmx/contracts';
 
 type ItemForm = {
@@ -20,6 +20,7 @@ const emptyItem: ItemForm = {
 };
 
 export default function ComprasPage() {
+  const { session, loading: authLoading } = useAuth();
   const [tenantId, setTenantId] = useState('');
 
   const [suppliers, setSuppliers] = useState<SupplierDto[]>([]);
@@ -36,14 +37,8 @@ export default function ComprasPage() {
   const productMap = useMemo(() => new Map(products.map((product) => [product.id, product])), [products]);
 
   useEffect(() => {
-    const resolveTenant = async () => {
-      const supabase = getSupabaseClient();
-      const { data } = await supabase.auth.getSession();
-      setTenantId(data.session?.user.app_metadata?.tenant_id || '');
-    };
-
-    void resolveTenant();
-  }, []);
+    setTenantId(session?.shop?.id || '');
+  }, [session]);
 
   const loadData = async () => {
     setLoading(true);
@@ -69,8 +64,9 @@ export default function ComprasPage() {
   };
 
   useEffect(() => {
+    if (authLoading) return;
     void loadData();
-  }, []);
+  }, [authLoading, tenantId]);
 
   const addItem = () => setItems((current) => [...current, { ...emptyItem }]);
   const removeItem = (index: number) => setItems((current) => current.filter((_, itemIndex) => itemIndex !== index));

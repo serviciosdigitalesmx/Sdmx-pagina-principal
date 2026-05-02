@@ -2,9 +2,8 @@
 import type { ServiceOrderCreateRequestDto } from "@sdmx/contracts";
 import { FormEvent, useEffect, useState } from "react";
 import { apiClient } from "@/lib/apiClient";
+import { useAuth } from "@/context/AuthContext";
 import { ClipboardList, Plus, Smartphone, AlertCircle } from "lucide-react";
-import { getSupabaseClient } from "@/lib/supabase";
-import { tenantIdFromAuthUser } from "@/lib/tenant";
 
 interface Order {
   id: string;
@@ -16,6 +15,7 @@ interface Order {
 }
 
 export function Operativo() {
+  const { session } = useAuth();
   const [tenantId, setTenantId] = useState('');
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
@@ -49,16 +49,9 @@ export function Operativo() {
   }
 
   useEffect(() => {
-    const resolveTenant = async () => {
-      const supabase = getSupabaseClient();
-      const { data } = await supabase.auth.getSession();
-      const tenant = tenantIdFromAuthUser(data.session?.user ?? null);
-      setTenantId(tenant);
-    };
-
-    void resolveTenant();
+    setTenantId(session?.shop?.id || '');
     loadData();
-  }, []);
+  }, [session]);
 
   async function handleCreate(e: FormEvent) {
     e.preventDefault();

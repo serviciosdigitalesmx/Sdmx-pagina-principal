@@ -26,6 +26,13 @@ const send = async <T>(path: string, method: HttpMethod, auth: AuthContext, body
 
 export const supabase = {
   authLogin: (email: string, password: string) => send<{ access_token: string; refresh_token: string; expires_in?: number; user: { id: string; email: string } }>('/auth/v1/token?grant_type=password', 'POST', { serviceRole: false }, { email, password }),
+  authRefresh: (refreshToken: string) =>
+    send<{ access_token: string; refresh_token: string; expires_in?: number; user: { id: string; email: string } }>(
+      '/auth/v1/token?grant_type=refresh_token',
+      'POST',
+      { serviceRole: false },
+      { refresh_token: refreshToken }
+    ),
   authUser: (jwt: string) => send<{ id: string; email: string }>('/auth/v1/user', 'GET', { jwt }),
   authAdminCreate: (email: string, password: string) => send<{ id: string }>('/auth/v1/admin/users', 'POST', { serviceRole: true }, { email, password, email_confirm: true }),
   authAdminUpdate: (userId: string, payload: unknown) =>

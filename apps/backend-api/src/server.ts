@@ -13,6 +13,8 @@ const isAllowedOrigin = (origin: string | null): boolean => {
   const normalized = normalizeOrigin(origin);
   const originList = env.corsAllowedOriginList;
 
+  if (normalized.startsWith('http://localhost:') || normalized.startsWith('https://localhost:')) return true;
+  if (normalized.startsWith('http://127.0.0.1:') || normalized.startsWith('https://127.0.0.1:')) return true;
   if (originList.includes(normalized)) return true;
   if (originList.includes('https://*.vercel.app') && normalized.endsWith('.vercel.app')) return true;
   if (originList.includes('http://localhost:3000') && normalized.startsWith('http://localhost:')) return true;
@@ -32,6 +34,7 @@ const applyCors = (response: Response, origin: string | null): Response => {
     'access-control-allow-headers',
     'content-type,authorization,apikey,x-client-info,x-supabase-api-version,x-supabase-auth-token,x-supabase-refresh-token'
   );
+  headers.set('access-control-allow-credentials', 'true');
   headers.set('access-control-max-age', '86400');
   headers.set('vary', 'origin');
   return new Response(response.body, {

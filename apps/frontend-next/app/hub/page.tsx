@@ -9,7 +9,7 @@ import { Finanzas } from "@/components/native/Finanzas";
 import { Solicitudes } from "@/components/native/Solicitudes";
 import FeatureGuard from "@/components/native/FeatureGuard";
 import { Boxes, ClipboardList, DollarSign, Wrench, Link2, Copy, type LucideIcon } from "lucide-react";
-import { useAuth } from "@/components/native/AuthGuard";
+import { useAuth } from "@/context/AuthContext";
 import { apiClient } from "@/lib/apiClient";
 import { buildApiUrl } from "@/lib/api-base";
 

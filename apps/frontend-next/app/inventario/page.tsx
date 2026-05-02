@@ -3,9 +3,8 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { SaasShell } from '@/components/ui/SaasShell';
 import { apiClient } from '@/lib/apiClient';
-import { useAuthReady } from '@/lib/use-auth-ready';
+import { useAuth } from '@/context/AuthContext';
 import { Boxes, ArrowDownRight, ArrowUpRight, RefreshCw, Plus, History } from 'lucide-react';
-import { getSupabaseClient } from '@/lib/supabase';
 import { formatDate } from '@/lib/format';
 import type {
   InventoryKardexEntryDto,
@@ -53,7 +52,7 @@ const emptyMovementForm: MovementForm = {
 };
 
 export default function InventarioPage() {
-  const authReady = useAuthReady();
+  const { session, loading: authLoading } = useAuth();
   const [tenantId, setTenantId] = useState('');
 
   const [products, setProducts] = useState<InventoryProductDto[]>([]);
@@ -73,14 +72,8 @@ export default function InventarioPage() {
   );
 
   useEffect(() => {
-    const resolveTenant = async () => {
-      const supabase = getSupabaseClient();
-      const { data } = await supabase.auth.getSession();
-      setTenantId(data.session?.user.app_metadata?.tenant_id || '');
-    };
-
-    void resolveTenant();
-  }, []);
+    setTenantId(session?.shop?.id || '');
+  }, [session]);
 
   const loadData = async () => {
     setLoading(true);
@@ -137,12 +130,12 @@ export default function InventarioPage() {
   };
 
   useEffect(() => {
-    if (!authReady) return;
+    if (authLoading) return;
     void loadData();
-  }, [authReady]);
+  }, [authLoading, tenantId]);
 
   useEffect(() => {
-    if (!authReady) return;
+    if (authLoading) return;
     const loadKardex = async () => {
       if (!selectedProductId) {
         setKardex([]);
@@ -154,7 +147,7 @@ export default function InventarioPage() {
       }
     };
     void loadKardex();
-  }, [authReady, selectedProductId]);
+  }, [authLoading, tenantId, selectedProductId]);
 
   const handleCreateProduct = async (event: FormEvent) => {
     event.preventDefault();

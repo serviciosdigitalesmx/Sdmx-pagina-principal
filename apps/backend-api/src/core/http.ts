@@ -23,3 +23,34 @@ export const bearer = (request: Request): string | null => {
   if (!auth || !auth.toLowerCase().startsWith('bearer ')) return null;
   return auth.slice(7).trim();
 };
+
+export const cookieValue = (request: Request, name: string): string | null => {
+  const header = request.headers.get('cookie');
+  if (!header) return null;
+  const parts = header.split(';').map((part) => part.trim());
+  for (const part of parts) {
+    const eq = part.indexOf('=');
+    if (eq === -1) continue;
+    const key = decodeURIComponent(part.slice(0, eq).trim());
+    if (key === name) return decodeURIComponent(part.slice(eq + 1));
+  }
+  return null;
+};
+
+export const setCookieHeader = (name: string, value: string, options: {
+  httpOnly?: boolean;
+  secure?: boolean;
+  sameSite?: 'Lax' | 'Strict' | 'None';
+  maxAge?: number;
+  path?: string;
+  domain?: string;
+} = {}): string => {
+  const parts = [`${encodeURIComponent(name)}=${encodeURIComponent(value)}`];
+  parts.push(`Path=${options.path ?? '/'}`);
+  if (options.maxAge !== undefined) parts.push(`Max-Age=${options.maxAge}`);
+  if (options.domain) parts.push(`Domain=${options.domain}`);
+  if (options.httpOnly !== false) parts.push('HttpOnly');
+  if (options.secure !== false) parts.push('Secure');
+  parts.push(`SameSite=${options.sameSite ?? 'None'}`);
+  return parts.join('; ');
+};

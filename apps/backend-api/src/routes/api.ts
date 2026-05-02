@@ -1,5 +1,5 @@
 import { appService } from '../domain/app-service.js';
-import { badRequest, bearer, forbidden, notFound, ok, parseJson, unauthorized } from '../core/http.js';
+import { badRequest, bearer, cookieValue, forbidden, notFound, ok, parseJson, setCookieHeader, unauthorized } from '../core/http.js';
 import type {
   ConfirmPurchaseRequestDto as ConfirmPurchaseRequest,
   CreatePurchaseRequestDto as CreatePurchaseRequest,
@@ -32,6 +32,12 @@ const safe = async (fn: () => Promise<Response>): Promise<Response> => {
   }
 };
 
+const authCookie = 'sdmx_refresh_token';
+const buildAuthCookie = (token: string, maxAgeSeconds = 60 * 60 * 24 * 30) =>
+  setCookieHeader(authCookie, token, { httpOnly: true, secure: true, sameSite: 'None', maxAge: maxAgeSeconds, path: '/' });
+const clearAuthCookie = () =>
+  setCookieHeader(authCookie, '', { httpOnly: true, secure: true, sameSite: 'None', maxAge: 0, path: '/' });
+
 const parseReportRange = (url: URL): { from?: string | null; to?: string | null } => {
   const from = url.searchParams.get('from');
   const to = url.searchParams.get('to');
@@ -59,8 +65,29 @@ export const handleApi = async (request: Request): Promise<Response> => {
     return safe(async () => {
       const body = await parseJson<LoginRequest>(request);
       if (!body.email || !body.password) return badRequest('VALIDATION_ERROR', 'email y password son obligatorios');
-      return ok(await appService.login(body.email, body.password));
+      const session = await appService.login(body.email, body.password);
+      const response = ok(session);
+      const headers = new Headers(response.headers);
+      headers.append('set-cookie', buildAuthCookie(session.refreshToken || ''));
+      return new Response(await response.text(), { status: response.status, headers });
     });
+  }
+  if (pathname === '/api/auth/refresh' && method === 'POST') {
+    return safe(async () => {
+      const refreshToken = cookieValue(request, authCookie);
+      if (!refreshToken) return unauthorized();
+      const session = await appService.refreshSession(refreshToken);
+      const response = ok(session);
+      const headers = new Headers(response.headers);
+      if (session.refreshToken) headers.append('set-cookie', buildAuthCookie(session.refreshToken));
+      return new Response(await response.text(), { status: response.status, headers });
+    });
+  }
+  if (pathname === '/api/auth/logout' && method === 'POST') {
+    const response = ok({ loggedOut: true });
+    const headers = new Headers(response.headers);
+    headers.append('set-cookie', clearAuthCookie());
+    return new Response(await response.text(), { status: response.status, headers });
   }
   if (pathname === '/api/billing/checkout' && method === 'POST') {
     try {

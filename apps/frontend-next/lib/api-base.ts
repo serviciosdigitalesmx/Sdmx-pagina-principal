@@ -1,5 +1,3 @@
-"use client";
-
 function normalizeBaseUrl(value: string) {
   return value.trim().replace(/\/$/, "");
 }
@@ -9,12 +7,7 @@ export function getApiBaseUrl() {
   if (configured) {
     return normalizeBaseUrl(configured);
   }
-
-  if (typeof window !== "undefined") {
-    return normalizeBaseUrl(window.location.origin);
-  }
-
-  return "";
+  throw new Error("NEXT_PUBLIC_API_BASE_URL no definido");
 }
 
 export function buildApiUrl(path: string) {

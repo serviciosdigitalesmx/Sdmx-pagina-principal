@@ -1,9 +1,11 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { getSupabaseClient } from '@/lib/supabase';
-import { buildApiUrl } from '@/lib/api-base';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { buildApiUrl } from "@/lib/api-base";
+import { setToken } from "@/lib/auth/tokenManager";
+import type { ApiResponse } from "@sdmx/contracts";
+import type { Session } from "@/lib/session";
 
 const parseHash = (hash: string): URLSearchParams => {
   const raw = hash.startsWith('#') ? hash.slice(1) : hash;
@@ -19,40 +21,31 @@ export default function AuthCallbackPage() {
       try {
         const params = parseHash(window.location.hash);
         const error = params.get('error_description') || params.get('error');
-
         if (error) {
           setMessage(error);
           return;
         }
 
         const accessToken = params.get('access_token');
-        const refreshToken = params.get('refresh_token');
-
         if (!accessToken) {
           setMessage('No se recibió access_token en el callback OAuth.');
           return;
         }
 
-        const supabase = getSupabaseClient();
-        const bootstrapResponse = await fetch(buildApiUrl('/api/auth/oauth/bootstrap'), {
+        const bootstrapResponse = await fetch(buildApiUrl('/auth/oauth/bootstrap'), {
           method: 'POST',
+          credentials: 'include',
           headers: {
             authorization: `Bearer ${accessToken}`,
             'content-type': 'application/json'
           }
         });
-        const bootstrapPayload = await bootstrapResponse.json();
-        if (!bootstrapResponse.ok || !bootstrapPayload?.success) {
+        const bootstrapPayload = await bootstrapResponse.json().catch(() => null) as ApiResponse<Session> | null;
+        if (!bootstrapResponse.ok || !bootstrapPayload?.success || !bootstrapPayload.data) {
           throw new Error(bootstrapPayload?.error?.message || 'No se pudo completar el bootstrap de OAuth');
         }
 
-        const sessionData = bootstrapPayload.data;
-        const { error: sessionError } = await supabase.auth.setSession({
-          access_token: sessionData.accessToken || accessToken,
-          refresh_token: sessionData.refreshToken || refreshToken || ''
-        });
-        if (sessionError) throw sessionError;
-
+        setToken(bootstrapPayload.data.accessToken || accessToken);
         window.history.replaceState({}, document.title, '/hub');
         router.replace('/hub');
       } catch (error) {

@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Plus, Receipt, RefreshCw, Trash2 } from 'lucide-react';
 import { SaasShell } from '@/components/ui/SaasShell';
 import { apiClient } from '@/lib/apiClient';
-import { getSupabaseClient } from '@/lib/supabase';
+import { useAuth } from '@/context/AuthContext';
 import type { ExpenseCategoryDto, ExpenseDto } from '@sdmx/contracts';
 
 type CategoryForm = {
@@ -34,6 +34,7 @@ const emptyExpenseForm: ExpenseForm = {
 };
 
 export default function GastosPage() {
+  const { session, loading: authLoading } = useAuth();
   const [tenantId, setTenantId] = useState('');
 
   const [categories, setCategories] = useState<ExpenseCategoryDto[]>([]);
@@ -47,14 +48,8 @@ export default function GastosPage() {
   const categoryMap = useMemo(() => new Map(categories.map((category) => [category.id, category])), [categories]);
 
   useEffect(() => {
-    const resolveTenant = async () => {
-      const supabase = getSupabaseClient();
-      const { data } = await supabase.auth.getSession();
-      setTenantId(data.session?.user.app_metadata?.tenant_id || '');
-    };
-
-    void resolveTenant();
-  }, []);
+    setTenantId(session?.shop?.id || '');
+  }, [session]);
 
   const loadData = async () => {
     setLoading(true);
@@ -83,8 +78,9 @@ export default function GastosPage() {
   };
 
   useEffect(() => {
+    if (authLoading) return;
     void loadData();
-  }, []);
+  }, [authLoading, tenantId]);
 
   const createCategory = async (event: FormEvent) => {
     event.preventDefault();

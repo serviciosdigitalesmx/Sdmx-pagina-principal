@@ -4,8 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Building2, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { SaasShell } from '@/components/ui/SaasShell';
 import { apiClient } from '@/lib/apiClient';
-import { useAuthReady } from '@/lib/use-auth-ready';
-import { getSupabaseClient } from '@/lib/supabase';
+import { useAuth } from '@/context/AuthContext';
 import type { SupplierDto } from '@sdmx/contracts';
 
 type SupplierForm = {
@@ -27,7 +26,7 @@ const emptyForm: SupplierForm = {
 };
 
 export default function ProveedoresPage() {
-  const authReady = useAuthReady();
+  const { session, loading: authLoading } = useAuth();
   const [tenantId, setTenantId] = useState('');
 
   const [suppliers, setSuppliers] = useState<SupplierDto[]>([]);
@@ -43,14 +42,8 @@ export default function ProveedoresPage() {
   );
 
   useEffect(() => {
-    const resolveTenant = async () => {
-      const supabase = getSupabaseClient();
-      const { data } = await supabase.auth.getSession();
-      setTenantId(data.session?.user.app_metadata?.tenant_id || '');
-    };
-
-    void resolveTenant();
-  }, []);
+    setTenantId(session?.shop?.id || '');
+  }, [session]);
 
   const loadSuppliers = async () => {
     setLoading(true);
@@ -70,9 +63,9 @@ export default function ProveedoresPage() {
   };
 
   useEffect(() => {
-    if (!authReady) return;
+    if (authLoading) return;
     void loadSuppliers();
-  }, [authReady]);
+  }, [authLoading, tenantId]);
 
   useEffect(() => {
     if (!editingSupplier) return;

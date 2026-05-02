@@ -6,6 +6,7 @@ type SupabaseAuth = { access_token?: string; refresh_token?: string };
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, '');
 
 function createAuthedClient(token: string) {
   if (!supabaseUrl || !supabaseAnonKey) throw new Error('Supabase environment variables are required');
@@ -55,6 +56,31 @@ function responseError(message: string, code = 'DOMAIN_ERROR') {
   return NextResponse.json({ success: false, error: { code, message } }, { status: 400 });
 }
 
+async function proxyToBackend(request: Request, endpoint: string) {
+  if (!apiBaseUrl) throw new Error('NEXT_PUBLIC_API_BASE_URL no definido');
+  const target = `${apiBaseUrl}/api/${endpoint}`;
+  const headers = new Headers();
+  const auth = request.headers.get('authorization');
+  const cookie = request.headers.get('cookie');
+  const contentType = request.headers.get('content-type');
+  if (auth) headers.set('authorization', auth);
+  if (cookie) headers.set('cookie', cookie);
+  if (contentType) headers.set('content-type', contentType);
+  const response = await fetch(target, {
+    method: request.method,
+    headers,
+    body: request.method === 'GET' || request.method === 'HEAD' ? undefined : await request.text()
+  });
+  const text = await response.text();
+  return new NextResponse(text, {
+    status: response.status,
+    headers: {
+      'content-type': response.headers.get('content-type') || 'application/json; charset=utf-8',
+      ...(response.headers.get('set-cookie') ? { 'set-cookie': response.headers.get('set-cookie') as string } : {})
+    }
+  });
+}
+
 function pathParts(path: string[]) {
   return path.filter(Boolean);
 }
@@ -78,6 +104,9 @@ export async function GET(request: Request, context: { params: Promise<{ path: s
   const { path } = await context.params;
   const parts = pathParts(path);
   const endpoint = parts.join('/');
+  if (endpoint === 'auth/me') {
+    return proxyToBackend(request, endpoint);
+  }
   if (endpoint.startsWith('portal/orders/')) {
     const folio = parts[2];
     const service = createServiceClient();
@@ -318,23 +347,9 @@ export async function POST(request: Request, context: { params: Promise<{ path: 
   const endpoint = parts.join('/');
   const auth = request.headers.get('authorization') || '';
   const token = auth.toLowerCase().startsWith('bearer ') ? auth.slice(7).trim() : '';
-  const publicPostEndpoints = new Set(['auth/login', 'auth/register']);
+  const publicPostEndpoints = new Set(['auth/login', 'auth/register', 'auth/refresh', 'auth/logout', 'auth/oauth/bootstrap']);
   if (publicPostEndpoints.has(endpoint)) {
-    try {
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, '');
-      if (!apiBaseUrl) throw new Error('NEXT_PUBLIC_API_BASE_URL no definido');
-      const body = await request.json();
-      const response = await fetch(`${apiBaseUrl}/api/${endpoint}`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-      const payload = await response.json().catch(() => ({}));
-      return NextResponse.json(payload, { status: response.status });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Error interno';
-      return NextResponse.json({ success: false, error: { code: 'DOMAIN_ERROR', message } }, { status: 400 });
-    }
+    return proxyToBackend(request, endpoint);
   }
   if (!token) return NextResponse.json({ success: false, error: { code: 'UNAUTHORIZED', message: 'No autorizado' } }, { status: 401 });
 

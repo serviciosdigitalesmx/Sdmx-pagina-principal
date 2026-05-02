@@ -3,14 +3,8 @@
 import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Building2, AlertCircle, UserPlus, Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import { getSupabaseClient } from '@/lib/supabase';
-import { buildApiUrl } from '@/lib/api-base';
-
-const GoogleMark = () => (
-  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#1F7EDC] text-[11px] font-black leading-none text-white shadow-[0_0_12px_rgba(31,126,220,.3)]">
-    G
-  </span>
-);
+import { login as loginWithBackend } from '@/services/auth.service';
+import { apiClient } from '@/lib/apiClient';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -20,7 +14,6 @@ export default function RegisterPage() {
   const [shopName, setShopName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const onSubmit = async (event: FormEvent) => {
@@ -29,65 +22,14 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const registerResponse = await fetch(buildApiUrl('/api/auth/register'), {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          password,
-          fullName,
-          tenantId: shopName
-        })
-      });
-      const registerPayload = await registerResponse.json();
-      if (!registerResponse.ok || !registerPayload?.success) {
-        throw new Error(registerPayload?.error?.message || 'Error al registrar');
-      }
-
-      const loginResponse = await fetch(buildApiUrl('/api/auth/login'), {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-      const loginPayload = await loginResponse.json();
-      if (!loginResponse.ok || !loginPayload?.success) {
-        throw new Error(loginPayload?.error?.message || 'No se pudo iniciar sesión después del registro');
-      }
-
-      const session = loginPayload.data;
-      if (!session?.accessToken || !session?.refreshToken) {
-        throw new Error('La respuesta del backend no contiene credenciales válidas.');
-      }
-
-      const supabase = getSupabaseClient();
-      const { error: sessionError } = await supabase.auth.setSession({
-        access_token: session.accessToken,
-        refresh_token: session.refreshToken
-      });
-      if (sessionError) throw sessionError;
-
+      const registerPayload = await apiClient.post('/auth/register', { email, password, fullName, tenantId: shopName }, { credentials: 'include' });
+      if (!registerPayload.success) throw new Error(registerPayload.error?.message || 'Error al registrar');
+      await loginWithBackend({ email, password });
       router.push('/hub');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error al registrar');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const onGoogleRegister = async () => {
-    setGoogleLoading(true);
-    setError('');
-
-    try {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, '');
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') || window.location.origin;
-      if (!supabaseUrl) throw new Error('NEXT_PUBLIC_SUPABASE_URL no definido');
-      const redirectTo = encodeURIComponent(`${appUrl}/auth/callback`);
-      window.location.href = `${supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${redirectTo}`;
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'No se pudo registrar con Google');
-    } finally {
-      setGoogleLoading(false);
     }
   };
 
@@ -126,116 +68,40 @@ export default function RegisterPage() {
           <form onSubmit={onSubmit} className="grid gap-5 md:grid-cols-2">
             <div className="space-y-2 md:col-span-1">
               <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Nombre completo</label>
-              <input
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="Tu nombre"
-                required
-                className="srf-input h-14 text-white placeholder:text-slate-500 bg-[#101827] border-[#284b7d]"
-              />
+              <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Tu nombre" required className="srf-input h-14 text-white placeholder:text-slate-500 bg-[#101827] border-[#284b7d]" />
             </div>
-
             <div className="space-y-2 md:col-span-1">
               <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Nombre de tu negocio</label>
-              <input
-                value={shopName}
-                onChange={(e) => setShopName(e.target.value)}
-                placeholder="Taller Ejemplo"
-                required
-                className="srf-input h-14 text-white placeholder:text-slate-500 bg-[#101827] border-[#284b7d]"
-              />
+              <input value={shopName} onChange={(e) => setShopName(e.target.value)} placeholder="Taller Ejemplo" required className="srf-input h-14 text-white placeholder:text-slate-500 bg-[#101827] border-[#284b7d]" />
             </div>
-
             <div className="space-y-2 md:col-span-1">
               <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Correo</label>
               <div className="relative">
                 {!email && <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500 pointer-events-none" />}
-                <input
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="tu@correo.com"
-                  type="email"
-                  required
-                  className={`srf-input h-14 text-white placeholder:text-slate-500 bg-[#101827] border-[#284b7d] ${email ? 'pl-4' : 'pl-12'}`}
-                />
+                <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu@correo.com" type="email" required className={`srf-input h-14 text-white placeholder:text-slate-500 bg-[#101827] border-[#284b7d] ${email ? 'pl-4' : 'pl-12'}`} />
               </div>
             </div>
-
             <div className="space-y-2 md:col-span-1">
               <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">Contraseña</label>
               <div className="relative">
                 {!password && <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500 pointer-events-none" />}
-                <input
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  className={`srf-input h-14 text-white placeholder:text-slate-500 bg-[#101827] border-[#284b7d] ${password ? 'pl-4 pr-12' : 'pl-12 pr-12'}`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((current) => !current)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-2 text-slate-400 transition hover:text-white"
-                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                >
+                <input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" type={showPassword ? 'text' : 'password'} required className={`srf-input h-14 text-white placeholder:text-slate-500 bg-[#101827] border-[#284b7d] ${password ? 'pl-4 pr-12' : 'pl-12 pr-12'}`} />
+                <button type="button" onClick={() => setShowPassword((current) => !current)} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-2 text-slate-400 transition hover:text-white" aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}>
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
             </div>
-
             <div className="md:col-span-2 pt-2">
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full srf-btn-primary py-5 text-lg font-black uppercase tracking-[0.1em] shadow-xl shadow-orange-500/20 disabled:opacity-50 transition-all flex items-center justify-center gap-3"
-              >
-                {loading ? (
-                  <div className="w-6 h-6 border-4 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                  <>
-                    <UserPlus className="h-5 w-5" /> Crear cuenta
-                  </>
-                )}
+              <button type="submit" disabled={loading} className="w-full srf-btn-primary py-5 text-lg font-black uppercase tracking-[0.1em] shadow-xl shadow-orange-500/20 disabled:opacity-50 transition-all flex items-center justify-center gap-3">
+                {loading ? <div className="w-6 h-6 border-4 border-white/30 border-t-white rounded-full animate-spin" /> : <><UserPlus className="h-5 w-5" /> Crear cuenta</>}
               </button>
             </div>
           </form>
 
-          <div className="my-6 flex items-center gap-3">
-            <div className="h-px flex-1 bg-white/10" />
-            <span className="text-[10px] font-black uppercase tracking-[0.28em] text-slate-500">o regístrate con</span>
-            <div className="h-px flex-1 bg-white/10" />
-          </div>
-
-          <button
-            type="button"
-            onClick={onGoogleRegister}
-            disabled={googleLoading}
-            className="w-full inline-flex items-center justify-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-5 py-4 font-black text-white transition hover:bg-white/10 disabled:opacity-50"
-          >
-            {googleLoading ? (
-              <div className="h-5 w-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-            ) : (
-              <>
-                <GoogleMark />
-                Continuar con Google
-              </>
-            )}
-          </button>
-
           <div className="mt-10 pt-8 border-t border-white/5 text-center">
-            <p className="text-slate-500 text-sm">
-              ¿Ya tienes una cuenta?{' '}
-              <a href="/login" className="text-white font-black hover:text-blue-400 transition-colors">Volver al login</a>
-            </p>
+            <p className="text-slate-500 text-sm">¿Ya tienes una cuenta? <a href="/login" className="text-white font-black hover:text-blue-400 transition-colors">Volver al login</a></p>
           </div>
         </div>
-
-        <footer className="mt-8 text-center">
-          <p className="text-[10px] text-slate-600 font-black uppercase tracking-[0.3em]">
-            Desarrollado por Servicios Digitales MX
-          </p>
-        </footer>
       </section>
     </main>
   );

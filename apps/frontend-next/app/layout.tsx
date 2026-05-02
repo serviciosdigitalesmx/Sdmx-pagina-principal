@@ -1,5 +1,5 @@
 import './globals.css';
-import { ToastProvider } from '@/components/ui/ToastProvider';
+import { Providers } from '@/app/providers';
 import type { Metadata } from 'next';
 import { Space_Grotesk } from 'next/font/google';
 
@@ -9,7 +9,7 @@ const spaceGrotesk = Space_Grotesk({
   weight: ['400', '500', '700']
 });
 
-export const metadata: Metadata = { 
+export const metadata: Metadata = {
   title: 'Fixi | Premium SaaS',
   description: 'Sistema de Gestión Fixi'
 };
@@ -18,7 +18,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es" className={`${spaceGrotesk.variable}`} suppressHydrationWarning>
       <body className="antialiased bg-background text-textMain font-sans selection:bg-primary/30">
-        <ToastProvider>{children}</ToastProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

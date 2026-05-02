@@ -2,9 +2,7 @@
 import { useEffect, useState } from 'react';
 import { SaasShell } from '@/components/ui/SaasShell';
 import { apiClient } from '@/lib/apiClient';
-import { useAuth } from '@/components/native/AuthGuard';
-import { getSupabaseClient } from '@/lib/supabase';
-import { tenantIdFromAuthUser } from '@/lib/tenant';
+import { useAuth } from '@/context/AuthContext';
 import { formatDate } from '@/lib/format';
 import { Users, UserPlus, Phone, Mail, Calendar, Search, MoreVertical, X } from 'lucide-react';
 
@@ -30,15 +28,7 @@ export default function ClientesPage() {
   const [phone, setPhone] = useState('');
 
   useEffect(() => {
-    const resolveTenant = async () => {
-      const supabase = getSupabaseClient();
-      const { data } = await supabase.auth.getSession();
-      const sessionUser = data.session?.user ?? null;
-      const authUser = authSession?.user ?? null;
-      setTenantId(tenantIdFromAuthUser(sessionUser) || tenantIdFromAuthUser(authUser));
-    };
-
-    void resolveTenant();
+    setTenantId(authSession?.shop?.id || '');
   }, [authSession]);
 
   const loadData = async () => {

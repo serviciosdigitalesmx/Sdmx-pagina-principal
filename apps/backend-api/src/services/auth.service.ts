@@ -57,6 +57,17 @@ export const authService = {
     };
   },
 
+  async refresh(refreshToken: string): Promise<SessionDto> {
+    const auth = await supabase.authRefresh(refreshToken);
+    const base = await this.sessionFromToken(auth.access_token);
+    return {
+      ...base,
+      accessToken: auth.access_token,
+      refreshToken: auth.refresh_token,
+      expiresAt: new Date(Date.now() + ((auth.expires_in ?? 3600) * 1000)).toISOString()
+    };
+  },
+
   async bootstrapOAuth(token: string): Promise<SessionDto> {
     const auth = await supabase.authUser(token);
     const existingUsers = await supabase.queryAsService<UserDto[]>(
