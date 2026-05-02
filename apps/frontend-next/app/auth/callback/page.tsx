@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSupabaseClient } from '@/lib/supabase';
+import { buildApiUrl } from '@/lib/api-base';
 
 const parseHash = (hash: string): URLSearchParams => {
   const raw = hash.startsWith('#') ? hash.slice(1) : hash;
@@ -33,9 +34,22 @@ export default function AuthCallbackPage() {
         }
 
         const supabase = getSupabaseClient();
+        const bootstrapResponse = await fetch(buildApiUrl('/api/auth/oauth/bootstrap'), {
+          method: 'POST',
+          headers: {
+            authorization: `Bearer ${accessToken}`,
+            'content-type': 'application/json'
+          }
+        });
+        const bootstrapPayload = await bootstrapResponse.json();
+        if (!bootstrapResponse.ok || !bootstrapPayload?.success) {
+          throw new Error(bootstrapPayload?.error?.message || 'No se pudo completar el bootstrap de OAuth');
+        }
+
+        const sessionData = bootstrapPayload.data;
         const { error: sessionError } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken || ''
+          access_token: sessionData.accessToken || accessToken,
+          refresh_token: sessionData.refreshToken || refreshToken || ''
         });
         if (sessionError) throw sessionError;
 
