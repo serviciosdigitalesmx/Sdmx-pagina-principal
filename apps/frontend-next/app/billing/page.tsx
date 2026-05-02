@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, BadgeCheck, CreditCard, Sparkles } from "lucide-react";
 import { SaasShell } from "@/components/ui/SaasShell";
+import { buildApiUrl } from "@/lib/api-base";
 
 type PlanCode = "basic" | "pro" | "enterprise";
 
@@ -44,7 +45,7 @@ export default function BillingPage() {
       return;
     }
 
-    const response = await fetch("/api/billing/checkout", {
+    const response = await fetch(buildApiUrl("/api/billing/checkout"), {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ plan })

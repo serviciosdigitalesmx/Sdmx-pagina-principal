@@ -1,4 +1,5 @@
 import { getSupabaseClient } from "@/lib/supabase";
+import { buildApiUrl } from "@/lib/api-base";
 
 type ApiResult<T> = {
   success: boolean;
@@ -14,7 +15,7 @@ export async function fetchAuthedSessionApi<T>(path: string): Promise<T> {
     throw new Error("Usuario no autenticado");
   }
 
-  const response = await fetch(`/api/${path.replace(/^\/+/, "")}`, {
+  const response = await fetch(buildApiUrl(`/api/${path.replace(/^\/+/, "")}`), {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
