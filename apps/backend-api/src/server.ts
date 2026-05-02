@@ -1,3 +1,6 @@
+import publicRoutes from './routes/public.routes';
+import billingRoutes from './routes/billing.routes';
+import webhookRoutes from './routes/webhook.routes';
 import { createServer, IncomingMessage, ServerResponse } from 'node:http';
 import { env } from './config/env.js';
 import { handleApi } from './routes/api.js';
