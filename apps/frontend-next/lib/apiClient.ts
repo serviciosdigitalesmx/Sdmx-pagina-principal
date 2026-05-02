@@ -6,6 +6,20 @@ function resolveBaseUrl() {
   return '';
 }
 
+function isPublicEndpoint(endpoint: string) {
+  return endpoint.startsWith('/api/public/');
+}
+
+function unauthorizedResponse<T>(message = 'No autorizado'): ApiResponse<T> {
+  return {
+    success: false,
+    error: {
+      code: 'UNAUTHORIZED',
+      message,
+    },
+  };
+}
+
 export async function fetchWithAuth<T>(
   endpoint: string,
   options: RequestInit = {}
@@ -19,6 +33,11 @@ export async function fetchWithAuth<T>(
   const supabase = getSupabaseClient();
   const { data: authSession } = await supabase.auth.getSession();
   const token = authSession.session?.access_token || null;
+  const requiresAuth = !isPublicEndpoint(endpoint);
+
+  if (requiresAuth && !token) {
+    return unauthorizedResponse<T>('This endpoint requires a valid Bearer token');
+  }
 
   const headers = new Headers(options.headers);
   headers.set('Content-Type', 'application/json');
