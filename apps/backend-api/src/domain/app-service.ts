@@ -11,6 +11,7 @@ import { serviceOrdersService } from '../services/service-orders.service.js';
 import { subscriptionService } from '../services/subscription.service.js';
 import { suppliersService } from '../services/suppliers.service.js';
 import { supabase } from '../services/supabase.js';
+import { tenantIdFromSession } from '../services/tenant.js';
 import type {
   CreateSupplierRequestDto,
   CheckoutRequestDto,
@@ -116,7 +117,7 @@ export const appService = {
     reportsService.purchasesExpenses(token, { from, to }),
   listAuditEvents: async (token: string): Promise<Array<{ id: string }>> => {
     const session = await authService.sessionFromToken(token);
-    const tenantId = String(session.shop.id);
+    const tenantId = tenantIdFromSession(session);
     return supabase.query<Array<{ id: string }>>(`audit_events?tenant_id=eq.${encodeURIComponent(tenantId)}&order=created_at.desc&select=*`, token);
   },
   listInventoryProducts: (token: string): Promise<InventoryProductDto[]> => inventoryService.listProducts(token),

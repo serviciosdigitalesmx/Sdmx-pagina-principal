@@ -5,6 +5,7 @@ import { SaasShell } from '@/components/ui/SaasShell';
 import { apiClient } from '@/lib/apiClient';
 import { Boxes, ArrowDownRight, ArrowUpRight, RefreshCw, Plus, History } from 'lucide-react';
 import { getSupabaseClient } from '@/lib/supabase';
+import { formatDate } from '@/lib/format';
 import type {
   InventoryKardexEntryDto,
   InventoryMovementDto,
@@ -73,7 +74,7 @@ export default function InventarioPage() {
     const resolveTenant = async () => {
       const supabase = getSupabaseClient();
       const { data } = await supabase.auth.getSession();
-      setTenantId(data.session?.user.user_metadata?.tenant_id || data.session?.user.app_metadata?.tenant_id || '');
+      setTenantId(data.session?.user.app_metadata?.tenant_id || '');
     };
 
     void resolveTenant();
@@ -399,7 +400,7 @@ export default function InventarioPage() {
                     <div className="text-right">
                       <div className="text-sm font-black text-white">{Number(movement.quantity).toFixed(2)}</div>
                       <div className="text-[10px] uppercase tracking-widest text-slate-500">
-                        {new Date(movement.created_at).toLocaleString('es-MX')}
+                        {formatDate(movement.created_at, { dateStyle: 'medium', timeStyle: 'short' })}
                       </div>
                     </div>
                   </div>
@@ -443,7 +444,7 @@ export default function InventarioPage() {
                         Balance: {Number(entry.balance).toFixed(2)}
                       </div>
                       <div className="text-[10px] uppercase tracking-widest text-slate-500">
-                        {new Date(entry.movement.created_at).toLocaleString('es-MX')}
+                        {formatDate(entry.movement.created_at, { dateStyle: 'medium', timeStyle: 'short' })}
                       </div>
                     </div>
                   </div>

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { SaasShell } from '@/components/ui/SaasShell';
 import { apiClient } from '@/lib/apiClient';
 import { ClipboardList, PlusCircle, Smartphone, User, Settings, Clock, Search, X, Link2, FileText, Copy } from 'lucide-react';
+import { formatDate } from '@/lib/format';
 
 interface ServiceOrder {
   id: string;
@@ -290,7 +291,7 @@ export default function RecepcionPage() {
                             <td className="px-8 py-6 text-right">
                                <div className="flex items-center justify-end gap-2 text-xs text-slate-500 font-bold">
                                   <Clock className="h-3.5 w-3.5" />
-                                  {new Date(o.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })}
+                                  {formatDate(o.created_at, { day: '2-digit', month: 'short' })}
                                </div>
                             </td>
                           </tr>

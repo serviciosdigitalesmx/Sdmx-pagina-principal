@@ -4,6 +4,8 @@ import { SaasShell } from '@/components/ui/SaasShell';
 import { apiClient } from '@/lib/apiClient';
 import { useAuth } from '@/components/native/AuthGuard';
 import { getSupabaseClient } from '@/lib/supabase';
+import { tenantIdFromAuthUser } from '@/lib/tenant';
+import { formatDate } from '@/lib/format';
 import { Users, UserPlus, Phone, Mail, Calendar, Search, MoreVertical, X } from 'lucide-react';
 
 interface Customer {
@@ -31,12 +33,9 @@ export default function ClientesPage() {
     const resolveTenant = async () => {
       const supabase = getSupabaseClient();
       const { data } = await supabase.auth.getSession();
-      setTenantId(
-        authSession?.shop.id ||
-        data.session?.user.user_metadata?.tenant_id ||
-        data.session?.user.app_metadata?.tenant_id ||
-        ''
-      );
+      const sessionUser = data.session?.user ?? null;
+      const authUser = authSession?.user ?? null;
+      setTenantId(tenantIdFromAuthUser(sessionUser) || tenantIdFromAuthUser(authUser));
     };
 
     void resolveTenant();
@@ -193,7 +192,7 @@ export default function ClientesPage() {
                       <td className="px-8 py-6">
                         <div className="flex items-center gap-2.5 text-xs text-slate-500 font-bold uppercase tracking-tighter">
                           <Calendar className="h-3.5 w-3.5 text-blue-500/50" />
-                          {new Date(c.created_at).toLocaleDateString('es-MX', { dateStyle: 'long' })}
+                          {formatDate(c.created_at, { dateStyle: 'long' })}
                         </div>
                       </td>
                       <td className="px-8 py-6 text-right">

@@ -39,7 +39,7 @@ export default function ComprasPage() {
     const resolveTenant = async () => {
       const supabase = getSupabaseClient();
       const { data } = await supabase.auth.getSession();
-      setTenantId(data.session?.user.user_metadata?.tenant_id || data.session?.user.app_metadata?.tenant_id || '');
+      setTenantId(data.session?.user.app_metadata?.tenant_id || '');
     };
 
     void resolveTenant();

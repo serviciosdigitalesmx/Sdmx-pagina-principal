@@ -15,7 +15,7 @@ function createServiceClient() {
 function formatDate(value?: string | null): string {
   if (!value) return "No definido";
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleString("es-MX");
+  return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat("es-MX", { timeZone: "UTC" }).format(date);
 }
 
 export async function GET(_: Request, context: { params: Promise<{ folio: string }> }) {
