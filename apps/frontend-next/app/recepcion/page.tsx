@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { SaasShell } from '@/components/ui/SaasShell';
 import { apiClient } from '@/lib/apiClient';
+import { buildApiUrl } from '@/lib/api-base';
 import { ClipboardList, PlusCircle, Smartphone, User, Settings, Clock, Search, X, Link2, FileText, Copy } from 'lucide-react';
 import { formatDate } from '@/lib/format';
 
@@ -108,7 +109,11 @@ export default function RecepcionPage() {
   const [sharePortalLink, setSharePortalLink] = useState('');
 
   useEffect(() => {
-    setSharePortalLink(lastCreatedFolio ? `${window.location.origin}/portal?folio=${encodeURIComponent(lastCreatedFolio)}` : '');
+    setSharePortalLink(
+      lastCreatedFolio
+        ? `${window.location.origin}/portal?folio=${encodeURIComponent(lastCreatedFolio)}`
+        : ''
+    );
   }, [lastCreatedFolio]);
 
   async function copyPortalLink() {
@@ -157,7 +162,7 @@ export default function RecepcionPage() {
                     <Copy className="h-4 w-4" />
                     Copiar link
                   </button>
-                  <a href={`/api/public/orders/${encodeURIComponent(lastCreatedFolio)}/pdf`} target="_blank" rel="noreferrer" className="srf-btn-secondary px-4 py-3 text-sm font-black inline-flex items-center gap-2">
+                  <a href={buildApiUrl(`/api/public/orders/${encodeURIComponent(lastCreatedFolio)}/pdf`)} target="_blank" rel="noreferrer" className="srf-btn-secondary px-4 py-3 text-sm font-black inline-flex items-center gap-2">
                     <FileText className="h-4 w-4" />
                     Generar PDF
                   </a>

@@ -1,10 +1,6 @@
 import { getSupabaseClient } from "@/lib/supabase";
 import type { ApiResponse } from "@sdmx/contracts";
-
-function resolveBaseUrl() {
-  if (typeof window !== 'undefined') return window.location.origin;
-  return '';
-}
+import { buildApiUrl } from "@/lib/api-base";
 
 function isPublicEndpoint(endpoint: string) {
   return endpoint.startsWith('/api/public/');
@@ -45,12 +41,6 @@ export async function fetchWithAuth<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
-  const baseUrl = resolveBaseUrl();
-
-  if (!baseUrl) {
-    throw new Error('No se pudo resolver la URL base de la API');
-  }
-
   const token = await resolveBearerToken(endpoint);
 
   if (!isPublicEndpoint(endpoint) && !token) {
@@ -64,9 +54,7 @@ export async function fetchWithAuth<T>(
     headers.set('Authorization', `Bearer ${token}`);
   }
 
-  const url = endpoint.startsWith('http')
-    ? endpoint
-    : `${baseUrl}${endpoint}`;
+  const url = buildApiUrl(endpoint);
 
   try {
     const response = await fetch(url, {

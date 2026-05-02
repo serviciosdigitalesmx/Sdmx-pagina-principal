@@ -11,6 +11,7 @@ import FeatureGuard from "@/components/native/FeatureGuard";
 import { Boxes, ClipboardList, DollarSign, Wrench, Link2, Copy, type LucideIcon } from "lucide-react";
 import { useAuth } from "@/components/native/AuthGuard";
 import { apiClient } from "@/lib/apiClient";
+import { buildApiUrl } from "@/lib/api-base";
 
 type ModuleKey = "recepcion" | "solicitudes" | "tecnico" | "stock" | "finanzas";
 
@@ -48,7 +49,7 @@ export default function HubPage() {
           throw new Error(response.error?.message || "No se pudo resolver la landing");
         }
         if (mounted) {
-          setLandingUrl(`${window.location.origin}${response.data.landingUrl}`);
+          setLandingUrl(buildApiUrl(response.data.landingUrl));
           setLandingError("");
         }
       } catch (error) {

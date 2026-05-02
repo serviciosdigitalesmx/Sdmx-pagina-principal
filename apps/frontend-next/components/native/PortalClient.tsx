@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { apiClient } from "@/lib/apiClient";
+import { buildApiUrl } from "@/lib/api-base";
 import { formatDate } from "@/lib/format";
 import { Search, Package, Clock, ShieldCheck, MapPin, Smartphone, ArrowRight, FileText } from "lucide-react";
 
@@ -188,7 +189,7 @@ export function PortalClient() {
                     <div className="text-white font-black text-lg mt-1">Documento visible del folio</div>
                   </div>
                   <a
-                    href={`/api/public/orders/${encodeURIComponent(order.folio)}/pdf`}
+                    href={buildApiUrl(`/api/public/orders/${encodeURIComponent(order.folio)}/pdf`)}
                     target="_blank"
                     rel="noreferrer"
                     className="srf-btn-primary inline-flex items-center gap-2 px-5 py-3 font-black"
@@ -200,7 +201,7 @@ export function PortalClient() {
                 <div className="mt-5 overflow-hidden rounded-[1.5rem] border border-white/10 bg-slate-950/70">
                   <iframe
                     title={`PDF ${order.folio}`}
-                    src={`/api/public/orders/${encodeURIComponent(order.folio)}/pdf`}
+                    src={buildApiUrl(`/api/public/orders/${encodeURIComponent(order.folio)}/pdf`)}
                     className="h-[760px] w-full bg-white"
                   />
                 </div>
