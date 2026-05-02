@@ -21,9 +21,11 @@ This repository is a production SaaS monorepo. The deployment and runtime bounda
 ### Frontend
 
 - `NEXT_PUBLIC_API_BASE_URL`
-- `NEXT_PUBLIC_API_URL` as compatibility fallback only
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_APP_URL`
+
+`NEXT_PUBLIC_API_URL` is deprecated and should not be relied on for new deployments.
 
 ### Backend
 
@@ -64,4 +66,3 @@ Archive outside the product repo:
 - Vercel root directory: `apps/frontend-next`
 - Render root: `apps/backend-api`
 - The production bundle must contain backend login calls, not browser Supabase auth.
-

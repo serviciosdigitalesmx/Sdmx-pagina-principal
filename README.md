@@ -8,10 +8,14 @@ Arquitectura activa:
 ## Configuración de producción y local
 
 ### Frontend (`apps/frontend-next`)
-- `NEXT_PUBLIC_API_URL` (opcional)
-  - vacío: usa **mismo origen** en runtime.
-  - definido: usa URL explícita del backend (ej. Render).
-- Runtime override opcional: `window.__SDMX_CONFIG__.apiUrl`.
+- `NEXT_PUBLIC_API_BASE_URL`
+  - URL explícita del backend en Render.
+  - el frontend la usa para todos los endpoints `/api/*` y `/api/public/*`.
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_APP_URL`
+
+`NEXT_PUBLIC_API_URL` quedó solo como compatibilidad histórica y no se usa en el flujo actual.
 
 ### Backend (`apps/backend-api`)
 - `SUPABASE_URL`
