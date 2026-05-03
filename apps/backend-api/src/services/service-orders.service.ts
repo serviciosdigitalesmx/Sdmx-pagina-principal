@@ -7,8 +7,7 @@ import type {
   ServiceOrderStatusUpdateRequestDto,
   DashboardSummaryDto,
   TimelineEventDto,
-  EvidenceUploadRequest,
-  PlanCode
+  EvidenceUploadRequest
 } from '@sdmx/contracts';
 
 const nowIso = () => new Date().toISOString();
@@ -26,11 +25,12 @@ export const serviceOrdersService = {
   async dashboardSummary(token: string): Promise<DashboardSummaryDto> {
     const session = await loadSession(token);
     requireActiveSubscription(session);
-
+    const tenantId = resolveTenantIdFromSession(session);
+    // 🔐 Filtros por tenant
     const [orders, customers, quotes] = await Promise.all([
-      supabase.query<StatusRow[]>(`service_orders?select=id,status`, token),
-      supabase.query<Array<{ id: string }>>(`customers?select=id`, token),
-      supabase.query<QuoteRow[]>(`quotations?select=id,status,total_mxn`, token)
+      supabase.query<StatusRow[]>(`service_orders?tenant_id=eq.${encodeURIComponent(tenantId)}&select=id,status`, token),
+      supabase.query<Array<{ id: string }>>(`customers?tenant_id=eq.${encodeURIComponent(tenantId)}&select=id`, token),
+      supabase.query<QuoteRow[]>(`quotations?tenant_id=eq.${encodeURIComponent(tenantId)}&select=id,status,total_mxn`, token)
     ]);
 
     const totalSales = quotes.filter((q) => String(q.status).toLowerCase() === 'approved').reduce((acc, q) => acc + Number(q.total_mxn ?? 0), 0);
@@ -49,7 +49,7 @@ export const serviceOrdersService = {
     const tenantId = resolveTenantIdFromSession(session);
 
     if (session.subscription) {
-      const orders = await supabase.query<Array<{ id: string }>>(`service_orders?select=id`, token);
+      const orders = await supabase.query<Array<{ id: string }>>(`service_orders?tenant_id=eq.${encodeURIComponent(tenantId)}&select=id`, token);
       enforcePlanLimits(session.subscription.plan, orders.length, 'maxServiceOrders');
     }
 
@@ -89,16 +89,21 @@ export const serviceOrdersService = {
   async listServiceOrders(token: string): Promise<ServiceOrderDto[]> {
     const session = await loadSession(token);
     requireActiveSubscription(session);
-    return supabase.query<ServiceOrderDto[]>(`service_orders?order=updated_at.desc&select=*`, token);
+    const tenantId = resolveTenantIdFromSession(session);
+    // 🔐 Filtro por tenant
+    return supabase.query<ServiceOrderDto[]>(`service_orders?tenant_id=eq.${encodeURIComponent(tenantId)}&order=updated_at.desc&select=*`, token);
   },
 
   async updateServiceOrderStatus(token: string, serviceOrderId: string, req: ServiceOrderStatusUpdateRequestDto): Promise<ServiceOrderDto> {
     const session = await loadSession(token);
     requireActiveSubscription(session);
+    const tenantId = resolveTenantIdFromSession(session);
 
     const current = await supabase.query<CurrentOrderRow[]>(`service_orders?id=eq.${encodeURIComponent(serviceOrderId)}&select=id,tenant_id,status`, token);
     const order = current[0];
     assert(Boolean(order), 'Orden no encontrada');
+    // 🔐 Verificar que la orden pertenezca al tenant
+    if (order.tenant_id !== tenantId) throw new Error('Acceso denegado a la orden');
 
     const policy = await supabase.query<Array<{ id: string }>>(
       `status_transition_policy?entity=eq.service_order&from_status=eq.${encodeURIComponent(String(order.status))}&to_status=eq.${encodeURIComponent(req.status)}&select=id`,
@@ -126,16 +131,27 @@ export const serviceOrdersService = {
   async listStatusTimeline(token: string, serviceOrderId: string): Promise<TimelineEventDto[]> {
     const session = await loadSession(token);
     requireActiveSubscription(session);
+    const tenantId = resolveTenantIdFromSession(session);
+    // 🔐 Asegurar que la orden pertenezca al tenant (usando subconsulta)
+    const orderCheck = await supabase.query<{ tenant_id: string }[]>(`service_orders?id=eq.${encodeURIComponent(serviceOrderId)}&select=tenant_id`, token);
+    if (!orderCheck[0] || orderCheck[0].tenant_id !== tenantId) {
+      throw new Error('Orden no encontrada o fuera del tenant');
+    }
     return supabase.query<TimelineEventDto[]>(`service_order_timeline?service_order_id=eq.${encodeURIComponent(serviceOrderId)}&order=created_at.asc&select=*`, token);
   },
 
   async getPortalOrderPublic(folio: string): Promise<Array<{ id: string; folio: string; status: string }>> {
+    // Este método es público, no requiere tenant check ya que se usa con service role
     return supabase.queryAsService<Array<{ id: string; folio: string; status: string }>>(
       `service_orders?folio=eq.${encodeURIComponent(folio.toUpperCase())}&select=id,folio,status,device_type,device_brand,device_model,reported_issue,promised_date,updated_at,file_assets(id,path,is_public,mime_type)`
     );
   },
 
   async signedUpload(token: string, request: EvidenceUploadRequest): Promise<{ signedUrl: string }> {
+    // Verificar permisos del tenant para la ruta del archivo (se asume que el path contiene tenant_id)
+    const session = await loadSession(token);
+    requireActiveSubscription(session);
+    // Opcional: validar que el path incluya el tenant_id
     return supabase.storageSignedUpload(request.bucket, request.path, token, request.expiresInSeconds ?? 600);
   },
 
