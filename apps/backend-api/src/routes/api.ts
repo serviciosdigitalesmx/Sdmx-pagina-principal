@@ -10,7 +10,6 @@ import { reportsService } from '../services/reports.service.js';
 
 export const handleApi = Router();
 
-// Middleware de autenticación y carga de contexto real
 const withAuth = (fn: (req: any, res: any, token: string) => Promise<any>) => {
   return async (req: any, res: any) => {
     try {
@@ -27,7 +26,6 @@ const withAuth = (fn: (req: any, res: any, token: string) => Promise<any>) => {
   };
 };
 
-// --- AUTH ---
 handleApi.post('/api/auth/login', async (req, res) => {
   try {
     const result = await authService.login(req.body.email, req.body.password);
@@ -42,14 +40,15 @@ handleApi.get('/api/auth/me', withAuth(async (req, res, token) => {
   res.json({ success: true, data: session });
 }));
 
-// --- NEGOCIO (Conexión directa a servicios de producción) ---
+// --- NEGOCIO (Usando nombres de métodos detectados por tsc) ---
 
 handleApi.get('/api/customers', withAuth(async (req, res, token) => {
   res.json({ success: true, data: await customersService.listCustomers(token) });
 }));
 
 handleApi.get('/api/service-orders', withAuth(async (req, res, token) => {
-  res.json({ success: true, data: await serviceOrdersService.listOrders(token) });
+  // Cambiado de listOrders a listServiceOrders según auditoría de tipos
+  res.json({ success: true, data: await serviceOrdersService.listServiceOrders(token) });
 }));
 
 handleApi.get('/api/products', withAuth(async (req, res, token) => {
@@ -61,10 +60,11 @@ handleApi.get('/api/suppliers', withAuth(async (req, res, token) => {
 }));
 
 handleApi.get('/api/finance/summary', withAuth(async (req, res, token) => {
-  res.json({ success: true, data: await financeService.getSummary(token) });
+  // tsc sugirió 'summary' en lugar de 'getSummary'
+  res.json({ success: true, data: await financeService.summary(token, req.query) });
 }));
 
 handleApi.get('/api/reports/operations', withAuth(async (req, res, token) => {
-  const { from, to } = req.query;
-  res.json({ success: true, data: await reportsService.getOperationsReport(token, from, to) });
+  // tsc sugirió 'operations' en lugar de 'getOperationsReport'
+  res.json({ success: true, data: await reportsService.operations(token, req.query) });
 }));
