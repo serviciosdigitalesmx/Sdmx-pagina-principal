@@ -1,22 +1,21 @@
 import { Router } from 'express';
 import { authService } from '../services/auth.service.js';
 import { subscriptionService } from '../services/subscription.service.js';
+import { loadSession } from '../services/context.js';
 
 export const handleApi = Router();
 
-// Middleware simple para normalizar la URL antes de cualquier lógica
-handleApi.use((req, res, next) => {
-  // Evita que constructores de URL truenen si el host no viene completo
-  req.app.set('trust proxy', true);
-  next();
-});
-
-handleApi.post('/api/auth/register', async (req, res) => {
+// Endpoint para que el frontend valide quién es el usuario logueado
+handleApi.get('/api/auth/me', async (req, res) => {
   try {
-    const result = await authService.register(req.body);
-    res.json({ success: true, data: result });
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ success: false, error: 'No token' });
+    
+    const token = authHeader.replace('Bearer ', '');
+    const session = await loadSession(token);
+    res.json({ success: true, data: session });
   } catch (error: any) {
-    res.status(400).json({ success: false, error: { message: error.message } });
+    res.status(401).json({ success: false, error: { message: error.message } });
   }
 });
 
@@ -38,7 +37,22 @@ handleApi.post('/api/auth/refresh', async (req, res) => {
   }
 });
 
-// Endpoint de prueba que usas en test-auth.sh
+// Endpoint de clientes para pruebas
 handleApi.get('/api/customers', async (req, res) => {
-  res.json({ success: true, data: [] });
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ success: false, error: 'No token' });
+    
+    const token = authHeader.replace('Bearer ', '');
+    const session = await loadSession(token);
+    
+    // Aquí es donde entra tu "Regla de Oro": Validar acceso
+    if (!session.accessGranted) {
+      return res.status(403).json({ success: false, error: 'SUBSCRIPTION_REQUIRED' });
+    }
+
+    res.json({ success: true, data: [] });
+  } catch (error: any) {
+    res.status(401).json({ success: false, error: { message: error.message } });
+  }
 });
