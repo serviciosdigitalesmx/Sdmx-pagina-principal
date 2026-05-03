@@ -1,5 +1,5 @@
-// subscription.service.ts
 import { loadSession, requireActiveSubscription } from './context.js';
+import type { SessionDto } from '@sdmx/contracts';
 
 export const subscriptionService = {
   async subscriptionStatus(token: string) {
@@ -9,6 +9,6 @@ export const subscriptionService = {
 
   async ensureActiveSubscription(token: string): Promise<void> {
     const session = await loadSession(token);
-    requireActiveSubscription(session);
+    requireActiveSubscription(session); // ✅ usa la función del contexto
   }
 };
