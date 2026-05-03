@@ -1,9 +1,6 @@
 import { Router } from 'express';
-import { handleMercadoPagoWebhook } from '../controllers/webhook.controller';
+import { handleWebhook } from '../controllers/webhook.controller.js';
 
 const router = Router();
-
-// Endpoint: POST /api/webhooks/mercadopago
-router.post('/mercadopago', handleMercadoPagoWebhook);
-
+router.post('/mercadopago', handleWebhook);
 export default router;
