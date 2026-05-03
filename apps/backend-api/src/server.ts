@@ -3,22 +3,24 @@ import cors from 'cors';
 import publicRoutes from './routes/public.routes.js';
 import billingRoutes from './routes/billing.routes.js';
 import webhookRoutes from './routes/webhook.routes.js';
+import { handleApi } from './routes/api.js'; // El router que tiene /auth/login
 
 const app = express();
 
-// Configuración de CORS Maestra
 app.use(cors({
   origin: [
     'https://sdmx-pagina-principal.vercel.app',
     'http://localhost:3000'
   ],
-  credentials: true, // Esto permite que las cookies de refresh viajen
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-supabase-api-version']
 }));
 
 app.use(express.json());
 
+// Registramos las rutas. handleApi es el que maneja /api/auth/login y /api/auth/refresh
+app.use('/', handleApi); 
 app.use('/api/public', publicRoutes);
 app.use('/api/billing', billingRoutes);
 app.use('/api/webhooks', webhookRoutes);
