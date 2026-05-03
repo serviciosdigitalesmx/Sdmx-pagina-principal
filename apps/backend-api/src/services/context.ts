@@ -1,59 +1,92 @@
-// context.ts (versión sin bloqueos)
 import { createClient } from '@supabase/supabase-js';
-import type { SessionDto, SubscriptionDto } from '@sdmx/contracts';
+import type { SessionDto, SubscriptionDto, UserDto } from '@sdmx/contracts';
 import { env } from '../config/env.js';
 
 const supabaseAdmin = createClient(env.supabaseUrl, env.supabaseServiceRoleKey);
 
 export async function loadSession(token: string): Promise<SessionDto> {
-  // Opcional: aún validar que el token sea válido, pero dar acceso aunque no haya suscripción
-  try {
-    const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
-    if (error || !user) {
-      // Si no hay token válido, devolvemos un usuario por defecto para desarrollo
-      return {
-        user: { id: 'dev-user', email: 'dev@example.com', tenant_id: 'dev-tenant' },
-        accessGranted: true,
-        subscription: { status: 'active', plan: 'enterprise' } as SubscriptionDto,
-        shop: { id: 'dev-tenant', name: 'Dev Shop', slug: 'dev', billing_exempt: true }
-      };
-    }
-    // Obtener tenant (puede fallar, pero damos acceso)
-    let tenantId = 'dev-tenant';
-    try {
-      const { data: userRecord } = await supabaseAdmin
-        .from('users')
-        .select('tenant_id')
-        .eq('auth_user_id', user.id)
-        .single();
-      if (userRecord?.tenant_id) tenantId = userRecord.tenant_id;
-    } catch (e) {
-      // ignorar
-    }
-    return {
-      user: { id: user.id, email: user.email!, tenant_id: tenantId },
-      accessGranted: true, // 🔓 Siempre true
-      subscription: { status: 'active', plan: 'enterprise' } as SubscriptionDto,
-      shop: { id: tenantId, name: 'Mi Taller', slug: 'taller', billing_exempt: true }
-    };
-  } catch (error) {
-    // Fallback total: sesión de desarrollo
-    return {
-      user: { id: 'dev-user', email: 'dev@example.com', tenant_id: 'dev-tenant' },
-      accessGranted: true,
-      subscription: { status: 'active', plan: 'enterprise' } as SubscriptionDto,
-      shop: { id: 'dev-tenant', name: 'Dev Shop', slug: 'dev', billing_exempt: true }
-    };
+  const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+  if (error || !user) throw new Error('Sesión inválida o token expirado');
+
+  const { data: userRecord, error: userError } = await supabaseAdmin
+    .from('users')
+    .select('id, tenant_id, full_name, email, auth_user_id')
+    .eq('auth_user_id', user.id)
+    .single();
+
+  if (userError || !userRecord) {
+    throw new Error('Usuario no registrado en el sistema');
   }
+
+  const tenantId = userRecord.tenant_id;
+
+  const { data: subscription, error: subError } = await supabaseAdmin
+    .from('subscriptions')
+    .select('status, plan, current_period_end')
+    .eq('tenant_id', tenantId)
+    .order('created_at', { ascending: false })
+    .maybeSingle();
+
+  let accessGranted = true; // TODO: cambiar a lógica real cuando se implemente billing
+  let subscriptionStatus: SubscriptionDto['status'] = 'active';
+  let plan: SubscriptionDto['plan'] = 'enterprise';
+
+  if (!subError && subscription) {
+    const isActive = subscription.status === 'active';
+    const isTrialing = subscription.status === 'trialing';
+    const notExpired = !subscription.current_period_end || new Date(subscription.current_period_end) > new Date();
+    if ((isActive || isTrialing) && notExpired) {
+      accessGranted = true;
+      subscriptionStatus = subscription.status;
+      plan = subscription.plan;
+    }
+  }
+
+  const session: SessionDto = {
+    user: {
+      id: userRecord.id,
+      auth_user_id: user.id,
+      tenant_id: tenantId,
+      full_name: userRecord.full_name,
+      email: user.email!,
+      branch_id: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    } as UserDto,
+    accessGranted,
+    subscription: {
+      status: subscriptionStatus,
+      plan,
+      tenant_id: tenantId,
+      provider: 'trial',
+      external_id: '',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    } as SubscriptionDto,
+    shop: {
+      id: tenantId,
+      name: userRecord.full_name?.split(' ')[0] || 'Mi Taller',
+      slug: 'taller',
+      billing_exempt: true
+    },
+    accessToken: token,
+    refreshToken: '',
+    expiresAt: new Date(Date.now() + 3600000).toISOString(),
+    roles: [],
+    permissions: []
+  };
+
+  return session;
 }
 
 export function resolveTenantIdFromSession(session: SessionDto): string {
-  return session.user.tenant_id || 'dev-tenant';
+  return session.user.tenant_id;
 }
 
 export function requireActiveSubscription(session: SessionDto): void {
-  // No hacer nada, permitir siempre
-  return;
+  if (!session.accessGranted) {
+    throw new Error('SUBSCRIPTION_REQUIRED: Se requiere una suscripción activa o en período de prueba.');
+  }
 }
 
 export const mpSettings = () => ({

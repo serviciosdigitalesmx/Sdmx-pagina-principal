@@ -19,10 +19,7 @@ app.use(cors({
 
 app.use(express.json());
 
-// Montar el router real (maneja /api/auth, /api/customers, etc.)
-app.use('/', handleApi); 
-
-// Rutas públicas y adicionales
+app.use('/', handleApi);
 app.use('/api/public', publicRoutes);
 app.use('/api/billing', billingRoutes);
 app.use('/api/webhooks', webhookRoutes);
