@@ -6,13 +6,13 @@ import webhookRoutes from './routes/webhook.routes.js';
 
 const app = express();
 
-// Configuración de CORS Blindada
+// Configuración de CORS Maestra
 app.use(cors({
   origin: [
     'https://sdmx-pagina-principal.vercel.app',
-    'http://localhost:3000' // Para tus pruebas locales
+    'http://localhost:3000'
   ],
-  credentials: true, // OBLIGATORIO para que viajen las cookies/refresh_token
+  credentials: true, // Esto permite que las cookies de refresh viajen
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-supabase-api-version']
 }));
