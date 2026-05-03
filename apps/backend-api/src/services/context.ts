@@ -1,15 +1,19 @@
-import { supabase as supabaseClient } from './supabase.js';
+import { supabase as supabaseClientInstance } from './supabase.js';
 import type { SessionDto, SubscriptionDto } from '@sdmx/contracts';
 
-// Cambiamos a función porque billing.service.ts lo intenta llamar: mpSettings()
+// Agregamos todas las propiedades que billing.service.ts está reclamando
 export const mpSettings = () => ({
   publicKey: process.env.MP_PUBLIC_KEY || '',
-  accessToken: process.env.MP_ACCESS_TOKEN || ''
+  accessToken: process.env.MP_ACCESS_TOKEN || '',
+  appUrl: process.env.NEXT_PUBLIC_APP_URL || 'https://sdmx-pagina-principal.vercel.app',
+  webhookBaseUrl: process.env.BACKEND_URL || 'https://sdmx-backend-api.onrender.com',
+  webhookSecret: process.env.MP_WEBHOOK_SECRET || 'dev_secret'
 });
 
 export async function loadSession(token: string): Promise<SessionDto> {
-  // Usamos la referencia renombrada para evitar colisiones
-  const { data: { user }, error } = await supabaseClient.auth.getUser(token);
+  // Usamos el nombre largo para que no se confunda con el servicio
+  const { data: { user }, error } = await supabaseClientInstance.auth.getUser(token);
+  
   if (error || !user) throw new Error('Sesión inválida');
 
   const tenantId = user.app_metadata.tenant_id;
@@ -20,7 +24,7 @@ export async function loadSession(token: string): Promise<SessionDto> {
       email: user.email!,
       tenant_id: tenantId
     },
-    accessGranted: true, // 🔓 Bypass total para desarrollo
+    accessGranted: true, // 🔓 Bypass total
     subscription: {
       status: 'active',
       plan: 'enterprise'
@@ -39,6 +43,5 @@ export function resolveTenantIdFromSession(session: SessionDto): string {
 }
 
 export function requireActiveSubscription(session: SessionDto): void {
-  // 🔓 Bypass total: no bloquea nada
   return;
 }
