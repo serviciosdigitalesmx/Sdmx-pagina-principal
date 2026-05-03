@@ -1,10 +1,8 @@
 import { Router } from 'express';
-import { generateOrderPdf, getPublicTenant, createPublicRequest } from '../controllers/pdf.controller'; 
-// Nota: Puedes renombrar pdf.controller a public.controller después para limpieza
+import { getPublicTenant } from '../controllers/public.controller.js';
+import { generateOrderPdf } from '../controllers/pdf.controller.js';
 
 const router = Router();
-router.get('/orders/:folio/pdf', generateOrderPdf);
-router.get('/tenants/:slug', getPublicTenant);
-router.post('/requests', createPublicRequest);
-
+router.get('/tenant/:slug', getPublicTenant);
+router.get('/pdf/order/:folio', generateOrderPdf);
 export default router;

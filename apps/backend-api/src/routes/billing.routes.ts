@@ -1,9 +1,6 @@
 import { Router } from 'express';
-import { createCheckoutPreference } from '../controllers/checkout.controller';
+import { createCheckout } from '../controllers/checkout.controller.js';
 
 const router = Router();
-
-// POST /api/billing/checkout
-router.post('/checkout', createCheckoutPreference);
-
+router.post('/checkout', createCheckout);
 export default router;
