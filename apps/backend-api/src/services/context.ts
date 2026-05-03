@@ -1,14 +1,15 @@
-import { supabase } from './supabase.js';
+import { supabase as supabaseClient } from './supabase.js';
 import type { SessionDto, SubscriptionDto } from '@sdmx/contracts';
 
-// Objeto requerido por billing.service.ts
-export const mpSettings = {
+// Cambiamos a función porque billing.service.ts lo intenta llamar: mpSettings()
+export const mpSettings = () => ({
   publicKey: process.env.MP_PUBLIC_KEY || '',
   accessToken: process.env.MP_ACCESS_TOKEN || ''
-};
+});
 
 export async function loadSession(token: string): Promise<SessionDto> {
-  const { data: { user }, error } = await supabase.auth.getUser(token);
+  // Usamos la referencia renombrada para evitar colisiones
+  const { data: { user }, error } = await supabaseClient.auth.getUser(token);
   if (error || !user) throw new Error('Sesión inválida');
 
   const tenantId = user.app_metadata.tenant_id;
@@ -19,7 +20,7 @@ export async function loadSession(token: string): Promise<SessionDto> {
       email: user.email!,
       tenant_id: tenantId
     },
-    accessGranted: true, // 🔓 Bypass: Siempre permitido
+    accessGranted: true, // 🔓 Bypass total para desarrollo
     subscription: {
       status: 'active',
       plan: 'enterprise'
@@ -33,12 +34,11 @@ export async function loadSession(token: string): Promise<SessionDto> {
   } as SessionDto;
 }
 
-// Función requerida por casi todos tus servicios
 export function resolveTenantIdFromSession(session: SessionDto): string {
   return session.user.tenant_id;
 }
 
 export function requireActiveSubscription(session: SessionDto): void {
-  // 🔓 Bypass total para desarrollo
+  // 🔓 Bypass total: no bloquea nada
   return;
 }
