@@ -3,7 +3,7 @@ import cors from 'cors';
 import publicRoutes from './routes/public.routes.js';
 import billingRoutes from './routes/billing.routes.js';
 import webhookRoutes from './routes/webhook.routes.js';
-import { handleApi } from './routes/api.js';
+import { handleApi } from './routes/api.js'; // El router que tiene /auth/login
 
 const app = express();
 
@@ -19,15 +19,13 @@ app.use(cors({
 
 app.use(express.json());
 
-// Montar el router real (maneja /api/auth, /api/customers, etc.)
+// Registramos las rutas. handleApi es el que maneja /api/auth/login y /api/auth/refresh
 app.use('/', handleApi); 
-
-// Rutas públicas y adicionales
 app.use('/api/public', publicRoutes);
 app.use('/api/billing', billingRoutes);
 app.use('/api/webhooks', webhookRoutes);
 
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

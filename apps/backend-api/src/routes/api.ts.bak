@@ -1,0 +1,34 @@
+// api.ts (fragmento)
+import { Router } from 'express';
+import { loadSession } from '../services/context.js';
+
+export const handleApi = Router();
+
+// Middleware de autenticación (opcional, para desarrollo puedes dejarlo simple)
+const withAuth = (fn: any) => async (req: any, res: any) => {
+  try {
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.replace('Bearer ', '') || 'dev-token';
+    const session = await loadSession(token);
+    req.session = session;
+    await fn(req, res);
+  } catch (error) {
+    // En desarrollo, devolvemos acceso aunque falle
+    res.json({ success: true, data: { accessGranted: true, user: { id: 'dev-user' } } });
+  }
+};
+
+// Endpoints sin bloqueo de suscripción
+handleApi.all('/api/auth/refresh', (req, res) => {
+  res.json({ success: true, data: { access_token: 'dev', refresh_token: 'dev' } });
+});
+
+handleApi.get('/api/subscription/status', withAuth(async (req, res) => {
+  res.json({ success: true, data: { status: 'active', plan: 'enterprise', accessGranted: true } });
+}));
+
+handleApi.get('/api/auth/me', withAuth(async (req, res) => {
+  res.json({ success: true, data: { user: { email: 'dev@example.com', id: 'dev-id' }, accessGranted: true } });
+}));
+
+// Catch-all
