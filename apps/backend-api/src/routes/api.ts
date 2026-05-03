@@ -208,4 +208,4 @@ router.post('/api/webhooks/mercadopago', async (req, res) => {
   res.json({ received: true });
 });
 
-export default router;
+export const handleApi = router;

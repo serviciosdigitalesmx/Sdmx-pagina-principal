@@ -1,0 +1,274 @@
+== SDMX AUDIT ==
+
+== 1. ESTRUCTURA ==
+
+api
+auditoria
+auth
+billing
+clientes
+compras
+cotizaciones
+dashboard
+evidencias
+finanzas
+gastos
+globals.css
+hub
+inventario
+landing
+layout.tsx
+login
+page.tsx
+portal
+proveedores
+providers.tsx
+recepcion
+register
+reportes
+seed
+tecnico
+
+apps/frontend-next/app/api:
+[...path]
+billing
+webhooks
+
+apps/frontend-next/app/api/[...path]:
+route.ts
+
+apps/frontend-next/app/api/billing:
+checkout
+
+apps/frontend-next/app/api/billing/checkout:
+route.ts
+
+apps/frontend-next/app/api/webhooks:
+mercadopago
+
+apps/frontend-next/app/api/webhooks/mercadopago:
+route.ts
+
+apps/frontend-next/app/auditoria:
+page.tsx
+
+apps/frontend-next/app/auth:
+callback
+
+apps/frontend-next/app/auth/callback:
+page.tsx
+
+apps/frontend-next/app/billing:
+failure
+page.tsx
+pending
+success
+
+apps/frontend-next/app/billing/failure:
+page.tsx
+
+apps/frontend-next/app/billing/pending:
+page.tsx
+
+apps/frontend-next/app/billing/success:
+page.tsx
+
+apps/frontend-next/app/clientes:
+page.tsx
+
+apps/frontend-next/app/compras:
+page.tsx
+
+apps/frontend-next/app/cotizaciones:
+page.tsx
+
+apps/frontend-next/app/dashboard:
+page.tsx
+
+apps/frontend-next/app/evidencias:
+page.tsx
+
+apps/frontend-next/app/finanzas:
+page.tsx
+
+apps/frontend-next/app/gastos:
+page.tsx
+
+apps/frontend-next/app/hub:
+page.tsx
+
+apps/frontend-next/app/inventario:
+page.tsx
+
+apps/frontend-next/app/landing:
+[slug]
+
+apps/frontend-next/app/landing/[slug]:
+page.tsx
+
+apps/frontend-next/app/login:
+page.tsx
+
+apps/frontend-next/app/portal:
+page.tsx
+
+apps/frontend-next/app/proveedores:
+page.tsx
+
+apps/frontend-next/app/recepcion:
+page.tsx
+
+apps/frontend-next/app/register:
+page.tsx
+
+apps/frontend-next/app/reportes:
+page.tsx
+
+apps/frontend-next/app/seed:
+page.tsx
+
+apps/frontend-next/app/tecnico:
+page.tsx
+
+== 2. ARCHIVOS CRÍTICOS ==
+
+[OK] apps/frontend-next/lib/api.ts
+[OK] apps/frontend-next/services/auth.service.ts
+[OK] apps/frontend-next/context/AuthContext.tsx
+
+== 3. ENDPOINTS USADOS EN FRONTEND ==
+
+'/api/customers
+'/api/evidences/signed-upload
+'/api/expense-categories
+'/api/expenses
+'/api/inventory/movements
+'/api/products
+'/api/purchases
+'/api/service-orders
+'/api/suppliers
+"/api/customers
+"/api/dashboard/summary
+"/api/portal/
+"/api/products
+"/api/public/
+"/api/public/requests
+"/api/service-orders
+
+== 4. ENDPOINTS EN BACKEND ==
+
+
+== 5. USO DE MOCKS ==
+
+
+== 6. AUTH FLOW ==
+
+apps/frontend-next/context/AuthContext.tsx:import { clearToken, getToken, setToken } from "@/lib/auth/tokenManager";
+apps/frontend-next/context/AuthContext.tsx:import { login as backendLogin, logout as backendLogout } from "@/services/auth.service";
+apps/frontend-next/context/AuthContext.tsx:  const response = await apiClient.get<Session>("/auth/me", { credentials: 'include' });
+apps/frontend-next/context/AuthContext.tsx:  const refresh = await apiClient.post<{ accessToken?: string; session?: Session }>("/auth/refresh", {}, { credentials: 'include' });
+apps/frontend-next/app/compras/page.tsx:  const { session, loading: authLoading } = useAuth();
+apps/frontend-next/app/compras/page.tsx:    if (authLoading) return;
+apps/frontend-next/app/compras/page.tsx:  }, [authLoading, tenantId]);
+apps/frontend-next/app/auth/callback/page.tsx:import { setToken } from "@/lib/auth/tokenManager";
+apps/frontend-next/app/auth/callback/page.tsx:        const bootstrapResponse = await fetch(buildApiUrl('/auth/oauth/bootstrap'), {
+apps/frontend-next/app/auth/callback/page.tsx:            authorization: `Bearer ${accessToken}`,
+apps/frontend-next/app/finanzas/page.tsx:import { useAuthReady } from '@/lib/use-auth-ready';
+apps/frontend-next/app/finanzas/page.tsx:  const authReady = useAuthReady();
+apps/frontend-next/app/finanzas/page.tsx:    if (!authReady) return;
+apps/frontend-next/app/finanzas/page.tsx:  }, [authReady, query]);
+apps/frontend-next/app/reportes/page.tsx:import { useAuthReady } from '@/lib/use-auth-ready';
+apps/frontend-next/app/reportes/page.tsx:  const authReady = useAuthReady();
+apps/frontend-next/app/reportes/page.tsx:    if (!authReady || !from || !to) return;
+apps/frontend-next/app/reportes/page.tsx:  }, [authReady, query]);
+apps/frontend-next/app/register/page.tsx:import { login as loginWithBackend } from '@/services/auth.service';
+apps/frontend-next/app/register/page.tsx:      const registerPayload = await apiClient.post('/auth/register', { email, password, fullName, tenantId: shopName }, { credentials: 'include' });
+apps/frontend-next/app/proveedores/page.tsx:  const { session, loading: authLoading } = useAuth();
+apps/frontend-next/app/proveedores/page.tsx:    if (authLoading) return;
+apps/frontend-next/app/proveedores/page.tsx:  }, [authLoading, tenantId]);
+apps/frontend-next/app/inventario/page.tsx:  const { session, loading: authLoading } = useAuth();
+apps/frontend-next/app/inventario/page.tsx:    if (authLoading) return;
+apps/frontend-next/app/inventario/page.tsx:  }, [authLoading, tenantId]);
+apps/frontend-next/app/inventario/page.tsx:    if (authLoading) return;
+apps/frontend-next/app/inventario/page.tsx:  }, [authLoading, tenantId, selectedProductId]);
+apps/frontend-next/app/api/[...path]/route.ts:    global: { headers: { authorization: `Bearer ${token}` } }
+apps/frontend-next/app/api/[...path]/route.ts:  const { data, error } = await client.auth.getUser(token);
+apps/frontend-next/app/api/[...path]/route.ts:async function getLocalUser(supabase: ReturnType<typeof createAuthedClient>, authUserId: string) {
+apps/frontend-next/app/api/[...path]/route.ts:  if (!authUserId) return null;
+apps/frontend-next/app/api/[...path]/route.ts:  const { data } = await supabase.from('users').select('*').eq('auth_user_id', authUserId).maybeSingle();
+apps/frontend-next/app/api/[...path]/route.ts:  const auth = request.headers.get('authorization');
+apps/frontend-next/app/api/[...path]/route.ts:  if (auth) headers.set('authorization', auth);
+apps/frontend-next/app/api/[...path]/route.ts:  if (endpoint === 'auth/me') {
+apps/frontend-next/app/api/[...path]/route.ts:  const auth = request.headers.get('authorization') || '';
+apps/frontend-next/app/api/[...path]/route.ts:  const token = auth.toLowerCase().startsWith('bearer ') ? auth.slice(7).trim() : '';
+apps/frontend-next/app/api/[...path]/route.ts:    if (endpoint === 'auth/me') {
+apps/frontend-next/app/api/[...path]/route.ts:      const { data: user } = await supabase.auth.getUser(token);
+apps/frontend-next/app/api/[...path]/route.ts:  const auth = request.headers.get('authorization') || '';
+apps/frontend-next/app/api/[...path]/route.ts:  const token = auth.toLowerCase().startsWith('bearer ') ? auth.slice(7).trim() : '';
+apps/frontend-next/app/api/[...path]/route.ts:  const publicPostEndpoints = new Set(['auth/login', 'auth/register', 'auth/refresh', 'auth/logout', 'auth/oauth/bootstrap']);
+apps/frontend-next/app/api/[...path]/route.ts:    if (endpoint === 'auth/oauth/bootstrap') {
+apps/frontend-next/app/api/[...path]/route.ts:      const { data: user } = await supabase.auth.getUser(token);
+apps/frontend-next/app/api/webhooks/mercadopago/route.ts:      headers: { authorization: `Bearer ${mpAccessToken}` }
+apps/frontend-next/app/api/billing/checkout/route.ts:  return createClient(supabaseUrl, supabaseAnonKey, jwt ? { global: { headers: { authorization: `Bearer ${jwt}` } } } : undefined);
+apps/frontend-next/app/api/billing/checkout/route.ts:  const { data: userRes, error: userError } = await supabase.auth.getUser(token);
+apps/frontend-next/app/api/billing/checkout/route.ts:    const auth = request.headers.get('authorization') || '';
+apps/frontend-next/app/api/billing/checkout/route.ts:    const token = auth.toLowerCase().startsWith('bearer ') ? auth.slice(7).trim() : '';
+apps/frontend-next/app/api/billing/checkout/route.ts:        authorization: `Bearer ${mpAccessToken}`,
+apps/frontend-next/app/gastos/page.tsx:  const { session, loading: authLoading } = useAuth();
+apps/frontend-next/app/gastos/page.tsx:    if (authLoading) return;
+apps/frontend-next/app/gastos/page.tsx:  }, [authLoading, tenantId]);
+apps/frontend-next/app/clientes/page.tsx:  const { session: authSession, loading: authLoading } = useAuth();
+apps/frontend-next/app/clientes/page.tsx:    setTenantId(authSession?.shop?.id || '');
+apps/frontend-next/app/clientes/page.tsx:  }, [authSession]);
+apps/frontend-next/app/clientes/page.tsx:    if (authLoading) return;
+apps/frontend-next/app/clientes/page.tsx:  }, [authLoading, tenantId]);
+apps/frontend-next/app/clientes/page.tsx:        {!tenantId && !authLoading && (
+apps/frontend-next/lib/api.ts:  if (token) headers.set('authorization', `Bearer ${token}`);
+apps/frontend-next/lib/hydrateSession.ts:  const session = await fetchAuthedSessionApi<AppSession>("auth/me");
+apps/frontend-next/lib/apiClient.ts:import { clearToken, getToken, setToken } from "@/lib/auth/tokenManager";
+apps/frontend-next/lib/apiClient.ts:  return endpoint.startsWith("/auth/");
+apps/frontend-next/lib/apiClient.ts:function unauthorizedResponse<T>(message = "No autorizado"): ApiResponse<T> {
+apps/frontend-next/lib/apiClient.ts:    const response = await fetch(buildApiUrl("/auth/refresh"), {
+apps/frontend-next/lib/apiClient.ts:      return unauthorizedResponse<T>("This endpoint requires a valid Bearer token");
+apps/frontend-next/lib/apiClient.ts:      return unauthorizedResponse<T>("Sesión expirada");
+apps/frontend-next/lib/use-auth-ready.ts:      const data = await apiClient.get("/auth/me");
+apps/frontend-next/services/auth.service.ts:import { clearToken, setToken } from "@/lib/auth/tokenManager";
+apps/frontend-next/services/auth.service.ts:  const response = await apiClient.post<LoginResult>("/auth/login", input, { credentials: 'include' });
+apps/frontend-next/services/auth.service.ts:  const me = await apiClient.get<Session>("/auth/me", { credentials: 'include' });
+apps/frontend-next/services/auth.service.ts:  const response = await apiClient.get<Session>("/auth/me", { credentials: 'include' });
+apps/frontend-next/services/auth.service.ts:  await apiClient.post("/auth/logout", {}, { credentials: 'include' }).catch(() => undefined);
+
+== 7. CONTRACTS USAGE ==
+
+apps/frontend-next/app/compras/page.tsx:import type { InventoryProductDto, PurchaseOrderDto, SupplierDto } from '@sdmx/contracts';
+apps/frontend-next/app/auth/callback/page.tsx:import type { ApiResponse } from "@sdmx/contracts";
+apps/frontend-next/app/finanzas/page.tsx:import type { FinanceMonthlyDto, FinanceSummaryDto, FinanceTransactionDto } from '@sdmx/contracts';
+apps/frontend-next/app/reportes/page.tsx:} from '@sdmx/contracts';
+apps/frontend-next/app/proveedores/page.tsx:import type { SupplierDto } from '@sdmx/contracts';
+apps/frontend-next/app/inventario/page.tsx:} from '@sdmx/contracts';
+apps/frontend-next/app/gastos/page.tsx:import type { ExpenseCategoryDto, ExpenseDto } from '@sdmx/contracts';
+apps/frontend-next/components/native/Operativo.tsx:import type { ServiceOrderCreateRequestDto } from "@sdmx/contracts";
+apps/frontend-next/components/ProtectedData.tsx:import type { ApiResponse } from '@sdmx/contracts';
+apps/frontend-next/package.json:    "@sdmx/contracts": "^1.0.0",
+apps/frontend-next/lib/session.ts:import type { SessionDto } from "@sdmx/contracts";
+apps/frontend-next/lib/apiClient.ts:import type { ApiResponse } from "@sdmx/contracts";
+apps/backend-api/package.json:    "@sdmx/contracts": "file:../../packages/contracts"
+apps/backend-api/src/types/contracts.ts:export type { ApiResponse } from '@sdmx/contracts';
+apps/backend-api/src/domain/app-service.ts:} from '@sdmx/contracts';
+apps/backend-api/src/services/service-orders.service.ts:} from '@sdmx/contracts';
+apps/backend-api/src/services/inventory.service.ts:} from '@sdmx/contracts';
+apps/backend-api/src/services/expenses.service.ts:} from '@sdmx/contracts';
+apps/backend-api/src/services/subscription.service.ts:import type { SessionDto } from '@sdmx/contracts';
+apps/backend-api/src/services/auth.service.ts:import type { RegisterRequestDto, SessionDto, UserDto } from '@sdmx/contracts';
+apps/backend-api/src/services/reports.service.ts:} from '@sdmx/contracts';
+apps/backend-api/src/services/plans.ts:import { PlanCode } from '@sdmx/contracts';
+apps/backend-api/src/services/finance.service.ts:} from '@sdmx/contracts';
+apps/backend-api/src/services/context.ts:import type { SessionDto, SubscriptionDto } from '@sdmx/contracts';
+apps/backend-api/src/services/suppliers.service.ts:} from '@sdmx/contracts';
+apps/backend-api/src/services/purchases.service.ts:} from '@sdmx/contracts';
+apps/backend-api/src/services/billing.service.ts:import type { CheckoutRequestDto, CheckoutResponseDto, PlanCode, SubscriptionDto } from '@sdmx/contracts';
+apps/backend-api/src/services/quotes.service.ts:import type { QuoteDto, QuoteCreateRequestDto } from '@sdmx/contracts';
+apps/backend-api/src/services/tenant.ts:import type { SessionDto } from '@sdmx/contracts';
+apps/backend-api/src/services/customers.service.ts:} from '@sdmx/contracts';
+
+== DONE ==

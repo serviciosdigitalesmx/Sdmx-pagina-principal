@@ -22,7 +22,7 @@ export function Stock() {
       setError("");
 
       try {
-        const res = await apiClient.get<Product[]>("/api/products");
+        const res = await apiClient.get<Product[]>("/api/inventory-products");
         if (!res.success) throw new Error(res.error?.message || "Error de API");
         setData(Array.isArray(res.data) ? res.data : []);
       } catch (err: unknown) {

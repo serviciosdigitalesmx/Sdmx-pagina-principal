@@ -46,7 +46,7 @@ export default function ComprasPage() {
     try {
       const [suppliersRes, productsRes, purchasesRes] = await Promise.all([
         apiClient.get<SupplierDto[]>('/api/suppliers'),
-        apiClient.get<InventoryProductDto[]>('/api/products'),
+        apiClient.get<InventoryProductDto[]>('/api/inventory-products'),
         apiClient.get<PurchaseOrderDto[]>('/api/purchases')
       ]);
 

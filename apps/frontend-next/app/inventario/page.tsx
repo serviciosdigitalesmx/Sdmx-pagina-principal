@@ -80,7 +80,7 @@ export default function InventarioPage() {
     setError('');
     try {
       const [productsRes, movementsRes] = await Promise.allSettled([
-        apiClient.get<InventoryProductDto[]>('/api/products'),
+        apiClient.get<InventoryProductDto[]>('/api/inventory-products'),
         apiClient.get<InventoryMovementDto[]>('/api/inventory/movements')
       ]);
 
@@ -111,7 +111,7 @@ export default function InventarioPage() {
 
       const productId = selectedProductId || (productsRes.status === 'fulfilled' && productsRes.value.success ? productsRes.value.data?.[0]?.id : '') || '';
       if (productId) {
-        const kardexRes = await apiClient.get<InventoryKardexEntryDto[]>(`/api/products/${productId}/kardex`);
+        const kardexRes = await apiClient.get<InventoryKardexEntryDto[]>(`/api/inventory-products/${productId}/kardex`);
         if (kardexRes.success && kardexRes.data) {
           setKardex(kardexRes.data);
         } else {
@@ -141,7 +141,7 @@ export default function InventarioPage() {
         setKardex([]);
         return;
       }
-      const res = await apiClient.get<InventoryKardexEntryDto[]>(`/api/products/${selectedProductId}/kardex`);
+      const res = await apiClient.get<InventoryKardexEntryDto[]>(`/api/inventory-products/${selectedProductId}/kardex`);
       if (res.success && res.data) {
         setKardex(res.data);
       }
@@ -159,7 +159,7 @@ export default function InventarioPage() {
     setSavingProduct(true);
     setError('');
     try {
-      const response = await apiClient.post<InventoryProductDto>('/api/products', {
+      const response = await apiClient.post<InventoryProductDto>('/api/inventory-products', {
         tenantId,
         sku: productForm.sku,
         name: productForm.name,
