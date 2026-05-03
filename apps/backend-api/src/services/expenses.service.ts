@@ -18,7 +18,9 @@ export const expensesService = {
   async listCategories(token: string): Promise<ExpenseCategoryDto[]> {
     const session = await loadSession(token);
     requireActiveSubscription(session);
-    return supabase.query<ExpenseCategoryDto[]>(`expense_categories?order=updated_at.desc&select=*`, token);
+    const tenantId = resolveTenantIdFromSession(session);
+    // 🔐 Filtro por tenant
+    return supabase.query<ExpenseCategoryDto[]>(`expense_categories?tenant_id=eq.${encodeURIComponent(tenantId)}&order=updated_at.desc&select=*`, token);
   },
 
   async createCategory(token: string, request: CreateExpenseCategoryRequestDto): Promise<ExpenseCategoryDto> {
@@ -43,8 +45,10 @@ export const expensesService = {
   async listExpenses(token: string): Promise<ExpenseDto[]> {
     const session = await loadSession(token);
     requireActiveSubscription(session);
+    const tenantId = resolveTenantIdFromSession(session);
+    // 🔐 Filtro por tenant
     return supabase.query<ExpenseDto[]>(
-      `expenses?order=expense_date.desc,created_at.desc&select=*,category:expense_categories(*)`,
+      `expenses?tenant_id=eq.${encodeURIComponent(tenantId)}&order=expense_date.desc,created_at.desc&select=*,category:expense_categories(*)`,
       token
     );
   },
@@ -52,12 +56,14 @@ export const expensesService = {
   async getExpenseById(token: string, expenseId: string): Promise<ExpenseDto> {
     const session = await loadSession(token);
     requireActiveSubscription(session);
+    const tenantId = resolveTenantIdFromSession(session);
     const expenses = await supabase.query<ExpenseDto[]>(
       `expenses?id=eq.${encodeURIComponent(expenseId)}&select=*,category:expense_categories(*)`,
       token
     );
     const expense = expenses[0];
     assert(Boolean(expense), 'Gasto no encontrado');
+    if (expense.tenant_id !== tenantId) throw new Error('Acceso denegado al gasto');
     return expense;
   },
 
@@ -98,7 +104,7 @@ export const expensesService = {
   async deleteExpense(token: string, expenseId: string): Promise<{ deleted: true }> {
     const session = await loadSession(token);
     requireActiveSubscription(session);
-    const expense = await this.getExpenseById(token, expenseId);
+    const expense = await this.getExpenseById(token, expenseId); // valida tenant
     const tenantId = resolveTenantIdFromSession(session);
 
     const res = await fetch(`${env.supabaseUrl}/rest/v1/expenses?id=eq.${encodeURIComponent(expenseId)}&tenant_id=eq.${encodeURIComponent(tenantId)}`, {
