@@ -13,7 +13,9 @@ export const customersService = {
   async listCustomers(token: string): Promise<CustomerDto[]> {
     const session = await loadSession(token);
     requireActiveSubscription(session);
-    return supabase.query<CustomerDto[]>(`customers?order=created_at.desc&select=*`, token);
+    const tenantId = resolveTenantIdFromSession(session);
+    // 🔐 Filtro obligatorio por tenant
+    return supabase.query<CustomerDto[]>(`customers?tenant_id=eq.${encodeURIComponent(tenantId)}&order=created_at.desc&select=*`, token);
   },
 
   async createCustomer(token: string, request: CustomerCreateRequestDto): Promise<CustomerDto> {
@@ -37,12 +39,24 @@ export const customersService = {
   async listCustomerContacts(token: string, customerId: string): Promise<CustomerContactDto[]> {
     const session = await loadSession(token);
     requireActiveSubscription(session);
+    const tenantId = resolveTenantIdFromSession(session);
+    // 🔐 Verificar que el customer pertenezca al tenant
+    const customer = await supabase.query<{ tenant_id: string }[]>(`customers?id=eq.${encodeURIComponent(customerId)}&select=tenant_id`, token);
+    if (!customer[0] || customer[0].tenant_id !== tenantId) {
+      throw new Error('Cliente no encontrado o fuera del tenant');
+    }
     return supabase.query<CustomerContactDto[]>(`customer_contacts?customer_id=eq.${encodeURIComponent(customerId)}&select=*`, token);
   },
 
   async createCustomerContact(token: string, request: CustomerContactCreateRequestDto): Promise<CustomerContactDto> {
     const session = await loadSession(token);
     requireActiveSubscription(session);
+    const tenantId = resolveTenantIdFromSession(session);
+    // 🔐 Validar que el cliente pertenezca al tenant antes de crear contacto
+    const customer = await supabase.query<{ tenant_id: string }[]>(`customers?id=eq.${encodeURIComponent(request.customerId)}&select=tenant_id`, token);
+    if (!customer[0] || customer[0].tenant_id !== tenantId) {
+      throw new Error('Cliente no encontrado o fuera del tenant');
+    }
     const created = await supabase.insert<CustomerContactDto[]>('customer_contacts', token, request);
     return created[0];
   },
