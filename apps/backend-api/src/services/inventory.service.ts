@@ -38,7 +38,9 @@ export const inventoryService = {
   async listProducts(token: string): Promise<InventoryProductDto[]> {
     const session = await loadSession(token);
     requireActiveSubscription(session);
-    return supabase.query<InventoryProductDto[]>(`inventory_products?order=updated_at.desc&select=*`, token);
+    const tenantId = resolveTenantIdFromSession(session);
+    // 🔐 Filtro por tenant
+    return supabase.query<InventoryProductDto[]>(`inventory_products?tenant_id=eq.${encodeURIComponent(tenantId)}&order=updated_at.desc&select=*`, token);
   },
 
   async createProduct(token: string, request: InventoryProductCreateRequestDto): Promise<InventoryProductDto> {
@@ -72,9 +74,12 @@ export const inventoryService = {
   async updateProduct(token: string, productId: string, request: InventoryProductUpdateRequestDto): Promise<InventoryProductDto> {
     const session = await loadSession(token);
     requireActiveSubscription(session);
+    const tenantId = resolveTenantIdFromSession(session);
 
     const existing = await supabase.query<InventoryProductDto[]>(`inventory_products?id=eq.${encodeURIComponent(productId)}&select=*`, token);
     assert(Boolean(existing[0]), 'Producto no encontrado');
+    // 🔐 Verificar que el producto pertenezca al tenant
+    if (existing[0].tenant_id !== tenantId) throw new Error('Acceso denegado al producto');
 
     const updated = await supabase.patch<InventoryProductDto[]>(`inventory_products?id=eq.${encodeURIComponent(productId)}&select=*`, token, {
       ...(request.sku !== undefined ? { sku: normalizeSku(request.sku) } : {}),
@@ -94,10 +99,16 @@ export const inventoryService = {
   async listMovements(token: string, productId?: string): Promise<InventoryMovementDto[]> {
     const session = await loadSession(token);
     requireActiveSubscription(session);
-    const query = productId
-      ? `inventory_movements?product_id=eq.${encodeURIComponent(productId)}&order=created_at.desc&select=*`
-      : `inventory_movements?order=created_at.desc&select=*`;
-    return supabase.query<InventoryMovementDto[]>(query, token);
+    const tenantId = resolveTenantIdFromSession(session);
+    if (productId) {
+      // 🔐 Verificar que el producto pertenezca al tenant
+      const product = await supabase.query<{ tenant_id: string }[]>(`inventory_products?id=eq.${encodeURIComponent(productId)}&select=tenant_id`, token);
+      if (!product[0] || product[0].tenant_id !== tenantId) throw new Error('Producto no encontrado o fuera del tenant');
+      return supabase.query<InventoryMovementDto[]>(`inventory_movements?product_id=eq.${encodeURIComponent(productId)}&order=created_at.desc&select=*`, token);
+    } else {
+      // 🔐 Filtro por tenant para todos los movimientos
+      return supabase.query<InventoryMovementDto[]>(`inventory_movements?tenant_id=eq.${encodeURIComponent(tenantId)}&order=created_at.desc&select=*`, token);
+    }
   },
 
   async createMovement(token: string, request: InventoryMovementCreateRequestDto): Promise<InventoryMovementDto> {
@@ -156,12 +167,14 @@ export const inventoryService = {
   async getKardex(token: string, productId: string): Promise<InventoryKardexEntryDto[]> {
     const session = await loadSession(token);
     requireActiveSubscription(session);
+    const tenantId = resolveTenantIdFromSession(session);
     const products = await supabase.query<InventoryProductDto[]>(
       `inventory_products?id=eq.${encodeURIComponent(productId)}&select=*`,
       token
     );
     const product = products[0];
     assert(Boolean(product), 'Producto no encontrado');
+    if (product.tenant_id !== tenantId) throw new Error('Acceso denegado al producto');
 
     const movements = await supabase.query<InventoryMovementDto[]>(
       `inventory_movements?product_id=eq.${encodeURIComponent(productId)}&order=created_at.asc&select=*`,
@@ -192,4 +205,3 @@ export const inventoryService = {
     });
   }
 };
-
