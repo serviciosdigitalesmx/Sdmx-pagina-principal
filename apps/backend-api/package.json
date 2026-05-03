@@ -1,21 +1,24 @@
 {
   "name": "sdmx-backend-api",
   "version": "1.0.0",
-  "private": true,
   "type": "module",
+  "main": "dist/server.js",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
+    "build": "tsc -p tsconfig.json",
     "dev": "tsx watch src/server.ts"
   },
-  "devDependencies": {
-    "@types/cors": "^2.8.19",
-    "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
-  },
   "dependencies": {
-    "@sdmx/contracts": "^1.0.0",
+    "@supabase/supabase-js": "^2.43.1",
+    "express": "^4.19.2",
     "cors": "^2.8.5",
-    "dotenv": "^17.4.2"
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.12.12",
+    "@types/cors": "^2.8.17",
+    "typescript": "^5.4.5",
+    "tsx": "^4.10.5"
   }
 }
