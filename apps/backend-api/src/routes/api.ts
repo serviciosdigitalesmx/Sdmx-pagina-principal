@@ -1,47 +1,61 @@
+// api.ts
 import { Router } from 'express';
-import { loadSession } from '../services/context.js';
+import { loadSession, requireActiveSubscription } from '../services/context.js';
 
 export const handleApi = Router();
 
-// Middleware ultra-resiliente
-const withAuth = (fn: (req: any, res: any, token: string) => Promise<any>) => {
-  return async (req: any, res: any) => {
+// Middleware de autenticación real
+const authenticate = () => {
+  return async (req: any, res: any, next: any) => {
     try {
       const authHeader = req.headers.authorization || '';
-      const token = authHeader.replace('Bearer ', '') || 'dev-token';
-      await fn(req, res, token);
-    } catch (error) {
-      // Si falla la lógica interna, devolvemos un objeto de seguridad
-      res.json({ success: true, data: { accessGranted: true, user: { id: 'dev-user' } } });
+      const token = authHeader.replace('Bearer ', '').trim();
+      if (!token) {
+        return res.status(401).json({ success: false, error: { code: 'UNAUTHORIZED', message: 'Token no proporcionado' } });
+      }
+      const session = await loadSession(token);
+      req.session = session;
+      req.token = token;
+      next();
+    } catch (error: any) {
+      return res.status(401).json({ success: false, error: { code: 'UNAUTHORIZED', message: error.message || 'Token inválido' } });
     }
   };
 };
 
-// 1. Eliminar el 401 de refresh definitivamente
-handleApi.all('/api/auth/refresh', (req, res) => {
-  res.json({ success: true, data: { access_token: 'dev', refresh_token: 'dev' } });
+// Endpoints públicos (sin autenticación)
+handleApi.post('/api/auth/login', (req, res) => { /* implementar */ });
+handleApi.post('/api/auth/register', (req, res) => { /* implementar */ });
+handleApi.post('/api/auth/refresh', (req, res) => { /* implementar */ });
+handleApi.post('/api/webhooks/mercadopago', (req, res) => { /* implementar */ });
+handleApi.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+
+// Middleware para endpoints que requieren suscripción activa (opcional)
+const requireActive = (req: any, res: any, next: any) => {
+  try {
+    requireActiveSubscription(req.session);
+    next();
+  } catch (error: any) {
+    return res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: error.message } });
+  }
+};
+
+// Endpoints protegidos (autenticación + suscripción opcional)
+handleApi.get('/api/subscription/status', authenticate(), async (req: any, res) => {
+  res.json({ success: true, data: { status: req.session.subscription.status, plan: req.session.subscription.plan, accessGranted: req.session.accessGranted } });
 });
 
-// 2. Bypass de estatus de suscripción (Lo que pide tu Hub)
-handleApi.get('/api/subscription/status', withAuth(async (req, res) => {
-  res.json({ 
-    success: true, 
-    data: { status: 'active', plan: 'enterprise', accessGranted: true } 
-  });
-}));
+handleApi.get('/api/auth/me', authenticate(), async (req: any, res) => {
+  res.json({ success: true, data: { user: req.session.user, accessGranted: req.session.accessGranted } });
+});
 
-// 3. Endpoint de identidad (Evita el crash de Next.js)
-handleApi.get('/api/auth/me', withAuth(async (req, res) => {
-  res.json({ 
-    success: true, 
-    data: { 
-      user: { email: 'srfix@taller.com', id: 'dev-id' }, 
-      accessGranted: true 
-    } 
-  });
-}));
+// Ejemplo de endpoint que requiere suscripción activa
+handleApi.post('/api/service-orders', authenticate(), requireActive, async (req, res) => {
+  // lógica de creación
+});
 
-// 4. Catch-all para cualquier otra petición de negocio
-handleApi.all('/api/*', withAuth(async (req, res) => {
-  res.json({ success: true, data: {} });
-}));
+// Catch-all para otros endpoints protegidos (requiere al menos autenticación)
+handleApi.all('/api/*', authenticate(), async (req: any, res) => {
+  // Si llegó hasta aquí, el token es válido. Se puede responder un mensaje genérico o continuar.
+  res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Endpoint no existe' } });
+});
