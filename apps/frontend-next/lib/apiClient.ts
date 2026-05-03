@@ -7,7 +7,7 @@ import { clearToken, getToken, setToken } from "@/lib/auth/tokenManager";
 let refreshInFlight: Promise<string | null> | null = null;
 
 function isPublicEndpoint(endpoint: string) {
-  return endpoint.startsWith("/api/public/");
+  return endpoint.startsWith("/api/public/") || endpoint.startsWith("/api/portal/");
 }
 
 function isAuthEndpoint(endpoint: string) {

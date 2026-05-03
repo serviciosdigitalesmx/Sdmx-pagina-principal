@@ -1,8 +1,10 @@
 import { Router } from 'express';
-import { getPublicTenant } from '../controllers/public.controller.js';
-import { generateOrderPdf } from '../controllers/pdf.controller.js';
+import { createPublicRequest, generateOrderPdf, getPublicTenant } from '../controllers/public.controller.js';
 
 const router = Router();
-router.get('/tenant/:slug', getPublicTenant);
-router.get('/pdf/order/:folio', generateOrderPdf);
+
+router.get('/tenants/:slug', getPublicTenant);
+router.post('/requests', createPublicRequest);
+router.get('/orders/:folio/pdf', generateOrderPdf);
+
 export default router;
