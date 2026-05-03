@@ -27,7 +27,9 @@ export const purchasesService = {
   async listPurchases(token: string): Promise<PurchaseOrderDto[]> {
     const session = await loadSession(token);
     requireActiveSubscription(session);
-    const orders = await supabase.query<PurchaseOrderDto[]>(`purchase_orders?order=created_at.desc&select=*`, token);
+    const tenantId = resolveTenantIdFromSession(session);
+    // 🔐 Filtro por tenant
+    const orders = await supabase.query<PurchaseOrderDto[]>(`purchase_orders?tenant_id=eq.${encodeURIComponent(tenantId)}&order=created_at.desc&select=*`, token);
     const withItems = await Promise.all(orders.map((order) => attachItems(token, order)));
     return withItems;
   },
@@ -35,12 +37,15 @@ export const purchasesService = {
   async getPurchaseById(token: string, purchaseOrderId: string): Promise<PurchaseOrderDto> {
     const session = await loadSession(token);
     requireActiveSubscription(session);
+    const tenantId = resolveTenantIdFromSession(session);
     const orders = await supabase.query<PurchaseOrderDto[]>(
       `purchase_orders?id=eq.${encodeURIComponent(purchaseOrderId)}&select=*`,
       token
     );
     const order = orders[0];
     assert(Boolean(order), 'Compra no encontrada');
+    // 🔐 Verificar que la compra pertenezca al tenant
+    if (order.tenant_id !== tenantId) throw new Error('Acceso denegado a la compra');
     return attachItems(token, order);
   },
 
