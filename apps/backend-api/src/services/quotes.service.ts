@@ -9,7 +9,9 @@ export const quotesService = {
   async listQuotes(token: string): Promise<QuoteDto[]> {
     const session = await loadSession(token);
     requireActiveSubscription(session);
-    return supabase.query<QuoteDto[]>(`quotations?order=created_at.desc&select=*`, token);
+    const tenantId = resolveTenantIdFromSession(session);
+    // 🔐 Filtro por tenant
+    return supabase.query<QuoteDto[]>(`quotations?tenant_id=eq.${encodeURIComponent(tenantId)}&order=created_at.desc&select=*`, token);
   },
 
   async createQuote(token: string, request: QuoteCreateRequestDto): Promise<QuoteDto> {
