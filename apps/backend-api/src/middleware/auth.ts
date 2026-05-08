@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import { loadSession } from '../services/context.js';
 
-export interface AuthRequest extends Request {
+export type AuthRequest = Request & {
   token?: string;
   user?: any;
-}
+};
 
 export const authMiddleware = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;

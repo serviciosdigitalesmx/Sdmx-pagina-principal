@@ -121,7 +121,7 @@ export const inventoryService = {
     assert(request.quantity > 0, 'quantity debe ser mayor a 0');
 
     const products = await supabase.query<InventoryProductRow[]>(
-      `inventory_products?id=eq.${encodeURIComponent(request.productId)}&select=*`,
+      `inventory_products?id=eq.${encodeURIComponent(String(request.productId ?? request.product_id))}&select=*`,
       token
     );
     const product = products[0];
@@ -148,7 +148,7 @@ export const inventoryService = {
     });
 
     const updated = await supabase.patch<InventoryProductDto[]>(
-      `inventory_products?id=eq.${encodeURIComponent(request.productId)}&select=*`,
+      `inventory_products?id=eq.${encodeURIComponent(String(request.productId ?? request.product_id))}&select=*`,
       token,
       {
         current_stock: nextStock,

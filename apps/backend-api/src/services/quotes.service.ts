@@ -20,7 +20,7 @@ export const quotesService = {
     const tenantId = resolveTenantIdFromSession(session);
 
     const subtotal = Number(request.subtotalMxn);
-    const vat = request.vatMxn > 0 ? Number(request.vatMxn) : Number((subtotal * IVA_RATE).toFixed(2));
+    const vat = (request.vatMxn !== undefined && request.vatMxn > 0) ? Number(request.vatMxn) : Number((subtotal * IVA_RATE).toFixed(2));
     const total = Number((subtotal + vat).toFixed(2));
     const advance = Number(request.advanceMxn ?? 0);
     const balance = Number((total - advance).toFixed(2));

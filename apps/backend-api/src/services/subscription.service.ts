@@ -4,7 +4,7 @@ import type { SessionDto } from '@sdmx/contracts';
 export const subscriptionService = {
   async subscriptionStatus(token: string) {
     const session = await loadSession(token);
-    return { subscription: session.subscription };
+    return { subscription: session.subscription ?? null };
   },
 
   async ensureActiveSubscription(token: string): Promise<void> {

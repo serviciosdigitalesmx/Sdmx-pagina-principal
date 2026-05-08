@@ -53,7 +53,7 @@ export const customersService = {
     requireActiveSubscription(session);
     const tenantId = resolveTenantIdFromSession(session);
     // 🔐 Validar que el cliente pertenezca al tenant antes de crear contacto
-    const customer = await supabase.query<{ tenant_id: string }[]>(`customers?id=eq.${encodeURIComponent(request.customerId)}&select=tenant_id`, token);
+    const customer = await supabase.query<{ tenant_id: string }[]>(`customers?id=eq.${encodeURIComponent(String(request.customerId ?? request.customer_id))}&select=tenant_id`, token);
     if (!customer[0] || customer[0].tenant_id !== tenantId) {
       throw new Error('Cliente no encontrado o fuera del tenant');
     }

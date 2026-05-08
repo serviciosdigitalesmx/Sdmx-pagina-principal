@@ -7,6 +7,7 @@ export default function PortalClientePage() {
   const { folio } = useParams();
   const [equipo, setEquipo] = useState<any>(null);
   const [error, setError] = useState('');
+  const [dias, setDias] = useState<number | null>(null);
   const { get } = useApi();
 
   useEffect(() => {
@@ -15,9 +16,15 @@ export default function PortalClientePage() {
     }
   }, [folio]);
 
+  useEffect(() => {
+    if (equipo?.fecha_promesa) {
+      const calculatedDias = Math.ceil((new Date(equipo.fecha_promesa).getTime() - new Date().getTime()) / (1000*3600*24));
+      setDias(calculatedDias);
+    }
+  }, [equipo]);
+
   if (error) return <div className="p-8 text-center text-red-500">{error}</div>;
   if (!equipo) return <div className="p-8 text-center">Cargando...</div>;
-  const dias = Math.ceil((new Date(equipo.fecha_promesa).getTime() - new Date().getTime()) / (1000*3600*24));
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-6">
       <div className="bg-gray-800 rounded-xl p-6">
@@ -26,7 +33,7 @@ export default function PortalClientePage() {
           <div><span className="text-gray-400">Cliente:</span> {equipo.clientes?.nombre}</div>
           <div><span className="text-gray-400">Equipo:</span> {equipo.marca_modelo}</div>
           <div><span className="text-gray-400">Falla:</span> {equipo.falla_reportada}</div>
-          <div><span className="text-gray-400">Promesa:</span> {equipo.fecha_promesa} {dias>=0?`(faltan ${dias} días)`:'(atrasado)'}</div>
+          <div><span className="text-gray-400">Promesa:</span> {equipo.fecha_promesa} {dias !== null ? (dias >= 0 ? `(faltan ${dias} días)` : '(atrasado)') : ''}</div>
           <div><span className="text-gray-400">Costo:</span> ${equipo.costo_estimado||'Por definir'}</div>
         </div>
         <div className="mt-6"><h3 className="font-bold">Seguimiento</h3><p className="bg-gray-700 p-3 rounded mt-2">{equipo.seguimiento_cliente||'Sin avances.'}</p></div>

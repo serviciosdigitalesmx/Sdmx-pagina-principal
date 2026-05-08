@@ -77,7 +77,7 @@ export const expensesService = {
     assert(Number(request.amountCents) >= 0, 'amountCents debe ser mayor o igual a 0');
 
     const category = await supabase.query<ExpenseCategoryDto[]>(
-      `expense_categories?id=eq.${encodeURIComponent(request.categoryId)}&select=*`,
+      `expense_categories?id=eq.${encodeURIComponent(String(request.categoryId ?? request.category_id))}&select=*`,
       token
     );
     assert(Boolean(category[0]), 'Categoría no encontrada');

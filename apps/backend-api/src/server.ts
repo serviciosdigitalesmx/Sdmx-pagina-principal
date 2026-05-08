@@ -4,14 +4,12 @@ import publicRoutes from './routes/public.routes.js';
 import billingRoutes from './routes/billing.routes.js';
 import webhookRoutes from './routes/webhook.routes.js';
 import { handleApi } from './routes/api.js';
+import { env } from './config/env.js';
 
 const app = express();
 
 app.use(cors({
-  origin: [
-    'https://sdmx-pagina-principal.vercel.app',
-    'http://localhost:3000'
-  ],
+  origin: env.corsAllowedOriginList.length > 0 ? env.corsAllowedOriginList : ['http://localhost:3000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-supabase-api-version']
