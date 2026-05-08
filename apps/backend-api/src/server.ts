@@ -5,6 +5,7 @@ import billingRoutes from './routes/billing.routes.js';
 import webhookRoutes from './routes/webhook.routes.js';
 import { handleApi } from './routes/api.js';
 import { env } from './config/env.js';
+import operationsRoutes from './routes/operations.routes.js';
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.use('/', handleApi);
 app.use('/api/public', publicRoutes);
 app.use('/api/billing', billingRoutes);
 app.use('/api/webhooks', webhookRoutes);
+app.use('/api/operations', operationsRoutes);
 
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {

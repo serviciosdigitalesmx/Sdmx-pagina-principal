@@ -326,6 +326,11 @@ export interface ServiceOrderDto {
   device_brand?: string | null;
   device_model?: string | null;
   reported_issue?: string | null;
+  serial_number?: string | null;
+  accessories?: string | null;
+  internal_notes?: string | null;
+  warranty_until?: string | null; // ISO timestamp
+  evidence_metadata?: any; // JSON array metadata for evidence images
   promised_date?: string | null;
   costo_estimado?: number | null;
   created_at?: string;
@@ -347,6 +352,11 @@ export interface ServiceOrderCreateRequestDto {
   promisedDate?: string;
   estimatedCost?: number;
   notes?: string;
+  serialNumber?: string;
+  accessories?: string;
+  internalNotes?: string;
+  warrantyUntil?: string; // ISO timestamp
+  evidenceMetadata?: any;
   receptionChecklist?: any;
   receptionPhotoBase64?: string;
   sourceQuoteFolio?: string;

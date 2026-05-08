@@ -1,5 +1,5 @@
 import { supabase } from './supabase.js';
-import { loadSession } from './context.js';
+import { loadSession, resolveTenantIdFromSession, requireActiveSubscription } from './context.js';
 import type {
   ServiceOrderCreateRequestDto,
   ServiceOrderStatusUpdateRequestDto,
@@ -11,12 +11,15 @@ import type {
 export class ServiceOrdersService {
   // Compatibility aliases expected by app-service facade
   async dashboardSummary(token: string) {
-    const orders = await this.findAll(token);
+    const session = await loadSession(token);
+    requireActiveSubscription(session);
+    const tenantId = resolveTenantIdFromSession(session);
+    const orders = await supabase.query<any[]>(`service_orders?tenant_id=eq.${encodeURIComponent(tenantId)}&order=created_at.desc&select=*`, token);
     const summary = {
-      totalServiceOrders: orders.length,
-      pending: orders.filter((o) => o.status === 'pending').length,
-      diagnosing: orders.filter((o) => o.status === 'diagnosing').length,
-      ready: orders.filter((o) => o.status === 'ready').length
+      totalServiceOrders: (orders || []).length,
+      pending: (orders || []).filter((o) => o.status === 'pending').length,
+      diagnosing: (orders || []).filter((o) => o.status === 'diagnosing').length,
+      ready: (orders || []).filter((o) => o.status === 'ready').length
     };
     return summary;
   }
@@ -42,83 +45,154 @@ export class ServiceOrdersService {
   }
 
   async create(token: string, request: ServiceOrderCreateRequestDto): Promise<ServiceOrderDto> {
-    const { data, error } = await supabase
-      .from('service_orders')
-      .insert({
-        tenant_id: request.tenantId,
-        branch_id: request.branchId ?? null,
-        customer_id: request.customerId,
-        device_type: request.deviceType,
-        device_brand: request.deviceBrand,
-        device_model: request.deviceModel,
-        reported_issue: request.reportedIssue,
-        estimated_cost: request.estimatedCost,
-        notes: request.notes,
-        reception_checklist: request.receptionChecklist,
-        reception_photo_base64: request.receptionPhotoBase64,
-        source_quote_folio: request.sourceQuoteFolio,
-        promised_date: request.promisedDate,
-        status: 'received'
-      })
-      .select()
-      .single();
-    if (error) throw new Error(error.message);
-    return data;
+    const session = await loadSession(token);
+    requireActiveSubscription(session);
+    const tenantId = resolveTenantIdFromSession(session);
+
+    const payload: any = {
+      tenant_id: tenantId,
+      branch_id: request.branchId ?? null,
+      customer_id: request.customerId,
+      device_type: request.deviceType ?? request.deviceInfo?.type ?? null,
+      device_brand: request.deviceBrand ?? request.deviceInfo?.brand ?? null,
+      device_model: request.deviceModel ?? request.deviceInfo?.model ?? null,
+      reported_issue: request.reportedIssue ?? request.problemDescription ?? null,
+      serial_number: (request as any).serialNumber ?? null,
+      accessories: (request as any).accessories ?? null,
+      internal_notes: (request as any).internalNotes ?? null,
+      warranty_until: (request as any).warrantyUntil ?? null,
+      evidence_metadata: (request as any).evidenceMetadata ?? null,
+      estimated_cost: request.estimatedCost ?? null,
+      notes: request.notes ?? null,
+      reception_checklist: request.receptionChecklist ?? null,
+      reception_photo_base64: request.receptionPhotoBase64 ?? null,
+      source_quote_folio: request.sourceQuoteFolio ?? null,
+      promised_date: request.promisedDate ?? null,
+      status: 'received',
+      created_at: new Date().toISOString()
+    };
+
+    const created = await supabase.insert<any[]>('service_orders', token, payload);
+    return created[0];
   }
 
   async findAll(token: string): Promise<ServiceOrderDto[]> {
-    const { data, error } = await supabase
-      .from('service_orders')
-      .select('*')
-      .order('created_at', { ascending: false });
-    if (error) throw new Error(error.message);
-    return data;
+    const session = await loadSession(token);
+    requireActiveSubscription(session);
+    const tenantId = resolveTenantIdFromSession(session);
+    return supabase.query<ServiceOrderDto[]>(`service_orders?tenant_id=eq.${encodeURIComponent(tenantId)}&order=created_at.desc&select=*`, token);
   }
 
   async findById(token: string, id: string): Promise<ServiceOrderDto> {
-    const { data, error } = await supabase
-      .from('service_orders')
-      .select('*')
-      .eq('id', id)
-      .single();
-    if (error) throw new Error(error.message);
-    return data;
+    const session = await loadSession(token);
+    requireActiveSubscription(session);
+    const tenantId = resolveTenantIdFromSession(session);
+    const rows = await supabase.query<ServiceOrderDto[]>(`service_orders?id=eq.${encodeURIComponent(id)}&tenant_id=eq.${encodeURIComponent(tenantId)}&select=*`, token);
+    return (rows && rows[0]) || (null as any);
   }
 
   async update(token: string, id: string, request: ServiceOrderStatusUpdateRequestDto): Promise<ServiceOrderDto> {
-    const { data, error } = await supabase
-      .from('service_orders')
-      .update({ status: request.status })
-      .eq('id', id)
-      .select()
-      .single();
-    if (error) throw new Error(error.message);
-    return data;
+    const session = await loadSession(token);
+    requireActiveSubscription(session);
+    const tenantId = resolveTenantIdFromSession(session);
+
+    // Fetch current order to record history
+    const existing = await supabase.query<any[]>(`service_orders?id=eq.${encodeURIComponent(id)}&tenant_id=eq.${encodeURIComponent(tenantId)}&select=*`, token);
+    const current = existing && existing[0] ? existing[0] : null;
+
+    // Validate status transitions and required fields
+    const toStatus = (request as any).status || (request as any).status;
+    if (toStatus && current) {
+      this._validateStatusTransition(current, toStatus, request);
+    }
+
+    // Build patch payload (support updating extended fields)
+    const patchPayload: any = Object.assign({}, request);
+    patchPayload.updated_at = new Date().toISOString();
+
+    // Ensure multi-tenant patch
+    const patched = await supabase.patch<any[]>(`service_orders?id=eq.${encodeURIComponent(id)}&tenant_id=eq.${encodeURIComponent(tenantId)}`, token, patchPayload as any);
+
+    // Insert timeline event
+    const fromStatus = current ? (current.status || null) : null;
+    await supabase.insert<any[]>('service_order_timeline', token, {
+      tenant_id: tenantId,
+      service_order_id: id,
+      from_status: fromStatus,
+      to_status: toStatus,
+      note: (request as any).note ?? null,
+      actor_user_id: session.user?.id ?? null,
+      created_at: new Date().toISOString()
+    });
+
+    return (patched && patched[0]) || (null as any);
   }
 
   async getHistory(token: string, id: string): Promise<TimelineEventDto[]> {
-    const { data, error } = await supabase
-      .from('service_order_timeline')
-      .select('*')
-      .eq('service_order_id', id)
-      .order('created_at', { ascending: false });
-    if (error) throw new Error(error.message);
-    return data;
+    const session = await loadSession(token);
+    requireActiveSubscription(session);
+    const tenantId = resolveTenantIdFromSession(session);
+    return supabase.query<TimelineEventDto[]>(`service_order_timeline?tenant_id=eq.${encodeURIComponent(tenantId)}&service_order_id=eq.${encodeURIComponent(id)}&order=created_at.desc&select=*`, token);
   }
 
   async findByFolioForClient(folio: string): Promise<ServiceOrderDto> {
-    const { data, error } = await supabase
-      .from('service_orders')
-      .select('*')
-      .eq('folio', folio)
-      .single();
-    if (error) throw new Error('Orden no encontrada');
-    return data;
+    const rows = await supabase.query<ServiceOrderDto[]>(`service_orders?folio=eq.${encodeURIComponent(folio)}&select=*`);
+    if (!rows || !rows.length) throw new Error('Orden no encontrada');
+    return rows[0];
+  }
+
+  // Calculate costs from a list of items (subtotal, vat, total)
+  async calculateEstimate(token: string, items: Array<{ quantity: number; unit_cost_mxn: number }>) {
+    const IVA_RATE = 0.16;
+    const subtotal = Number((items || []).reduce((acc, it) => acc + (Number(it.quantity || 0) * Number(it.unit_cost_mxn || 0)), 0).toFixed(2));
+    const vat = Number((subtotal * IVA_RATE).toFixed(2));
+    const total = Number((subtotal + vat).toFixed(2));
+    return { subtotal, vat, total };
+  }
+
+  // Validate allowed status transitions and required fields per transition
+  _validateStatusTransition(current: any, toStatus: string, payload: any) {
+    const from = current.status;
+    // Example rules:
+    // - Cannot move to 'ready' or 'delivered' if estimated_cost is missing or zero
+    if (['ready', 'delivered', 'terminado'].includes(toStatus)) {
+      const cost = Number(payload.total_cost ?? payload.estimated_cost ?? current.estimated_cost ?? 0);
+      if (!cost || cost <= 0) {
+        throw new Error('No se puede cambiar a "' + toStatus + '" sin un costo final mayor a 0');
+      }
+    }
+    // - Cannot move to 'diagnosing' / 'in_progress' without technician assigned
+    if (['diagnosing', 'in_progress', 'en_proceso'].includes(toStatus)) {
+      const tech = payload.technician_assigned ?? current.technician_assigned;
+      if (!tech) throw new Error('Asignar un técnico antes de mover a "' + toStatus + '"');
+    }
+    // Additional rules can be added here following legacy behavior
+    return true;
+  }
+
+  // Validate warranty: checks service_order.warranty_until if available
+  async validateWarranty(token: string, serviceOrderId: string): Promise<{ valid: boolean; reason?: string }> {
+    const session = await loadSession(token);
+    requireActiveSubscription(session);
+    const tenantId = resolveTenantIdFromSession(session);
+    const rows = await supabase.query<any[]>(`service_orders?id=eq.${encodeURIComponent(serviceOrderId)}&tenant_id=eq.${encodeURIComponent(tenantId)}&select=*`, token);
+    const order = rows && rows[0] ? rows[0] : null;
+    if (!order) return { valid: false, reason: 'not_found' };
+    if (order.warranty_until) {
+      try {
+        const until = new Date(order.warranty_until);
+        if (isNaN(until.getTime())) return { valid: false, reason: 'invalid_warranty_date' };
+        return { valid: new Date() <= until };
+      } catch (e) {
+        return { valid: false, reason: 'invalid_warranty_date' };
+      }
+    }
+    return { valid: false, reason: 'no_warranty_info' };
   }
 
   async signedUpload(token: string, request: EvidenceUploadRequest): Promise<{ signedUrl: string }> {
     const session = await loadSession(token);
-    const tenantId = session.user.tenant_id;
+    const tenantId = resolveTenantIdFromSession(session);
 
     const bucket = 'evidences';
     const filePath = `${tenantId}/service_orders/${request.serviceOrderId}/${Date.now()}_${request.fileName}`;

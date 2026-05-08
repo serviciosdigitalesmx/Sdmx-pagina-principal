@@ -13,7 +13,9 @@
     "express": "^4.19.2",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "@sdmx/contracts": "file:../../packages/contracts"
+    "@sdmx/contracts": "file:../../packages/contracts",
+    "pdf-lib": "^1.17.1",
+    "node-fetch": "^3.4.1"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
