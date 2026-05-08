@@ -1,222 +1,141 @@
-export type ApiErrorDto = {
-  code: string;
-  message: string;
-};
+export type ServiceStatus = 'pending' | 'diagnosing' | 'waiting_parts' | 'ready' | 'delivered' | 'cancelled';
 
-export type ApiResponse<T> = {
-  success: boolean;
-  data?: T;
-  error?: ApiErrorDto;
-};
+export interface DeviceInfo {
+  brand: string;
+  model: string;
+  serial?: string;
+  type: 'phone' | 'laptop' | 'tablet' | 'other';
+}
 
-export type PlanCode = "basic" | "pro" | "enterprise";
-export type SubscriptionStatusDto = "pending" | "trialing" | "active" | "past_due" | "suspended" | "canceled";
-
-export type TenantDto = {
-  id: string;
-  name: string;
-  slug?: string | null;
-  billing_exempt?: boolean;
-  created_at?: string;
-  updated_at?: string;
-};
-
-export type UserDto = {
-  id: string;
-  auth_user_id: string;
-  tenant_id: string;
-  full_name: string;
-  email: string;
-  branch_id?: string | null;
-  created_at?: string;
-  updated_at?: string;
-};
-
-export type ShopDto = TenantDto;
-
-export type RoleDto = {
-  id: string;
-  name: string;
-  description?: string | null;
-};
-
-export type PermissionDto = {
-  id: string;
-  name: string;
-  description?: string | null;
-};
-
-export type SubscriptionDto = {
+export interface ServiceOrder {
   id?: string;
   tenant_id: string;
-  plan: PlanCode;
-  status: SubscriptionStatusDto;
-  provider: "mercadopago" | "trial";
-  external_id: string;
-  current_period_end?: string | null;
-  raw_payload?: unknown;
+  customer_id: string;
+  device_info: DeviceInfo;
+  problem_description: string;
+  status: ServiceStatus;
+  total_cost: number;
   created_at?: string;
-  updated_at?: string;
-};
+}
 
-export type SessionDto = {
-  accessToken: string;
-  refreshToken: string;
-  expiresAt: string;
-  accessGranted?: boolean;
-  user: UserDto;
-  shop: ShopDto;
-  subscription: SubscriptionDto | null;
-  roles: RoleDto[];
-  permissions: PermissionDto[];
-};
+// Common response wrapper
+export interface ApiResponse<T = unknown> {
+  success: boolean;
+  data?: T;
+  error?: { code?: string; message?: string } | string | null;
+}
 
-export type LoginRequestDto = {
-  email: string;
-  password: string;
-};
-
-export type RegisterRequestDto = {
-  email: string;
-  password: string;
-  fullName: string;
-  tenantId: string;
-  branchId?: string | null;
-};
-
-export type CheckoutRequestDto = {
-  plan: PlanCode;
-};
-
-export type CheckoutResponseDto = {
-  initPoint: string;
-  preferenceId?: string;
-};
-
-export type DashboardSummaryDto = {
-  openOrders: number;
-  inProgressOrders: number;
-  readyOrders: number;
-  totalCustomers: number;
-  totalSalesMxn: number;
-};
-
-export type ServiceOrderCreateRequestDto = {
-  tenantId: string;
-  branchId?: string | null;
-  customerId: string;
-  deviceType: string;
-  deviceBrand: string;
-  deviceModel: string;
-  reportedIssue: string;
-  estimatedCost?: number | null;
-  notes?: string | null;
-  receptionChecklist?: Record<string, boolean> | null;
-  receptionPhotoBase64?: string | null;
-  sourceQuoteFolio?: string | null;
-  promisedDate?: string | null;
-};
-
-export type ServiceOrderStatusUpdateRequestDto = {
-  status: string;
-  note?: string | null;
-};
-
-export type ServiceOrderDto = {
+// Users / Session / Auth
+export interface UserDto {
   id: string;
+  auth_user_id?: string;
   tenant_id: string;
   branch_id?: string | null;
-  folio: string;
-  customer_id: string;
-  status: string;
-  device_type: string;
-  device_brand: string;
-  device_model: string;
-  reported_issue: string;
-  estimated_cost?: number | null;
-  notes?: string | null;
-  reception_checklist?: Record<string, boolean> | null;
-  reception_photo_base64?: string | null;
-  source_quote_folio?: string | null;
-  promised_date?: string | null;
-  created_at: string;
-  updated_at: string;
-};
+  full_name?: string;
+  email?: string;
+  is_active?: boolean;
+  created_at?: string;
+}
 
-export type TimelineEventDto = {
+export interface SubscriptionDto {
   id: string;
-  service_order_id: string;
-  from_status: string;
-  to_status: string;
-  note?: string | null;
-  created_at: string;
-};
+  tenant_id: string;
+  plan_code?: PlanCode;
+  plan?: PlanCode;
+  status: string;
+  current_period_end?: string | null;
+  grace_until?: string | null;
+  provider?: string;
+  external_id?: string;
+  created_at?: string;
+  updated_at?: string;
+}
 
-export type CustomerDto = {
+export interface SessionDto {
+  accessToken?: string;
+  refreshToken?: string;
+  expiresAt?: string;
+  user: UserDto;
+  shop?: any;
+  subscription?: SubscriptionDto | null;
+  accessGranted?: boolean;
+  roles?: string[];
+  permissions?: string[];
+}
+
+export type PlanCode = 'free' | 'basic' | 'pro' | 'scale' | string;
+
+// Customers
+export interface CustomerDto {
   id: string;
   tenant_id: string;
   branch_id?: string | null;
   full_name: string;
-  email: string;
+  email?: string | null;
   phone?: string | null;
-  created_at: string;
-  updated_at?: string;
-};
+  created_at?: string;
+}
 
-export type CustomerCreateRequestDto = {
-  tenantId: string;
+export interface CustomerCreateRequestDto {
+  full_name: string;
+  email?: string | null;
+  phone?: string | null;
+  branch_id?: string | null;
+  // camelCase aliases for backend
+  fullName?: string;
   branchId?: string | null;
-  fullName: string;
-  email: string;
-  phone?: string | null;
-};
+}
 
-export type CustomerContactDto = {
+export interface CustomerContactDto {
   id: string;
   customer_id: string;
   name: string;
-  role: string;
-  email: string;
+  role?: string | null;
+  email?: string | null;
   phone?: string | null;
-  created_at: string;
-};
+  created_at?: string;
+}
 
-export type CustomerContactCreateRequestDto = {
-  customerId: string;
+export interface CustomerContactCreateRequestDto {
+  customer_id: string;
   name: string;
-  role: string;
-  email: string;
+  role?: string | null;
+  email?: string | null;
   phone?: string | null;
-};
+  // camelCase aliases
+  customerId?: string;
+}
 
-export type QuoteCreateRequestDto = {
-  tenantId: string;
-  serviceOrderId: string;
-  subtotalMxn: number;
-  vatMxn: number;
-  advanceMxn: number;
-};
-
-export type QuoteDto = {
+// Suppliers
+export interface SupplierDto {
   id: string;
   tenant_id: string;
-  service_order_id: string;
-  subtotal_mxn: number;
-  vat_mxn: number;
-  total_mxn: number;
-  advance_mxn: number;
-  balance_mxn: number;
-  status: string;
-  created_at: string;
-};
+  name: string;
+  contact_name?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  address?: string | null;
+  notes?: string | null;
+  created_at?: string;
+}
 
-export type EvidenceUploadRequest = {
-  bucket: string;
-  path: string;
-  expiresInSeconds?: number;
-};
+export interface CreateSupplierRequestDto {
+  id?: string;
+  tenant_id?: string;
+  name: string;
+  contact_name?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  notes?: string;
+  // camelCase aliases
+  contactName?: string;
+}
 
-export type InventoryProductDto = {
+export interface UpdateSupplierRequestDto extends Partial<CreateSupplierRequestDto> { }
+
+// Inventory
+export interface InventoryProductDto {
   id: string;
   tenant_id: string;
   branch_id?: string | null;
@@ -227,101 +146,88 @@ export type InventoryProductDto = {
   sale_price_mxn?: number | null;
   current_stock: number;
   min_stock: number;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-};
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
 
-export type InventoryProductCreateRequestDto = {
-  tenantId: string;
-  branchId?: string | null;
+export interface InventoryProductCreateRequestDto {
   sku: string;
   name: string;
   category?: string | null;
+  unit_cost_mxn?: number | null;
+  sale_price_mxn?: number | null;
+  min_stock?: number;
+  // camelCase aliases
   unitCostMxn?: number | null;
   salePriceMxn?: number | null;
-  minStock?: number | null;
-};
-
-export type InventoryProductUpdateRequestDto = {
-  sku?: string;
-  name?: string;
-  category?: string | null;
-  unitCostMxn?: number | null;
-  salePriceMxn?: number | null;
-  minStock?: number | null;
+  minStock?: number;
+  branchId?: string;
   isActive?: boolean;
-};
+}
 
-export type InventoryMovementTypeDto = "in" | "out" | "adjustment" | "transfer";
+export interface InventoryProductUpdateRequestDto extends Partial<InventoryProductCreateRequestDto> { }
 
-export type InventoryMovementDto = {
+export interface InventoryMovementDto {
   id: string;
   tenant_id: string;
   branch_id?: string | null;
   product_id: string;
-  movement_type: InventoryMovementTypeDto;
+  movement_type: 'in' | 'out' | 'adjustment' | 'transfer' | string;
   quantity: number;
   unit_cost_mxn?: number | null;
   reference_type?: string | null;
   reference_id?: string | null;
   note?: string | null;
-  created_at: string;
-};
+  created_at?: string;
+}
 
-export type InventoryMovementCreateRequestDto = {
-  tenantId: string;
-  branchId?: string | null;
-  productId: string;
-  movementType: InventoryMovementTypeDto;
+export interface InventoryMovementCreateRequestDto {
+  product_id: string;
+  movement_type: InventoryMovementDto['movement_type'];
   quantity: number;
-  unitCostMxn?: number | null;
-  referenceType?: string | null;
-  referenceId?: string | null;
-  note?: string | null;
-};
+  unit_cost_mxn?: number;
+  reference_type?: string;
+  reference_id?: string;
+  note?: string;
+  // camelCase aliases
+  productId?: string;
+  movementType?: InventoryMovementDto['movement_type'];
+  unitCostMxn?: number;
+  referenceType?: string;
+  referenceId?: string;
+  branchId?: string;
+}
 
-export type InventoryKardexEntryDto = {
-  movement: InventoryMovementDto;
-  product: InventoryProductDto;
-  balance: number;
-};
+export interface InventoryKardexEntryDto {
+  // older shape fields
+  product_id?: string;
+  quantity?: number;
+  unit_cost_mxn?: number | null;
+  reference_type?: string | null;
+  reference_id?: string | null;
+  created_at?: string;
+  // new shape used by backend mappings
+  movement?: InventoryMovementDto;
+  product?: InventoryProductDto;
+  balance?: number;
+}
 
-export type SupplierDto = {
+// Purchases / Quotes
+export interface PurchaseOrderDto {
   id: string;
   tenant_id: string;
-  name: string;
-  contact_name?: string | null;
-  phone?: string | null;
-  email?: string | null;
-  address?: string | null;
+  supplier_id: string;
+  status: string;
+  total_amount_cents: number;
+  currency?: string;
   notes?: string | null;
-  created_at: string;
-  updated_at: string;
-};
+  created_at?: string;
+  updated_at?: string;
+  items?: PurchaseItemDto[];
+}
 
-export type CreateSupplierRequestDto = {
-  tenantId: string;
-  name: string;
-  contactName?: string | null;
-  phone?: string | null;
-  email?: string | null;
-  address?: string | null;
-  notes?: string | null;
-};
-
-export type UpdateSupplierRequestDto = {
-  name?: string;
-  contactName?: string | null;
-  phone?: string | null;
-  email?: string | null;
-  address?: string | null;
-  notes?: string | null;
-};
-
-export type PurchaseOrderStatusDto = 'draft' | 'confirmed' | 'cancelled';
-
-export type PurchaseItemDto = {
+export interface PurchaseItemDto {
   id: string;
   tenant_id: string;
   purchase_order_id: string;
@@ -329,164 +235,228 @@ export type PurchaseItemDto = {
   quantity: number;
   unit_cost_cents: number;
   total_cost_cents: number;
-  created_at: string;
-};
+}
 
-export type PurchaseOrderDto = {
-  id: string;
-  tenant_id: string;
+export interface CreatePurchaseRequestDto {
   supplier_id: string;
-  status: PurchaseOrderStatusDto;
-  total_amount_cents: number;
-  currency: string;
-  notes?: string | null;
-  created_at: string;
-  updated_at: string;
-  items?: PurchaseItemDto[];
-};
+  items: Array<{ product_id: string; quantity: number; unit_cost_cents: number; productId?: string; unitCostCents?: number }>;
+  // camelCase aliases
+  supplierId?: string;
+  notes?: string;
+}
 
-export type CreatePurchaseRequestDto = {
-  supplierId: string;
-  notes?: string | null;
-  items: Array<{
-    productId: string;
-    quantity: number;
-    unitCostCents: number;
-  }>;
-};
+export interface ConfirmPurchaseRequestDto { purchaseOrderId: string; tenantId?: string }
 
-export type ConfirmPurchaseRequestDto = {
-  tenantId: string;
-};
+export interface QuoteDto {
+  id: string;
+  tenant_id: string;
+  service_order_id: string;
+  subtotal_mxn: number;
+  vat_mxn: number;
+  total_mxn: number;
+  advance_mxn?: number;
+  balance_mxn?: number;
+  status: string;
+  created_at?: string;
+}
 
-export type ExpenseCategoryDto = {
+export interface QuoteCreateRequestDto {
+  service_order_id: string;
+  subtotal_mxn: number;
+  vat_mxn: number;
+  total_mxn: number;
+  advance_mxn?: number;
+  // camelCase aliases
+  serviceOrderId?: string;
+  subtotalMxn?: number;
+  vatMxn?: number;
+  totalMxn?: number;
+  advanceMxn?: number;
+}
+
+// Expenses
+export interface ExpenseCategoryDto {
   id: string;
   tenant_id: string;
   name: string;
   description?: string | null;
-  created_at: string;
-  updated_at: string;
-};
+  created_at?: string;
+}
 
-export type CreateExpenseCategoryRequestDto = {
-  tenantId: string;
-  name: string;
-  description?: string | null;
-};
-
-export type ExpenseDto = {
+export interface ExpenseDto {
   id: string;
   tenant_id: string;
   category_id: string;
   expense_date: string;
   description: string;
   amount_cents: number;
-  payment_method: string;
+  payment_method?: string;
   reference?: string | null;
   notes?: string | null;
-  created_at: string;
-  updated_at: string;
-  category?: ExpenseCategoryDto;
-};
+  created_at?: string;
+}
 
-export type CreateExpenseRequestDto = {
-  tenantId: string;
-  categoryId: string;
-  expenseDate?: string;
+export interface CreateExpenseRequestDto {
+  category_id: string;
+  expense_date: string;
   description: string;
-  amountCents: number;
+  amount_cents: number;
+  payment_method?: string;
+  reference?: string;
+  notes?: string;
+  // camelCase aliases
+  categoryId?: string;
+  expenseDate?: string;
+  amountCents?: number;
   paymentMethod?: string;
-  reference?: string | null;
-  notes?: string | null;
-};
+}
 
-export type ReportDateRangeDto = {
-  from?: string | null;
-  to?: string | null;
-};
+export interface CreateExpenseCategoryRequestDto { name: string; description?: string; }
 
-export type OperationsReportDto = {
+// Service orders (extended)
+export interface ServiceOrderDto {
+  id: string;
+  tenant_id: string;
+  branch_id?: string | null;
+  customer_id?: string | null;
+  folio?: string;
+  status: ServiceStatus;
+  device_info?: DeviceInfo;
+  device_type?: string | null;
+  device_brand?: string | null;
+  device_model?: string | null;
+  reported_issue?: string | null;
+  promised_date?: string | null;
+  costo_estimado?: number | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface ServiceOrderCreateRequestDto {
+  customer_id?: string;
+  device_info?: DeviceInfo;
+  problem_description?: string;
+  promised_date?: string;
+  // camelCase aliases used by backend
+  customerId?: string;
+  deviceInfo?: DeviceInfo;
+  deviceType?: string;
+  deviceBrand?: string;
+  deviceModel?: string;
+  problemDescription?: string;
+  promisedDate?: string;
+  estimatedCost?: number;
+  notes?: string;
+  receptionChecklist?: any;
+  receptionPhotoBase64?: string;
+  sourceQuoteFolio?: string;
+  // additional backend aliases
+  tenantId?: string;
+  branchId?: string;
+  reportedIssue?: string;
+}
+
+export interface ServiceOrderStatusUpdateRequestDto { status: ServiceStatus }
+
+export interface TimelineEventDto {
+  id: string;
+  service_order_id: string;
+  from_status?: string | null;
+  to_status: string;
+  note?: string | null;
+  created_at?: string;
+}
+
+export interface EvidenceUploadRequest {
+  serviceOrderId: string;
+  fileName: string;
+  fileData: string; // base64 encoded file
+}
+
+// Billing / Checkout
+export interface CheckoutRequestDto {
+  plan: PlanCode;
+  success_url?: string;
+  cancel_url?: string;
+}
+
+export interface CheckoutResponseDto {
+  initPoint?: string; // e.g., MercadoPago init point or hosted checkout URL
+  checkoutUrl?: string;
+  preferenceId?: string;
+}
+
+// Finance / Reports
+export interface FinanceTransactionDto {
+  id: string;
+  amount_cents: number;
+  currency?: string;
+  description?: string | null;
+  created_at?: string;
+  // optional fields used by services
+  type?: string;
+  date?: string;
+  source?: string;
+  reference_id?: string;
+  referenceId?: string;
+  category?: string;
+}
+
+export interface FinanceMonthlyDto { month?: string; total_mxn?: number; months?: Array<{ month: string; total_mxn?: number }>; range?: ReportDateRangeDto }
+
+export interface FinanceSummaryDto {
+  total_mxn?: number;
+  totalIncomeCents?: number;
+  expenses_mxn?: number;
+  revenueSource?: string;
+  range?: ReportDateRangeDto;
+  totalExpensesCents?: number;
+  totalPurchasesCents?: number;
+  accountsReceivableCents?: number;
+  balanceCents?: number;
+  notes?: string[];
+}
+
+export interface ReportDateRangeDto { from?: string | null; to?: string | null }
+
+// Dashboard
+export interface DashboardSummaryDto {
+  totalServiceOrders?: number;
+  pending?: number;
+  diagnosing?: number;
+  ready?: number;
+}
+
+// Auth requests
+export interface LoginRequestDto { email: string; password: string }
+export interface RegisterRequestDto { email: string; password: string; full_name?: string; fullName?: string; tenantId?: string }
+
+// Reports DTOs used by backend
+export interface OperationsReportDto {
   range: ReportDateRangeDto;
   totalOrders: number;
   ordersByStatus: Array<{ status: string; count: number }>;
   ordersCreated: Array<{ date: string; count: number }>;
-};
+}
 
-export type FinanceReportDto = {
+export interface FinanceReportDto {
   range: ReportDateRangeDto;
   estimatedRevenueCents: number;
   totalExpensesCents: number;
   confirmedPurchasesCents: number;
   estimatedBalanceCents: number;
-  revenueSource: 'quotations.total_mxn' | 'service_orders.estimated_cost' | 'mixed';
+  revenueSource: string;
   notes: string[];
-};
+}
 
-export type InventoryReportDto = {
+export interface InventoryReportDto {
   range: ReportDateRangeDto;
-  lowStockProducts: Array<{
-    id: string;
-    sku: string;
-    name: string;
-    current_stock: number;
-    min_stock: number;
-    category?: string | null;
-  }>;
-  recentMovements: Array<{
-    id: string;
-    product_id: string;
-    movement_type: string;
-    quantity: number;
-    unit_cost_mxn?: number | null;
-    reference_type?: string | null;
-    reference_id?: string | null;
-    created_at: string;
-  }>;
-};
+  lowStockProducts: any[];
+  recentMovements: any[];
+}
 
-export type PurchasesExpensesReportDto = {
+export interface PurchasesExpensesReportDto {
   range: ReportDateRangeDto;
-  purchasesBySupplier: Array<{ supplier_id: string; supplier_name: string; count: number; total_amount_cents: number }>;
-  expensesByCategory: Array<{ category_id: string; category_name: string; count: number; total_amount_cents: number }>;
-};
-
-export type FinanceTransactionTypeDto = 'revenue' | 'expense' | 'purchase' | 'receivable';
-
-export type FinanceTransactionDto = {
-  id: string;
-  type: FinanceTransactionTypeDto;
-  source: string;
-  reference_id?: string | null;
-  description: string;
-  amount_cents: number;
-  currency: string;
-  date: string;
-  category?: string | null;
-};
-
-export type FinanceSummaryDto = {
-  range: ReportDateRangeDto;
-  totalIncomeCents: number;
-  totalExpensesCents: number;
-  totalPurchasesCents: number;
-  accountsReceivableCents: number;
-  balanceCents: number;
-  revenueSource: 'quotations.total_mxn' | 'service_orders.estimated_cost' | 'mixed' | 'none';
-  notes: string[];
-};
-
-export type FinanceMonthlyDto = {
-  range: ReportDateRangeDto;
-  months: Array<{
-    month: string;
-    incomeCents: number;
-    expensesCents: number;
-    purchasesCents: number;
-    receivablesCents: number;
-    balanceCents: number;
-  }>;
-};
-
-export type FinanceSummaryRequestDto = ReportDateRangeDto;
-export type FinanceMonthlyRequestDto = ReportDateRangeDto;
-export type FinanceTransactionsRequestDto = ReportDateRangeDto;
+  purchasesBySupplier: Array<{ supplier_id: string; supplier_name: any; count: number; total_amount_cents: number }>;
+  expensesByCategory: Array<{ category_id: string; category_name: any; count: number; total_amount_cents: number }>;
+}

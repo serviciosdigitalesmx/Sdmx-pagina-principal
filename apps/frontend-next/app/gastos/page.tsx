@@ -25,7 +25,7 @@ type ExpenseForm = {
 const emptyCategoryForm: CategoryForm = { name: '', description: '' };
 const emptyExpenseForm: ExpenseForm = {
   categoryId: '',
-  expenseDate: new Date().toISOString().slice(0, 10),
+  expenseDate: '',
   description: '',
   amountCents: '',
   paymentMethod: 'cash',
@@ -46,6 +46,11 @@ export default function GastosPage() {
   const [expenseForm, setExpenseForm] = useState<ExpenseForm>(emptyExpenseForm);
 
   const categoryMap = useMemo(() => new Map(categories.map((category) => [category.id, category])), [categories]);
+
+  useEffect(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    setExpenseForm(prev => ({ ...prev, expenseDate: today }));
+  }, []);
 
   useEffect(() => {
     setTenantId(session?.shop?.id || '');

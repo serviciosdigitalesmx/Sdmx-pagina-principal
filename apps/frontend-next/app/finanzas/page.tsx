@@ -7,19 +7,35 @@ import { apiClient } from '@/lib/apiClient';
 import { useAuthReady } from '@/lib/use-auth-ready';
 import type { FinanceMonthlyDto, FinanceSummaryDto, FinanceTransactionDto } from '@sdmx/contracts';
 
-const today = new Date().toISOString().slice(0, 10);
-const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-
 export default function FinanzasPage() {
   const authReady = useAuthReady();
-  const [from, setFrom] = useState(thirtyDaysAgo);
-  const [to, setTo] = useState(today);
+  const [today, setToday] = useState('');
+  const [thirtyDaysAgo, setThirtyDaysAgo] = useState('');
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [summary, setSummary] = useState<FinanceSummaryDto | null>(null);
   const [monthly, setMonthly] = useState<FinanceMonthlyDto | null>(null);
   const [transactions, setTransactions] = useState<FinanceTransactionDto[]>([]);
+
+  useEffect(() => {
+    const current = new Date();
+    const todayStr = current.toISOString().slice(0, 10);
+    const thirtyDaysAgoStr = new Date(current.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    setToday(todayStr);
+    setThirtyDaysAgo(thirtyDaysAgoStr);
+    setFrom(thirtyDaysAgoStr);
+    setTo(todayStr);
+  }, []);
+
+  const query = useMemo(() => {
+    const params = new URLSearchParams();
+    if (from) params.set('from', from);
+    if (to) params.set('to', to);
+    return params.toString();
+  }, [from, to]);
 
   const query = useMemo(() => {
     const params = new URLSearchParams();

@@ -19,7 +19,7 @@ const syncAuthTenantMetadata = async (authUserId: string, tenantId: string): Pro
 export const authService = {
   async register(payload: RegisterRequestDto): Promise<UserDto> {
     let tenantId = payload.tenantId;
-    const tenantSlug = payload.tenantId.toLowerCase().replace(/[^a-z0-9]/g, '-') || 'default';
+    const tenantSlug = String(payload.tenantId ?? 'default').toLowerCase().replace(/[^a-z0-9]/g, '-') || 'default';
 
     const tenantRows = await supabase.upsertAsService<Array<{ id: string }>>(
       'tenants',

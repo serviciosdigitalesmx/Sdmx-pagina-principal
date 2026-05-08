@@ -1,12 +1,18 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 
 const PUBLIC_PATHS = ["/login", "/register", "/portal", "/seed"];
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { loading, isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (!isAuthenticated && typeof window !== "undefined" && !PUBLIC_PATHS.some((path) => window.location.pathname.startsWith(path))) {
+      window.location.assign("/login");
+    }
+  }, [isAuthenticated]);
 
   if (loading) {
     return (
@@ -16,8 +22,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!isAuthenticated && typeof window !== "undefined" && !PUBLIC_PATHS.some((path) => window.location.pathname.startsWith(path))) {
-    window.location.assign("/login");
+  if (!isAuthenticated) {
     return null;
   }
 
