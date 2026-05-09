@@ -329,7 +329,7 @@ export interface ServiceOrderDto {
   serial_number?: string | null;
   accessories?: string | null;
   internal_notes?: string | null;
-  warranty_until?: string | null; // ISO timestamp
+  warranty_until?: string; // ISO timestamp
   evidence_metadata?: any[]; // JSON array metadata for evidence images
   promised_date?: string | null;
   costo_estimado?: number | null;
@@ -364,6 +364,7 @@ export interface ServiceOrderCreateRequestDto {
   tenantId?: string;
   branchId?: string;
   reportedIssue?: string;
+  status?: string;
 }
 
 export interface ServiceOrderStatusUpdateRequestDto { status: ServiceStatus; note?: string }
@@ -470,3 +471,4 @@ export interface PurchasesExpensesReportDto {
   purchasesBySupplier: Array<{ supplier_id: string; supplier_name: any; count: number; total_amount_cents: number }>;
   expensesByCategory: Array<{ category_id: string; category_name: any; count: number; total_amount_cents: number }>;
 }
+

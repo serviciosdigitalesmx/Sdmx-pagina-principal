@@ -1,4 +1,5 @@
 "use client";
+import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
 
 import { useEffect, useState } from "react";
 import { SaasShell } from "@/components/ui/SaasShell";
@@ -46,7 +47,7 @@ export default function HubPage() {
       try {
         const response = await apiClient.get<{ landingUrl: string }>(`/api/public/tenants/${encodeURIComponent(slug)}`);
         if (!response.success || !response.data?.landingUrl) {
-          throw new Error(response.error?.message || "No se pudo resolver la landing");
+          throw new Error(getApiErrorMessage(response.error, "No se pudo resolver la landing"));
         }
         if (mounted) {
           setLandingUrl(buildApiUrl(response.data.landingUrl));

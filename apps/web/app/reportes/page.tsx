@@ -1,4 +1,5 @@
 'use client';
+import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
 
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { BarChart3, Loader2, RefreshCw } from 'lucide-react';
@@ -60,21 +61,21 @@ export default function ReportesPage() {
       if (operationsRes.status === 'fulfilled' && operationsRes.value.success) {
         setOperations(operationsRes.value.data || null);
       } else {
-        messages.push(operationsRes.status === 'fulfilled' ? operationsRes.value.error?.message || 'No se pudo cargar reporte operativo' : 'No se pudo cargar reporte operativo');
+        messages.push(operationsRes.status === 'fulfilled' ? getApiErrorMessage(operationsRes.value.error, 'No se pudo cargar reporte operativo') : 'No se pudo cargar reporte operativo');
         setOperations(null);
       }
 
       if (financeRes.status === 'fulfilled' && financeRes.value.success) {
         setFinance(financeRes.value.data || null);
       } else {
-        messages.push(financeRes.status === 'fulfilled' ? financeRes.value.error?.message || 'No se pudo cargar reporte financiero' : 'No se pudo cargar reporte financiero');
+        messages.push(financeRes.status === 'fulfilled' ? getApiErrorMessage(financeRes.value.error, 'No se pudo cargar reporte financiero') : 'No se pudo cargar reporte financiero');
         setFinance(null);
       }
 
       if (inventoryRes.status === 'fulfilled' && inventoryRes.value.success) {
         setInventory(inventoryRes.value.data || null);
       } else {
-        messages.push(inventoryRes.status === 'fulfilled' ? inventoryRes.value.error?.message || 'No se pudo cargar reporte de inventario' : 'No se pudo cargar reporte de inventario');
+        messages.push(inventoryRes.status === 'fulfilled' ? getApiErrorMessage(inventoryRes.value.error, 'No se pudo cargar reporte de inventario') : 'No se pudo cargar reporte de inventario');
         setInventory(null);
       }
 
@@ -83,7 +84,7 @@ export default function ReportesPage() {
       } else {
         messages.push(
           purchasesExpensesRes.status === 'fulfilled'
-            ? purchasesExpensesRes.value.error?.message || 'No se pudo cargar reporte de compras y gastos'
+            ? getApiErrorMessage(purchasesExpensesRes.value.error, 'No se pudo cargar reporte de compras y gastos')
             : 'No se pudo cargar reporte de compras y gastos'
         );
         setPurchasesExpenses(null);

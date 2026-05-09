@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { buildApiUrl } from "@/lib/api-base";
 import { setToken } from "@/lib/auth/tokenManager";
+import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
 import type { ApiResponse } from "@sdmx/contracts";
 import type { Session } from "@/lib/session";
 
@@ -42,7 +43,7 @@ export default function AuthCallbackPage() {
         });
         const bootstrapPayload = await bootstrapResponse.json().catch(() => null) as ApiResponse<Session> | null;
         if (!bootstrapResponse.ok || !bootstrapPayload?.success || !bootstrapPayload.data) {
-          throw new Error(bootstrapPayload?.error?.message || 'No se pudo completar el bootstrap de OAuth');
+          throw new Error(getApiErrorMessage(bootstrapPayload?.error, 'No se pudo completar el bootstrap de OAuth'));
         }
 
         setToken(bootstrapPayload.data.accessToken || accessToken);

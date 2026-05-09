@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from "react";
 import { apiClient } from "@/lib/apiClient";
+import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
 import { DollarSign, TrendingUp, TrendingDown, Wallet, CreditCard, Activity } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 
@@ -24,7 +25,7 @@ export function Finanzas() {
 
       try {
         const res = await apiClient.get<FinanceSummary>("/api/dashboard/summary");
-        if (!res.success) throw new Error(res.error?.message || "Error de API");
+        if (!res.success) throw new Error(getApiErrorMessage(res.error, "Error de API"));
         setData(res.data || null);
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : "Error cargando datos");

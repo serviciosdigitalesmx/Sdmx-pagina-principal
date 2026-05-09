@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from "react";
 import { apiClient } from "@/lib/apiClient";
+import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
 import { Wrench, Clock, CheckCircle2, AlertTriangle, ArrowRight } from "lucide-react";
 import { formatDate } from "@/lib/format";
 
@@ -26,7 +27,7 @@ export function Tecnico() {
 
       try {
         const res = await apiClient.get<ServiceOrder[]>("/api/service-orders");
-        if (!res.success) throw new Error(res.error?.message || "Error de API");
+        if (!res.success) throw new Error(getApiErrorMessage(res.error, "Error de API"));
         setData(Array.isArray(res.data) ? res.data : []);
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : "Error cargando datos");

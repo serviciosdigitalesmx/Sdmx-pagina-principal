@@ -1,4 +1,5 @@
 'use client';
+import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
 
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Plus, Receipt, RefreshCw, Trash2 } from 'lucide-react';
@@ -101,7 +102,7 @@ export default function GastosPage() {
         name: categoryForm.name,
         description: categoryForm.description || null
       });
-      if (!response.success || !response.data) throw new Error(response.error?.message || 'No se pudo crear la categoría');
+      if (!response.success || !response.data) throw new Error(getApiErrorMessage(response.error, 'No se pudo crear la categoría'));
       setCategoryForm(emptyCategoryForm);
       await loadData();
     } catch (e) {
@@ -135,7 +136,7 @@ export default function GastosPage() {
         reference: expenseForm.reference || null,
         notes: expenseForm.notes || null
       });
-      if (!response.success || !response.data) throw new Error(response.error?.message || 'No se pudo crear el gasto');
+      if (!response.success || !response.data) throw new Error(getApiErrorMessage(response.error, 'No se pudo crear el gasto'));
       setExpenseForm({ ...emptyExpenseForm, categoryId: expenseForm.categoryId });
       await loadData();
     } catch (e) {
@@ -150,7 +151,7 @@ export default function GastosPage() {
     setError('');
     try {
       const response = await apiClient.delete<{ deleted: true }>(`/api/expenses/${expenseId}`);
-      if (!response.success || !response.data) throw new Error(response.error?.message || 'No se pudo eliminar el gasto');
+      if (!response.success || !response.data) throw new Error(getApiErrorMessage(response.error, 'No se pudo eliminar el gasto'));
       await loadData();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo eliminar el gasto');

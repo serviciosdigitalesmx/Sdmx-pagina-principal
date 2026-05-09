@@ -10,8 +10,8 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: 'Don Cepillo | Catálogo y pedidos',
-  description: 'Catálogo web de productos de limpieza con pedido por WhatsApp'
+  title: "Burger's Racing | Menú y pedidos",
+  description: 'Menú de hamburguesas, tacos, tortas, hotdogs y más con pedido por WhatsApp'
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

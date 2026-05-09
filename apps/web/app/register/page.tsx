@@ -1,4 +1,5 @@
 'use client';
+import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
 
 import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -23,7 +24,7 @@ export default function RegisterPage() {
 
     try {
       const registerPayload = await apiClient.post('/auth/register', { email, password, fullName, tenantId: shopName }, { credentials: 'include' });
-      if (!registerPayload.success) throw new Error(registerPayload.error?.message || 'Error al registrar');
+      if (!registerPayload.success) throw new Error(getApiErrorMessage(registerPayload.error, 'Error al registrar'));
       await loginWithBackend({ email, password });
       router.push('/hub');
     } catch (e) {

@@ -2,6 +2,7 @@
 import type { ServiceOrderCreateRequestDto } from "@sdmx/contracts";
 import { FormEvent, useEffect, useState } from "react";
 import { apiClient } from "@/lib/apiClient";
+import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
 import { useAuth } from "@/context/AuthContext";
 import { ClipboardList, Plus, Smartphone, AlertCircle } from "lucide-react";
 
@@ -38,7 +39,7 @@ export function Operativo() {
     try {
       const ordersRes = await apiClient.get<Order[]>("/api/service-orders");
 
-      if (!ordersRes.success) throw new Error(ordersRes.error?.message);
+      if (!ordersRes.success) throw new Error(getApiErrorMessage(ordersRes.error, 'Error de API'));
 
       setOrders(ordersRes.data || []);
     } catch (err: unknown) {
@@ -72,7 +73,7 @@ export function Operativo() {
         phone: form.customerPhone.trim() || null
       });
       if (!customerRes.success || !customerRes.data?.id) {
-        throw new Error(customerRes.error?.message || "No se pudo crear el cliente");
+        throw new Error(getApiErrorMessage(customerRes.error, "No se pudo crear el cliente"));
       }
 
       const orderPayload: ServiceOrderCreateRequestDto = {
@@ -85,7 +86,7 @@ export function Operativo() {
       };
 
       const res = await apiClient.post("/api/service-orders", orderPayload);
-      if (!res.success) throw new Error(res.error?.message || "No se pudo crear la orden");
+      if (!res.success) throw new Error(getApiErrorMessage(res.error, "No se pudo crear la orden"));
 
       setForm({
         customerFullName: "",

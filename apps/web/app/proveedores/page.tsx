@@ -1,4 +1,5 @@
 'use client';
+import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
 
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Building2, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react';
@@ -53,7 +54,7 @@ export default function ProveedoresPage() {
       if (res.success && res.data) {
         setSuppliers(res.data);
       } else {
-        setError(res.error?.message || 'No se pudieron cargar los proveedores');
+        setError(getApiErrorMessage(res.error, 'No se pudieron cargar los proveedores'));
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudieron cargar los proveedores');
@@ -103,7 +104,7 @@ export default function ProveedoresPage() {
           address: form.address || null,
           notes: form.notes || null
         });
-        if (!response.success || !response.data) throw new Error(response.error?.message || 'No se pudo actualizar el proveedor');
+        if (!response.success || !response.data) throw new Error(getApiErrorMessage(response.error, 'No se pudo actualizar el proveedor'));
       } else {
         const response = await apiClient.post<SupplierDto>('/api/suppliers', {
           tenantId,
@@ -114,7 +115,7 @@ export default function ProveedoresPage() {
           address: form.address || null,
           notes: form.notes || null
         });
-        if (!response.success || !response.data) throw new Error(response.error?.message || 'No se pudo crear el proveedor');
+        if (!response.success || !response.data) throw new Error(getApiErrorMessage(response.error, 'No se pudo crear el proveedor'));
       }
 
       resetForm();
@@ -131,7 +132,7 @@ export default function ProveedoresPage() {
     setError('');
     try {
       const response = await apiClient.delete<{ deleted: true }>(`/api/suppliers/${id}`);
-      if (!response.success || !response.data) throw new Error(response.error?.message || 'No se pudo eliminar el proveedor');
+      if (!response.success || !response.data) throw new Error(getApiErrorMessage(response.error, 'No se pudo eliminar el proveedor'));
       if (editingId === id) resetForm();
       await loadSuppliers();
     } catch (e) {

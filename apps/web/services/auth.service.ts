@@ -1,11 +1,12 @@
 "use client";
+import { getApiErrorMessage } from '@/lib/getApiErrorMessage';
 import { apiClient } from "@/lib/apiClient";
 import { clearToken, setToken } from "@/lib/auth/tokenManager";
 import type { Session } from "@/lib/session";
 type LoginInput = { email: string; password: string };
 export async function login(input: LoginInput): Promise<Session> {
   const res = await apiClient.post<Session>("/auth/login", input, { credentials: "include" });
-  if (!res.success || !res.data) throw new Error(res.error?.message || "Error");
+  if (!res.success || !res.data) throw new Error(getApiErrorMessage(res.error, "Error"));
   if (res.data.accessToken) setToken(res.data.accessToken);
   return res.data;
 }

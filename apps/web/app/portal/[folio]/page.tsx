@@ -1,18 +1,24 @@
 'use client';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { useApi } from '@/hooks/useApi';
+import { apiClient } from '@/lib/apiClient';
+import { getApiErrorMessage } from '@/lib/getApiErrorMessage';
 
 export default function PortalClientePage() {
   const { folio } = useParams();
   const [equipo, setEquipo] = useState<any>(null);
   const [error, setError] = useState('');
   const [dias, setDias] = useState<number | null>(null);
-  const { get } = useApi();
 
   useEffect(() => {
     if (folio) {
-      get(`/api/equipos/folio/${folio}`).then(setEquipo).catch(() => setError('Folio no encontrado'));
+      apiClient.get(`/api/equipos/folio/${folio}`).then((response) => {
+        if (!response.success || !response.data) {
+          setError(getApiErrorMessage(response.error, 'Folio no encontrado'));
+          return;
+        }
+        setEquipo(response.data);
+      }).catch(() => setError('Folio no encontrado'));
     }
   }, [folio]);
 

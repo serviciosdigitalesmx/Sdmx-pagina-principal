@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { apiClient } from '@/lib/apiClient';
+import { getApiErrorMessage } from '@/lib/getApiErrorMessage';
 
 /**
  * Hook genérico para manejar la carga de datos desde el API.
@@ -20,7 +21,7 @@ export function useApiData<T>(endpoint: string) {
       if (result.success) {
         setData(result.data ?? null);
       } else {
-        setError(result.error?.message || 'Error al cargar los datos');
+        setError(getApiErrorMessage(result.error, 'Error al cargar los datos'));
       }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Error de red');

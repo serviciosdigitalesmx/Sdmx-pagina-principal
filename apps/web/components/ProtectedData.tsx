@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/apiClient';
+import { getApiErrorMessage } from '@/lib/getApiErrorMessage';
 import type { ApiResponse } from '@sdmx/contracts';
 
 export default function ProtectedData({ endpoint }: { endpoint: string }) {
@@ -16,11 +17,14 @@ export default function ProtectedData({ endpoint }: { endpoint: string }) {
         const response = await apiClient.get<unknown>(endpoint) as ApiResponse<unknown>;
         
         if (!response.success) {
-          if (response.error?.code === 'UNAUTHORIZED') {
+          const errorCode = typeof response.error === 'object' && response.error && 'code' in response.error
+            ? (response.error as { code?: unknown }).code
+            : undefined;
+          if (errorCode === 'UNAUTHORIZED') {
             router.push('/login');
             return;
           }
-          throw new Error(response.error?.message || 'Error de carga');
+          throw new Error(getApiErrorMessage(response.error, 'Error de carga'));
         }
 
         setData(response.data);

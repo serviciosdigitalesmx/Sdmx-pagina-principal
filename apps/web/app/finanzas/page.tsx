@@ -1,4 +1,5 @@
 'use client';
+import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
 
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { CreditCard, Loader2, RefreshCw, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
@@ -37,20 +38,18 @@ export default function FinanzasPage() {
     return params.toString();
   }, [from, to]);
 
-  const query = useMemo(() => {
-    const params = new URLSearchParams();
-    if (from) params.set('from', from);
-    if (to) params.set('to', to);
+  const queryString = useMemo(() => {
+    const params = new URLSearchParams(query);
     return params.toString();
-  }, [from, to]);
+  }, [query]);
 
   const loadFinance = async () => {
     setError('');
     try {
       const [summaryRes, monthlyRes, transactionsRes] = await Promise.allSettled([
-        apiClient.get<FinanceSummaryDto>(`/api/finance/summary?${query}`),
-        apiClient.get<FinanceMonthlyDto>(`/api/finance/monthly?${query}`),
-        apiClient.get<FinanceTransactionDto[]>(`/api/finance/transactions?${query}`)
+        apiClient.get<FinanceSummaryDto>(`/api/finance/summary?${queryString}`),
+        apiClient.get<FinanceMonthlyDto>(`/api/finance/monthly?${queryString}`),
+        apiClient.get<FinanceTransactionDto[]>(`/api/finance/transactions?${queryString}`)
       ]);
 
       const messages: string[] = [];
@@ -58,21 +57,21 @@ export default function FinanzasPage() {
       if (summaryRes.status === 'fulfilled' && summaryRes.value.success) {
         setSummary(summaryRes.value.data || null);
       } else {
-        messages.push(summaryRes.status === 'fulfilled' ? summaryRes.value.error?.message || 'No se pudo cargar resumen financiero' : 'No se pudo cargar resumen financiero');
+        messages.push(summaryRes.status === 'fulfilled' ? getApiErrorMessage(summaryRes.value.error, 'No se pudo cargar resumen financiero') : 'No se pudo cargar resumen financiero');
         setSummary(null);
       }
 
       if (monthlyRes.status === 'fulfilled' && monthlyRes.value.success) {
         setMonthly(monthlyRes.value.data || null);
       } else {
-        messages.push(monthlyRes.status === 'fulfilled' ? monthlyRes.value.error?.message || 'No se pudo cargar resumen mensual' : 'No se pudo cargar resumen mensual');
+        messages.push(monthlyRes.status === 'fulfilled' ? getApiErrorMessage(monthlyRes.value.error, 'No se pudo cargar resumen mensual') : 'No se pudo cargar resumen mensual');
         setMonthly(null);
       }
 
       if (transactionsRes.status === 'fulfilled' && transactionsRes.value.success) {
         setTransactions(transactionsRes.value.data || []);
       } else {
-        messages.push(transactionsRes.status === 'fulfilled' ? transactionsRes.value.error?.message || 'No se pudieron cargar movimientos' : 'No se pudieron cargar movimientos');
+        messages.push(transactionsRes.status === 'fulfilled' ? getApiErrorMessage(transactionsRes.value.error, 'No se pudieron cargar movimientos') : 'No se pudieron cargar movimientos');
         setTransactions([]);
       }
 
@@ -90,7 +89,7 @@ export default function FinanzasPage() {
   useEffect(() => {
     if (!authReady) return;
     void loadFinance();
-  }, [authReady, query]);
+  }, [authReady, queryString]);
 
   const handleRefresh = (event?: FormEvent) => {
     event?.preventDefault();
@@ -188,13 +187,13 @@ export default function FinanzasPage() {
                     <div key={month.month} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm">
                       <div className="flex items-center justify-between">
                         <span className="font-black text-white">{month.month}</span>
-                        <span className={month.balanceCents >= 0 ? 'text-emerald-300 font-black' : 'text-red-300 font-black'}>{formatMoney(month.balanceCents)}</span>
+                        <span className={(month.total_mxn ?? 0) >= 0 ? 'text-emerald-300 font-black' : 'text-red-300 font-black'}>{formatMoney((month.total_mxn ?? 0) * 100)}</span>
                       </div>
                       <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-slate-400 md:grid-cols-4">
-                        <span>Ing: {formatMoney(month.incomeCents)}</span>
-                        <span>Egr: {formatMoney(month.expensesCents)}</span>
-                        <span>Comp: {formatMoney(month.purchasesCents)}</span>
-                        <span>CxC: {formatMoney(month.receivablesCents)}</span>
+                        <span>Total MXN: {month.total_mxn ?? 0}</span>
+                        <span>Rango: {from} - {to}</span>
+                        <span>Actualizado: {today}</span>
+                        <span>Periodo: 30 días</span>
                       </div>
                     </div>
                   ))}

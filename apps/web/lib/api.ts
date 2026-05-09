@@ -1,4 +1,5 @@
 import { buildApiUrl } from './api-base';
+import { getApiErrorMessage } from '@/lib/getApiErrorMessage';
 
 export async function api<T>(path: string, init: RequestInit = {}, token?: string): Promise<T> {
   const headers = new Headers(init.headers ?? {});

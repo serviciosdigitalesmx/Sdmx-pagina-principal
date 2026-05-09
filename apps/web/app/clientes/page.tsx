@@ -1,4 +1,5 @@
 'use client';
+import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
 import { useEffect, useState } from 'react';
 import { SaasShell } from '@/components/ui/SaasShell';
 import { apiClient } from '@/lib/apiClient';
@@ -39,7 +40,7 @@ export default function ClientesPage() {
       if (response.success && response.data) {
         setCustomers(response.data);
       } else {
-        setError(response.error?.message || 'No se pudo cargar el listado de clientes');
+        setError(getApiErrorMessage(response.error, 'No se pudo cargar el listado de clientes'));
       }
     } catch {
       setError('No se pudo cargar el listado de clientes');
@@ -79,7 +80,7 @@ export default function ClientesPage() {
         setEmail('');
         setPhone('');
       } else {
-        setError(response.error?.message || 'Error al crear cliente');
+        setError(getApiErrorMessage(response.error, 'Error al crear cliente'));
       }
     } catch {
       setError('Error crítico al crear cliente');

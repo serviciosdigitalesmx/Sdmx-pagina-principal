@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { apiClient } from "@/lib/apiClient";
+import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
 import { formatDate } from "@/lib/format";
 import { Inbox, RefreshCw, ExternalLink } from "lucide-react";
 
@@ -26,7 +27,7 @@ export function Solicitudes() {
     setError("");
     try {
       const response = await apiClient.get<RequestRow[]>("/api/service-orders");
-      if (!response.success) throw new Error(response.error?.message || "No se pudieron cargar las solicitudes");
+      if (!response.success) throw new Error(getApiErrorMessage(response.error, "No se pudieron cargar las solicitudes"));
       const filtered = (response.data || []).filter((item) => ["solicitud", "recibido"].includes(String(item.status).toLowerCase()));
       setItems(filtered);
     } catch (err) {

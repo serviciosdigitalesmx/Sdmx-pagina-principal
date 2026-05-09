@@ -1,4 +1,5 @@
 'use client';
+import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
 
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Plus, RefreshCw, ShoppingCart, CheckCircle2, XCircle, Package } from 'lucide-react';
@@ -106,7 +107,7 @@ export default function ComprasPage() {
         items: payloadItems
       });
 
-      if (!response.success || !response.data) throw new Error(response.error?.message || 'No se pudo crear la compra');
+      if (!response.success || !response.data) throw new Error(getApiErrorMessage(response.error, 'No se pudo crear la compra'));
 
       setNotes('');
       setItems([{ ...emptyItem }]);
@@ -125,7 +126,7 @@ export default function ComprasPage() {
       const response = await apiClient.post<PurchaseOrderDto>(`/api/purchases/${purchaseId}/confirm`, {
         tenantId
       });
-      if (!response.success || !response.data) throw new Error(response.error?.message || 'No se pudo confirmar la compra');
+      if (!response.success || !response.data) throw new Error(getApiErrorMessage(response.error, 'No se pudo confirmar la compra'));
       await loadData();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo confirmar la compra');
@@ -139,7 +140,7 @@ export default function ComprasPage() {
     setError('');
     try {
       const response = await apiClient.post<PurchaseOrderDto>(`/api/purchases/${purchaseId}/cancel`);
-      if (!response.success || !response.data) throw new Error(response.error?.message || 'No se pudo cancelar la compra');
+      if (!response.success || !response.data) throw new Error(getApiErrorMessage(response.error, 'No se pudo cancelar la compra'));
       await loadData();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo cancelar la compra');

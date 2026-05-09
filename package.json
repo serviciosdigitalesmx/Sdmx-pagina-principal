@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
-    "dev:frontend": "turbo run dev --filter=sdmx-frontend-next",
+    "dev:frontend": "turbo run dev --filter=web",
     "dev:backend": "turbo run dev --filter=backend-api",
     "audit:source-of-truth": "bash scripts/audit-source-of-truth.sh",
     "audit:auth-boundaries": "bash scripts/audit-auth-boundaries.sh",

@@ -1,4 +1,5 @@
 'use client';
+import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
 
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { SaasShell } from '@/components/ui/SaasShell';
@@ -9,7 +10,6 @@ import { formatDate } from '@/lib/format';
 import type {
   InventoryKardexEntryDto,
   InventoryMovementDto,
-  InventoryMovementTypeDto,
   InventoryProductDto
 } from '@sdmx/contracts';
 
@@ -24,13 +24,15 @@ type ProductForm = {
 
 type MovementForm = {
   productId: string;
-  movementType: InventoryMovementTypeDto;
+  movementType: InventoryMovementDto['movement_type'];
   quantity: string;
   unitCostMxn: string;
   referenceType: string;
   referenceId: string;
   note: string;
 };
+
+const movementTypes: Array<InventoryMovementDto['movement_type']> = ['in', 'out', 'adjustment', 'transfer'];
 
 const emptyProductForm: ProductForm = {
   sku: '',
@@ -93,7 +95,7 @@ export default function InventarioPage() {
             setSelectedProductId(productsRes.value.data[0].id);
           }
         } else {
-          messages.push(productsRes.value.error?.message || 'No se pudo cargar inventario');
+          messages.push(getApiErrorMessage(productsRes.value.error, 'No se pudo cargar inventario'));
         }
       } else {
         messages.push('No se pudo cargar inventario');
@@ -103,7 +105,7 @@ export default function InventarioPage() {
         if (movementsRes.value.success && movementsRes.value.data) {
           setMovements(movementsRes.value.data);
         } else {
-          messages.push(movementsRes.value.error?.message || 'No se pudo cargar movimientos');
+          messages.push(getApiErrorMessage(movementsRes.value.error, 'No se pudo cargar movimientos'));
         }
       } else {
         messages.push('No se pudo cargar movimientos');
@@ -115,7 +117,7 @@ export default function InventarioPage() {
         if (kardexRes.success && kardexRes.data) {
           setKardex(kardexRes.data);
         } else {
-          messages.push(kardexRes.error?.message || 'No se pudo cargar kardex');
+          messages.push(getApiErrorMessage(kardexRes.error, 'No se pudo cargar kardex'));
         }
       }
 
@@ -170,7 +172,7 @@ export default function InventarioPage() {
       });
 
       if (!response.success || !response.data) {
-        throw new Error(response.error?.message || 'No se pudo crear el producto');
+        throw new Error(getApiErrorMessage(response.error, 'No se pudo crear el producto'));
       }
 
       setProductForm(emptyProductForm);
@@ -208,7 +210,7 @@ export default function InventarioPage() {
       });
 
       if (!response.success || !response.data) {
-        throw new Error(response.error?.message || 'No se pudo registrar el movimiento');
+        throw new Error(getApiErrorMessage(response.error, 'No se pudo registrar el movimiento'));
       }
 
       setMovementForm({ ...emptyMovementForm, productId: movementForm.productId });
@@ -351,11 +353,12 @@ export default function InventarioPage() {
                   ))}
                 </select>
                 <div className="grid grid-cols-2 gap-3">
-                  <select className="srf-input" value={movementForm.movementType} onChange={(e) => setMovementForm({ ...movementForm, movementType: e.target.value as InventoryMovementTypeDto })}>
-                    <option value="in">Entrada</option>
-                    <option value="out">Salida</option>
-                    <option value="adjustment">Ajuste</option>
-                    <option value="transfer">Transferencia</option>
+                  <select className="srf-input" value={movementForm.movementType} onChange={(e) => setMovementForm({ ...movementForm, movementType: e.target.value as InventoryMovementDto['movement_type'] })}>
+                    {movementTypes.map((movementType) => (
+                      <option key={movementType} value={movementType}>
+                        {movementType === 'in' ? 'Entrada' : movementType === 'out' ? 'Salida' : movementType === 'adjustment' ? 'Ajuste' : 'Transferencia'}
+                      </option>
+                    ))}
                   </select>
                   <input className="srf-input" placeholder="Cantidad" value={movementForm.quantity} onChange={(e) => setMovementForm({ ...movementForm, quantity: e.target.value })} required />
                 </div>
@@ -397,7 +400,7 @@ export default function InventarioPage() {
                     <div className="text-right">
                       <div className="text-sm font-black text-white">{Number(movement.quantity).toFixed(2)}</div>
                       <div className="text-[10px] uppercase tracking-widest text-slate-500">
-                        {formatDate(movement.created_at, { dateStyle: 'medium', timeStyle: 'short' })}
+                        {formatDate(movement.created_at || new Date().toISOString(), { dateStyle: 'medium', timeStyle: 'short' })}
                       </div>
                     </div>
                   </div>
@@ -426,14 +429,14 @@ export default function InventarioPage() {
 
             <div className="space-y-3">
               {kardex.map((entry) => (
-                <article key={entry.movement.id} className="rounded-3xl border border-white/10 bg-slate-950/40 p-4">
+                <article key={entry.movement?.id || `${entry.balance}-${entry.quantity}`} className="rounded-3xl border border-white/10 bg-slate-950/40 p-4">
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <div className="text-xs font-black uppercase tracking-[0.22em] text-slate-500">
-                        {entry.movement.movement_type}
+                        {entry.movement?.movement_type || 'Movimiento'}
                       </div>
                       <div className="mt-1 text-white font-bold">
-                        {entry.movement.reference_type || 'Sin referencia'}
+                        {entry.movement?.reference_type || 'Sin referencia'}
                       </div>
                     </div>
                     <div className="text-right">
@@ -441,7 +444,7 @@ export default function InventarioPage() {
                         Balance: {Number(entry.balance).toFixed(2)}
                       </div>
                       <div className="text-[10px] uppercase tracking-widest text-slate-500">
-                        {formatDate(entry.movement.created_at, { dateStyle: 'medium', timeStyle: 'short' })}
+                        {formatDate(entry.movement?.created_at || new Date().toISOString(), { dateStyle: 'medium', timeStyle: 'short' })}
                       </div>
                     </div>
                   </div>

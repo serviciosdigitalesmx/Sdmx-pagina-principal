@@ -1,4 +1,5 @@
 'use client';
+import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
 import { useState } from 'react';
 import { apiClient } from '@/lib/apiClient';
 import { SaasShell } from '@/components/ui/SaasShell';
@@ -31,7 +32,7 @@ export default function Page() {
       if (response.success) {
         setResult((response.data as SignedUploadResponse) ?? null);
       } else {
-        setError(response.error?.message || 'Error al generar firma');
+        setError(getApiErrorMessage(response.error, 'Error al generar firma'));
       }
     } catch (e) {
       setError('Error de comunicación con el servidor');

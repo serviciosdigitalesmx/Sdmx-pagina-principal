@@ -1,30 +1,51 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useApi } from '@/hooks/useApi';
+import { apiClient } from '@/lib/apiClient';
 import { uploadImage } from '@/lib/storage';
 
+type EquipoItem = {
+  id: string;
+  folio: string;
+  estado: string;
+  fecha_promesa: string;
+  clientes?: { nombre?: string; telefono?: string };
+  marca_modelo?: string;
+  tipo_dispositivo?: string;
+  cliente_nombre?: string;
+  cliente_telefono?: string;
+  falla_reportada?: string;
+  seguimiento_cliente?: string;
+  notas_internas?: string;
+  tecnico_asignado?: string;
+  youtube_id?: string;
+  costo_estimado?: string | number | null;
+};
+
 export default function TecnicoPageClient() {
-  const [equipos, setEquipos] = useState([]);
+  const [equipos, setEquipos] = useState<EquipoItem[]>([]);
   const [filtros, setFiltros] = useState({ estado: 'todos', tecnico: '', busqueda: '' });
   const [modalOpen, setModalOpen] = useState(false);
-  const [selected, setSelected] = useState<any>(null);
+  const [selected, setSelected] = useState<EquipoItem | null>(null);
   const [nuevasFotos, setNuevasFotos] = useState<File[]>([]);
-  const { get, put } = useApi();
 
   const cargarEquipos = async () => {
-    const data = await get('/api/equipos', filtros);
-    setEquipos(data);
+    const response = await apiClient.get<EquipoItem[]>('/api/equipos');
+    if (response.success && response.data) {
+      setEquipos(response.data);
+    }
   };
   useEffect(() => { cargarEquipos(); }, [filtros]);
 
   const abrirModal = async (id: string) => {
-    const equipo = await get(`/api/equipos/${id}`);
-    setSelected(equipo);
-    setModalOpen(true);
+    const response = await apiClient.get<EquipoItem>(`/api/equipos/${id}`);
+    if (response.success && response.data) {
+      setSelected(response.data);
+      setModalOpen(true);
+    }
   };
-  const guardarCambio = async (campo: string, valor: any) => {
+  const guardarCambio = async (campo: string, valor: string) => {
     if (!selected) return;
-    await put(`/api/equipos/${selected.id}`, { [campo]: valor });
+    await apiClient.put(`/api/equipos/${selected.id}`, { [campo]: valor });
     setSelected({ ...selected, [campo]: valor });
     cargarEquipos();
   };
@@ -32,7 +53,7 @@ export default function TecnicoPageClient() {
     if (!selected || nuevasFotos.length === 0) return;
     for (const foto of nuevasFotos) {
       const url = await uploadImage(foto, `seguimiento/${selected.id}`);
-      await put(`/api/equipos/${selected.id}`, { fotos_seguimiento: [url] });
+      await apiClient.put(`/api/equipos/${selected.id}`, { fotos_seguimiento: [url] });
     }
     setNuevasFotos([]);
     cargarEquipos();
