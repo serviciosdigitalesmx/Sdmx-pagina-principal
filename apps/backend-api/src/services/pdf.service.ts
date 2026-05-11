@@ -1,5 +1,4 @@
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
-import fetch from 'node-fetch';
 import { supabase } from './supabase.js';
 import { loadSession, resolveTenantIdFromSession } from './context.js';
 
