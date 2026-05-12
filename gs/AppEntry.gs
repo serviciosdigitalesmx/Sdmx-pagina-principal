@@ -30,32 +30,33 @@ function AppEntry_dispatch(e, dispatcher) {
     return Utils_fail('Accion no soportada');
   });
 
-  if (responseMode === 'popup') {
-    return AppEntry_popupResponse(result, params);
+  if (responseMode === 'redirect' && String(params.action || '').trim() === 'login_interno') {
+    return AppEntry_redirectLoginResponse(result, params);
   }
   return result;
 }
 
-function AppEntry_popupResponse(result, params) {
+function AppEntry_redirectLoginResponse(result, params) {
   let body = {};
   try {
     body = JSON.parse(result.getContent ? result.getContent() : JSON.stringify(result || {}));
   } catch (e) {
     body = { success: false, error: 'Respuesta invalida del servidor' };
   }
+  const returnUrl = String(params.returnUrl || '').trim() || 'https://serviciosdigitalesmx.github.io/Sr-Fix/integrador.html';
+  const user = body && body.data && body.data.user ? body.data.user : null;
+  const target = new URL(returnUrl);
+  target.searchParams.set('srfix_login', body && body.success ? 'success' : 'error');
+  if (body && body.success && user) {
+    target.searchParams.set('srfix_login_user', encodeURIComponent(JSON.stringify(user)));
+  } else if (body && body.error) {
+    target.searchParams.set('srfix_login_error', encodeURIComponent(String(body.error)));
+  }
   const html = HtmlService.createHtmlOutput(
     '<!doctype html><html><head><meta charset="utf-8"></head><body>' +
     '<script>' +
     '(function(){' +
-    'var payload = ' + JSON.stringify(body) + ';' +
-    'try {' +
-    'if (window.opener) {' +
-    'window.opener.postMessage({ type: "srfix-login-popup", payload: payload }, "*");' +
-    '}' +
-    '} finally {' +
-    'window.close();' +
-    'setTimeout(function(){ document.body.innerText = "Puedes cerrar esta ventana."; }, 50);' +
-    '}' +
+    'window.top.location.replace(' + JSON.stringify(target.toString()) + ');' +
     '})();' +
     '</script>' +
     '</body></html>'
