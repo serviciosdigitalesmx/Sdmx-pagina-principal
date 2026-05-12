@@ -28,6 +28,7 @@
   const formCliente = requireElement<HTMLFormElement>('form-cliente');
   const modalCliente = requireElement<HTMLDivElement>('modal-cliente');
   const modalDetalle = requireElement<HTMLDivElement>('modal-detalle');
+  const REQUEST_TIMEOUT_MS = 15000;
 
   let currentPage = 1;
   let hasMore = false;
@@ -106,6 +107,21 @@
     return BACKEND_URL;
   }
 
+  async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs = REQUEST_TIMEOUT_MS): Promise<Response> {
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      return await fetch(url, { ...options, signal: controller.signal });
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        throw new Error('Tiempo de espera agotado al consultar el backend');
+      }
+      throw error;
+    } finally {
+      window.clearTimeout(timer);
+    }
+  }
+
   function buildGetUrl(action: string, payload: Record<string, unknown>): string {
     const q = new URLSearchParams();
     q.set('action', action);
@@ -143,8 +159,8 @@
     payload: Record<string, unknown> = {},
     method: ClientesRequestMethod = 'POST',
   ): Promise<T> {
-    const requestGet = (): Promise<Response> => fetch(buildGetUrl(action, payload), { method: 'GET' });
-    const requestPost = (): Promise<Response> => fetch(getBackendUrl(), {
+    const requestGet = (): Promise<Response> => fetchWithTimeout(buildGetUrl(action, payload), { method: 'GET' });
+    const requestPost = (): Promise<Response> => fetchWithTimeout(getBackendUrl(), {
       method: 'POST',
       body: JSON.stringify({ action, ...payload })
     });
@@ -259,6 +275,7 @@
       elLoading.classList.add('hidden');
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
+      console.error('Error cargando clientes:', error);
       elLoading.classList.add('hidden');
       elEmpty.classList.remove('hidden');
       elEmpty.textContent = `No se pudieron cargar los clientes: ${message}`;
@@ -383,7 +400,7 @@
   async function verDetalle(id: string): Promise<void> {
     try {
       const data = await requestBackend<ClienteDetailResponse>('cliente', { id }, 'POST');
-      const cliente: ClienteRecord = data.cliente || { NOMBRE: 'Cliente' } as ClienteRecord;
+      const cliente: ClienteRecord = data.cliente || ({ NOMBRE: 'Cliente' } as ClienteRecord);
       const historial: ClienteHistorial = data.historial || {};
       requireElement<HTMLElement>('detalle-title').textContent = cliente.NOMBRE || 'Historial del cliente';
       requireElement<HTMLElement>('detalle-body').innerHTML = `

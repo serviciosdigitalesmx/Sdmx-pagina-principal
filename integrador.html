@@ -102,6 +102,24 @@
             box-shadow: 0 14px 30px rgba(255, 106, 42, 0.22);
         }
         .wrap { height: calc(100vh - 62px); }
+        .workspace-shell.is-fullscreen {
+            position: fixed;
+            inset: 0;
+            z-index: 70;
+            height: 100dvh;
+            width: 100vw;
+            background: var(--bg);
+        }
+        .workspace-shell.is-fullscreen .workspace-header {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            background: rgba(7, 12, 22, 0.92);
+            backdrop-filter: blur(16px);
+        }
+        .workspace-shell.is-fullscreen .frame-shell {
+            height: calc(100dvh - 72px);
+        }
         .panel {
             display: none;
             height: 100%;
@@ -634,6 +652,7 @@
             <div class="workspace-actions">
                 <span id="workspace-role" class="role-pill">Sin sesión</span>
                 <span id="workspace-current-module" class="module-pill">Módulo activo</span>
+                <button id="btn-shell-fullscreen" type="button" class="ghost-btn">Expandir</button>
                 <button id="btn-shell-logout" type="button" class="ghost-btn">Cerrar sesión</button>
             </div>
         </div>
@@ -759,6 +778,7 @@
         const WORKSPACE_SUBTITLE = document.getElementById('workspace-subtitle');
         const WORKSPACE_ROLE = document.getElementById('workspace-role');
         const WORKSPACE_MODULE = document.getElementById('workspace-current-module');
+        const BTN_SHELL_FULLSCREEN = document.getElementById('btn-shell-fullscreen');
         const BTN_SHELL_LOGOUT = document.getElementById('btn-shell-logout');
         const BACKEND_URL = (window.SRFIX_BACKEND_URL || localStorage.getItem('srfix_backend_url') || 'https://script.google.com/macros/s/AKfycbw49B0GeqyZ2Yr0a-IZNqUhrhUBH0yldSO274EDHBU9gT5SPrXSs2ixIhwD5BRmg-6W/exec');
         const APP_BUILD = '20260422a';
@@ -794,6 +814,8 @@
             sucursales: './panel-sucursales.html',
             seguridad: './panel-seguridad.html'
         };
+        let currentModule = 'operativo';
+        let shellFullscreen = false;
 
         function buildFrameUrl(path) {
             const url = new URL(path, window.location.href);
@@ -854,6 +876,7 @@
             const allowed = getAllowedModules(current);
             const requested = ['operativo', 'tecnico', 'solicitudes', 'archivo', 'clientes', 'tareas', 'stock', 'proveedores', 'compras', 'gastos', 'finanzas', 'reportes', 'sucursales', 'seguridad'].includes(modulo) ? modulo : 'operativo';
             const actual = allowed.includes(requested) ? requested : 'operativo';
+            currentModule = actual;
             asegurarCargaIframe(actual);
             PANEL_OP.classList.toggle('active', actual === 'operativo');
             PANEL_TE.classList.toggle('active', actual === 'tecnico');
@@ -887,6 +910,9 @@
             WORKSPACE_TITLE.textContent = meta.title;
             WORKSPACE_SUBTITLE.textContent = meta.subtitle;
             WORKSPACE_MODULE.textContent = `Modulo activo: ${meta.title}`;
+            if (shellFullscreen) {
+                WORKSPACE_MODULE.textContent = `Pantalla completa: ${meta.title}`;
+            }
 
             const url = new URL(window.location.href);
             url.searchParams.set('modulo', actual);
@@ -907,6 +933,28 @@
         BTN_RE.addEventListener('click', () => mostrarModulo('reportes'));
         BTN_SU.addEventListener('click', () => mostrarModulo('sucursales'));
         BTN_SG.addEventListener('click', () => mostrarModulo('seguridad'));
+
+        function setShellFullscreen(active) {
+            shellFullscreen = !!active;
+            const shell = document.querySelector('.workspace-shell');
+            if (shell) {
+                shell.classList.toggle('is-fullscreen', shellFullscreen);
+            }
+            BTN_SHELL_FULLSCREEN.textContent = shellFullscreen ? 'Salir de fullscreen' : 'Expandir';
+            if (shellFullscreen) {
+                mostrarModulo(currentModule);
+            }
+        }
+
+        BTN_SHELL_FULLSCREEN.addEventListener('click', () => {
+            setShellFullscreen(!shellFullscreen);
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && shellFullscreen) {
+                setShellFullscreen(false);
+            }
+        });
 
         async function cargarSucursales() {
             try {

@@ -130,6 +130,64 @@
             return 'La operacion fue rechazada';
         return '';
     }
+    function tecnicoNormalizarEquipoRecord(raw) {
+        const source = raw || {};
+        const clienteNombre = String(source.CLIENTE_NOMBRE ??
+            source.clienteNombre ??
+            source.cliente ??
+            source.NOMBRE_CLIENTE ??
+            source.NOMBRE ??
+            '').trim();
+        const clienteTelefono = String(source.CLIENTE_TELEFONO ??
+            source.clienteTelefono ??
+            source.telefono ??
+            source.TELEFONO ??
+            '').trim();
+        const dispositivo = String(source.DISPOSITIVO ??
+            source.dispositivo ??
+            source.EQUIPO ??
+            source.TIPO ??
+            '').trim();
+        const modelo = String(source.MODELO ??
+            source.modelo ??
+            source.MODELO_EQUIPO ??
+            '').trim();
+        return {
+            ...source,
+            FOLIO: String(source.FOLIO || '').trim().toUpperCase(),
+            CLIENTE_NOMBRE: clienteNombre,
+            CLIENTE_TELEFONO: clienteTelefono,
+            DISPOSITIVO: dispositivo,
+            MODELO: modelo,
+            FALLA_REPORTADA: String(source.FALLA_REPORTADA || source.fallaReportada || source.FALLA || source.falla || '').trim(),
+            ESTADO: String(source.ESTADO || source.estado || 'Recibido').trim(),
+            TECNICO_ASIGNADO: String(source.TECNICO_ASIGNADO || source.tecnicoAsignado || source.tecnico || '').trim(),
+            FECHA_INGRESO: String(source.FECHA_INGRESO || source.fechaIngreso || source.FECHA_CREACION || source.fechaCreacion || ''),
+            FECHA_PROMESA: String(source.FECHA_PROMESA || source.fechaPromesa || ''),
+            FECHA_ULTIMA_ACTUALIZACION: String(source.FECHA_ULTIMA_ACTUALIZACION || source.fechaUltimaActualizacion || source.FECHA_ACTUALIZACION || ''),
+            YOUTUBE_ID: String(source.YOUTUBE_ID || source.youtubeId || '').trim(),
+            FOTO_RECEPCION: String(source.FOTO_RECEPCION || source.fotoRecepcion || source.FOTO || source.foto || source.IMAGEN_RECEPCION || source.imagenRecepcion || ''),
+            CASO_RESOLUCION_TECNICA: String(source.CASO_RESOLUCION_TECNICA || source.casoResolucionTecnica || '').trim(),
+            NOTAS_INTERNAS: String(source.NOTAS_INTERNAS || source.notasInternas || '').trim(),
+            SEGUIMIENTO_CLIENTE: String(source.SEGUIMIENTO_CLIENTE || source.seguimientoCliente || '').trim(),
+            SEGUIMIENTO_FOTOS: source.SEGUIMIENTO_FOTOS,
+            CHECK_CARGADOR: String(source.CHECK_CARGADOR || '').trim(),
+            CHECK_PANTALLA: String(source.CHECK_PANTALLA || '').trim(),
+            CHECK_PRENDE: String(source.CHECK_PRENDE || '').trim(),
+            CHECK_RESPALDO: String(source.CHECK_RESPALDO || '').trim(),
+            diasRestantes: Number(source.diasRestantes || 0),
+            color: source.color || 'gris'
+        };
+    }
+    function tecnicoExtraerEquiposResponse(data) {
+        const envelope = data && typeof data === 'object' && 'data' in data ? data.data : data;
+        const source = envelope || {};
+        const equiposRaw = Array.isArray(source.equipos) ? source.equipos : [];
+        return {
+            ...source,
+            equipos: equiposRaw.map(eq => tecnicoNormalizarEquipoRecord(eq))
+        };
+    }
     function tecnicoCanRetryAsGet(action) {
         return !/^(guardar_|registrar_|eliminar_|archivar_|transferir_|recibir_|cambiar_|login_|validar_|crear_|reabrir_)/.test(String(action || '').trim().toLowerCase());
     }
@@ -362,7 +420,8 @@
             .join('||');
     }
     async function obtenerSemaforoData(pageSize) {
-        return await tecnicoRequestBackend('semaforo', { page: 1, pageSize }, 'GET');
+        const data = await tecnicoRequestBackend('semaforo', { page: 1, pageSize }, 'GET');
+        return tecnicoExtraerEquiposResponse(data);
     }
     async function cargarDatos(esLogin = false) {
         if (cargaDatosEnCurso)
@@ -376,8 +435,8 @@
             const data = await obtenerSemaforoData(pageSize);
             if (requestSeq !== cargaDatosSeq)
                 return false;
-            const nuevosEquipos = data.equipos || [];
-            const firmaNueva = calcularFirmaSemaforo(nuevosEquipos);
+                const nuevosEquipos = (data.equipos || []).map(tecnicoNormalizarEquipoRecord);
+                const firmaNueva = calcularFirmaSemaforo(nuevosEquipos);
             const huboCambios = firmaNueva !== ultimaFirmaSemaforo;
             equiposData = nuevosEquipos;
             ultimaFirmaSemaforo = firmaNueva;
@@ -450,13 +509,17 @@
                 return false;
             if (filtros.texto) {
                 const texto = filtros.texto;
-                return (eq.FOLIO && eq.FOLIO.toLowerCase().includes(texto)) ||
-                    (eq.CLIENTE_NOMBRE && eq.CLIENTE_NOMBRE.toLowerCase().includes(texto)) ||
-                    (eq.DISPOSITIVO && eq.DISPOSITIVO.toLowerCase().includes(texto)) ||
-                    (eq.MODELO && eq.MODELO.toLowerCase().includes(texto));
-            }
-            return true;
-        });
+                    const folio = String(eq.FOLIO || '').toLowerCase();
+                    const cliente = String(eq.CLIENTE_NOMBRE || '').toLowerCase();
+                    const dispositivo = String(eq.DISPOSITIVO || '').toLowerCase();
+                    const modelo = String(eq.MODELO || '').toLowerCase();
+                    return folio.includes(texto) ||
+                        cliente.includes(texto) ||
+                        dispositivo.includes(texto) ||
+                        modelo.includes(texto);
+                }
+                return true;
+            });
         resultado.sort((a, b) => {
             const diasA = Number(a.diasRestantes || 0);
             const diasB = Number(b.diasRestantes || 0);
@@ -650,7 +713,7 @@
                                 <span class="font-mono text-sm font-bold tracking-wide text-[#EAF2FF]">${escapeHtml(eq.FOLIO)}</span>
                                 ${esInactivo && eq.ESTADO !== 'Entregado' ? '<span class="tecnico-ticket-alerta">Sin avance</span>' : ''}
                             </div>
-                            <h3 class="mt-3 text-lg font-semibold leading-tight text-[#F8FAFC] break-words" title="${escapeHtml(eq.CLIENTE_NOMBRE)}">${escapeHtml(eq.CLIENTE_NOMBRE)}</h3>
+                            <h3 class="mt-3 text-lg font-semibold leading-tight text-[#F8FAFC] break-words" title="${escapeHtml(eq.CLIENTE_NOMBRE || 'Cliente sin nombre')}">${escapeHtml(eq.CLIENTE_NOMBRE || 'Cliente sin nombre')}</h3>
                             <p class="mt-1 text-sm text-[#94A3B8] truncate" title="${escapeHtml(equipoTexto)}">${escapeHtml(equipoTexto)}</p>
                         </div>
                         <div class="tecnico-ticket-days ${tieneDias ? '' : 'is-muted'}">

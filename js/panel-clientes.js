@@ -15,6 +15,7 @@
     const formCliente = requireElement('form-cliente');
     const modalCliente = requireElement('modal-cliente');
     const modalDetalle = requireElement('modal-detalle');
+    const REQUEST_TIMEOUT_MS = 15000;
     let currentPage = 1;
     let hasMore = false;
     let isLoading = false;
@@ -85,6 +86,22 @@
     function getBackendUrl() {
         return BACKEND_URL;
     }
+    async function fetchWithTimeout(url, options, timeoutMs = REQUEST_TIMEOUT_MS) {
+        const controller = new AbortController();
+        const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+        try {
+            return await fetch(url, { ...options, signal: controller.signal });
+        }
+        catch (error) {
+            if (error instanceof DOMException && error.name === 'AbortError') {
+                throw new Error('Tiempo de espera agotado al consultar el backend');
+            }
+            throw error;
+        }
+        finally {
+            window.clearTimeout(timer);
+        }
+    }
     function buildGetUrl(action, payload) {
         const q = new URLSearchParams();
         q.set('action', action);
@@ -117,8 +134,8 @@
         return !/^(guardar_|registrar_|eliminar_|archivar_|transferir_|recibir_|cambiar_|login_|validar_|crear_|reabrir_)/.test(normalized);
     }
     async function requestBackend(action, payload = {}, method = 'POST') {
-        const requestGet = () => fetch(buildGetUrl(action, payload), { method: 'GET' });
-        const requestPost = () => fetch(getBackendUrl(), {
+        const requestGet = () => fetchWithTimeout(buildGetUrl(action, payload), { method: 'GET' });
+        const requestPost = () => fetchWithTimeout(getBackendUrl(), {
             method: 'POST',
             body: JSON.stringify({ action, ...payload })
         });
@@ -247,6 +264,7 @@
         }
         catch (error) {
             const message = error instanceof Error ? error.message : String(error);
+            console.error('Error cargando clientes:', error);
             elLoading.classList.add('hidden');
             elEmpty.classList.remove('hidden');
             elEmpty.textContent = `No se pudieron cargar los clientes: ${message}`;

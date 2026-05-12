@@ -49,8 +49,89 @@ function Service_getTechnicianPanel(data) {
 }
 
 function Service_getClientPanel(data) {
-  if (typeof getClientPanel === 'function') return getClientPanel(data && data.clientId);
-  return { error: 'Servicio HUB no disponible' };
+  const clientId = String(data && data.clientId || '').trim();
+  if (!clientId) return { error: 'clientId requerido' };
+
+  const cliente = Repository_findClienteById(clientId);
+  if (!cliente) return { error: 'No encontrado' };
+
+  const nombre = String(cliente.NOMBRE || '').trim().toLowerCase();
+  const telefono = normalizarTelefono(cliente.TELEFONO || '');
+  const email = String(cliente.EMAIL || '').trim().toLowerCase();
+
+  const equiposTable = Repository_readEquiposTable();
+  const solicitudesTable = Repository_readSolicitudesTable();
+  const equipos = (equiposTable.rows || []).map(function(row) {
+    return Utils_normalizeEntity('equipo', mapearFila(equiposTable.headers || [], row));
+  }).filter(function(eq) {
+    const eqNombre = String(eq.CLIENTE_NOMBRE || '').trim().toLowerCase();
+    const eqTelefono = normalizarTelefono(eq.CLIENTE_TELEFONO || '');
+    const eqEmail = String(eq.CLIENTE_EMAIL || '').trim().toLowerCase();
+    return (nombre && eqNombre === nombre) || (telefono && eqTelefono === telefono) || (email && eqEmail === email);
+  });
+
+  const solicitudes = (solicitudesTable.rows || []).map(function(row) {
+    return mapearFila(solicitudesTable.headers || [], row);
+  }).filter(function(item) {
+    const itemNombre = String(item.NOMBRE || '').trim().toLowerCase();
+    const itemTelefono = normalizarTelefono(item.TELEFONO || '');
+    const itemEmail = String(item.EMAIL || '').trim().toLowerCase();
+    return (nombre && itemNombre === nombre) || (telefono && itemTelefono === telefono) || (email && itemEmail === email);
+  });
+
+  const historialEquipos = equipos.slice().sort(function(a, b) {
+    return String(b.FECHA_ENTREGA || b.FECHA_INGRESO || b.FECHA_ULTIMA_ACTUALIZACION || '').localeCompare(String(a.FECHA_ENTREGA || a.FECHA_INGRESO || a.FECHA_ULTIMA_ACTUALIZACION || ''));
+  }).map(function(eq) {
+    return {
+      FOLIO: String(eq.FOLIO || '').trim().toUpperCase(),
+      TIPO: String(eq.DISPOSITIVO || '').trim(),
+      MODELO: String(eq.MODELO || '').trim(),
+      FALLA: String(eq.FALLA_REPORTADA || '').trim(),
+      DIAGNOSTICO: String(eq.CASO_RESOLUCION_TECNICA || '').trim(),
+      ESTADO: String(eq.ESTADO || '').trim(),
+      FECHA_INGRESO: formatearFechaYMDOrEmpty(eq.FECHA_INGRESO || ''),
+      FECHA_ENTREGA: formatearFechaYMDOrEmpty(eq.FECHA_ENTREGA || ''),
+      COSTO_ESTIMADO: _toMoney(eq.COSTO_ESTIMADO)
+    };
+  });
+
+  const historialCotizaciones = solicitudes.slice().map(function(item) {
+    const cotizacion = _archivoParseJson(item.COTIZACION_JSON);
+    return {
+      folio: String(item.FOLIO_COTIZACION || '').trim().toUpperCase(),
+      dispositivo: String(item.DISPOSITIVO || '').trim(),
+      modelo: String(item.MODELO || '').trim(),
+      descripcion: String(item.DESCRIPCION || '').trim(),
+      problemas: String(item.PROBLEMAS || '').trim(),
+      total: _toMoney(item.COTIZACION_TOTAL || (cotizacion && cotizacion.total) || 0),
+      estado: String(item.ESTADO || '').trim()
+    };
+  });
+
+  const totalReparaciones = equipos.filter(function(eq) {
+    return String(eq.ESTADO || '').trim().toLowerCase() === 'entregado';
+  }).length;
+  const totalCotizaciones = solicitudes.filter(function(item) {
+    return String(item.ESTADO || '').trim().toLowerCase() === 'archivado' || Number(item.COTIZACION_TOTAL || 0) > 0;
+  }).length;
+  const ingresos = equipos.reduce(function(acc, eq) {
+    return acc + _toMoney(eq.COSTO_ESTIMADO);
+  }, 0);
+  const ticketPromedio = equipos.length ? ingresos / equipos.length : 0;
+  const ultimaVisita = (equipos[0] && (equipos[0].FECHA_ENTREGA || equipos[0].FECHA_INGRESO || equipos[0].FECHA_ULTIMA_ACTUALIZACION)) || '';
+
+  return {
+    cliente: Utils_normalizeEntity('cliente', cliente),
+    historial: {
+      totalEquipos: equipos.length,
+      totalReparaciones: totalReparaciones,
+      totalCotizaciones: totalCotizaciones,
+      ticketPromedio: ticketPromedio,
+      ultimaVisita: formatearFechaYMDOrEmpty(ultimaVisita),
+      equipos: historialEquipos,
+      cotizaciones: historialCotizaciones
+    }
+  };
 }
 
 function Service_crearSolicitud(data) {
@@ -1520,7 +1601,7 @@ function Service_listarClientes(data) {
 }
 
 function Service_getClienteById(id) {
-  const cliente = Repository_findClienteById(id);
-  if (!cliente) return jsonResponse({ error: 'No encontrado' });
-  return jsonResponse({ cliente: Utils_normalizeEntity('cliente', cliente) });
+  const payload = Service_getClientPanel({ clientId: id });
+  if (payload && payload.error) return jsonResponse({ error: payload.error });
+  return jsonResponse(payload);
 }
