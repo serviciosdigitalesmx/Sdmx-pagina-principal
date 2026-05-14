@@ -1,13 +1,20 @@
 {
-  "name": "sr-fix",
+  "name": "srfix-monorepo",
   "private": true,
+  "packageManager": "pnpm@9.0.0",
   "scripts": {
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "build": "tsc -p tsconfig.json && cp js/sw.js .",
-    "clean": "rm -rf js/*.js sw.js"
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "clean": "turbo run clean && rm -rf node_modules"
   },
   "devDependencies": {
-    "@types/node": "^25.7.0",
-    "typescript": "^5.8.3"
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "turbo": "latest",
+    "typescript": "^5.4.5"
   }
 }
