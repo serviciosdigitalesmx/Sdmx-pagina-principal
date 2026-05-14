@@ -29,7 +29,7 @@ importers:
 
   apps/api:
     dependencies:
-      '@srfix/database':
+      '@white-label/database':
         specifier: workspace:*
         version: link:../../packages/database
       cors:
@@ -63,7 +63,7 @@ importers:
 
   apps/web-admin:
     dependencies:
-      '@srfix/ui':
+      '@white-label/ui':
         specifier: workspace:*
         version: link:../../packages/ui
       next:

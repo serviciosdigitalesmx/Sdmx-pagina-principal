@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
-import { getTenantClient } from '@srfix/database';
+import { getTenantClient } from '@white-label/database';
 
 const createExpenseSchema = z.object({
   sucursalId: z.string().min(1, 'sucursalId is required'),

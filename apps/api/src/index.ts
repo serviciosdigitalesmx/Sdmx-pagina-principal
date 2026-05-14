@@ -28,7 +28,8 @@ app.use('/api/:tenantId/inventory', inventoryRouter);
 app.use('/api/inventory', inventoryRouter);
 
 app.get('/', (req, res) => {
-  res.send('Sr. Fix API is running');
+  const apiName = process.env.API_NAME ?? 'White-label API';
+  res.send(`${apiName} is running`);
 });
 
 app.listen(port, () => {

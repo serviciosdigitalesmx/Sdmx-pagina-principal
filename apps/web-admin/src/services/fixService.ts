@@ -6,7 +6,7 @@ type ApiListResponse<T> = {
 };
 
 class FixService {
-  private tokenKey = 'srfix_auth_token';
+  private tokenKey = process.env.NEXT_PUBLIC_AUTH_TOKEN_KEY ?? 'app_auth_token';
 
   private get apiUrl() {
     return (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000').replace(/\/$/, '');

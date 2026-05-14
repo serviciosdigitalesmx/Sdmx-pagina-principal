@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
-import { getTenantClient } from '@srfix/database';
+import { getTenantClient } from '@white-label/database';
 
 const createCustomerSchema = z.object({
   name: z.string().min(1),

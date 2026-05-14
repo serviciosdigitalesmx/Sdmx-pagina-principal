@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
-import { getTenantClient } from '@srfix/database';
+import { getTenantClient } from '@white-label/database';
 
 // Esquema de validación para la creación de órdenes
 const createOrderSchema = z.object({

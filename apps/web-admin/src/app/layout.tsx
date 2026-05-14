@@ -13,8 +13,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sr. Fix Admin",
-  description: "Dashboard multi-tenant de administración para Sr. Fix",
+  title:
+    process.env.NEXT_PUBLIC_TENANT_META_TITLE ?? "Portal white-label del taller",
+  description:
+    process.env.NEXT_PUBLIC_TENANT_META_DESCRIPTION ??
+    "Portal operativo white-label para talleres con soporte y experiencia configurable.",
 };
 
 export default function RootLayout({

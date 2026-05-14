@@ -5,7 +5,7 @@ import { RequireRole } from '@/components/guard/RequireRole';
 import { useAuth } from '@/components/guard/use-auth';
 import { ModuleShell } from '@/components/dashboard/module-shell';
 import { fixService } from '@/services/fixService';
-import { Table } from '@srfix/ui';
+import { Table } from '@white-label/ui';
 
 type InventoryRow = {
   id?: string;

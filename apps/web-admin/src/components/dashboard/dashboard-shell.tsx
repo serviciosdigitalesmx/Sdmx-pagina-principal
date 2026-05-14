@@ -78,7 +78,7 @@ function DashboardShellContent({
               className="flex h-10 w-10 items-center justify-center rounded-2xl text-sm font-black text-slate-950"
               style={{ backgroundColor: theme.primary }}
             >
-              SF
+              {tenant.brandName.slice(0, 2).toUpperCase()}
             </div>
             <div>
               <div className="text-sm font-semibold tracking-wide text-white">
