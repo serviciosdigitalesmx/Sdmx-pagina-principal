@@ -140,6 +140,9 @@ importers:
 
   apps/web-public:
     dependencies:
+      '@supabase/supabase-js':
+        specifier: ^2.43.4
+        version: 2.105.4
       next:
         specifier: 16.2.6
         version: 16.2.6(@babel/core@7.29.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
