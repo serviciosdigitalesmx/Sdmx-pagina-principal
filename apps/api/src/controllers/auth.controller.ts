@@ -108,3 +108,28 @@ export const register = async (req: Request, res: Response) => {
     return res.status(500).json({ error: message });
   }
 };
+
+export const redirectGoogleAuth = async (_req: Request, res: Response) => {
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+  const publicAppUrl = process.env.PUBLIC_APP_URL;
+
+  if (!supabaseUrl) {
+    return res.status(500).json({ error: 'SUPABASE_URL is required' });
+  }
+
+  if (!supabaseAnonKey) {
+    return res.status(500).json({ error: 'SUPABASE_ANON_KEY is required' });
+  }
+
+  if (!publicAppUrl) {
+    return res.status(500).json({ error: 'PUBLIC_APP_URL is required' });
+  }
+
+  const redirectTo = new URL('/onboarding', publicAppUrl).toString();
+  const authorizeUrl = new URL('/auth/v1/authorize', supabaseUrl);
+  authorizeUrl.searchParams.set('provider', 'google');
+  authorizeUrl.searchParams.set('redirect_to', redirectTo);
+
+  return res.redirect(302, authorizeUrl.toString());
+};

@@ -16,7 +16,7 @@ const contactEmailHref = contactEmail ? `mailto:${contactEmail}` : undefined;
 const contactPhoneHref = contactPhone ? `tel:${contactPhone.replace(/\s+/g, "")}` : undefined;
 
 const outcomes = [
-  "Ordena clientes, vehículos y seguimiento en un solo panel.",
+  "Ordena clientes, equipos y seguimiento en un solo panel.",
   "Evita cruces de información con tenant_id y RLS en Supabase.",
   "Convierte más con recordatorios, WhatsApp y trazabilidad operativa.",
 ];
@@ -32,7 +32,7 @@ const plans = [
   {
     name: "Starter",
     price: starterPrice,
-    description: "Para talleres pequeños que necesitan vender, ordenar y dar seguimiento sin perder el control.",
+    description: "Para talleres pequeños que reparan celulares, tablets y equipos básicos sin perder el control.",
     features: [
       "Captura de clientes y órdenes",
       "Seguimiento básico por WhatsApp",
@@ -56,7 +56,7 @@ const plans = [
   {
     name: "Enterprise",
     price: enterprisePrice,
-    description: "Para grupos de talleres que requieren soporte, procesos y configuración a medida.",
+    description: "Para grupos de talleres de celulares y computadoras que requieren soporte, procesos y configuración a medida.",
     features: [
       "Implementación guiada",
       "Roles, permisos y auditoría",
@@ -85,7 +85,7 @@ const results = [
 const faqs = [
   {
     q: "¿Qué problema resuelve?",
-    a: "Centraliza la operación de un taller: clientes, órdenes, seguimiento y comunicación comercial.",
+    a: "Centraliza la operación de un taller de reparación: clientes, órdenes, seguimiento y comunicación comercial.",
   },
   {
     q: "¿Dónde veo el precio?",
@@ -108,10 +108,10 @@ export default function Home() {
                 {brandShort}
               </div>
               <div>
-                <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">SaaS para talleres mecánicos</p>
+                <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">SaaS para talleres de reparación</p>
                 <h1 className="mt-1 text-2xl font-semibold tracking-tight">{productName}</h1>
                 <p className="mt-1 max-w-2xl text-sm text-slate-300">
-                  Vende más servicio, organiza mejor la operación y sigue cada orden con una plataforma pensada para producción.
+                  Vende más servicio, organiza mejor la operación y sigue cada orden con una plataforma pensada para talleres de celulares, computadoras y electrónica.
                 </p>
               </div>
             </div>
@@ -136,10 +136,10 @@ export default function Home() {
 
             <div className="space-y-5">
               <h2 className="max-w-3xl text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
-                La portada que convierte visitantes en demos, y demos en cierres.
+                La portada que convierte visitantes en demos, y demos en cierres para talleres de celulares y computadoras.
               </h2>
               <p className="max-w-2xl text-lg leading-8 text-slate-600">
-                {productName} presenta una oferta clara: qué resuelve, cuánto cuesta y cómo empezar hoy. Sin humo, sin vaguedades y sin dejar dudas de que es un SaaS real.
+                {productName} presenta una oferta clara para talleres de reparación: qué resuelve, cuánto cuesta y cómo empezar hoy. Sin humo, sin vaguedades y sin dejar dudas de que es un SaaS real.
               </p>
             </div>
 

@@ -15,10 +15,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title:
     process.env.NEXT_PUBLIC_SAAS_META_TITLE ??
-    "Plataforma SaaS white-label para talleres mecánicos",
+    "Plataforma SaaS white-label para talleres de reparación",
   description:
     process.env.NEXT_PUBLIC_SAAS_META_DESCRIPTION ??
-    "SaaS multi-tenant con paneles white-label, automatización y aislamiento por tenant.",
+    "SaaS multi-tenant para talleres de celulares, computadoras y electrónica con automatización y aislamiento por tenant.",
 };
 
 export default function RootLayout({
