@@ -4,9 +4,7 @@ const legalName =
 
 const brandShort = process.env.NEXT_PUBLIC_SAAS_BRAND_SHORT ?? "WB";
 const demoUrl = process.env.NEXT_PUBLIC_SAAS_DEMO_URL;
-const appUrl = process.env.NEXT_PUBLIC_APP_URL;
-const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL;
-const loginUrl = adminUrl ?? appUrl ?? "/onboarding";
+const loginUrl = "/onboarding";
 const companyId = process.env.NEXT_PUBLIC_SAAS_COMPANY_ID;
 const contactEmail = process.env.NEXT_PUBLIC_SAAS_CONTACT_EMAIL;
 const contactPhone = process.env.NEXT_PUBLIC_SAAS_CONTACT_PHONE;
