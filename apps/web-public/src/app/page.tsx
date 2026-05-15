@@ -8,9 +8,9 @@ const companyId = process.env.NEXT_PUBLIC_SAAS_COMPANY_ID;
 const contactEmail = process.env.NEXT_PUBLIC_SAAS_CONTACT_EMAIL;
 const contactPhone = process.env.NEXT_PUBLIC_SAAS_CONTACT_PHONE;
 
-const starterPrice = process.env.NEXT_PUBLIC_SAAS_STARTER_PRICE;
-const growthPrice = process.env.NEXT_PUBLIC_SAAS_GROWTH_PRICE;
-const enterprisePrice = process.env.NEXT_PUBLIC_SAAS_ENTERPRISE_PRICE;
+const starterPrice = process.env.NEXT_PUBLIC_SAAS_STARTER_PRICE ?? "$300 MXN";
+const growthPrice = process.env.NEXT_PUBLIC_SAAS_GROWTH_PRICE ?? "$450 MXN";
+const enterprisePrice = process.env.NEXT_PUBLIC_SAAS_ENTERPRISE_PRICE ?? "$600 MXN";
 
 const contactEmailHref = contactEmail ? `mailto:${contactEmail}` : undefined;
 const contactPhoneHref = contactPhone ? `tel:${contactPhone.replace(/\s+/g, "")}` : undefined;
@@ -31,7 +31,7 @@ const proofPoints = [
 const plans = [
   {
     name: "Starter",
-    price: starterPrice ?? "Configura NEXT_PUBLIC_SAAS_STARTER_PRICE",
+    price: starterPrice,
     description: "Para talleres pequeños que necesitan vender, ordenar y dar seguimiento sin perder el control.",
     features: [
       "Captura de clientes y órdenes",
@@ -43,7 +43,7 @@ const plans = [
   },
   {
     name: "Growth",
-    price: growthPrice ?? "Configura NEXT_PUBLIC_SAAS_GROWTH_PRICE",
+    price: growthPrice,
     description: "Para talleres que ya facturan y necesitan ver operación, ventas y carga diaria con claridad.",
     features: [
       "Panel comercial y operativo",
@@ -55,7 +55,7 @@ const plans = [
   },
   {
     name: "Enterprise",
-    price: enterprisePrice ?? "Configura NEXT_PUBLIC_SAAS_ENTERPRISE_PRICE",
+    price: enterprisePrice,
     description: "Para grupos de talleres que requieren soporte, procesos y configuración a medida.",
     features: [
       "Implementación guiada",
