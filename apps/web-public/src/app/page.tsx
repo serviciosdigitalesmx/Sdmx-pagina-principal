@@ -4,6 +4,7 @@ const legalName =
 
 const brandShort = process.env.NEXT_PUBLIC_SAAS_BRAND_SHORT ?? "WB";
 const demoUrl = process.env.NEXT_PUBLIC_SAAS_DEMO_URL;
+const loginUrl = process.env.NEXT_PUBLIC_APP_URL ?? "/dashboard";
 const companyId = process.env.NEXT_PUBLIC_SAAS_COMPANY_ID;
 const contactEmail = process.env.NEXT_PUBLIC_SAAS_CONTACT_EMAIL;
 const contactPhone = process.env.NEXT_PUBLIC_SAAS_CONTACT_PHONE;
@@ -120,6 +121,9 @@ export default function Home() {
               <a className="rounded-full bg-cyan-400 px-5 py-3 font-semibold text-slate-950 transition hover:bg-cyan-300" href="/onboarding">
                 Probar gratis
               </a>
+              <a className="rounded-full border border-cyan-300 px-5 py-3 font-semibold text-cyan-100 transition hover:bg-white/10" href={loginUrl}>
+                Iniciar sesión
+              </a>
               <a className="rounded-full border border-white/20 px-5 py-3 font-semibold text-white transition hover:bg-white/10" href="#pricing">
                 Ver precios
               </a>
@@ -146,6 +150,9 @@ export default function Home() {
             <div className="flex flex-wrap gap-3">
               <a className="rounded-full bg-slate-950 px-5 py-3 font-semibold text-white transition hover:bg-slate-800" href="/onboarding">
                 Comenzar prueba
+              </a>
+              <a className="rounded-full border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50" href={loginUrl}>
+                Iniciar sesión
               </a>
               <a className="rounded-full border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50" href={demoUrl ?? "#contact"}>
                 Pedir demo
@@ -327,6 +334,9 @@ export default function Home() {
           <div className="flex flex-wrap gap-4">
             <a href="#pricing" className="hover:text-slate-800">
               Precios
+            </a>
+            <a href={loginUrl} className="hover:text-slate-800">
+              Iniciar sesión
             </a>
             <a href="#contact" className="hover:text-slate-800">
               Contacto
