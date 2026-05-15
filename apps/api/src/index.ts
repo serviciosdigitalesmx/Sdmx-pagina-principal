@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import authRouter from './routes/auth';
 import ordersRouter from './routes/orders';
 import financeRouter from './routes/finance';
 import customersRouter from './routes/customers';
@@ -18,6 +19,7 @@ app.use(cors({
 }));
 app.use(express.json());
 
+app.use('/api/auth', authRouter);
 app.use('/api/:tenantId/orders', ordersRouter);
 app.use('/api/orders', ordersRouter);
 app.use('/api/:tenantId/finance', financeRouter);

@@ -1,0 +1,38 @@
+import Link from 'next/link';
+import { SaveOnboardingToken } from './save-onboarding-token';
+
+export default function OnboardingSuccessPage({
+  searchParams,
+}: {
+  searchParams: {
+    tenant?: string;
+    token?: string;
+  };
+}) {
+  return (
+    <main className="min-h-screen bg-[linear-gradient(180deg,#08111f_0%,#0f172a_38%,#f8fafc_38%,#f8fafc_100%)] px-6 py-12 text-slate-950">
+      <SaveOnboardingToken token={searchParams.token} />
+      <section className="mx-auto flex w-full max-w-3xl flex-col gap-6 rounded-[2rem] border border-slate-200 bg-white p-8 shadow-xl shadow-slate-200/60">
+        <p className="text-xs uppercase tracking-[0.35em] text-cyan-700">Registro completado</p>
+        <h1 className="text-4xl font-semibold tracking-tight">
+          Tu prueba gratuita ya quedó creada.
+        </h1>
+        <p className="text-lg leading-8 text-slate-600">
+          {searchParams.tenant ? `Tenant: ${searchParams.tenant}.` : 'El tenant fue creado correctamente.'}{' '}
+          La sesión quedó guardada en este navegador.
+        </p>
+        <div className="rounded-3xl bg-slate-50 p-5 text-sm text-slate-600">
+          Si quieres seguir probando, abre el panel del taller con la misma sesión.
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href="/"
+            className="rounded-full bg-slate-950 px-5 py-3 font-semibold text-white transition hover:bg-slate-800"
+          >
+            Volver al inicio
+          </Link>
+        </div>
+      </section>
+    </main>
+  );
+}
