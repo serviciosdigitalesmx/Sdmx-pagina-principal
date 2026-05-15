@@ -13,6 +13,10 @@ const initialState: LoginState = {
   password: "",
 };
 
+function getDashboardRedirectUrl() {
+  return new URL("/hub", window.location.origin).toString();
+}
+
 export default function LoginPage() {
   const [form, setForm] = useState<LoginState>(initialState);
   const [loading, setLoading] = useState(false);
@@ -46,8 +50,7 @@ export default function LoginPage() {
         window.localStorage.setItem("auth_token", data.session.access_token);
       }
 
-      const redirectTo = new URL("/dashboard", window.location.origin).toString();
-      window.location.assign(redirectTo);
+      window.location.assign(getDashboardRedirectUrl());
     } catch (submitError) {
       const message = submitError instanceof Error ? submitError.message : "Error inesperado";
       setError(message);
