@@ -11,10 +11,28 @@ dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 4000;
-const allowedOrigin = process.env.CORS_ORIGIN || 'http://localhost:3000';
+const allowedOrigins = Array.from(
+  new Set(
+    (process.env.CORS_ORIGIN ?? 'http://localhost:3000')
+      .split(',')
+      .concat('https://sdmx-pagina-principal.vercel.app')
+      .map((origin) => origin.trim())
+      .filter(Boolean),
+  ),
+);
 
 app.use(cors({
-  origin: allowedOrigin,
+  origin: (origin, callback) => {
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`Origin not allowed by CORS: ${origin}`));
+  },
   credentials: true,
 }));
 app.use(express.json());
