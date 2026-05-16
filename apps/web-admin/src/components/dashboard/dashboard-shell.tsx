@@ -70,13 +70,12 @@ function DashboardShellContent({
   const theme = useTenantTheme();
 
   return (
-    <div className="min-h-screen bg-slate-950 flex text-slate-100">
-      <aside className="w-72 shrink-0 border-r border-white/10 bg-slate-950/95 flex flex-col">
+    <div className="min-h-screen flex text-slate-100 bg-[radial-gradient(circle_at_top,_rgba(212,175,55,0.08),_transparent_28%),linear-gradient(180deg,#0a0e17_0%,#070b12_100%)]">
+      <aside className="w-72 shrink-0 border-r border-white/10 bg-[#0d1320]/95 flex flex-col backdrop-blur-xl">
         <div className="border-b border-white/10 p-5">
           <div className="flex items-center gap-3">
             <div
-              className="flex h-10 w-10 items-center justify-center rounded-2xl text-sm font-black text-slate-950"
-              style={{ backgroundColor: theme.primary }}
+              className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[#d4af37]/25 bg-[linear-gradient(180deg,rgba(212,175,55,0.28),rgba(17,19,31,0.95))] text-sm font-black text-[#f5efe1]"
             >
               {tenant.brandName.slice(0, 2).toUpperCase()}
             </div>
@@ -102,11 +101,11 @@ function DashboardShellContent({
                     label={item.label}
                     allowedRoles={item.allowedRoles}
                     className={[
-                      'flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm transition-colors',
+                      'flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm transition-all duration-200',
                       pathname === item.href ||
                       (item.href !== '/dashboard' && pathname?.startsWith(item.href))
-                        ? 'bg-slate-800 text-white shadow-lg shadow-black/20'
-                        : 'text-slate-300 hover:bg-slate-800/70 hover:text-white',
+                        ? 'border border-[#d4af37]/20 bg-[#d4af37]/10 text-white shadow-[0_10px_30px_rgba(0,0,0,0.25)]'
+                        : 'text-slate-300 hover:bg-white/5 hover:text-white hover:border hover:border-white/10',
                     ].join(' ')}
                   />
                 ))}
@@ -115,7 +114,7 @@ function DashboardShellContent({
           ))}
         </nav>
         <div className="border-t border-white/10 p-4 text-sm text-slate-400">
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div className="rounded-2xl border border-[#d4af37]/12 bg-white/5 p-4">
             <div className="text-white">{tenant.userEmail}</div>
             <div className="mt-1 text-xs text-slate-500">Role: {tenant.userRole}</div>
             <div className="text-xs text-slate-500">Sucursal: {tenant.branchName}</div>
@@ -124,9 +123,9 @@ function DashboardShellContent({
       </aside>
 
       <div className="flex-1 flex flex-col">
-        <header className="flex h-16 items-center justify-between border-b border-white/10 bg-slate-950/70 px-6 backdrop-blur">
+        <header className="flex h-16 items-center justify-between border-b border-white/10 bg-[#0d1320]/75 px-6 backdrop-blur-xl">
           <div>
-            <div className="text-sm font-semibold text-white">Workspace activo</div>
+            <div className="text-sm font-semibold text-white [font-family:var(--font-display)]">Workspace activo</div>
             <div className="text-xs text-slate-400">Tenant actual: {tenant.tenantId}</div>
           </div>
           <div className="flex items-center space-x-4">
@@ -141,7 +140,7 @@ function DashboardShellContent({
             </div>
           </div>
         </header>
-        <main className="flex-1 overflow-auto bg-slate-950 p-6">{children}</main>
+        <main className="flex-1 overflow-auto bg-transparent p-6">{children}</main>
       </div>
     </div>
   );

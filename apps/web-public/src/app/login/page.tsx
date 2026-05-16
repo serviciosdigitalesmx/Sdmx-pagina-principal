@@ -89,23 +89,35 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.18),_transparent_30%),linear-gradient(180deg,#08111f_0%,#0f172a_38%,#f8fafc_38%,#f8fafc_100%)] px-6 py-10 text-slate-950">
-      <section className="mx-auto grid w-full max-w-5xl gap-8 lg:grid-cols-[0.95fr_1.05fr]">
-        <div className="rounded-[2rem] border border-white/10 bg-slate-950/95 p-8 text-white shadow-2xl shadow-slate-950/30">
-          <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">Acceso al taller</p>
-          <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">
-            Inicia sesión con tu correo y contraseña.
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(212,175,55,0.10),_transparent_30%),radial-gradient(circle_at_20%_20%,_rgba(45,212,191,0.08),_transparent_24%),linear-gradient(180deg,#0a0e17_0%,#070b12_100%)] px-6 py-10 text-slate-950">
+      <section className="mx-auto grid w-full max-w-5xl gap-8 lg:grid-cols-[1fr_1.05fr]">
+        <div className="rounded-[2rem] border border-[#d4af37]/15 bg-[#0d1320]/85 p-8 text-white shadow-[0_30px_100px_rgba(0,0,0,0.45)] backdrop-blur-xl">
+          <p className="text-xs uppercase tracking-[0.35em] text-[#d4af37]/90">Acceso al taller</p>
+          <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl [font-family:var(--font-display)]">
+            Accede a FIXI con la misma presencia que viste en la landing.
           </h1>
           <p className="mt-4 max-w-xl text-base leading-7 text-slate-300">
-            Si olvidaste tu contraseña, puedes pedir recuperación por correo desde el mismo formulario.
+            Tu sesión se mantiene protegida y el acceso está pensado para llevarte directo al entorno operativo sin ruido visual.
           </p>
+
+          <div className="mt-8 grid gap-3 sm:grid-cols-2">
+            {[
+              ["Sesión segura", "Credenciales cifradas y acceso directo."],
+              ["Soporte rápido", "Recuperación por correo en el mismo flujo."],
+            ].map(([title, desc]) => (
+              <div key={title} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <p className="text-sm font-semibold text-white">{title}</p>
+                <p className="mt-1 text-sm text-slate-300">{desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-xl shadow-slate-200/60">
+        <div className="rounded-[2rem] border border-[#d4af37]/15 bg-[#111827]/92 p-8 text-white shadow-[0_30px_100px_rgba(0,0,0,0.45)] backdrop-blur-xl">
           <form className="space-y-5" onSubmit={handleSubmit}>
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700" htmlFor="email">
-                Correo o usuario
+              <label className="mb-2 block text-sm font-medium text-slate-300" htmlFor="email">
+                Correo electrónico
               </label>
               <input
                 id="email"
@@ -115,13 +127,13 @@ export default function LoginPage() {
                 value={form.email}
                 onChange={handleChange}
                 required
-                className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200"
+                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition placeholder:text-slate-500 focus:border-[#d4af37]/60 focus:ring-2 focus:ring-[#d4af37]/20"
                 placeholder="dueno@taller.com"
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700" htmlFor="password">
+              <label className="mb-2 block text-sm font-medium text-slate-300" htmlFor="password">
                 Contraseña
               </label>
               <input
@@ -132,19 +144,19 @@ export default function LoginPage() {
                 value={form.password}
                 onChange={handleChange}
                 required
-                className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200"
+                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition placeholder:text-slate-500 focus:border-[#d4af37]/60 focus:ring-2 focus:ring-[#d4af37]/20"
                 placeholder="Tu contraseña"
               />
             </div>
 
             {error ? (
-              <p className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              <p className="rounded-2xl border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
                 {error}
               </p>
             ) : null}
 
             {success ? (
-              <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+              <p className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
                 {success}
               </p>
             ) : null}
@@ -152,19 +164,23 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-full bg-slate-950 px-6 py-3 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-full border border-[#d4af37]/30 bg-[#d4af37]/10 px-6 py-3 font-semibold text-[#f3df9f] transition hover:bg-[#d4af37]/18 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {loading ? "Entrando..." : "Iniciar sesión"}
+              {loading ? "Entrando..." : "Acceder a FIXI"}
             </button>
 
             <button
               type="button"
               onClick={handlePasswordReset}
               disabled={resetLoading}
-              className="w-full rounded-full border border-slate-300 px-6 py-3 font-semibold text-slate-900 transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-full border border-white/12 px-6 py-3 font-semibold text-white transition hover:border-[#d4af37]/30 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {resetLoading ? "Enviando correo..." : "Recuperar contraseña por correo"}
             </button>
+
+            <p className="text-center text-xs uppercase tracking-[0.24em] text-slate-400">
+              ¿Aún no tienes acceso? Solicítalo por correo.
+            </p>
           </form>
         </div>
       </section>
