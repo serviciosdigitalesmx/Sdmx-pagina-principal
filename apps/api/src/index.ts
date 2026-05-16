@@ -16,7 +16,7 @@ const allowedOrigins = (process.env.CORS_ORIGIN ?? 'http://localhost:3000')
   .map((origin) => origin.trim())
   .filter(Boolean);
 
-const baseDomains = (process.env.BASE_DOMAIN ?? 'srfix.mx,sdmx.mx')
+const baseDomains = (process.env.BASE_DOMAIN ?? 'serviciosdigitalesmx.online,serviciosdigitalesmx.dev')
   .split(',')
   .map((d) => d.trim())
   .filter(Boolean);

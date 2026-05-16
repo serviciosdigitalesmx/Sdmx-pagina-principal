@@ -1,7 +1,10 @@
 # Deploy Checklist
 
 ## Frontend: Vercel
-1. Configura el proyecto `apps/web-admin` como app principal en Vercel.
+1. Configura estos proyectos y dominios:
+   - `apps/web-public` en `www.serviciosdigitalesmx.online`
+   - `apps/web-admin` en `app.serviciosdigitalesmx.online`
+   - `apps/web-clientes` en `clientes.serviciosdigitalesmx.online`
 2. Define estas variables de entorno:
    - `NEXT_PUBLIC_API_URL`
    - `NEXT_PUBLIC_DEFAULT_TENANT_ID`
@@ -26,6 +29,7 @@
 2. Define estas variables de entorno:
    - `PORT`
    - `CORS_ORIGIN`
+   - `BASE_DOMAIN`
    - `JWT_SECRET`
    - `SUPABASE_URL`
    - `SUPABASE_SERVICE_ROLE_KEY`

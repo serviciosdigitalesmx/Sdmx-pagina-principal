@@ -14,7 +14,7 @@ const allowedOrigins = Array.from(
   new Set(
     (process.env.CORS_ORIGIN ?? 'http://localhost:3000')
       .split(',')
-      .concat('https://sdmx-pagina-principal.vercel.app')
+      .concat('https://www.serviciosdigitalesmx.online', 'https://app.serviciosdigitalesmx.online', 'https://clientes.serviciosdigitalesmx.online')
       .map((origin) => origin.trim())
       .filter(Boolean),
   ),
