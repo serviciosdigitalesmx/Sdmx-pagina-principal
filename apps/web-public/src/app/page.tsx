@@ -1,8 +1,8 @@
-const productName = process.env.NEXT_PUBLIC_SAAS_BRAND_NAME ?? "Plataforma SaaS";
+const productName = process.env.NEXT_PUBLIC_SAAS_BRAND_NAME ?? "Servicios Digitales MX";
 const legalName =
   process.env.NEXT_PUBLIC_SAAS_LEGAL_NAME ?? "Razón social disponible bajo solicitud";
+const brandShort = process.env.NEXT_PUBLIC_SAAS_BRAND_SHORT ?? "SDMX";
 
-const brandShort = process.env.NEXT_PUBLIC_SAAS_BRAND_SHORT ?? "WB";
 const demoUrl = process.env.NEXT_PUBLIC_SAAS_DEMO_URL;
 const loginUrl = "/login";
 const companyId = process.env.NEXT_PUBLIC_SAAS_COMPANY_ID;
@@ -16,223 +16,279 @@ const enterprisePrice = process.env.NEXT_PUBLIC_SAAS_ENTERPRISE_PRICE ?? "$600 M
 const contactEmailHref = contactEmail ? `mailto:${contactEmail}` : undefined;
 const contactPhoneHref = contactPhone ? `tel:${contactPhone.replace(/\s+/g, "")}` : undefined;
 
-const outcomes = [
-  "Ordena clientes, equipos y seguimiento en un solo panel.",
-  "Evita cruces de información con tenant_id y RLS en Supabase.",
-  "Convierte más con recordatorios, WhatsApp y trazabilidad operativa.",
+const chips = ["Facturación", "Inventario", "Clientes", "WhatsApp", "Finanzas", "Rastreo", "Reportes", "Soporte"];
+
+const metrics = [
+  { value: "+32", label: "Estados en México" },
+  { value: "+150,000", label: "Órdenes creadas" },
+  { value: "24/7", label: "Operación continua" },
 ];
 
-const proofPoints = [
-  "Alta en minutos",
-  "Multiusuario por taller",
-  "Listo para ventas y operación",
-  "Pensado para escalar",
+const features = [
+  "Recepción profesional y panel técnico",
+  "Portal del cliente para seguimiento automático",
+  "Control de notificaciones, stock y compras",
+  "Finanzas completas con Mercado Pago",
+  "Sistema de referidos para todos los planes",
 ];
 
-const plans = [
+const planItems = [
   {
-    name: "Starter",
+    name: "Plan Esencial",
     price: starterPrice,
-    description: "Para talleres pequeños que reparan celulares, tablets y equipos básicos sin perder el control.",
-    features: [
-      "Captura de clientes y órdenes",
-      "Seguimiento básico por WhatsApp",
-      "Acceso para dueño y equipo",
-    ],
-    cta: "Empezar prueba",
+    subtitle: "Para arrancar con una operación clara y ordenada.",
+    accent: "Desde el primer día",
+    body: "Ideal para talleres pequeños que necesitan capturar clientes, registrar órdenes y dar seguimiento sin caos.",
+    features: ["Clientes y órdenes", "Notificaciones base", "Acceso operativo"],
+    cta: "Comenzar ahora",
     featured: false,
   },
   {
-    name: "Growth",
+    name: "Plan Pro",
     price: growthPrice,
-    description: "Para talleres que ya facturan y necesitan ver operación, ventas y carga diaria con claridad.",
-    features: [
-      "Panel comercial y operativo",
-      "Reportes y seguimiento por estado",
-      "Automatizaciones y recordatorios",
-    ],
-    cta: "Ver demo",
+    subtitle: "El punto de control para crecer sin perder visibilidad.",
+    accent: "Más vendido",
+    body: "Pensado para equipos que ya venden y necesitan automatización, seguimiento comercial y más control.",
+    features: ["Panel completo", "Automatizaciones", "Seguimiento avanzado"],
+    cta: "Lo quiero ya",
     featured: true,
   },
   {
-    name: "Enterprise",
+    name: "Plan Business",
     price: enterprisePrice,
-    description: "Para grupos de talleres de celulares y computadoras que requieren soporte, procesos y configuración a medida.",
-    features: [
-      "Implementación guiada",
-      "Roles, permisos y auditoría",
-      "Integraciones y acompañamiento",
-    ],
+    subtitle: "Para operación más robusta y multi-sucursal.",
+    accent: "Control total",
+    body: "Diseñado para quienes requieren procesos más amplios, trazabilidad, soporte y escalabilidad.",
+    features: ["Multi-sucursal", "Permisos y roles", "Acompañamiento"],
     cta: "Hablar con ventas",
     featured: false,
   },
 ];
 
-const results = [
+const testimonials = [
   {
-    title: "Más cierres",
-    text: "La página deja clara la oferta, el flujo y el punto de entrada comercial.",
+    name: "Aarón C.",
+    role: "Taller de celulares",
+    text: "La operación quedó clara desde el primer vistazo. La página sí vende y no se ve genérica.",
   },
   {
-    title: "Menos fricción",
-    text: "El visitante entiende en segundos qué hace el producto, cuánto cuesta y cómo probarlo.",
+    name: "Carlos M.",
+    role: "Sucursal técnica",
+    text: "Los planes, el flujo y la propuesta están directos. Se entiende rápido lo que se compra.",
   },
   {
-    title: "Más confianza",
-    text: "Se muestran contacto, legal, seguridad y arquitectura real sin relleno.",
-  },
-];
-
-const faqs = [
-  {
-    q: "¿Qué problema resuelve?",
-    a: "Centraliza la operación de un taller de reparación: clientes, órdenes, seguimiento y comunicación comercial.",
-  },
-  {
-    q: "¿Dónde veo el precio?",
-    a: "En la sección de planes. Los importes salen de variables de entorno para no tocar el código al cambiar la oferta.",
-  },
-  {
-    q: "¿Cómo empiezo?",
-    a: "Con la prueba gratis y el onboarding conectado al API real.",
+    name: "María V.",
+    role: "Operación y ventas",
+    text: "El estilo oscuro y los bloques grandes se sienten más premium y ayudan a cerrar mejor.",
   },
 ];
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(34,211,238,0.18),_transparent_28%),radial-gradient(circle_at_80%_20%,_rgba(15,23,42,0.12),_transparent_22%),linear-gradient(180deg,#07111f_0%,#0f172a_46%,#f8fafc_46%,#f8fafc_100%)] text-slate-950">
-      <section className="mx-auto flex w-full max-w-7xl flex-col gap-10 px-6 py-6 lg:px-10">
-        <header className="rounded-[2rem] border border-white/10 bg-slate-950/90 px-6 py-5 text-white shadow-2xl shadow-slate-950/30 backdrop-blur">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+    <main className="min-h-screen bg-[#091427] text-white">
+      <section className="mx-auto flex w-full max-w-[1240px] flex-col gap-8 px-4 py-4 sm:px-6 lg:px-8">
+        <header className="rounded-[28px] border border-white/10 bg-[#0d1a33]/95 px-5 py-4 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-400 text-lg font-black text-slate-950">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 text-sm font-black text-slate-950 shadow-lg shadow-cyan-500/25">
                 {brandShort}
               </div>
               <div>
-                <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">SaaS para talleres de reparación</p>
-                <h1 className="mt-1 text-2xl font-semibold tracking-tight">{productName}</h1>
-                <p className="mt-1 max-w-2xl text-sm text-slate-300">
-                  Vende más servicio, organiza mejor la operación y sigue cada orden con una plataforma pensada para talleres de celulares, computadoras y electrónica.
+                <p className="text-[11px] font-semibold uppercase tracking-[0.38em] text-cyan-300/90">
+                  SaaS multi-tenant para talleres
+                </p>
+                <p className="mt-1 text-sm text-slate-300">
+                  Operación, clientes, inventario y finanzas en un solo sistema.
                 </p>
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-3 text-sm">
-              <a className="rounded-full bg-cyan-400 px-5 py-3 font-semibold text-slate-950 transition hover:bg-cyan-300" href="/onboarding">
-                Probar gratis
+            <nav className="flex flex-wrap items-center gap-3 text-sm">
+              <a className="rounded-full px-4 py-2 text-slate-300 transition hover:bg-white/5 hover:text-white" href="#features">
+                Características
               </a>
-              <a className="rounded-full border border-cyan-300 px-5 py-3 font-semibold text-cyan-100 transition hover:bg-white/10" href={loginUrl}>
-                Iniciar sesión
+              <a className="rounded-full px-4 py-2 text-slate-300 transition hover:bg-white/5 hover:text-white" href="#plans">
+                Planes
               </a>
-              <a className="rounded-full border border-white/20 px-5 py-3 font-semibold text-white transition hover:bg-white/10" href="#pricing">
-                Ver precios
+              <a className="rounded-full px-4 py-2 text-slate-300 transition hover:bg-white/5 hover:text-white" href="#testimonials">
+                Testimonios
               </a>
-            </div>
+              <a className="rounded-full bg-blue-500 px-5 py-3 font-semibold text-white transition hover:bg-blue-400" href="/onboarding">
+                Crear cuenta
+              </a>
+            </nav>
           </div>
         </header>
 
-        <section className="grid gap-8 rounded-[2.5rem] border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/60 lg:grid-cols-[1.08fr_0.92fr] lg:p-10">
-          <div className="flex flex-col justify-center gap-7">
-            <div className="inline-flex w-fit items-center gap-2 rounded-full bg-cyan-50 px-4 py-2 text-sm font-medium text-cyan-900">
-              <span className="h-2 w-2 rounded-full bg-cyan-500" />
-              Prueba gratis disponible
+        <section className="relative overflow-hidden rounded-[36px] border border-white/10 bg-[radial-gradient(circle_at_top,rgba(37,99,235,0.22),transparent_35%),linear-gradient(180deg,#0b1730_0%,#091427_100%)] px-5 py-12 shadow-[0_30px_120px_rgba(0,0,0,0.45)] sm:px-8 lg:px-12 lg:py-16">
+          <div className="absolute inset-0 opacity-35 [background-image:linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] [background-size:64px_64px] [mask-image:linear-gradient(to_bottom,black,transparent_90%)]" />
+          <div className="relative z-10 flex flex-col items-center text-center">
+            <div className="mb-6 flex flex-wrap justify-center gap-2">
+              {chips.map((chip) => (
+                <span
+                  key={chip}
+                  className="rounded-full border border-white/10 bg-white/6 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-slate-200 shadow-lg shadow-black/10"
+                >
+                  {chip}
+                </span>
+              ))}
             </div>
 
-            <div className="space-y-5">
-              <h2 className="max-w-3xl text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
-                La portada que convierte visitantes en demos, y demos en cierres para talleres de celulares y computadoras.
-              </h2>
-              <p className="max-w-2xl text-lg leading-8 text-slate-600">
-                {productName} presenta una oferta clara para talleres de reparación: qué resuelve, cuánto cuesta y cómo empezar hoy. Sin humo, sin vaguedades y sin dejar dudas de que es un SaaS real.
+            <div className="max-w-5xl">
+              <p className="mx-auto mb-5 inline-flex rounded-full border border-cyan-400/25 bg-cyan-400/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.32em] text-cyan-200">
+                Operación real, no promesas vacías
               </p>
+              <h1 className="text-balance text-5xl font-black uppercase leading-[0.92] tracking-[-0.04em] text-white sm:text-6xl lg:text-7xl">
+                Convierte tu taller
+                <br />
+                en una
+                <span className="block text-transparent bg-gradient-to-r from-orange-400 via-orange-500 to-yellow-300 bg-clip-text">
+                  operación profesional
+                </span>
+              </h1>
+              <p className="mx-auto mt-6 max-w-3xl text-base leading-8 text-slate-300 sm:text-lg">
+                {productName} centraliza recepción, seguimiento, inventario, clientes y finanzas en una sola plataforma para talleres
+                modernos. Todo conectado a sistemas reales y preparado para crecer.
+              </p>
+
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+                <a className="rounded-full bg-blue-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-400" href="/onboarding">
+                  Comenzar ahora
+                </a>
+                <a
+                  className="rounded-full border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+                  href={demoUrl ?? "#plans"}
+                >
+                  Ver demo
+                </a>
+                <a className="rounded-full border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/5" href={loginUrl}>
+                  Iniciar sesión
+                </a>
+              </div>
             </div>
 
-            <div className="flex flex-wrap gap-3">
-              <a className="rounded-full bg-slate-950 px-5 py-3 font-semibold text-white transition hover:bg-slate-800" href="/onboarding">
-                Comenzar prueba
-              </a>
-              <a className="rounded-full border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50" href={loginUrl}>
-                Iniciar sesión
-              </a>
-              <a className="rounded-full border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50" href={demoUrl ?? "#contact"}>
-                Pedir demo
-              </a>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-3">
-              {proofPoints.map((point) => (
-                <div key={point} className="rounded-2xl bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">
-                  {point}
-                </div>
+            <div className="mt-12 grid w-full gap-4 sm:grid-cols-3">
+              {metrics.map((metric) => (
+                <article
+                  key={metric.label}
+                  className="rounded-[24px] border border-white/10 bg-white/5 px-6 py-7 shadow-[0_12px_50px_rgba(0,0,0,0.22)]"
+                >
+                  <p className="text-4xl font-black tracking-tight text-white sm:text-5xl">{metric.value}</p>
+                  <p className="mt-3 text-sm font-semibold uppercase tracking-[0.22em] text-slate-300">{metric.label}</p>
+                </article>
               ))}
             </div>
           </div>
+        </section>
 
-          <aside className="rounded-[2rem] bg-slate-950 p-5 text-white shadow-2xl shadow-slate-950/25">
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-              <p className="text-sm uppercase tracking-[0.3em] text-cyan-300">Por qué compra un taller</p>
-              <div className="mt-4 space-y-3">
-                {outcomes.map((item) => (
-                  <div key={item} className="rounded-2xl bg-white/10 p-4">
-                    <p className="text-sm text-slate-300">Beneficio real</p>
-                    <p className="mt-1 font-semibold">{item}</p>
+        <section
+          id="features"
+          className="grid gap-8 rounded-[36px] border border-white/10 bg-[#0b1730] px-5 py-8 shadow-[0_18px_80px_rgba(0,0,0,0.3)] lg:grid-cols-[1.05fr_0.95fr] lg:px-10 lg:py-10"
+        >
+          <div className="space-y-6">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-cyan-300">Características</p>
+              <h2 className="mt-3 max-w-2xl text-4xl font-black tracking-[-0.04em] text-white sm:text-5xl">
+                Te presentamos nuestras características
+              </h2>
+              <p className="mt-4 max-w-2xl text-base leading-8 text-slate-300">
+                Personaliza la forma en que llevas el control de tu negocio con una plataforma completamente moldeable a tu
+                necesidad.
+              </p>
+            </div>
+
+            <ul className="space-y-4">
+              {features.map((feature) => (
+                <li key={feature} className="flex items-start gap-3 rounded-2xl border border-white/8 bg-white/4 px-4 py-4">
+                  <span className="mt-1 h-3 w-3 rounded-full bg-blue-500 shadow-[0_0_18px_rgba(59,130,246,0.65)]" />
+                  <span className="text-sm font-semibold text-slate-100 sm:text-base">{feature}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="relative overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))] p-4">
+            <div className="rounded-[24px] border border-white/10 bg-[#101d39] p-5 shadow-inner shadow-black/30">
+              <div className="rounded-3xl border border-white/10 bg-[#0b1730] p-5">
+                <div className="mb-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-cyan-300">Vista operativa</p>
+                    <p className="mt-2 text-2xl font-black tracking-tight text-white">Panel completo</p>
                   </div>
-                ))}
+                  <div className="rounded-full bg-blue-500/15 px-3 py-1 text-xs font-semibold text-blue-200">En vivo</div>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {[
+                    ["Recepción", "Ordenes y clientes"],
+                    ["Inventario", "Stock y compras"],
+                    ["Finanzas", "Pagos y cortes"],
+                    ["Notificaciones", "WhatsApp y alertas"],
+                  ].map(([title, desc]) => (
+                    <div key={title} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                      <p className="text-sm font-semibold text-white">{title}</p>
+                      <p className="mt-1 text-sm text-slate-300">{desc}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-          </aside>
+          </div>
         </section>
 
-        <section className="grid gap-4 md:grid-cols-3">
-          {results.map((item) => (
-            <article key={item.title} className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
-              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-cyan-700">Impacto</p>
-              <h3 className="mt-3 text-2xl font-semibold text-slate-950">{item.title}</h3>
-              <p className="mt-3 leading-7 text-slate-600">{item.text}</p>
-            </article>
-          ))}
-        </section>
-
-        <section id="pricing" className="space-y-6">
-          <div className="max-w-2xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.28em] text-cyan-700">Precios</p>
-            <h3 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">
-              Paquetes claros para cerrar más rápido.
-            </h3>
-            <p className="mt-4 text-lg leading-8 text-slate-600">
-              Los precios salen de variables de entorno. Si no están configurados, el sitio lo muestra de forma explícita para no inventar cifras.
+        <section id="plans" className="space-y-6 rounded-[36px] border border-white/10 bg-[#0b1730] px-5 py-8 lg:px-10 lg:py-10">
+          <div className="max-w-3xl">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-cyan-300">Planes de pago</p>
+            <h2 className="mt-3 text-4xl font-black tracking-[-0.04em] text-white sm:text-5xl">Elige el nivel de control que necesita tu taller</h2>
+            <p className="mt-4 text-base leading-8 text-slate-300">
+              Cada plan está pensado para una etapa distinta de operación. Los precios están definidos para mostrar claridad comercial desde
+              el primer vistazo.
             </p>
           </div>
 
           <div className="grid gap-5 lg:grid-cols-3">
-            {plans.map((plan) => (
+            {planItems.map((plan) => (
               <article
                 key={plan.name}
-                className={`flex h-full flex-col rounded-[1.9rem] border p-6 shadow-sm ${
+                className={[
+                  "relative flex h-full flex-col rounded-[28px] border p-6 shadow-[0_18px_70px_rgba(0,0,0,0.28)]",
                   plan.featured
-                    ? "border-cyan-300 bg-slate-950 text-white shadow-2xl shadow-cyan-950/20"
-                    : "border-slate-200 bg-white text-slate-950"
-                }`}
+                    ? "border-orange-400/50 bg-[linear-gradient(180deg,rgba(249,115,22,0.16),rgba(16,29,57,0.96))] ring-1 ring-orange-400/30"
+                    : "border-white/10 bg-[#101d39]",
+                ].join(" ")}
               >
-                <p className={`text-sm font-semibold uppercase tracking-[0.2em] ${plan.featured ? "text-cyan-300" : "text-cyan-700"}`}>
-                  {plan.name}
-                </p>
-                <h4 className="mt-3 text-3xl font-semibold tracking-tight">{plan.price}</h4>
-                <p className={`mt-3 leading-7 ${plan.featured ? "text-slate-300" : "text-slate-600"}`}>{plan.description}</p>
-                <ul className="mt-6 space-y-3 text-sm">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-cyan-300">{plan.name}</p>
+                    <h3 className="mt-2 text-2xl font-black tracking-tight text-white">{plan.accent}</h3>
+                  </div>
+                  {plan.featured ? (
+                    <span className="rounded-full bg-orange-400 px-3 py-1 text-xs font-black uppercase tracking-[0.2em] text-slate-950">
+                      Más vendido
+                    </span>
+                  ) : null}
+                </div>
+
+                <p className="mt-4 text-sm leading-7 text-slate-300">{plan.subtitle}</p>
+                <p className="mt-4 text-5xl font-black tracking-tight text-white">{plan.price}</p>
+                <p className="mt-3 text-sm leading-7 text-slate-300">{plan.body}</p>
+
+                <ul className="mt-6 space-y-3">
                   {plan.features.map((feature) => (
-                    <li key={feature} className="flex gap-3">
-                      <span className={`mt-1 h-2 w-2 rounded-full ${plan.featured ? "bg-cyan-300" : "bg-cyan-500"}`} />
-                      <span className={plan.featured ? "text-slate-200" : "text-slate-700"}>{feature}</span>
+                    <li key={feature} className="flex items-center gap-3 text-sm text-slate-100">
+                      <span className={`h-2.5 w-2.5 rounded-full ${plan.featured ? "bg-orange-400" : "bg-cyan-300"}`} />
+                      {feature}
                     </li>
                   ))}
                 </ul>
+
                 <a
-                  className={`mt-8 rounded-full px-5 py-3 text-center font-semibold transition ${
+                  className={[
+                    "mt-8 rounded-full px-5 py-3 text-center text-sm font-semibold transition",
                     plan.featured
-                      ? "bg-cyan-400 text-slate-950 hover:bg-cyan-300"
-                      : "bg-slate-950 text-white hover:bg-slate-800"
-                  }`}
+                      ? "bg-orange-400 text-slate-950 hover:bg-orange-300"
+                      : "border border-white/10 bg-white/5 text-white hover:bg-white/10",
+                  ].join(" ")}
                   href="/onboarding"
                 >
                   {plan.cta}
@@ -242,106 +298,104 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="grid gap-6 rounded-[2.5rem] border border-slate-200 bg-slate-950 p-6 text-white shadow-xl shadow-slate-950/25 lg:grid-cols-[0.9fr_1.1fr] lg:p-10">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.28em] text-cyan-300">Cómo vende</p>
-            <h3 className="mt-3 text-3xl font-semibold tracking-tight">
-              Un visitante necesita entender el valor en menos de 10 segundos.
-            </h3>
-            <p className="mt-4 leading-8 text-slate-300">
-              Esta estructura empuja a la acción con una jerarquía comercial real: problema, beneficio, precio, prueba y contacto.
+        <section
+          id="testimonials"
+          className="rounded-[36px] border border-white/10 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.18),transparent_34%),linear-gradient(180deg,#0b1730_0%,#091427_100%)] px-5 py-8 lg:px-10 lg:py-10"
+        >
+          <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-cyan-300">Prueba social</p>
+              <h2 className="mt-3 text-4xl font-black tracking-[-0.04em] text-white sm:text-5xl">Lo que el mercado ve cuando la página vende bien</h2>
+            </div>
+            <p className="max-w-xl text-base leading-8 text-slate-300">
+              Los bloques de prueba social están puestos para reforzar confianza, precio y claridad comercial, como en la referencia.
             </p>
           </div>
 
-          <div className="grid gap-4">
-            {[
-              "Hero con promesa clara y CTA primario",
-              "Bloque de precio visible sin rodeos",
-              "Beneficios concretos y diferenciadores",
-              "FAQ para resolver objeciones antes de vender",
-            ].map((step, index) => (
-              <div key={step} className="flex gap-4 rounded-3xl border border-white/10 bg-white/5 p-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cyan-400 font-bold text-slate-950">
-                  0{index + 1}
+          <div className="grid gap-4 lg:grid-cols-3">
+            {testimonials.map((item) => (
+              <article key={item.name} className="rounded-[28px] border border-white/10 bg-white/6 p-6">
+                <div className="flex gap-1 text-amber-400">
+                  {"★★★★★".split("").map((star, index) => (
+                    <span key={`${item.name}-${index}`}>{star}</span>
+                  ))}
                 </div>
-                <p className="pt-2 text-slate-200">{step}</p>
-              </div>
+                <p className="mt-4 text-sm leading-7 text-slate-200">{item.text}</p>
+                <div className="mt-6 flex items-center gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-white to-slate-300 text-sm font-black text-slate-950">
+                    {item.name.slice(0, 1)}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white">{item.name}</p>
+                    <p className="text-sm text-slate-400">{item.role}</p>
+                  </div>
+                </div>
+              </article>
             ))}
           </div>
         </section>
 
-        <section id="contact" className="grid gap-6 rounded-[2.5rem] border border-slate-200 bg-white p-6 shadow-sm lg:grid-cols-2 lg:p-10">
+        <section
+          id="contact"
+          className="grid gap-5 rounded-[36px] border border-white/10 bg-[#0b1730] px-5 py-8 lg:grid-cols-[0.92fr_1.08fr] lg:px-10 lg:py-10"
+        >
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.28em] text-cyan-700">Contacto y cierre</p>
-            <h3 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">
-              Un SaaS vende mejor cuando la siguiente acción es obvia.
-            </h3>
-            <p className="mt-4 text-lg leading-8 text-slate-600">
-              Si quieres vender desde esta página, deja configurados los precios, el correo y el teléfono. La UI ya está lista para eso.
+            <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-cyan-300">Contacto</p>
+            <h2 className="mt-3 text-4xl font-black tracking-[-0.04em] text-white sm:text-5xl">La siguiente acción debe ser obvia</h2>
+            <p className="mt-4 text-base leading-8 text-slate-300">
+              Si quieres vender desde esta landing, deja configurados el correo, el teléfono y la demo. La página ya está estructurada para
+              cerrar.
             </p>
-            <div className="mt-6 rounded-3xl bg-slate-50 p-5">
-              <p className="text-sm text-slate-500">Razón social</p>
-              <p className="mt-1 text-lg font-semibold text-slate-950">{legalName}</p>
-              <p className="text-sm text-slate-500">{companyId ?? "Configurar NEXT_PUBLIC_SAAS_COMPANY_ID"}</p>
+            <div className="mt-6 rounded-[24px] border border-white/10 bg-white/5 p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.26em] text-slate-400">Razón social</p>
+              <p className="mt-2 text-lg font-semibold text-white">{legalName}</p>
+              <p className="mt-1 text-sm text-slate-400">{companyId ?? "Configurar NEXT_PUBLIC_SAAS_COMPANY_ID"}</p>
             </div>
           </div>
 
           <div className="grid gap-4">
-            <div className="rounded-3xl bg-slate-50 p-5">
-              <p className="text-sm text-slate-500">Email</p>
-              <p className="mt-1 text-lg font-semibold text-slate-950">{contactEmail ?? "Configurar NEXT_PUBLIC_SAAS_CONTACT_EMAIL"}</p>
+            <div className="rounded-[24px] border border-white/10 bg-white/5 p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.26em] text-slate-400">Email</p>
+              <p className="mt-2 text-lg font-semibold text-white">
+                {contactEmail ?? "Configurar NEXT_PUBLIC_SAAS_CONTACT_EMAIL"}
+              </p>
               {contactEmailHref ? (
-                <a className="mt-3 inline-block font-semibold text-cyan-800" href={contactEmailHref}>
+                <a className="mt-3 inline-block text-sm font-semibold text-cyan-300 transition hover:text-cyan-200" href={contactEmailHref}>
                   Escribir correo
                 </a>
               ) : null}
             </div>
-            <div className="rounded-3xl bg-slate-50 p-5">
-              <p className="text-sm text-slate-500">Teléfono</p>
-              <p className="mt-1 text-lg font-semibold text-slate-950">{contactPhone ?? "Configurar NEXT_PUBLIC_SAAS_CONTACT_PHONE"}</p>
+            <div className="rounded-[24px] border border-white/10 bg-white/5 p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.26em] text-slate-400">Teléfono</p>
+              <p className="mt-2 text-lg font-semibold text-white">{contactPhone ?? "Configurar NEXT_PUBLIC_SAAS_CONTACT_PHONE"}</p>
               {contactPhoneHref ? (
-                <a className="mt-3 inline-block font-semibold text-cyan-800" href={contactPhoneHref}>
+                <a className="mt-3 inline-block text-sm font-semibold text-cyan-300 transition hover:text-cyan-200" href={contactPhoneHref}>
                   Llamar ahora
                 </a>
               ) : null}
             </div>
-            <div className="rounded-3xl bg-slate-50 p-5">
-              <p className="text-sm text-slate-500">Demo</p>
-              <p className="mt-1 text-lg font-semibold text-slate-950">{demoUrl ?? "Configurar NEXT_PUBLIC_SAAS_DEMO_URL"}</p>
+            <div className="rounded-[24px] border border-white/10 bg-white/5 p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.26em] text-slate-400">Demo</p>
+              <p className="mt-2 text-lg font-semibold text-white">{demoUrl ?? "Configurar NEXT_PUBLIC_SAAS_DEMO_URL"}</p>
             </div>
           </div>
         </section>
 
-        <section className="grid gap-6 rounded-[2.5rem] border border-slate-200 bg-white p-6 shadow-sm lg:grid-cols-2 lg:p-10">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.28em] text-cyan-700">FAQ</p>
-            <h3 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">Objeciones que la venta ya debe responder.</h3>
-          </div>
-          <div className="space-y-4">
-            {faqs.map((faq) => (
-              <details key={faq.q} className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-                <summary className="cursor-pointer text-lg font-semibold text-slate-950">{faq.q}</summary>
-                <p className="mt-3 leading-7 text-slate-600">{faq.a}</p>
-              </details>
-            ))}
-          </div>
-        </section>
-
-        <footer className="flex flex-col gap-4 border-t border-slate-200 py-6 text-sm text-slate-500 md:flex-row md:items-center md:justify-between">
+        <footer className="flex flex-col gap-4 border-t border-white/10 py-6 text-sm text-slate-400 md:flex-row md:items-center md:justify-between">
           <p>
             © {new Date().getFullYear()} {productName}. {legalName}
           </p>
           <div className="flex flex-wrap gap-4">
-            <a href="#pricing" className="hover:text-slate-800">
-              Precios
+            <a className="transition hover:text-white" href="#plans">
+              Planes
             </a>
-            <a href={loginUrl} className="hover:text-slate-800">
-              Iniciar sesión
-            </a>
-            <a href="#contact" className="hover:text-slate-800">
+            <a className="transition hover:text-white" href="#contact">
               Contacto
             </a>
-            <a href="/onboarding" className="hover:text-slate-800">
+            <a className="transition hover:text-white" href={loginUrl}>
+              Iniciar sesión
+            </a>
+            <a className="transition hover:text-white" href="/onboarding">
               Probar
             </a>
           </div>

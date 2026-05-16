@@ -11,23 +11,38 @@ dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 4000;
-const allowedOrigins = Array.from(
-  new Set(
-    (process.env.CORS_ORIGIN ?? 'http://localhost:3000')
-      .split(',')
-      .concat('https://sdmx-pagina-principal.vercel.app')
-      .map((origin) => origin.trim())
-      .filter(Boolean),
-  ),
-);
+const allowedOrigins = (process.env.CORS_ORIGIN ?? 'http://localhost:3000')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+const baseDomains = (process.env.BASE_DOMAIN ?? 'srfix.mx,sdmx.mx')
+  .split(',')
+  .map((d) => d.trim())
+  .filter(Boolean);
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin) {
-      return callback(null, true);
+    if (!origin) return callback(null, true);
+    let hostname = '';
+    try {
+      hostname = new URL(origin).hostname;
+    } catch {
+      hostname = origin || '';
     }
 
-    if (allowedOrigins.includes(origin)) {
+    const allowedHostnames = allowedOrigins.map((o) => {
+      try {
+        return new URL(o).hostname;
+      } catch {
+        return o;
+      }
+    });
+
+    const isWildcardAllowed = baseDomains.some((domain) => hostname === domain || hostname.endsWith(`.${domain}`));
+
+    const isAllowed = allowedHostnames.includes(hostname) || isWildcardAllowed || hostname.includes('localhost');
+    if (isAllowed) {
       return callback(null, true);
     }
 
@@ -37,15 +52,25 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Routes
 app.use('/api/auth', authRouter);
+app.use('/api/:tenantId/auth', authRouter); // Support for tenant-prefixed auth
+
 app.use('/api/:tenantId/orders', ordersRouter);
 app.use('/api/orders', ordersRouter);
+
 app.use('/api/:tenantId/finance', financeRouter);
 app.use('/api/finance', financeRouter);
+
 app.use('/api/:tenantId/customers', customersRouter);
 app.use('/api/customers', customersRouter);
+
 app.use('/api/:tenantId/inventory', inventoryRouter);
 app.use('/api/inventory', inventoryRouter);
+
+app.get('/healthz', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
 app.get('/', (req, res) => {
   const apiName = process.env.API_NAME ?? 'White-label API';
