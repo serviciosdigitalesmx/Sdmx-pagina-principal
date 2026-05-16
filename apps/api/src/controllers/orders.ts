@@ -57,7 +57,7 @@ export const createOrder = async (req: Request, res: Response) => {
       message: 'Orden creada exitosamente',
       data,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
         error: 'Datos de validación incorrectos',

@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { SaveOnboardingToken } from './save-onboarding-token';
 
+const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN ?? 'srfix.mx';
+
 export default function OnboardingSuccessPage({
   searchParams,
 }: {
@@ -25,9 +27,17 @@ export default function OnboardingSuccessPage({
           Si quieres seguir probando, abre el panel del taller con la misma sesión.
         </div>
         <div className="flex flex-wrap gap-3">
+          {searchParams.tenant ? (
+            <Link
+              href={`https://${searchParams.tenant}.${baseDomain}`}
+              className="rounded-full bg-cyan-600 px-8 py-3 font-semibold text-white shadow-lg shadow-cyan-200 transition hover:bg-cyan-500"
+            >
+              Ir a mi taller
+            </Link>
+          ) : null}
           <Link
             href="/"
-            className="rounded-full bg-slate-950 px-5 py-3 font-semibold text-white transition hover:bg-slate-800"
+            className="rounded-full bg-slate-100 px-6 py-3 font-semibold text-slate-700 transition hover:bg-slate-200"
           >
             Volver al inicio
           </Link>
