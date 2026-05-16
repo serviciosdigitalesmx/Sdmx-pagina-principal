@@ -1,12 +1,11 @@
-const productName = process.env.NEXT_PUBLIC_SAAS_BRAND_NAME ?? "Servicios Digitales MX";
-const legalName =
-  process.env.NEXT_PUBLIC_SAAS_LEGAL_NAME ?? "Razón social disponible bajo solicitud";
-const brandShort = process.env.NEXT_PUBLIC_SAAS_BRAND_SHORT ?? "SDMX";
+const productName = process.env.NEXT_PUBLIC_SAAS_BRAND_NAME ?? "FIXI";
+const legalName = process.env.NEXT_PUBLIC_SAAS_LEGAL_NAME ?? "Servicios Digitales MX";
+const brandShort = process.env.NEXT_PUBLIC_SAAS_BRAND_SHORT ?? "FXI";
 
 const demoUrl = process.env.NEXT_PUBLIC_SAAS_DEMO_URL;
 const loginUrl = "/login";
 const companyId = process.env.NEXT_PUBLIC_SAAS_COMPANY_ID;
-const contactEmail = process.env.NEXT_PUBLIC_SAAS_CONTACT_EMAIL;
+const contactEmail = process.env.NEXT_PUBLIC_SAAS_CONTACT_EMAIL ?? "FIXI@SERVICIOSDIGITALESMX.COM";
 const contactPhone = process.env.NEXT_PUBLIC_SAAS_CONTACT_PHONE;
 
 const starterPrice = process.env.NEXT_PUBLIC_SAAS_STARTER_PRICE ?? "$300 MXN";
@@ -15,6 +14,7 @@ const enterprisePrice = process.env.NEXT_PUBLIC_SAAS_ENTERPRISE_PRICE ?? "$600 M
 
 const contactEmailHref = contactEmail ? `mailto:${contactEmail}` : undefined;
 const contactPhoneHref = contactPhone ? `tel:${contactPhone.replace(/\s+/g, "")}` : undefined;
+const demoHref = demoUrl ?? contactEmailHref ?? "#contact";
 
 const chips = ["Facturación", "Inventario", "Clientes", "WhatsApp", "Finanzas", "Rastreo", "Reportes", "Soporte"];
 
@@ -148,7 +148,7 @@ export default function Home() {
               </h1>
               <p className="mx-auto mt-6 max-w-3xl text-base leading-8 text-slate-300 sm:text-lg">
                 {productName} centraliza recepción, seguimiento, inventario, clientes y finanzas en una sola plataforma para talleres
-                modernos. Todo conectado a sistemas reales y preparado para crecer.
+                que necesitan orden, visibilidad y atención profesional desde el primer contacto.
               </p>
 
               <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
@@ -157,9 +157,9 @@ export default function Home() {
                 </a>
                 <a
                   className="rounded-full border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
-                  href={demoUrl ?? "#plans"}
+                  href={demoHref}
                 >
-                  Ver demo
+                  Solicitar demo
                 </a>
                 <a className="rounded-full border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/5" href={loginUrl}>
                   Iniciar sesión
@@ -189,11 +189,11 @@ export default function Home() {
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-cyan-300">Características</p>
               <h2 className="mt-3 max-w-2xl text-4xl font-black tracking-[-0.04em] text-white sm:text-5xl">
-                Te presentamos nuestras características
+                Todo lo que necesitas para operar con orden
               </h2>
               <p className="mt-4 max-w-2xl text-base leading-8 text-slate-300">
-                Personaliza la forma en que llevas el control de tu negocio con una plataforma completamente moldeable a tu
-                necesidad.
+                Diseñamos la plataforma para que puedas atender clientes, registrar órdenes y dar seguimiento sin depender de hojas sueltas
+                o mensajes perdidos.
               </p>
             </div>
 
@@ -308,7 +308,7 @@ export default function Home() {
               <h2 className="mt-3 text-4xl font-black tracking-[-0.04em] text-white sm:text-5xl">Lo que el mercado ve cuando la página vende bien</h2>
             </div>
             <p className="max-w-xl text-base leading-8 text-slate-300">
-              Los bloques de prueba social están puestos para reforzar confianza, precio y claridad comercial, como en la referencia.
+              Opiniones y resultados que ayudan a que un taller nuevo entienda rápidamente el valor del sistema y su forma de trabajo.
             </p>
           </div>
 
@@ -341,24 +341,22 @@ export default function Home() {
         >
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-cyan-300">Contacto</p>
-            <h2 className="mt-3 text-4xl font-black tracking-[-0.04em] text-white sm:text-5xl">La siguiente acción debe ser obvia</h2>
+            <h2 className="mt-3 text-4xl font-black tracking-[-0.04em] text-white sm:text-5xl">Contacta al equipo correcto</h2>
             <p className="mt-4 text-base leading-8 text-slate-300">
-              Si quieres vender desde esta landing, deja configurados el correo, el teléfono y la demo. La página ya está estructurada para
-              cerrar.
+              Si quieres conocer FIXI o agendar una demo, usa los canales oficiales de contacto. La experiencia ya está preparada para
+              responder de forma clara y directa.
             </p>
             <div className="mt-6 rounded-[24px] border border-white/10 bg-white/5 p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.26em] text-slate-400">Razón social</p>
               <p className="mt-2 text-lg font-semibold text-white">{legalName}</p>
-              <p className="mt-1 text-sm text-slate-400">{companyId ?? "Configurar NEXT_PUBLIC_SAAS_COMPANY_ID"}</p>
+              {companyId ? <p className="mt-1 text-sm text-slate-400">{companyId}</p> : null}
             </div>
           </div>
 
           <div className="grid gap-4">
             <div className="rounded-[24px] border border-white/10 bg-white/5 p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.26em] text-slate-400">Email</p>
-              <p className="mt-2 text-lg font-semibold text-white">
-                {contactEmail ?? "Configurar NEXT_PUBLIC_SAAS_CONTACT_EMAIL"}
-              </p>
+              <p className="mt-2 text-lg font-semibold text-white">{contactEmail}</p>
               {contactEmailHref ? (
                 <a className="mt-3 inline-block text-sm font-semibold text-cyan-300 transition hover:text-cyan-200" href={contactEmailHref}>
                   Escribir correo
@@ -367,7 +365,7 @@ export default function Home() {
             </div>
             <div className="rounded-[24px] border border-white/10 bg-white/5 p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.26em] text-slate-400">Teléfono</p>
-              <p className="mt-2 text-lg font-semibold text-white">{contactPhone ?? "Configurar NEXT_PUBLIC_SAAS_CONTACT_PHONE"}</p>
+              <p className="mt-2 text-lg font-semibold text-white">{contactPhone ?? "Disponible por correo"}</p>
               {contactPhoneHref ? (
                 <a className="mt-3 inline-block text-sm font-semibold text-cyan-300 transition hover:text-cyan-200" href={contactPhoneHref}>
                   Llamar ahora
@@ -376,7 +374,10 @@ export default function Home() {
             </div>
             <div className="rounded-[24px] border border-white/10 bg-white/5 p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.26em] text-slate-400">Demo</p>
-              <p className="mt-2 text-lg font-semibold text-white">{demoUrl ?? "Configurar NEXT_PUBLIC_SAAS_DEMO_URL"}</p>
+              <p className="mt-2 text-lg font-semibold text-white">{demoUrl ?? "Solicítala por correo"}</p>
+              <a className="mt-3 inline-block text-sm font-semibold text-cyan-300 transition hover:text-cyan-200" href={demoHref}>
+                Solicitar demo
+              </a>
             </div>
           </div>
         </section>
