@@ -15,6 +15,11 @@ const enterprisePrice = process.env.NEXT_PUBLIC_SAAS_ENTERPRISE_PRICE ?? "$600 M
 const contactEmailHref = contactEmail ? `mailto:${contactEmail}` : undefined;
 const contactPhoneHref = contactPhone ? `tel:${contactPhone.replace(/\s+/g, "")}` : undefined;
 const demoHref = demoUrl ?? contactEmailHref ?? "#contact";
+const demoMailtoHref = contactEmail
+  ? `mailto:${contactEmail}?subject=${encodeURIComponent("Solicitud de demo FIXI")}&body=${encodeURIComponent(
+      "Hola, quiero agendar una demo de FIXI. ¿Me pueden compartir disponibilidad?"
+    )}`
+  : "#contact";
 
 const chips = ["Facturación", "Inventario", "Clientes", "WhatsApp", "Finanzas", "Rastreo", "Reportes", "Soporte"];
 
@@ -147,8 +152,8 @@ export default function Home() {
                 </span>
               </h1>
               <p className="mx-auto mt-6 max-w-3xl text-base leading-8 text-slate-300 sm:text-lg">
-                {productName} centraliza recepción, seguimiento, inventario, clientes y finanzas en una sola plataforma para talleres
-                que necesitan orden, visibilidad y atención profesional desde el primer contacto.
+                {productName} centraliza recepción, seguimiento, inventario, clientes y finanzas en una sola plataforma para talleres que
+                necesitan orden, visibilidad y atención profesional desde el primer contacto.
               </p>
 
               <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
@@ -157,7 +162,7 @@ export default function Home() {
                 </a>
                 <a
                   className="rounded-full border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
-                  href={demoHref}
+                  href={demoMailtoHref}
                 >
                   Solicitar demo
                 </a>
@@ -364,18 +369,22 @@ export default function Home() {
               ) : null}
             </div>
             <div className="rounded-[24px] border border-white/10 bg-white/5 p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.26em] text-slate-400">Teléfono</p>
-              <p className="mt-2 text-lg font-semibold text-white">{contactPhone ?? "Disponible por correo"}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.26em] text-slate-400">Atención</p>
+              <p className="mt-2 text-lg font-semibold text-white">{contactPhone ?? "Atención por correo"}</p>
               {contactPhoneHref ? (
                 <a className="mt-3 inline-block text-sm font-semibold text-cyan-300 transition hover:text-cyan-200" href={contactPhoneHref}>
                   Llamar ahora
                 </a>
-              ) : null}
+              ) : (
+                <a className="mt-3 inline-block text-sm font-semibold text-cyan-300 transition hover:text-cyan-200" href={contactEmailHref ?? "#contact"}>
+                  Escribir correo
+                </a>
+              )}
             </div>
             <div className="rounded-[24px] border border-white/10 bg-white/5 p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.26em] text-slate-400">Demo</p>
               <p className="mt-2 text-lg font-semibold text-white">{demoUrl ?? "Solicítala por correo"}</p>
-              <a className="mt-3 inline-block text-sm font-semibold text-cyan-300 transition hover:text-cyan-200" href={demoHref}>
+              <a className="mt-3 inline-block text-sm font-semibold text-cyan-300 transition hover:text-cyan-200" href={demoMailtoHref}>
                 Solicitar demo
               </a>
             </div>
