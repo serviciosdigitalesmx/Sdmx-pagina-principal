@@ -13,6 +13,13 @@ class FixService {
   }
 
   private get tenantId() {
+    if (typeof window !== 'undefined') {
+      const host = window.location.host;
+      // Extract subdomain as tenant if not on localhost
+      if (host.includes('.') && !host.includes('localhost') && !host.includes('vercel.app')) {
+        return host.split('.')[0];
+      }
+    }
     return process.env.NEXT_PUBLIC_DEFAULT_TENANT_ID || 'tenant-local';
   }
 
