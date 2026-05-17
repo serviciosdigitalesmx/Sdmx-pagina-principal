@@ -20,3 +20,4 @@ server/.env
 .idea/
 .DS_Store
 .vercel
+.turbo/

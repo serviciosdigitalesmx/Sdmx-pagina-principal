@@ -2,6 +2,7 @@
 
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
+import { saveAuthToken } from "@/lib/auth-storage";
 
 type LoginState = {
   email: string;
@@ -47,7 +48,7 @@ export default function LoginPage() {
       }
 
       if (data.session?.access_token) {
-        window.localStorage.setItem("auth_token", data.session.access_token);
+        saveAuthToken(data.session.access_token);
       }
 
       window.location.assign(getDashboardRedirectUrl());

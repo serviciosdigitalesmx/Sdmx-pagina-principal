@@ -5,9 +5,9 @@ type ApiListResponse<T> = {
   data: T;
 };
 
-class FixService {
-  private tokenKey = process.env.NEXT_PUBLIC_AUTH_TOKEN_KEY ?? 'app_auth_token';
+import { AUTH_TOKEN_KEY } from "@/lib/auth-storage";
 
+class FixService {
   private get apiUrl() {
     return (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000').replace(/\/$/, '');
   }
@@ -27,7 +27,7 @@ class FixService {
     if (typeof window === 'undefined') {
       return process.env.NEXT_PUBLIC_DEFAULT_API_TOKEN || '';
     }
-    return window.sessionStorage.getItem(this.tokenKey) || process.env.NEXT_PUBLIC_DEFAULT_API_TOKEN || '';
+    return window.localStorage.getItem(AUTH_TOKEN_KEY) || process.env.NEXT_PUBLIC_DEFAULT_API_TOKEN || '';
   }
 
   private async request<T>(path: string, init: RequestInit = {}): Promise<T> {
