@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { getBrowserSupabaseClient } from '@/lib/supabase-browser';
+import { saveAuthToken } from '@/lib/auth-storage';
 
 type GoogleSessionState = {
   email: string;
@@ -131,7 +132,7 @@ export default function GoogleCallbackPage() {
       }
 
       if (payload?.token) {
-        window.localStorage.setItem('auth_token', payload.token);
+        saveAuthToken(payload.token);
       }
 
       if (payload?.redirectUrl) {

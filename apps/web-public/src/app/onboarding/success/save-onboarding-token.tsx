@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect } from 'react';
+import { saveAuthToken } from '@/lib/auth-storage';
 
 export function SaveOnboardingToken({ token }: { token?: string }) {
   useEffect(() => {
     if (token) {
-      window.localStorage.setItem('auth_token', token);
+      saveAuthToken(token);
     }
   }, [token]);
 
