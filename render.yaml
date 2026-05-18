@@ -10,9 +10,13 @@ services:
         value: production
       - key: PORT
         value: 10000
-      - key: CORS_ORIGIN
+      - key: CORS_ALLOWED_ORIGINS
         sync: false
-      - key: PUBLIC_APP_URL
+      - key: APP_URL
+        sync: false
+      - key: BACKEND_PUBLIC_URL
+        sync: false
+      - key: WEBHOOK_BASE_URL
         sync: false
       - key: BASE_DOMAIN
         sync: false

@@ -28,7 +28,10 @@
 1. Configura `apps/api` como servicio Node.js.
 2. Define estas variables de entorno:
    - `PORT`
-   - `CORS_ORIGIN`
+   - `CORS_ALLOWED_ORIGINS`
+   - `APP_URL`
+   - `BACKEND_PUBLIC_URL`
+   - `WEBHOOK_BASE_URL`
    - `BASE_DOMAIN`
    - `JWT_SECRET`
    - `SUPABASE_URL`

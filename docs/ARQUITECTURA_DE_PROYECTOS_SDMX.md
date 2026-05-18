@@ -349,7 +349,9 @@ Cada ambiente debe tener:
 
 Se debe manejar un `.env.example` con al menos:
 
-- `NEXT_PUBLIC_APP_URL`
+- `NEXT_PUBLIC_API_URL`
+- `APP_URL`
+- `CORS_ALLOWED_ORIGINS`
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `API_BASE_URL`
