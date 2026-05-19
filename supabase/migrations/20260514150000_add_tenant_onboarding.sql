@@ -40,6 +40,38 @@ create unique index if not exists users_tenant_auth_uidx
 create unique index if not exists users_tenant_email_uidx
   on public.users (tenant_id, lower(email));
 
+alter table public.service_orders
+  add column if not exists folio text;
+
+create unique index if not exists service_orders_folio_uidx
+  on public.service_orders (tenant_id, folio)
+  where folio is not null;
+
+create table if not exists public.service_requests (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid not null references public.organizations(id) on delete cascade,
+  folio text not null,
+  customer_name text not null,
+  customer_phone text not null,
+  customer_email text,
+  device_type text not null,
+  device_model text not null,
+  issue_description text not null,
+  status text not null default 'pendiente',
+  quoted_total numeric(12,2) not null default 0,
+  deposit_amount numeric(12,2) not null default 0,
+  balance_amount numeric(12,2) not null default 0,
+  solicitud_origen_ip text,
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now())
+);
+
+create index if not exists service_requests_tenant_idx
+  on public.service_requests (tenant_id, created_at desc);
+
+create unique index if not exists service_requests_tenant_folio_uidx
+  on public.service_requests (tenant_id, folio);
+
 alter table public.users enable row level security;
 
 create or replace function public.create_tenant_transaction(
@@ -61,6 +93,7 @@ as $$
 declare
   v_slug text;
   v_tenant_id uuid;
+  v_org_id uuid;
   v_trial_expires_at timestamptz := timezone('utc', now()) + interval '14 days';
 begin
   if p_user_id is null then
@@ -86,24 +119,19 @@ begin
     v_slug := v_slug || '-' || substr(replace(gen_random_uuid()::text, '-', ''), 1, 6);
   end loop;
 
+  v_tenant_id := gen_random_uuid();
+  v_org_id := v_tenant_id;
+
   insert into public.tenants (
+    id,
     name,
     slug,
-    status,
-    plan,
-    contact_name,
-    contact_email,
-    contact_phone,
     trial_expires_at,
     branding
   ) values (
+    v_tenant_id,
     p_workshop_name,
     v_slug,
-    'active',
-    'starter',
-    p_workshop_name,
-    p_email,
-    p_phone,
     v_trial_expires_at,
     jsonb_build_object(
       'primaryColor', '#0066ff',
@@ -112,6 +140,22 @@ begin
     )
   )
   returning id into v_tenant_id;
+
+  insert into public.organizations (
+    id,
+    name,
+    slug,
+    subscription_status
+  ) values (
+    v_org_id,
+    p_workshop_name,
+    v_slug,
+    'trial'
+  )
+  on conflict (id) do update
+  set name = excluded.name,
+      slug = excluded.slug,
+      subscription_status = excluded.subscription_status;
 
   insert into public.users (
     tenant_id,

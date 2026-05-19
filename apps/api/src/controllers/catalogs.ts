@@ -6,7 +6,6 @@ const createCustomerSchema = z.object({
   name: z.string().min(1),
   phone: z.string().min(10),
   email: z.string().email().optional().or(z.literal('')),
-  branchId: z.string().min(1).optional(),
 });
 
 const createInventorySchema = z.object({
@@ -23,7 +22,7 @@ export const listCustomers = async (req: Request, res: Response) => {
     const supabase = getTenantClient(tenantId);
     const { data, error } = await supabase
       .from('customers')
-      .select('*')
+      .select('id, tenant_id, name, phone, email, created_at')
       .eq('tenant_id', tenantId)
       .order('created_at', { ascending: false })
       .limit(100);
@@ -46,8 +45,7 @@ export const createCustomer = async (req: Request, res: Response) => {
       name: body.name,
       phone: body.phone,
       email: body.email || null,
-      branch_id: body.branchId ?? null,
-    }]).select().single();
+    }]).select('id, tenant_id, name, phone, email, created_at').single();
     if (error) return res.status(502).json({ error: 'Failed to create customer', details: error.message });
     return res.status(201).json({ success: true, data });
   } catch (error) {

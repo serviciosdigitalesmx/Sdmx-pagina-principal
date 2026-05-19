@@ -27,18 +27,22 @@ export const createOrder = async (req: Request, res: Response) => {
     const newFolio = `${folioPrefix}-${Date.now().toString(36).toUpperCase()}`;
 
     const { data, error } = await supabase
-      .from('orders')
+      .from('service_orders')
       .insert([
         {
           tenant_id: tenantId,
           folio: newFolio,
-          client_name: validatedData.clientName,
-          client_phone: validatedData.clientPhone,
-          client_email: validatedData.clientEmail,
-          device_type: validatedData.deviceType,
-          device_model: validatedData.deviceModel,
-          issue: validatedData.issue,
-          status: 'NUEVA',
+          device_info: {
+            brand: validatedData.deviceModel,
+            model: validatedData.deviceModel,
+            type: validatedData.deviceType,
+            customer_name: validatedData.clientName,
+            customer_phone: validatedData.clientPhone,
+            customer_email: validatedData.clientEmail || null,
+          },
+          problem_description: validatedData.issue,
+          status: 'pending',
+          total_cost: 0,
         }
       ])
       .select()
@@ -79,7 +83,7 @@ export const listOrders = async (req: Request, res: Response) => {
 
     const supabase = getTenantClient(tenantId);
     const { data, error } = await supabase
-      .from('orders')
+      .from('service_orders')
       .select('*')
       .eq('tenant_id', tenantId)
       .order('created_at', { ascending: false })

@@ -6,12 +6,13 @@ import ordersRouter from './routes/orders';
 import financeRouter from './routes/finance';
 import customersRouter from './routes/customers';
 import inventoryRouter from './routes/inventory';
+import publicRouter from './routes/public';
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 4000;
-const allowedOrigins = (process.env.CORS_ORIGIN ?? 'http://localhost:3000')
+const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS ?? 'http://localhost:3000')
   .split(',')
   .map((origin) => origin.trim())
   .filter(Boolean);
@@ -67,6 +68,7 @@ app.use('/api/customers', customersRouter);
 
 app.use('/api/:tenantId/inventory', inventoryRouter);
 app.use('/api/inventory', inventoryRouter);
+app.use('/api/public', publicRouter);
 
 app.get('/healthz', (req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });

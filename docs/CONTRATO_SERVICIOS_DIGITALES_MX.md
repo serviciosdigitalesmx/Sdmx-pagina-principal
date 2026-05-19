@@ -104,6 +104,27 @@ Debe incluir:
 - CTAs claros
 - enlace a WhatsApp
 
+### 5.1.1 Contrato 3 en 1 por tenant
+
+Para cada tenant, la experiencia pública debe funcionar como una sola unidad:
+
+- landing del negocio
+- panel del cliente
+- cotizador / solicitudes
+
+Regla funcional:
+
+- `landing + panel del cliente + cotizador = 1 experiencia por tenant`
+- `hub = operación interna`
+
+La landing del tenant debe resolver:
+
+- botón para `Ver estatus`
+- botón para `Solicitar cotización`
+- acceso al panel del cliente sin cambiar de lenguaje visual
+
+La navegación pública no debe depender de hardcodeos específicos de negocio. Debe construirse por configuración.
+
 ## 5.2 Portal del Cliente
 
 Debe incluir:
@@ -145,6 +166,30 @@ Debe incluir:
 - generador de folios
 - lógica de estados y semáforo
 - CRUD de solicitudes, órdenes y catálogos
+
+### 5.5.1 Hub interno
+
+El hub interno es la capa operativa del negocio.
+
+Debe concentrar:
+
+- recepción
+- técnico
+- solicitudes
+- archivo
+- clientes
+- tareas
+- stock
+- proveedores
+- compras
+- gastos
+- finanzas
+- reportes
+- sucursales
+- seguridad
+
+El hub debe poder mostrar la URL del landing del tenant a partir de configuración, no de cadenas hardcodeadas.
+El template de esa URL debe venir de una variable de entorno o configuración equivalente.
 
 ## 6. Contrato de Multi-Tenancy
 

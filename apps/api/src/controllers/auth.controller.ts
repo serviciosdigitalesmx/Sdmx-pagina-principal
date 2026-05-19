@@ -97,7 +97,7 @@ export const register = async (req: Request, res: Response) => {
         slug: tenant.tenant_slug,
         trialExpiresAt: tenant.trial_expires_at,
       },
-      redirectUrl: `${process.env.PUBLIC_APP_URL ?? 'http://localhost:3000'}/onboarding/success?tenant=${encodeURIComponent(tenant.tenant_slug)}&token=${encodeURIComponent(token)}`,
+      redirectUrl: `${process.env.APP_URL ?? 'http://localhost:3000'}/onboarding/success?tenant=${encodeURIComponent(tenant.tenant_slug)}&token=${encodeURIComponent(token)}`,
     });
   } catch (error) {
     await supabaseAdmin.auth.admin.deleteUser(authUser.user.id).catch((deleteError) => {
@@ -111,14 +111,14 @@ export const register = async (req: Request, res: Response) => {
 
 export const redirectGoogleAuth = async (_req: Request, res: Response) => {
   const supabaseUrl = process.env.SUPABASE_URL;
-  const publicAppUrl = process.env.PUBLIC_APP_URL;
+  const publicAppUrl = process.env.APP_URL;
 
   if (!supabaseUrl) {
     return res.status(500).json({ error: 'SUPABASE_URL is required' });
   }
 
   if (!publicAppUrl) {
-    return res.status(500).json({ error: 'PUBLIC_APP_URL is required' });
+    return res.status(500).json({ error: 'APP_URL is required' });
   }
 
   const redirectTo = new URL('/onboarding/google/callback', publicAppUrl).toString();
@@ -196,7 +196,7 @@ export const completeGoogleRegistration = async (req: Request, res: Response) =>
         slug: tenant.tenant_slug,
         trialExpiresAt: tenant.trial_expires_at,
       },
-      redirectUrl: `${process.env.PUBLIC_APP_URL ?? 'http://localhost:3000'}/onboarding/success?tenant=${encodeURIComponent(tenant.tenant_slug)}&token=${encodeURIComponent(token)}`,
+      redirectUrl: `${process.env.APP_URL ?? 'http://localhost:3000'}/onboarding/success?tenant=${encodeURIComponent(tenant.tenant_slug)}&token=${encodeURIComponent(token)}`,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Internal server error';

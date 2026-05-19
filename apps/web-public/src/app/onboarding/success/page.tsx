@@ -2,8 +2,6 @@ import Link from 'next/link';
 import { SaveOnboardingToken } from './save-onboarding-token';
 import { AutoRedirectToAdmin } from './redirect-to-admin';
 
-const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN ?? 'srfix.mx';
-
 export default function OnboardingSuccessPage({
   searchParams,
 }: {
@@ -31,10 +29,10 @@ export default function OnboardingSuccessPage({
         <div className="flex flex-wrap gap-3">
           {searchParams.tenant ? (
             <Link
-              href={`https://${searchParams.tenant}.${baseDomain}`}
+              href={`/${searchParams.tenant}`}
               className="rounded-full bg-cyan-600 px-8 py-3 font-semibold text-white shadow-lg shadow-cyan-200 transition hover:bg-cyan-500"
             >
-              Ir a mi taller
+              Ir a mi landing
             </Link>
           ) : null}
           <Link

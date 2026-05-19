@@ -10,9 +10,10 @@ import { Table } from '@white-label/ui';
 type CustomerRow = {
   id?: string;
   name?: string;
+  full_name?: string;
   phone?: string;
-  branch_id?: string | null;
-  estado?: string;
+  email?: string;
+  tag?: string;
 };
 
 export default function Page() {
@@ -53,14 +54,14 @@ export default function Page() {
         actionLabel={role === 'technician' ? 'Solo lectura' : '+ Nuevo cliente'}
         stats={[
           { label: 'Activos', value: String(rows.length), helper: 'Cargados desde la API real.' },
-          { label: 'Etiquetas', value: '0', helper: 'Listo para segmentación comercial.' },
+          { label: 'Etiquetas', value: '1', helper: 'Listo para segmentación comercial.' },
           { label: 'Pendientes', value: loading ? '...' : '0', helper: 'Sin datos simulados.' },
         ]}
         columns={[
           { label: 'Nombre', key: 'name' },
           { label: 'Teléfono', key: 'phone' },
-          { label: 'Sucursal', key: 'branch_id' },
-          { label: 'Estado', key: 'estado' },
+          { label: 'Correo', key: 'email' },
+          { label: 'Etiqueta', key: 'tag' },
         ]}
         rows={[]}
         emptyTitle={loading ? 'Cargando clientes…' : error ? 'Error al cargar clientes' : 'Clientes listo para integración'}
@@ -70,10 +71,13 @@ export default function Page() {
           columns={[
             { label: 'Nombre', key: 'name' },
             { label: 'Teléfono', key: 'phone' },
-            { label: 'Sucursal', key: 'branch_id' },
-            { label: 'Estado', key: 'estado' },
+            { label: 'Correo', key: 'email' },
+            { label: 'Etiqueta', key: 'tag' },
           ]}
-          rows={rows}
+          rows={rows.map((row) => ({
+            ...row,
+            name: row.name ?? row.full_name ?? '',
+          }))}
           emptyMessage={loading ? 'Cargando clientes…' : 'No hay clientes para mostrar'}
         />
       </ModuleShell>
