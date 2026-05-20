@@ -24,6 +24,7 @@ const navGroups: NavGroup[] = [
       { href: '/dashboard', label: 'Dashboard', allowedRoles: ['owner', 'manager', 'technician'] },
       { href: '/dashboard/ordenes', label: 'Órdenes', allowedRoles: ['owner', 'manager', 'technician'] },
       { href: '/dashboard/archivo', label: 'Archivo', allowedRoles: ['owner', 'manager', 'technician'] },
+      { href: '/dashboard/solicitudes', label: 'Solicitudes', allowedRoles: ['owner', 'manager', 'technician'] },
     ],
   },
   {
@@ -32,6 +33,7 @@ const navGroups: NavGroup[] = [
       { href: '/dashboard/clientes', label: 'Clientes', allowedRoles: ['owner', 'manager', 'technician'] },
       { href: '/dashboard/proveedores', label: 'Proveedores', allowedRoles: ['owner', 'manager'] },
       { href: '/dashboard/stock', label: 'Inventario', allowedRoles: ['owner', 'manager', 'technician'] },
+      { href: '/dashboard/tareas', label: 'Tareas', allowedRoles: ['owner', 'manager', 'technician'] },
     ],
   },
   {
@@ -44,13 +46,6 @@ const navGroups: NavGroup[] = [
   },
   {
     title: 'Operación',
-    items: [
-      { href: '/dashboard/tareas', label: 'Tareas', allowedRoles: ['owner', 'manager', 'technician'] },
-      { href: '/dashboard/solicitudes', label: 'Solicitudes', allowedRoles: ['owner', 'manager', 'technician'] },
-    ],
-  },
-  {
-    title: 'Administración',
     items: [
       { href: '/dashboard/reportes', label: 'Reportes', allowedRoles: ['owner', 'manager'] },
       { href: '/dashboard/sucursales', label: 'Sucursales', allowedRoles: ['owner', 'manager'] },
@@ -70,24 +65,24 @@ function DashboardShellContent({
   const theme = useTenantTheme();
 
   return (
-    <div className="min-h-screen flex text-slate-100 bg-[radial-gradient(circle_at_top,_rgba(212,175,55,0.08),_transparent_28%),linear-gradient(180deg,#0a0e17_0%,#070b12_100%)]">
-      <aside className="w-72 shrink-0 border-r border-white/10 bg-[#0d1320]/95 flex flex-col backdrop-blur-xl">
-        <div className="border-b border-white/10 p-5">
+    <div className="flex min-h-screen flex-col text-slate-900 bg-[radial-gradient(circle_at_top,_rgba(44,110,159,0.12),_transparent_28%),linear-gradient(180deg,#f4f6f9_0%,#eef2f6_100%)] lg:flex-row">
+      <aside className="flex w-full shrink-0 flex-col border-b border-slate-200 bg-white/95 backdrop-blur-xl lg:w-72 lg:border-b-0 lg:border-r">
+        <div className="border-b border-slate-200 p-4 sm:p-5">
           <div className="flex items-center gap-3">
             <div
-              className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[#d4af37]/25 bg-[linear-gradient(180deg,rgba(212,175,55,0.28),rgba(17,19,31,0.95))] text-sm font-black text-[#f5efe1]"
+              className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[#2c6e9f]/20 bg-[linear-gradient(180deg,rgba(44,110,159,0.18),rgba(255,255,255,0.96))] text-sm font-black text-slate-900"
             >
               {tenant.brandName.slice(0, 2).toUpperCase()}
             </div>
             <div>
-              <div className="text-sm font-semibold tracking-wide text-white">
+              <div className="text-sm font-semibold tracking-wide text-slate-950">
                 {tenant.brandName}
               </div>
-              <div className="text-xs text-slate-400">{tenant.tenantName}</div>
+              <div className="text-xs text-slate-500">{tenant.tenantName}</div>
             </div>
           </div>
         </div>
-        <nav className="flex-1 space-y-6 overflow-y-auto p-4">
+        <nav className="flex-1 space-y-6 overflow-y-auto p-3 sm:p-4">
           {navGroups.map((group) => (
             <section key={group.title} className="space-y-3">
               <div className="px-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
@@ -104,8 +99,8 @@ function DashboardShellContent({
                       'flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm transition-all duration-200',
                       pathname === item.href ||
                       (item.href !== '/dashboard' && pathname?.startsWith(item.href))
-                        ? 'border border-[#d4af37]/20 bg-[#d4af37]/10 text-white shadow-[0_10px_30px_rgba(0,0,0,0.25)]'
-                        : 'text-slate-300 hover:bg-white/5 hover:text-white hover:border hover:border-white/10',
+                        ? 'border border-[#2c6e9f]/20 bg-[#2c6e9f]/10 text-slate-950 shadow-[0_10px_30px_rgba(15,23,42,0.08)]'
+                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950 hover:border hover:border-slate-200',
                     ].join(' ')}
                   />
                 ))}
@@ -113,23 +108,25 @@ function DashboardShellContent({
             </section>
           ))}
         </nav>
-        <div className="border-t border-white/10 p-4 text-sm text-slate-400">
-          <div className="rounded-2xl border border-[#d4af37]/12 bg-white/5 p-4">
-            <div className="text-white">{tenant.userEmail}</div>
-            <div className="mt-1 text-xs text-slate-500">Role: {tenant.userRole}</div>
+        <div className="border-t border-slate-200 p-4 text-sm text-slate-500">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div className="text-slate-950">{tenant.userEmail}</div>
+            <div className="mt-1 text-xs text-slate-500">Rol: {tenant.userRole}</div>
             <div className="text-xs text-slate-500">Sucursal: {tenant.branchName}</div>
           </div>
         </div>
       </aside>
 
-      <div className="flex-1 flex flex-col">
-        <header className="flex h-16 items-center justify-between border-b border-white/10 bg-[#0d1320]/75 px-6 backdrop-blur-xl">
-          <div>
-            <div className="text-sm font-semibold text-white [font-family:var(--font-display)]">Workspace activo</div>
-            <div className="text-xs text-slate-400">Tenant actual: {tenant.tenantId}</div>
+      <div className="flex flex-1 flex-col">
+        <header className="flex items-start justify-between gap-4 border-b border-slate-200 bg-white/80 px-4 py-4 backdrop-blur-xl sm:items-center sm:px-6 sm:py-0 sm:h-16">
+          <div className="min-w-0">
+            <div className="text-sm font-semibold text-slate-950 [font-family:var(--font-display)]">Workspace activo</div>
+            <div className="text-xs text-slate-500 leading-5">
+              Tenant: {tenant.tenantId} · Rol: {tenant.userRole} · Sucursal: {tenant.branchName}
+            </div>
           </div>
-          <div className="flex items-center space-x-4">
-            <button className="text-sm text-slate-400 transition-colors hover:text-white">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <button className="text-sm text-slate-500 transition-colors hover:text-slate-900">
               Notificaciones
             </button>
             <div

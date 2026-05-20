@@ -82,18 +82,20 @@ export default function OnboardingPage() {
       return;
     }
 
-    window.location.assign(`${apiUrl}/api/auth/google`);
+    const url = new URL(`${apiUrl}/api/auth/google`);
+    url.searchParams.set("origin", window.location.origin);
+    window.location.assign(url.toString());
   };
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(212,175,55,0.10),_transparent_30%),radial-gradient(circle_at_20%_20%,_rgba(45,212,191,0.08),_transparent_24%),linear-gradient(180deg,#0a0e17_0%,#070b12_100%)] px-6 py-10 text-slate-950">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(44,110,159,0.12),_transparent_30%),radial-gradient(circle_at_20%_20%,_rgba(94,157,201,0.08),_transparent_24%),linear-gradient(180deg,#f4f6f9_0%,#eef2f6_54%,#ffffff_100%)] px-6 py-10 text-slate-950">
       <section className="mx-auto grid w-full max-w-5xl gap-8 lg:grid-cols-[1fr_1.05fr]">
-        <div className="rounded-[2rem] border border-[#d4af37]/15 bg-[#0d1320]/85 p-8 text-white shadow-[0_30px_100px_rgba(0,0,0,0.45)] backdrop-blur-xl">
-          <p className="text-xs uppercase tracking-[0.35em] text-[#d4af37]/90">Prueba Gratuita</p>
+        <div className="rounded-[2rem] border border-slate-200 bg-white p-8 text-slate-900 shadow-[0_30px_100px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+          <p className="text-xs uppercase tracking-[0.35em] text-[#245a82]">Prueba Gratuita</p>
           <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl [font-family:var(--font-display)]">
             Empieza a operar con FIXI hoy mismo.
           </h1>
-          <p className="mt-4 max-w-xl text-base leading-7 text-slate-300">
+          <p className="mt-4 max-w-xl text-base leading-7 text-slate-600">
             Regístrate para obtener tu entorno seguro y aislado. Toma el control total de tu taller con el sistema de nueva generación.
           </p>
 
@@ -102,18 +104,18 @@ export default function OnboardingPage() {
               ["Aislamiento Total", "Tu información y la de tus clientes están separadas en silos seguros."],
               ["Sin Tarjeta", "Comienza tu prueba de inmediato sin compromisos iniciales."],
             ].map(([title, desc]) => (
-              <div key={title} className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="text-sm font-semibold text-white">{title}</p>
-                <p className="mt-1 text-sm text-slate-300">{desc}</p>
+              <div key={title} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-sm font-semibold text-slate-900">{title}</p>
+                <p className="mt-1 text-sm text-slate-600">{desc}</p>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="rounded-[2rem] border border-[#d4af37]/15 bg-[#111827]/92 p-8 text-white shadow-[0_30px_100px_rgba(0,0,0,0.45)] backdrop-blur-xl">
+        <div className="rounded-[2rem] border border-slate-200 bg-white p-8 text-slate-900 shadow-[0_30px_100px_rgba(15,23,42,0.08)] backdrop-blur-xl">
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-300" htmlFor="workshopName">
+              <label className="mb-2 block text-sm font-medium text-slate-600" htmlFor="workshopName">
                 Nombre del Taller
               </label>
               <input
@@ -125,13 +127,13 @@ export default function OnboardingPage() {
                 onChange={handleChange}
                 required
                 minLength={2}
-                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition placeholder:text-slate-500 focus:border-[#d4af37]/60 focus:ring-2 focus:ring-[#d4af37]/20"
+                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#2c6e9f] focus:ring-2 focus:ring-[#2c6e9f]/20"
                 placeholder="Ej. Motor Fix & Co."
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-300" htmlFor="phone">
+              <label className="mb-2 block text-sm font-medium text-slate-600" htmlFor="phone">
                 Teléfono
               </label>
               <input
@@ -143,13 +145,13 @@ export default function OnboardingPage() {
                 onChange={handleChange}
                 required
                 minLength={7}
-                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition placeholder:text-slate-500 focus:border-[#d4af37]/60 focus:ring-2 focus:ring-[#d4af37]/20"
+                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#2c6e9f] focus:ring-2 focus:ring-[#2c6e9f]/20"
                 placeholder="Ej. 555 123 4567"
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-300" htmlFor="email">
+              <label className="mb-2 block text-sm font-medium text-slate-600" htmlFor="email">
                 Correo Electrónico
               </label>
               <input
@@ -160,13 +162,13 @@ export default function OnboardingPage() {
                 value={form.email}
                 onChange={handleChange}
                 required
-                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition placeholder:text-slate-500 focus:border-[#d4af37]/60 focus:ring-2 focus:ring-[#d4af37]/20"
+                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#2c6e9f] focus:ring-2 focus:ring-[#2c6e9f]/20"
                 placeholder="dueno@taller.com"
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-300" htmlFor="password">
+              <label className="mb-2 block text-sm font-medium text-slate-600" htmlFor="password">
                 Contraseña
               </label>
               <input
@@ -178,13 +180,13 @@ export default function OnboardingPage() {
                 onChange={handleChange}
                 required
                 minLength={8}
-                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition placeholder:text-slate-500 focus:border-[#d4af37]/60 focus:ring-2 focus:ring-[#d4af37]/20"
+                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#2c6e9f] focus:ring-2 focus:ring-[#2c6e9f]/20"
                 placeholder="Mínimo 8 caracteres"
               />
             </div>
 
             {error ? (
-              <p className="rounded-2xl border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+              <p className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
                 {error}
               </p>
             ) : null}
@@ -192,22 +194,22 @@ export default function OnboardingPage() {
             <button
               type="submit"
               disabled={loading}
-              className="mt-2 w-full rounded-full border border-[#d4af37]/30 bg-[#d4af37]/10 px-6 py-3 font-semibold text-[#f3df9f] transition hover:bg-[#d4af37]/18 disabled:cursor-not-allowed disabled:opacity-60"
+              className="mt-2 w-full rounded-full bg-[#2c6e9f] px-6 py-3 font-semibold text-white transition hover:bg-[#245a82] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? "Creando cuenta..." : "Comenzar Prueba Gratuita"}
             </button>
 
             <div className="relative my-4 flex items-center">
-              <div className="flex-grow border-t border-white/10"></div>
-              <span className="mx-4 text-xs font-medium text-slate-500 uppercase tracking-widest">o</span>
-              <div className="flex-grow border-t border-white/10"></div>
+              <div className="flex-grow border-t border-slate-200"></div>
+              <span className="mx-4 text-xs font-medium uppercase tracking-widest text-slate-500">o</span>
+              <div className="flex-grow border-t border-slate-200"></div>
             </div>
 
             <button
               type="button"
               onClick={handleGoogleRegister}
               disabled={loading}
-              className="w-full rounded-full flex items-center justify-center gap-3 border border-white/12 px-6 py-3 font-semibold text-white transition hover:border-[#d4af37]/30 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex w-full items-center justify-center gap-3 rounded-full border border-slate-300 px-6 py-3 font-semibold text-slate-800 transition hover:border-[#2c6e9f]/30 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <svg className="h-5 w-5" aria-hidden="true" viewBox="0 0 24 24">
                 <path
@@ -232,7 +234,7 @@ export default function OnboardingPage() {
 
             <p className="text-center text-xs text-slate-400 mt-6">
               ¿Ya tienes cuenta?{' '}
-              <Link href="/login" className="text-[#d4af37] font-semibold transition hover:text-[#f3df9f]">
+              <Link href="/login" className="font-semibold text-[#245a82] transition hover:text-[#2c6e9f]">
                 Inicia sesión aquí
               </Link>
             </p>

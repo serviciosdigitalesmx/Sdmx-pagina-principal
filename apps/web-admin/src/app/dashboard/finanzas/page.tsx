@@ -1,28 +1,76 @@
-import { RequireRole } from '@/components/guard/RequireRole';
-import { ModuleShell } from '@/components/dashboard/module-shell';
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { RequireRole } from "@/components/guard/RequireRole";
+import { useAuth } from "@/components/guard/use-auth";
+import { ModuleShell } from "@/components/dashboard/module-shell";
+import { fixService } from "@/services/fixService";
+
+type FinanceRow = Record<string, string>;
 
 export default function Page() {
+  const { role, sucursalId } = useAuth();
+  const [rows, setRows] = useState<FinanceRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      try {
+        setLoading(true);
+        setError("");
+        const data = role === "owner" ? await fixService.getBalance() : await fixService.getCashflow(sucursalId);
+        if (!cancelled) {
+          setRows(
+            (data as Record<string, unknown>[]).map((row) =>
+              Object.fromEntries(
+                Object.entries(row).map(([key, value]) => [key, value == null ? "" : String(value)])
+              ) as FinanceRow
+            )
+          );
+        }
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : "Error al cargar finanzas");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    void load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [role, sucursalId]);
+
+  const stats = useMemo(
+    () => [
+      { label: "Registros", value: String(rows.length), helper: "Datos reales del backend." },
+      { label: "Rol", value: role, helper: "Permisos reales por usuario." },
+      { label: "Sucursal", value: sucursalId, helper: "Aislamiento por contexto." },
+    ],
+    [role, rows.length, sucursalId]
+  );
+
   return (
-    <RequireRole allowed={['owner', 'manager']}>
+    <RequireRole allowed={["owner", "manager"]}>
       <ModuleShell
         title="Finanzas"
-        subtitle="Balances, flujo de efectivo y reportes financieros del tenant."
+        subtitle="Balances y flujo financiero del tenant desde Supabase."
         icon="fas fa-chart-line"
-        actionLabel="Ver reporte"
-        stats={[
-          { label: 'Balance', value: '0 MXN', helper: 'Solo visible para owner/manager.' },
-          { label: 'Movimientos', value: '0', helper: 'Sin datos conectados.' },
-          { label: 'Sucursales', value: '0', helper: 'Filtrado por permisos.' },
-        ]}
+        actionLabel={role === "owner" ? "Balance global" : "Ver flujo por sucursal"}
+        stats={stats}
         columns={[
-          { label: 'Fecha', key: 'fecha' },
-          { label: 'Sucursal', key: 'sucursal' },
-          { label: 'Ingreso', key: 'ingreso' },
-          { label: 'Egreso', key: 'egreso' },
+          { label: "ID", key: "id" },
+          { label: "Balance", key: "balance" },
+          { label: "Ingreso", key: "income" },
+          { label: "Egreso", key: "expense" },
         ]}
-        rows={[]}
-        emptyTitle="Finanzas bloqueado por permisos y sin datos"
-        emptyCopy="Esta vista solo es accesible para owner y manager. Ya está preparada para leer de /api/:tenantId/finance con validación de sucursal."
+        rows={rows}
+        emptyTitle={loading ? "Cargando finanzas…" : error ? "No pudimos cargar las finanzas" : "Sin movimientos financieros todavía"}
+        emptyCopy={error || "Si no hay movimientos, se muestra vacío real. El módulo consume /api/:tenantId/finance/balance o /cashflow/:sucursalId."}
       />
     </RequireRole>
   );

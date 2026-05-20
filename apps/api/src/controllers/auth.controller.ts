@@ -14,6 +14,30 @@ function base64Url(input: Buffer | string) {
   return Buffer.from(input).toString('base64url');
 }
 
+function getAllowedAppOrigins() {
+  const configuredOrigins = (process.env.CORS_ALLOWED_ORIGINS ?? '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  const appUrl = process.env.APP_URL?.trim();
+
+  return new Set([
+    ...configuredOrigins,
+    ...(appUrl ? [appUrl] : []),
+  ]);
+}
+
+function isAllowedRedirectUrl(candidate: string) {
+  try {
+    const parsed = new URL(candidate);
+    const allowedOrigins = getAllowedAppOrigins();
+    return allowedOrigins.has(parsed.origin);
+  } catch {
+    return false;
+  }
+}
+
 function signJwt(payload: Record<string, unknown>) {
   const secret = process.env.JWT_SECRET;
 
@@ -112,6 +136,7 @@ export const register = async (req: Request, res: Response) => {
 export const redirectGoogleAuth = async (_req: Request, res: Response) => {
   const supabaseUrl = process.env.SUPABASE_URL;
   const publicAppUrl = process.env.APP_URL;
+  const requestOrigin = typeof _req.query.origin === 'string' ? _req.query.origin : null;
 
   if (!supabaseUrl) {
     return res.status(500).json({ error: 'SUPABASE_URL is required' });
@@ -121,7 +146,13 @@ export const redirectGoogleAuth = async (_req: Request, res: Response) => {
     return res.status(500).json({ error: 'APP_URL is required' });
   }
 
-  const redirectTo = new URL('/onboarding/google/callback', publicAppUrl).toString();
+  const resolvedPublicUrl = requestOrigin ?? publicAppUrl;
+
+  if (!isAllowedRedirectUrl(resolvedPublicUrl)) {
+    return res.status(400).json({ error: 'Invalid redirect origin' });
+  }
+
+  const redirectTo = new URL('/onboarding/google/callback', resolvedPublicUrl).toString();
   const authorizeUrl = new URL('/auth/v1/authorize', supabaseUrl);
   authorizeUrl.searchParams.set('provider', 'google');
   authorizeUrl.searchParams.set('redirect_to', redirectTo);

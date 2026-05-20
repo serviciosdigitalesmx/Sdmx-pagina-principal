@@ -5,6 +5,16 @@ type ApiListResponse<T> = {
   data: T;
 };
 
+type ApiSingleResponse<T> = {
+  success: true;
+  data: T;
+};
+
+type ApiErrorResponse = {
+  error?: string;
+  details?: unknown;
+};
+
 import { AUTH_TOKEN_KEY } from "@/lib/auth-storage";
 
 class FixService {
@@ -41,8 +51,12 @@ class FixService {
     });
 
     if (!response.ok) {
-      const payload = await response.json().catch(() => ({} as JsonRecord));
-      throw new Error((payload.error as string) || `HTTP ${response.status}`);
+      const payload = await response.json().catch(() => ({} as ApiErrorResponse));
+      const message =
+        typeof payload.error === 'string' && payload.error.trim().length > 0
+          ? payload.error
+          : `HTTP ${response.status}`;
+      throw new Error(message);
     }
 
     return response.json() as Promise<T>;
@@ -64,6 +78,17 @@ class FixService {
     return result.data;
   }
 
+  public async createCustomer(data: JsonRecord): Promise<JsonRecord> {
+    const result = await this.request<ApiSingleResponse<JsonRecord>>(
+      `/api/${this.tenantId}/customers`,
+      {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }
+    );
+    return result.data;
+  }
+
   public async createOrder(data: JsonRecord): Promise<JsonRecord> {
     const result = await this.request<ApiListResponse<JsonRecord>>(
       `/api/${this.tenantId}/orders`,
@@ -71,6 +96,62 @@ class FixService {
         method: 'POST',
         body: JSON.stringify(data),
       }
+    );
+    return result.data;
+  }
+
+  public async getOrders(): Promise<JsonRecord[]> {
+    const result = await this.request<ApiListResponse<JsonRecord[]>>(
+      `/api/${this.tenantId}/orders`,
+      { method: 'GET' }
+    );
+    return result.data;
+  }
+
+  public async getBalance(): Promise<JsonRecord[]> {
+    const result = await this.request<ApiListResponse<JsonRecord[]>>(
+      `/api/${this.tenantId}/finance/balance`,
+      { method: 'GET' }
+    );
+    return result.data;
+  }
+
+  public async getCashflow(sucursalId: string): Promise<JsonRecord[]> {
+    const result = await this.request<ApiListResponse<JsonRecord[]>>(
+      `/api/${this.tenantId}/finance/cashflow/${encodeURIComponent(sucursalId)}`,
+      { method: 'GET' }
+    );
+    return result.data;
+  }
+
+  public async getProcurementSummary(): Promise<JsonRecord> {
+    const result = await this.request<ApiSingleResponse<JsonRecord>>(
+      `/api/${this.tenantId}/procurement/summary`,
+      { method: 'GET' }
+    );
+    return result.data;
+  }
+
+  public async getReportsSummary(): Promise<JsonRecord> {
+    const result = await this.request<ApiSingleResponse<JsonRecord>>(
+      `/api/${this.tenantId}/reports/summary`,
+      { method: 'GET' }
+    );
+    return result.data;
+  }
+
+  public async getSuppliers(): Promise<JsonRecord[]> {
+    const result = await this.request<ApiListResponse<JsonRecord[]>>(
+      `/api/${this.tenantId}/suppliers`,
+      { method: 'GET' }
+    );
+    return result.data;
+  }
+
+  public async getSecuritySummary(): Promise<JsonRecord> {
+    const result = await this.request<ApiSingleResponse<JsonRecord>>(
+      `/api/${this.tenantId}/security/summary`,
+      { method: 'GET' }
     );
     return result.data;
   }

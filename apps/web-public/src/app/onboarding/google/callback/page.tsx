@@ -150,10 +150,10 @@ export default function GoogleCallbackPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#08111f_0%,#0f172a_38%,#f8fafc_38%,#f8fafc_100%)] px-6 py-10 text-slate-950">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(44,110,159,0.12),_transparent_30%),linear-gradient(180deg,#f4f6f9_0%,#eef2f6_38%,#ffffff_100%)] px-6 py-10 text-slate-950">
       <section className="mx-auto grid w-full max-w-3xl gap-8 rounded-[2rem] border border-slate-200 bg-white p-8 shadow-xl shadow-slate-200/60">
         <div>
-          <p className="text-xs uppercase tracking-[0.35em] text-cyan-700">Google conectado</p>
+          <p className="text-xs uppercase tracking-[0.35em] text-[#245a82]">Google conectado</p>
           <h1 className="mt-3 text-4xl font-semibold tracking-tight">Completa los datos del taller</h1>
           <p className="mt-4 text-lg leading-8 text-slate-600">
             La cuenta de Google ya fue validada. Falta el nombre del taller y el teléfono para crear el tenant sin inventar información.
@@ -185,7 +185,7 @@ export default function GoogleCallbackPage() {
               onChange={handleChange}
               required
               disabled={loadingSession}
-              className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 disabled:bg-slate-100"
+              className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-[#2c6e9f] focus:ring-2 focus:ring-[#2c6e9f]/20 disabled:bg-slate-100"
               placeholder="Taller San Juan"
             />
           </div>
@@ -201,7 +201,7 @@ export default function GoogleCallbackPage() {
               onChange={handleChange}
               required
               disabled={loadingSession}
-              className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 disabled:bg-slate-100"
+              className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-[#2c6e9f] focus:ring-2 focus:ring-[#2c6e9f]/20 disabled:bg-slate-100"
               placeholder="+52 81 1234 5678"
             />
           </div>
@@ -221,7 +221,7 @@ export default function GoogleCallbackPage() {
           <button
             type="submit"
             disabled={loadingSession || loadingSubmit}
-            className="w-full rounded-full bg-slate-950 px-6 py-3 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-full bg-[#2c6e9f] px-6 py-3 font-semibold text-white transition hover:bg-[#245a82] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loadingSubmit ? 'Creando tenant…' : loadingSession ? 'Validando Google…' : 'Completar registro'}
           </button>

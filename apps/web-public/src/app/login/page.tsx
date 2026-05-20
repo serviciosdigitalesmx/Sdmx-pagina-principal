@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ChangeEvent, type FormEvent } from "react";
+import Link from "next/link";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { saveAuthToken } from "@/lib/auth-storage";
 
@@ -90,34 +91,46 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(212,175,55,0.10),_transparent_30%),radial-gradient(circle_at_20%_20%,_rgba(45,212,191,0.08),_transparent_24%),linear-gradient(180deg,#0a0e17_0%,#070b12_100%)] px-6 py-10 text-slate-950">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(44,110,159,0.12),_transparent_30%),radial-gradient(circle_at_20%_20%,_rgba(94,157,201,0.08),_transparent_24%),linear-gradient(180deg,#f4f6f9_0%,#eef2f6_54%,#ffffff_100%)] px-6 py-10 text-slate-950">
       <section className="mx-auto grid w-full max-w-5xl gap-8 lg:grid-cols-[1fr_1.05fr]">
-        <div className="rounded-[2rem] border border-[#d4af37]/15 bg-[#0d1320]/85 p-8 text-white shadow-[0_30px_100px_rgba(0,0,0,0.45)] backdrop-blur-xl">
-          <p className="text-xs uppercase tracking-[0.35em] text-[#d4af37]/90">Acceso al taller</p>
+        <div className="rounded-[2rem] border border-slate-200 bg-white p-8 text-slate-900 shadow-[0_30px_100px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+          <p className="text-xs uppercase tracking-[0.35em] text-[#245a82]">Acceso al taller</p>
           <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl [font-family:var(--font-display)]">
-            Accede a FIXI con la misma presencia que viste en la landing.
+            <span className="sm:hidden">Entra al sistema.</span>
+            <span className="hidden sm:inline">Entra al entorno operativo de FIXI.</span>
           </h1>
-          <p className="mt-4 max-w-xl text-base leading-7 text-slate-300">
-            Tu sesión se mantiene protegida y el acceso está pensado para llevarte directo al entorno operativo sin ruido visual.
+          <p className="mt-4 max-w-xl text-base leading-7 text-slate-600">
+            <span className="sm:hidden">Tu acceso te lleva al workspace del tenant.</span>
+            <span className="hidden sm:inline">
+              El acceso mantiene la misma presencia visual de la landing, pero te lleva directo al workspace del tenant.
+            </span>
           </p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link href="/" className="rounded-full border border-slate-300 px-5 py-3 font-semibold text-slate-800 transition hover:bg-slate-50">
+              Volver al inicio
+            </Link>
+            <Link href="/onboarding" className="rounded-full border border-slate-300 px-5 py-3 font-semibold text-slate-800 transition hover:bg-slate-50">
+              Crear tenant
+            </Link>
+          </div>
 
           <div className="mt-8 grid gap-3 sm:grid-cols-2">
             {[
               ["Sesión segura", "Credenciales cifradas y acceso directo."],
               ["Soporte rápido", "Recuperación por correo en el mismo flujo."],
             ].map(([title, desc]) => (
-              <div key={title} className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="text-sm font-semibold text-white">{title}</p>
-                <p className="mt-1 text-sm text-slate-300">{desc}</p>
+              <div key={title} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-sm font-semibold text-slate-900">{title}</p>
+                <p className="mt-1 text-sm text-slate-600">{desc}</p>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="rounded-[2rem] border border-[#d4af37]/15 bg-[#111827]/92 p-8 text-white shadow-[0_30px_100px_rgba(0,0,0,0.45)] backdrop-blur-xl">
+        <div className="rounded-[2rem] border border-slate-200 bg-white p-8 text-slate-900 shadow-[0_30px_100px_rgba(15,23,42,0.08)] backdrop-blur-xl">
           <form className="space-y-5" onSubmit={handleSubmit}>
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-300" htmlFor="email">
+              <label className="mb-2 block text-sm font-medium text-slate-600" htmlFor="email">
                 Correo electrónico
               </label>
               <input
@@ -128,13 +141,13 @@ export default function LoginPage() {
                 value={form.email}
                 onChange={handleChange}
                 required
-                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition placeholder:text-slate-500 focus:border-[#d4af37]/60 focus:ring-2 focus:ring-[#d4af37]/20"
+                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#2c6e9f] focus:ring-2 focus:ring-[#2c6e9f]/20"
                 placeholder="dueno@taller.com"
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-300" htmlFor="password">
+              <label className="mb-2 block text-sm font-medium text-slate-600" htmlFor="password">
                 Contraseña
               </label>
               <input
@@ -145,19 +158,19 @@ export default function LoginPage() {
                 value={form.password}
                 onChange={handleChange}
                 required
-                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition placeholder:text-slate-500 focus:border-[#d4af37]/60 focus:ring-2 focus:ring-[#d4af37]/20"
+                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#2c6e9f] focus:ring-2 focus:ring-[#2c6e9f]/20"
                 placeholder="Tu contraseña"
               />
             </div>
 
             {error ? (
-              <p className="rounded-2xl border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+              <p className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
                 {error}
               </p>
             ) : null}
 
             {success ? (
-              <p className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+              <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
                 {success}
               </p>
             ) : null}
@@ -165,7 +178,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-full border border-[#d4af37]/30 bg-[#d4af37]/10 px-6 py-3 font-semibold text-[#f3df9f] transition hover:bg-[#d4af37]/18 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-full bg-[#2c6e9f] px-6 py-3 font-semibold text-white transition hover:bg-[#245a82] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? "Entrando..." : "Acceder a FIXI"}
             </button>
@@ -174,12 +187,12 @@ export default function LoginPage() {
               type="button"
               onClick={handlePasswordReset}
               disabled={resetLoading}
-              className="w-full rounded-full border border-white/12 px-6 py-3 font-semibold text-white transition hover:border-[#d4af37]/30 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-full border border-slate-300 px-6 py-3 font-semibold text-slate-800 transition hover:border-[#2c6e9f]/30 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {resetLoading ? "Enviando correo..." : "Recuperar contraseña por correo"}
             </button>
 
-            <p className="text-center text-xs uppercase tracking-[0.24em] text-slate-400">
+            <p className="text-center text-xs uppercase tracking-[0.24em] text-slate-500">
               ¿Aún no tienes acceso? Solicítalo por correo.
             </p>
           </form>

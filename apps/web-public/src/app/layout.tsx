@@ -23,8 +23,12 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_SAAS_META_TITLE ??
     "Plataforma SaaS white-label para talleres de reparación",
   description:
-    process.env.NEXT_PUBLIC_SAAS_META_DESCRIPTION ??
+      process.env.NEXT_PUBLIC_SAAS_META_DESCRIPTION ??
     "SaaS multi-tenant para talleres de celulares, computadoras y electrónica con automatización y aislamiento por tenant.",
+};
+
+export const viewport = {
+  themeColor: process.env.NEXT_PUBLIC_SAAS_THEME_COLOR ?? "#2c6e9f",
 };
 
 export default function RootLayout({

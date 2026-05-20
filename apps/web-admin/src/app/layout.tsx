@@ -26,14 +26,18 @@ export const metadata: Metadata = {
     "Portal operativo white-label para talleres con soporte y experiencia configurable.",
 };
 
+export const viewport = {
+  themeColor: process.env.NEXT_PUBLIC_TENANT_THEME_COLOR ?? "#2c6e9f",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const themePrimary = process.env.NEXT_PUBLIC_THEME_PRIMARY ?? '#22d3ee';
-  const themeSecondary = process.env.NEXT_PUBLIC_THEME_SECONDARY ?? '#0f172a';
-  const themeAccent = process.env.NEXT_PUBLIC_THEME_ACCENT ?? '#34d399';
+  const themePrimary = process.env.NEXT_PUBLIC_THEME_PRIMARY ?? '#2c6e9f';
+  const themeSecondary = process.env.NEXT_PUBLIC_THEME_SECONDARY ?? '#1f2937';
+  const themeAccent = process.env.NEXT_PUBLIC_THEME_ACCENT ?? '#5e9dc9';
 
   return (
     <html
@@ -47,7 +51,7 @@ export default function RootLayout({
         } as React.CSSProperties
       }
     >
-      <body className="min-h-full flex flex-col bg-slate-950">{children}</body>
+      <body className="min-h-full flex flex-col bg-[#f4f6f9] text-slate-800">{children}</body>
     </html>
   );
 }

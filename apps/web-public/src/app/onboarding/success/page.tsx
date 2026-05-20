@@ -11,11 +11,11 @@ export default function OnboardingSuccessPage({
   };
 }) {
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#08111f_0%,#0f172a_38%,#f8fafc_38%,#f8fafc_100%)] px-6 py-12 text-slate-950">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(44,110,159,0.12),_transparent_30%),linear-gradient(180deg,#f4f6f9_0%,#eef2f6_38%,#ffffff_100%)] px-6 py-12 text-slate-950">
       <SaveOnboardingToken token={searchParams.token} />
       <AutoRedirectToAdmin token={searchParams.token} />
-      <section className="mx-auto flex w-full max-w-3xl flex-col gap-6 rounded-[2rem] border border-slate-200 bg-white p-8 shadow-xl shadow-slate-200/60">
-        <p className="text-xs uppercase tracking-[0.35em] text-cyan-700">Registro completado</p>
+      <section className="mx-auto flex w-full max-w-3xl flex-col gap-6 rounded-[2rem] border border-slate-200 bg-white p-8 shadow-[0_24px_90px_rgba(15,23,42,0.08)]">
+        <p className="text-xs uppercase tracking-[0.35em] text-[#245a82]">Registro completado</p>
         <h1 className="text-4xl font-semibold tracking-tight">
           Tu prueba gratuita ya quedó creada.
         </h1>
@@ -30,10 +30,10 @@ export default function OnboardingSuccessPage({
           {searchParams.tenant ? (
             <Link
               href={`/${searchParams.tenant}`}
-              className="rounded-full bg-cyan-600 px-8 py-3 font-semibold text-white shadow-lg shadow-cyan-200 transition hover:bg-cyan-500"
-            >
-              Ir a mi landing
-            </Link>
+            className="rounded-full bg-[#2c6e9f] px-8 py-3 font-semibold text-white transition hover:bg-[#245a82]"
+          >
+            Ir a mi landing
+          </Link>
           ) : null}
           <Link
             href="/"
