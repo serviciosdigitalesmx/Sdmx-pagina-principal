@@ -18,6 +18,11 @@ const publicTrackingSchema = z.object({
   email: z.string().email().optional().or(z.literal('')),
 });
 
+const publicPortalSchema = z.object({
+  tenantSlug: z.string().min(1),
+  folio: z.string().min(1),
+});
+
 async function resolveTenantIdBySlug(slug: string) {
   const { data, error } = await supabaseAdmin
     .from('tenants')
@@ -104,6 +109,76 @@ export async function trackPublicOrder(req: Request, res: Response) {
     }
 
     return res.json({ success: true, tenant, data });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    return res.status(500).json({ error: message });
+  }
+}
+
+export async function getPublicPortalOrder(req: Request, res: Response) {
+  const parsed = publicPortalSchema.safeParse(req.params);
+
+  if (!parsed.success) {
+    return res.status(400).json({ error: 'Invalid params', details: parsed.error.flatten() });
+  }
+
+  try {
+    const { tenantSlug, folio } = parsed.data;
+    const tenant = await resolveTenantIdBySlug(tenantSlug);
+    const supabase = getTenantClient(tenant.id);
+
+    const { data, error } = await supabase
+      .from('service_orders')
+      .select('id, tenant_id, folio, status, total_cost, created_at, device_info, problem_description, serial_number')
+      .eq('tenant_id', tenant.id)
+      .eq('folio', folio)
+      .single();
+
+    if (error || !data) {
+      return res.status(404).json({ error: 'No encontramos tu reparación', details: error?.message });
+    }
+
+    const statusLabelMap: Record<string, string> = {
+      pending: 'Recibido',
+      pendiente: 'Recibido',
+      diagnostico: 'Diagnóstico',
+      diagnosticado: 'Diagnóstico',
+      reparacion: 'En reparación',
+      reparando: 'En reparación',
+      listo: 'Listo',
+      entregado: 'Entregado',
+    };
+
+    const statusKey = String(data.status ?? '').toLowerCase();
+    const timeline = [
+      { label: 'Recepción', status: 'completado' as const, note: 'Orden registrada en el sistema.' },
+      {
+        label: 'Diagnóstico',
+        status: ['diagnostico', 'reparacion', 'listo', 'entregado'].includes(statusKey) ? 'completado' as const : 'actual' as const,
+        note: 'Evaluación técnica del equipo.',
+      },
+      {
+        label: 'Reparación',
+        status: ['reparacion', 'listo', 'entregado'].includes(statusKey) ? 'completado' as const : 'actual' as const,
+        note: 'Trabajo técnico en proceso.',
+      },
+      {
+        label: 'Entrega',
+        status: ['listo', 'entregado'].includes(statusKey) ? 'actual' as const : 'pendiente' as const,
+        note: 'Lista para entregar al cliente.',
+      },
+    ];
+
+    return res.json({
+      success: true,
+      tenant,
+      data: {
+        order: data,
+        orderStatusLabel: statusLabelMap[statusKey] ?? String(data.status ?? 'Sin estado'),
+        timeline,
+        attachments: [],
+      },
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Internal server error';
     return res.status(500).json({ error: message });

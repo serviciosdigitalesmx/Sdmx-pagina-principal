@@ -2,7 +2,7 @@
 
 ## Frontend: Vercel
 1. Configura estos proyectos y dominios:
-   - `apps/web-public` en `www.serviciosdigitalesmx.online`
+   - `apps/web-public` en `serviciosdigitalesmx.online`
    - `apps/web-admin` en `app.serviciosdigitalesmx.online`
    - `apps/web-clientes` en `clientes.serviciosdigitalesmx.online`
 2. Define estas variables de entorno:

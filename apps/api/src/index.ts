@@ -6,7 +6,11 @@ import ordersRouter from './routes/orders';
 import financeRouter from './routes/finance';
 import customersRouter from './routes/customers';
 import inventoryRouter from './routes/inventory';
+import suppliersRouter from './routes/suppliers';
+import securityRouter from './routes/security';
 import publicRouter from './routes/public';
+import procurementRouter from './routes/procurement';
+import reportsRouter from './routes/reports';
 
 dotenv.config();
 
@@ -21,6 +25,12 @@ const baseDomains = (process.env.BASE_DOMAIN ?? 'serviciosdigitalesmx.online,ser
   .split(',')
   .map((d) => d.trim())
   .filter(Boolean);
+
+const localhostOrigins = new Set([
+  'localhost',
+  '127.0.0.1',
+  '::1',
+]);
 
 app.use(cors({
   origin: (origin, callback) => {
@@ -42,7 +52,10 @@ app.use(cors({
 
     const isWildcardAllowed = baseDomains.some((domain) => hostname === domain || hostname.endsWith(`.${domain}`));
 
-    const isAllowed = allowedHostnames.includes(hostname) || isWildcardAllowed || hostname.includes('localhost');
+    const isAllowed =
+      allowedHostnames.includes(hostname) ||
+      isWildcardAllowed ||
+      localhostOrigins.has(hostname);
     if (isAllowed) {
       return callback(null, true);
     }
@@ -68,6 +81,14 @@ app.use('/api/customers', customersRouter);
 
 app.use('/api/:tenantId/inventory', inventoryRouter);
 app.use('/api/inventory', inventoryRouter);
+app.use('/api/:tenantId/suppliers', suppliersRouter);
+app.use('/api/suppliers', suppliersRouter);
+app.use('/api/:tenantId/security', securityRouter);
+app.use('/api/security', securityRouter);
+app.use('/api/:tenantId/procurement', procurementRouter);
+app.use('/api/procurement', procurementRouter);
+app.use('/api/:tenantId/reports', reportsRouter);
+app.use('/api/reports', reportsRouter);
 app.use('/api/public', publicRouter);
 
 app.get('/healthz', (req, res) => {

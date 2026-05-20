@@ -1,26 +1,75 @@
+ "use client";
+
+import { useEffect, useMemo, useState } from 'react';
+import { RequireRole } from '@/components/guard/RequireRole';
+import { useAuth } from '@/components/guard/use-auth';
 import { ModuleShell } from '@/components/dashboard/module-shell';
+import { fixService } from '@/services/fixService';
 
 export default function GastosPage() {
+  const { role, sucursalId } = useAuth();
+  const [rows, setRows] = useState<Array<Record<string, string>>>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      try {
+        setLoading(true);
+        setError('');
+        const data = await fixService.getCashflow(sucursalId);
+        if (!cancelled) {
+          setRows(
+            (data as Array<Record<string, unknown>>).map((row) =>
+              Object.fromEntries(
+                Object.entries(row).map(([key, value]) => [key, value == null ? '' : String(value)])
+              ) as Record<string, string>
+            )
+          );
+        }
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : 'Error al cargar gastos');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    void load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [sucursalId]);
+
+  const stats = useMemo(
+    () => [
+      { label: 'Movimientos', value: String(rows.length), helper: 'Datos reales de cashflow.' },
+      { label: 'Sucursal', value: sucursalId, helper: 'Contexto obligatorio.' },
+      { label: 'Rol', value: role, helper: 'Permisos reales por usuario.' },
+    ],
+    [role, rows.length, sucursalId]
+  );
+
   return (
-    <ModuleShell
-      title="Gastos"
-      subtitle="Registro y control de egresos operativos, administrativos y extraordinarios."
-      icon="fas fa-receipt"
-      actionLabel="+ Registrar gasto"
-      stats={[
-        { label: 'Mes actual', value: '0 MXN', helper: 'Sin movimientos sincronizados.' },
-        { label: 'Categorías', value: '0', helper: 'Estructura lista para clasificación.' },
-        { label: 'Pendientes', value: '0', helper: 'No hay flujos reales aún.' },
-      ]}
-      columns={[
-        { label: 'Fecha', key: 'fecha' },
-        { label: 'Categoría', key: 'categoria' },
-        { label: 'Concepto', key: 'concepto' },
-        { label: 'Monto', key: 'monto' },
-      ]}
-      rows={[]}
-      emptyTitle="Registro de egresos pendiente de integración"
-      emptyCopy="Esta pantalla queda preparada para capturar gastos con validación de backend, tenant_id y categorización real. No se muestran datos simulados."
-    />
+    <RequireRole allowed={['owner', 'manager']}>
+      <ModuleShell
+        title="Gastos"
+        subtitle="Registro y control de egresos operativos, administrativos y extraordinarios."
+        icon="fas fa-receipt"
+        actionLabel="+ Registrar gasto"
+        stats={stats}
+        columns={[
+          { label: 'ID', key: 'id' },
+          { label: 'Sucursal', key: 'sucursal_id' },
+          { label: 'Ingreso', key: 'income' },
+          { label: 'Egreso', key: 'expense' },
+        ]}
+        rows={rows}
+        emptyTitle={loading ? 'Cargando gastos…' : error ? 'No pudimos cargar gastos' : 'Sin movimientos de gasto todavía'}
+        emptyCopy={error || 'La vista consume cashflow real por sucursal desde el backend.'}
+      />
+    </RequireRole>
   );
 }
