@@ -17,7 +17,19 @@ This document maps the production screens to the backend routes and Supabase tab
   - `loading`
   - `error`
   - `empty` when the folio does not exist
-  - `success` with order, status label, timeline and attachments placeholder only when real data exists
+  - `success` with order, status label, timeline and a `pdf_attachment` object when the order has a real PDF available
+
+### PDF contract
+
+- `pdf_attachment`
+  - `type`: `receipt_pdf`
+  - `label`: `PDF de la orden`
+  - `url`: real stored URL or inline `data:` URL from the reception flow
+  - `fileName`: optional suggested file name for downloads
+  - `mimeType`: `application/pdf`
+  - `source`: `stored_url` or `inline_data_url`
+- `attachments`
+  - compatibility array mirroring `pdf_attachment` when present
 
 ## Órdenes
 
@@ -123,11 +135,9 @@ This document maps the production screens to the backend routes and Supabase tab
 
 - Frontend route: `/dashboard/archivo`
 - Backend route:
-  - Pending dedicated endpoint
+  - `GET /api/:tenantId/orders`
 - Supabase tables:
   - `service_orders`
-  - `order_events` when available
-  - `order_documents` when available
 - Operation:
   - Read
 - Tenant isolation:

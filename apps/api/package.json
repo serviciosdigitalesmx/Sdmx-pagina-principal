@@ -1,6 +1,7 @@
 {
   "name": "@white-label/api",
   "version": "1.0.0",
+  "packageManager": "pnpm@9.0.0",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",

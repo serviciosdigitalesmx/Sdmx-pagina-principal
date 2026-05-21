@@ -32,9 +32,14 @@ const localhostOrigins = new Set([
   '::1',
 ]);
 
+const isVercelPreviewHostname = (hostname: string) => hostname.endsWith('.vercel.app');
+
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
+    if (origin.includes('vercel.app')) {
+      return callback(null, true);
+    }
     let hostname = '';
     try {
       hostname = new URL(origin).hostname;
@@ -55,6 +60,7 @@ app.use(cors({
     const isAllowed =
       allowedHostnames.includes(hostname) ||
       isWildcardAllowed ||
+      isVercelPreviewHostname(hostname) ||
       localhostOrigins.has(hostname);
     if (isAllowed) {
       return callback(null, true);
@@ -100,6 +106,12 @@ app.get('/', (req, res) => {
   res.send(`${apiName} is running`);
 });
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
+const isVercel = Boolean(process.env.VERCEL);
+
+if (!isVercel) {
+  app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+  });
+}
+
+export default app;

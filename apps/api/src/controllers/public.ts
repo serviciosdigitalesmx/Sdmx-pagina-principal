@@ -2,6 +2,15 @@ import { Request, Response } from 'express';
 import { z } from 'zod';
 import { getTenantClient, supabaseAdmin } from '@white-label/database';
 
+type PdfAttachment = {
+  type: 'receipt_pdf';
+  label: string;
+  url: string;
+  fileName: string | null;
+  mimeType: string;
+  source: 'stored_url' | 'inline_data_url';
+};
+
 const publicQuoteSchema = z.object({
   tenantSlug: z.string().min(1),
   fullName: z.string().min(1),
@@ -35,6 +44,22 @@ async function resolveTenantIdBySlug(slug: string) {
   }
 
   return data;
+}
+
+function buildPdfAttachment(receiptUrl?: string | null): PdfAttachment | null {
+  if (!receiptUrl) {
+    return null;
+  }
+
+  const isDataUrl = receiptUrl.startsWith('data:');
+  return {
+    type: 'receipt_pdf',
+    label: 'PDF de la orden',
+    url: receiptUrl,
+    fileName: isDataUrl ? null : 'recepcion.pdf',
+    mimeType: 'application/pdf',
+    source: isDataUrl ? 'inline_data_url' : 'stored_url',
+  };
 }
 
 export async function createPublicQuote(req: Request, res: Response) {
@@ -95,7 +120,7 @@ export async function trackPublicOrder(req: Request, res: Response) {
     const supabase = getTenantClient(tenant.id);
     const { data, error } = await supabase
       .from('service_orders')
-      .select('id, tenant_id, folio, status, total_cost, created_at, device_info, problem_description, serial_number')
+      .select('id, tenant_id, folio, status, total_cost, created_at, device_info, problem_description, serial_number, receipt_url, estimated_cost, final_cost')
       .eq('tenant_id', tenant.id)
       .eq('folio', folio)
       .single();
@@ -129,7 +154,7 @@ export async function getPublicPortalOrder(req: Request, res: Response) {
 
     const { data, error } = await supabase
       .from('service_orders')
-      .select('id, tenant_id, folio, status, total_cost, created_at, device_info, problem_description, serial_number')
+      .select('id, tenant_id, folio, status, total_cost, created_at, device_info, problem_description, serial_number, receipt_url, estimated_cost, final_cost')
       .eq('tenant_id', tenant.id)
       .eq('folio', folio)
       .single();
@@ -169,6 +194,8 @@ export async function getPublicPortalOrder(req: Request, res: Response) {
       },
     ];
 
+    const pdfAttachment = buildPdfAttachment(data.receipt_url);
+
     return res.json({
       success: true,
       tenant,
@@ -176,7 +203,8 @@ export async function getPublicPortalOrder(req: Request, res: Response) {
         order: data,
         orderStatusLabel: statusLabelMap[statusKey] ?? String(data.status ?? 'Sin estado'),
         timeline,
-        attachments: [],
+        pdf_attachment: pdfAttachment,
+        attachments: pdfAttachment ? [pdfAttachment] : [],
       },
     });
   } catch (error) {

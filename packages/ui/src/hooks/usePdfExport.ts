@@ -1,11 +1,19 @@
-export function usePdfExport(data: unknown, filename: string) {
-  let loading = false;
+import { useCallback, useState } from 'react';
 
-  const exportPdf = async () => {
-    loading = true;
+export type PdfExportInput = string | Blob | BlobPart[] | Record<string, unknown>;
+
+export function usePdfExport(data: PdfExportInput, filename: string, mimeType = 'application/pdf') {
+  const [loading, setLoading] = useState(false);
+
+  const exportPdf = useCallback(async () => {
+    setLoading(true);
+
     try {
-      const content = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
-      const blob = new Blob([content], { type: 'application/pdf' });
+      const blob =
+        data instanceof Blob
+          ? data
+          : new Blob([typeof data === 'string' ? data : JSON.stringify(data, null, 2)], { type: mimeType });
+
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
       anchor.href = url;
@@ -14,9 +22,9 @@ export function usePdfExport(data: unknown, filename: string) {
       anchor.click();
       URL.revokeObjectURL(url);
     } finally {
-      loading = false;
+      setLoading(false);
     }
-  };
+  }, [data, filename, mimeType]);
 
-  return { exportPdf, get loading() { return loading; } };
+  return { exportPdf, loading };
 }

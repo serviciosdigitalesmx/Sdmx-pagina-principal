@@ -13,6 +13,47 @@ type ArchivedOrder = {
   estado: string;
 };
 
+function normalizeStatus(value: string) {
+  const status = value.toLowerCase();
+
+  if (status.includes("recib")) return "Recibido";
+  if (status.includes("pend")) return "Pendiente";
+  if (status.includes("diag")) return "Diagnóstico";
+  if (status.includes("repar")) return "En reparación";
+  if (status.includes("list")) return "Listo";
+  if (status.includes("entreg")) return "Entregado";
+  if (status.includes("cerr")) return "Cerrado";
+  if (status.includes("complete")) return "Completado";
+  if (status.includes("ready")) return "Listo";
+  if (status.includes("delivered")) return "Entregado";
+  if (status.includes("waiting")) return "En espera";
+
+  return value || "Sin estado";
+}
+
+function resolveCloseDate(order: Record<string, unknown>) {
+  const candidate =
+    order.delivered_at ??
+    order.completed_at ??
+    order.archived_at ??
+    order.updated_at ??
+    order.created_at;
+
+  if (!candidate) {
+    return "Sin fecha";
+  }
+
+  const date = new Date(String(candidate));
+  if (Number.isNaN(date.getTime())) {
+    return String(candidate);
+  }
+
+  return new Intl.DateTimeFormat("es-MX", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
+}
+
 export default function ArchivoPage() {
   const { role } = useAuth();
   const [rows, setRows] = useState<ArchivedOrder[]>([]);
@@ -30,13 +71,21 @@ export default function ArchivoPage() {
         const archived = (data as Array<Record<string, unknown>>)
           .filter((order) => {
             const status = String(order.status ?? "").toLowerCase();
-            return ["listo", "entregado", "cerrado", "completed", "complete"].some((value) => status.includes(value));
+            return [
+              "list",
+              "entreg",
+              "cerr",
+              "complete",
+              "ready",
+              "delivered",
+              "waiting",
+            ].some((value) => status.includes(value));
           })
           .map((order) => ({
             folio: String(order.folio ?? ""),
             client: String((order.device_info as { customer_name?: string } | undefined)?.customer_name ?? ""),
-            cierre: String(order.created_at ?? ""),
-            estado: String(order.status ?? ""),
+            cierre: resolveCloseDate(order),
+            estado: normalizeStatus(String(order.status ?? "")),
           }));
 
         if (!cancelled) setRows(archived);

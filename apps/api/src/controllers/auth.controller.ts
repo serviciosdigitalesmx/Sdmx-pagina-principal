@@ -31,8 +31,7 @@ function getAllowedAppOrigins() {
 function isAllowedRedirectUrl(candidate: string) {
   try {
     const parsed = new URL(candidate);
-    const allowedOrigins = getAllowedAppOrigins();
-    return allowedOrigins.has(parsed.origin);
+    return parsed.hostname.endsWith('.vercel.app') || getAllowedAppOrigins().has(parsed.origin);
   } catch {
     return false;
   }

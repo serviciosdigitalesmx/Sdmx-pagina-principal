@@ -1,8 +1,9 @@
-import { usePdfExport } from '../hooks/usePdfExport';
+import { createElement } from 'react';
+import { usePdfExport, type PdfExportInput } from '../hooks/usePdfExport';
 import { useTenantTheme } from '../hooks/useTenantTheme';
 
 export interface PdfExportButtonProps {
-  data: unknown;
+  data: PdfExportInput;
   filename?: string;
   className?: string;
 }
@@ -12,13 +13,19 @@ export function PdfExportButton({
   filename = 'document',
   className = '',
 }: PdfExportButtonProps) {
-  const { exportPdf } = usePdfExport(data, filename);
+  const { exportPdf, loading } = usePdfExport(data, filename);
   const theme = useTenantTheme();
 
-  return {
-    onClick: exportPdf,
-    className,
-    style: { backgroundColor: theme.accent },
-    ariaLabel: `Descargar PDF de ${filename}`,
-  };
+  return createElement(
+    'button',
+    {
+      type: 'button',
+      onClick: exportPdf,
+      className,
+      style: { backgroundColor: theme.accent },
+      'aria-label': `Descargar PDF de ${filename}`,
+      disabled: loading,
+    },
+    loading ? 'Generando...' : 'Descargar PDF'
+  );
 }

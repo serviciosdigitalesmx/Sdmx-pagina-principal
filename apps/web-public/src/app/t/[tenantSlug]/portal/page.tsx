@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState, type FormEvent } from "react";
 import { useParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 type PortalOrderResponse = {
   success: true;
@@ -26,7 +27,22 @@ type PortalOrderResponse = {
     };
     orderStatusLabel: string;
     timeline: Array<{ label: string; status: "completado" | "actual" | "pendiente"; note: string }>;
-    attachments: unknown[];
+    pdf_attachment: {
+      type: "receipt_pdf";
+      label: string;
+      url: string;
+      fileName: string | null;
+      mimeType: string;
+      source: "stored_url" | "inline_data_url";
+    } | null;
+    attachments: Array<{
+      type: "receipt_pdf";
+      label: string;
+      url: string;
+      fileName: string | null;
+      mimeType: string;
+      source: "stored_url" | "inline_data_url";
+    }>;
   };
 };
 
@@ -42,8 +58,9 @@ function resolveWhatsappHref(phone?: string) {
 
 export default function PortalPage() {
   const params = useParams<{ tenantSlug?: string }>();
+  const searchParams = useSearchParams();
   const tenantSlug = typeof params?.tenantSlug === "string" && params.tenantSlug.trim().length > 0 ? params.tenantSlug : "demo";
-  const [folio, setFolio] = useState("");
+  const [folio, setFolio] = useState(searchParams.get("folio") ?? "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<PortalOrderResponse["data"] | null>(null);
@@ -54,6 +71,10 @@ export default function PortalPage() {
   const whatsappHref = useMemo(() => {
     const customerPhone = result?.order.device_info?.customer_phone;
     return resolveWhatsappHref(customerPhone);
+  }, [result]);
+
+  const pdfAttachment = useMemo(() => {
+    return result?.pdf_attachment ?? result?.attachments?.[0] ?? null;
   }, [result]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -217,6 +238,17 @@ export default function PortalPage() {
                 <p className="mt-2 text-sm leading-6 text-slate-600">
                   {result.attachments.length > 0 ? "Adjuntos disponibles." : "No hay adjuntos registrados para esta orden."}
                 </p>
+                {pdfAttachment ? (
+                  <a
+                    href={pdfAttachment.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    download={pdfAttachment.fileName ?? undefined}
+                    className="mt-3 inline-flex rounded-full bg-[#2c6e9f] px-4 py-2 font-semibold text-white"
+                  >
+                    Ver PDF de la orden
+                  </a>
+                ) : null}
               </div>
             </aside>
           </section>
