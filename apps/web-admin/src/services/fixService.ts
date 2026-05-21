@@ -41,11 +41,17 @@ class FixService {
   }
 
   private async request<T>(path: string, init: RequestInit = {}): Promise<T> {
+    const token = this.getToken();
+
+    if (!token) {
+      throw new Error('No hay sesión activa. Vuelve a iniciar sesión.');
+    }
+
     const response = await fetch(`${this.apiUrl}${path}`, {
       ...init,
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.getToken()}`,
+        Authorization: `Bearer ${token}`,
         ...(init.headers || {}),
       },
     });
