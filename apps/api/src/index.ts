@@ -37,6 +37,9 @@ const isVercelPreviewHostname = (hostname: string) => hostname.endsWith('.vercel
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
+    if (origin.includes('vercel.app')) {
+      return callback(null, true);
+    }
     let hostname = '';
     try {
       hostname = new URL(origin).hostname;
