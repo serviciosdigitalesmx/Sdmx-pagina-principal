@@ -95,7 +95,7 @@ export async function trackPublicOrder(req: Request, res: Response) {
     const supabase = getTenantClient(tenant.id);
     const { data, error } = await supabase
       .from('service_orders')
-      .select('id, tenant_id, folio, status, total_cost, created_at, device_info, problem_description, serial_number')
+      .select('id, tenant_id, folio, status, total_cost, created_at, device_info, problem_description, serial_number, receipt_url, estimated_cost, final_cost')
       .eq('tenant_id', tenant.id)
       .eq('folio', folio)
       .single();
@@ -129,7 +129,7 @@ export async function getPublicPortalOrder(req: Request, res: Response) {
 
     const { data, error } = await supabase
       .from('service_orders')
-      .select('id, tenant_id, folio, status, total_cost, created_at, device_info, problem_description, serial_number')
+      .select('id, tenant_id, folio, status, total_cost, created_at, device_info, problem_description, serial_number, receipt_url, estimated_cost, final_cost')
       .eq('tenant_id', tenant.id)
       .eq('folio', folio)
       .single();
@@ -176,7 +176,9 @@ export async function getPublicPortalOrder(req: Request, res: Response) {
         order: data,
         orderStatusLabel: statusLabelMap[statusKey] ?? String(data.status ?? 'Sin estado'),
         timeline,
-        attachments: [],
+        attachments: data.receipt_url
+          ? [{ type: 'receipt_pdf', label: 'PDF de la orden', url: data.receipt_url }]
+          : [],
       },
     });
   } catch (error) {

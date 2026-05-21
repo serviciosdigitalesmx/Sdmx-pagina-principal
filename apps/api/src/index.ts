@@ -32,6 +32,8 @@ const localhostOrigins = new Set([
   '::1',
 ]);
 
+const isVercelPreviewHostname = (hostname: string) => hostname.endsWith('.vercel.app');
+
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
@@ -55,6 +57,7 @@ app.use(cors({
     const isAllowed =
       allowedHostnames.includes(hostname) ||
       isWildcardAllowed ||
+      isVercelPreviewHostname(hostname) ||
       localhostOrigins.has(hostname);
     if (isAllowed) {
       return callback(null, true);

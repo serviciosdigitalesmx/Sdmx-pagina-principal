@@ -11,6 +11,23 @@ const createOrderSchema = z.object({
   deviceModel: z.string().min(1, 'La marca y modelo son requeridos'),
   issue: z.string().min(1, 'La falla es requerida'),
   quoteFolio: z.string().optional(),
+  estimatedCost: z.coerce.number().min(0).default(0),
+  promisedDate: z.string().optional().or(z.literal('')),
+  includeIva: z.coerce.boolean().default(false),
+  checklist: z.object({
+    hasCharger: z.coerce.boolean().default(false),
+    screenCondition: z.string().optional().default(''),
+    powersOn: z.coerce.boolean().default(false),
+    backupRequired: z.coerce.boolean().default(false),
+    notes: z.string().optional().default(''),
+  }).default({
+    hasCharger: false,
+    screenCondition: '',
+    powersOn: false,
+    backupRequired: false,
+    notes: '',
+  }),
+  receiptUrl: z.string().optional().or(z.literal('')),
 });
 
 export const createOrder = async (req: Request, res: Response) => {
@@ -25,6 +42,9 @@ export const createOrder = async (req: Request, res: Response) => {
     const supabase = getTenantClient(tenantId);
     const folioPrefix = process.env.ORDER_FOLIO_PREFIX ?? 'ORD';
     const newFolio = `${folioPrefix}-${Date.now().toString(36).toUpperCase()}`;
+    const estimatedCost = Number.isFinite(validatedData.estimatedCost) ? validatedData.estimatedCost : 0;
+    const ivaAmount = validatedData.includeIva ? Number((estimatedCost * 0.16).toFixed(2)) : 0;
+    const finalCost = Number((estimatedCost + ivaAmount).toFixed(2));
 
     const { data, error } = await supabase
       .from('service_orders')
@@ -32,6 +52,7 @@ export const createOrder = async (req: Request, res: Response) => {
         {
           tenant_id: tenantId,
           folio: newFolio,
+          status: 'recibido',
           device_info: {
             brand: validatedData.deviceModel,
             model: validatedData.deviceModel,
@@ -41,8 +62,10 @@ export const createOrder = async (req: Request, res: Response) => {
             customer_email: validatedData.clientEmail || null,
           },
           problem_description: validatedData.issue,
-          status: 'pending',
-          total_cost: 0,
+          estimated_cost: estimatedCost,
+          final_cost: finalCost,
+          promised_date: validatedData.promisedDate || null,
+          receipt_url: validatedData.receiptUrl || null,
         }
       ])
       .select()
@@ -56,10 +79,44 @@ export const createOrder = async (req: Request, res: Response) => {
       });
     }
 
+    const checklist = validatedData.checklist ?? {
+      hasCharger: false,
+      screenCondition: '',
+      powersOn: false,
+      backupRequired: false,
+      notes: '',
+    };
+
+    const { error: checklistError } = await supabase.from('service_order_checklists').insert([
+      {
+        tenant_id: tenantId,
+        service_order_id: data.id,
+        has_charger: checklist.hasCharger,
+        screen_condition: checklist.screenCondition || null,
+        powers_on: checklist.powersOn,
+        backup_required: checklist.backupRequired,
+        notes: checklist.notes || null,
+      },
+    ]);
+
+    if (checklistError) {
+      console.error('Supabase checklist insert error:', checklistError.message);
+      return res.status(502).json({
+        error: 'Failed to persist order checklist',
+        details: checklistError.message,
+      });
+    }
+
     return res.status(201).json({
       success: true,
       message: 'Orden creada exitosamente',
-      data,
+      data: {
+        ...data,
+        final_cost: finalCost,
+        estimated_cost: estimatedCost,
+        receipt_url: validatedData.receiptUrl || null,
+        include_iva: validatedData.includeIva,
+      },
     });
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {
@@ -84,7 +141,7 @@ export const listOrders = async (req: Request, res: Response) => {
     const supabase = getTenantClient(tenantId);
     const { data, error } = await supabase
       .from('service_orders')
-      .select('*')
+      .select('*, service_order_checklists(*)')
       .eq('tenant_id', tenantId)
       .order('created_at', { ascending: false })
       .limit(50);
