@@ -16,7 +16,57 @@ const initialState: LoginState = {
 };
 
 function getDashboardRedirectUrl() {
-  return new URL("/hub", window.location.origin).toString();
+  const adminUrl = process.env.NEXT_PUBLIC_WEB_ADMIN_URL;
+
+  if (!adminUrl) {
+    return new URL("/dashboard", window.location.origin).toString();
+  }
+
+  try {
+    return new URL("/", adminUrl).toString();
+  } catch {
+    return new URL("/dashboard", window.location.origin).toString();
+  }
+}
+
+function getAdminBridgeUrl(token: string) {
+  const adminUrl = process.env.NEXT_PUBLIC_WEB_ADMIN_URL;
+
+  if (!adminUrl) {
+    return getDashboardRedirectUrl();
+  }
+
+  try {
+    const bridgeUrl = new URL("/auth/bridge", adminUrl);
+    bridgeUrl.searchParams.set("token", token);
+    return bridgeUrl.toString();
+  } catch {
+    return getDashboardRedirectUrl();
+  }
+}
+
+async function exchangeSessionForApiToken(accessToken: string) {
+  const apiUrl = (process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/$/, "");
+
+  if (!apiUrl) {
+    throw new Error("API base URL no está configurada.");
+  }
+
+  const response = await fetch(`${apiUrl}/api/auth/exchange`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ accessToken }),
+  });
+
+  const payload = (await response.json().catch(() => ({}))) as { error?: string; token?: string };
+
+  if (!response.ok || !payload.token) {
+    throw new Error(payload.error || `No pudimos convertir la sesión. HTTP ${response.status}`);
+  }
+
+  return payload.token;
 }
 
 export default function LoginPage() {
@@ -48,11 +98,16 @@ export default function LoginPage() {
         throw signInError;
       }
 
-      if (data.session?.access_token) {
-        saveAuthToken(data.session.access_token);
+      const accessToken = data.session?.access_token;
+
+      if (accessToken) {
+        const apiToken = await exchangeSessionForApiToken(accessToken);
+        saveAuthToken(apiToken);
+        window.location.replace(getAdminBridgeUrl(apiToken));
+        return;
       }
 
-      window.location.assign(getDashboardRedirectUrl());
+      window.location.replace(getDashboardRedirectUrl());
     } catch (submitError) {
       const message = submitError instanceof Error ? submitError.message : "Error inesperado";
       setError(message);

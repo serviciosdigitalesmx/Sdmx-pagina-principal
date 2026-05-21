@@ -63,6 +63,9 @@ importers:
 
   apps/web-admin:
     dependencies:
+      '@tailwindcss/postcss':
+        specifier: ^4
+        version: 4.3.0
       '@white-label/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -76,9 +79,6 @@ importers:
         specifier: 19.2.4
         version: 19.2.4(react@19.2.4)
     devDependencies:
-      '@tailwindcss/postcss':
-        specifier: ^4
-        version: 4.3.0
       '@types/node':
         specifier: ^20
         version: 20.19.41

@@ -1,13 +1,16 @@
 "use client";
 
 export const AUTH_TOKEN_KEY = process.env.NEXT_PUBLIC_AUTH_TOKEN_KEY ?? "app_auth_token";
+const AUTH_TOKEN_KEYS = Array.from(new Set([AUTH_TOKEN_KEY, "app_auth_token", "auth_token"]));
 
 export function saveAuthToken(token: string) {
   if (typeof window === "undefined") {
     return;
   }
 
-  window.localStorage.setItem(AUTH_TOKEN_KEY, token);
+  for (const key of AUTH_TOKEN_KEYS) {
+    window.localStorage.setItem(key, token);
+  }
 }
 
 export function readAuthToken() {
@@ -15,5 +18,13 @@ export function readAuthToken() {
     return null;
   }
 
-  return window.localStorage.getItem(AUTH_TOKEN_KEY);
+  for (const key of AUTH_TOKEN_KEYS) {
+    const value = window.localStorage.getItem(key);
+
+    if (value) {
+      return value;
+    }
+  }
+
+  return null;
 }

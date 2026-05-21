@@ -73,6 +73,27 @@ function signJwt(payload: Record<string, unknown>) {
   return `${signingInput}.${signature}`;
 }
 
+function buildAuthPayload(user: { id: string; email?: string | null }, tenant: { id: string; slug?: string | null }, role: string, branchId?: string | null) {
+  return {
+    token: signJwt({
+      sub: user.id,
+      email: user.email ?? undefined,
+      role,
+      tenant_id: tenant.id,
+      tenant_slug: tenant.slug ?? undefined,
+      sucursal_id: branchId ?? undefined,
+    }),
+    user: {
+      sub: user.id,
+      email: user.email ?? null,
+      role,
+      tenantId: tenant.id,
+      tenantSlug: tenant.slug ?? null,
+      branchId: branchId ?? null,
+    },
+  };
+}
+
 export const register = async (req: Request, res: Response) => {
   const parsed = registerSchema.safeParse(req.body);
 
@@ -237,22 +258,93 @@ export const completeGoogleRegistration = async (req: Request, res: Response) =>
       throw new Error('Tenant transaction returned no data');
     }
 
-    const token = signJwt({
-      sub: userResult.user.id,
-      email,
-      role: 'owner',
-      tenant_id: tenant.tenant_id,
-      tenant_slug: tenant.tenant_slug,
-    });
+    const authPayload = buildAuthPayload(
+      { id: userResult.user.id, email },
+      { id: tenant.tenant_id, slug: tenant.tenant_slug },
+      'owner'
+    );
 
     return res.status(201).json({
-      token,
+      token: authPayload.token,
+      user: authPayload.user,
       tenant: {
         id: tenant.tenant_id,
         slug: tenant.tenant_slug,
         trialExpiresAt: tenant.trial_expires_at,
       },
-      redirectUrl: `${appUrl}/onboarding/success?tenant=${encodeURIComponent(tenant.tenant_slug)}&token=${encodeURIComponent(token)}`,
+      redirectUrl: `${appUrl}/onboarding/success?tenant=${encodeURIComponent(tenant.tenant_slug)}&token=${encodeURIComponent(authPayload.token)}`,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    return res.status(500).json({ error: message });
+  }
+};
+
+export const exchangeSupabaseSession = async (req: Request, res: Response) => {
+  const payloadSchema = z.object({
+    accessToken: z.string().min(1),
+  });
+
+  const parsed = payloadSchema.safeParse(req.body);
+
+  if (!parsed.success) {
+    return res.status(400).json({
+      error: 'Invalid payload',
+      details: parsed.error.flatten(),
+    });
+  }
+
+  const { accessToken } = parsed.data;
+
+  try {
+    const { data, error } = await supabaseAdmin.auth.getUser(accessToken);
+
+    if (error || !data.user) {
+      return res.status(401).json({ error: error?.message ?? 'Unable to validate session' });
+    }
+
+    const { data: userRow, error: userRowError } = await supabaseAdmin
+      .from('users')
+      .select('tenant_id, role, branch_id')
+      .eq('auth_user_id', data.user.id)
+      .maybeSingle();
+
+    if (userRowError) {
+      return res.status(502).json({ error: userRowError.message });
+    }
+
+    if (!userRow?.tenant_id) {
+      return res.status(404).json({ error: 'Tenant not found for authenticated user' });
+    }
+
+    const { data: tenantRow, error: tenantError } = await supabaseAdmin
+      .from('tenants')
+      .select('id, slug, name')
+      .eq('id', userRow.tenant_id)
+      .maybeSingle();
+
+    if (tenantError) {
+      return res.status(502).json({ error: tenantError.message });
+    }
+
+    if (!tenantRow) {
+      return res.status(404).json({ error: 'Tenant not found' });
+    }
+
+    const authPayload = buildAuthPayload(
+      { id: data.user.id, email: data.user.email },
+      { id: tenantRow.id, slug: tenantRow.slug },
+      userRow.role,
+      userRow.branch_id
+    );
+
+    return res.status(200).json({
+      ...authPayload,
+      tenant: {
+        id: tenantRow.id,
+        slug: tenantRow.slug,
+        name: tenantRow.name,
+      },
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Internal server error';
