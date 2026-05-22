@@ -35,7 +35,7 @@ const publicPortalSchema = z.object({
 async function resolveTenantIdBySlug(slug: string) {
   const { data, error } = await supabaseAdmin
     .from('tenants')
-    .select('id, slug, name')
+    .select('id, slug, name, contact_phone, contact_email')
     .eq('slug', slug)
     .single();
 

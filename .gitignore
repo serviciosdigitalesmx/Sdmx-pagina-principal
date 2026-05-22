@@ -21,3 +21,4 @@ server/.env
 .DS_Store
 .vercel
 .turbo/
+.env*.local

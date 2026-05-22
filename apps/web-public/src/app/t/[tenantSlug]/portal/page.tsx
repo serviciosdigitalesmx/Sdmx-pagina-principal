@@ -7,7 +7,13 @@ import { useSearchParams } from "next/navigation";
 
 type PortalOrderResponse = {
   success: true;
-  tenant: { id: string; slug: string; name: string };
+  tenant: {
+    id: string;
+    slug: string;
+    name: string;
+    contact_phone?: string | null;
+    contact_email?: string | null;
+  };
   data: {
     order: {
       folio: string;
@@ -47,7 +53,7 @@ type PortalOrderResponse = {
 };
 
 function resolveApiBaseUrl() {
-  return (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
+  return (process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/$/, "");
 }
 
 function resolveWhatsappHref(phone?: string) {
@@ -64,14 +70,15 @@ export default function PortalPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<PortalOrderResponse["data"] | null>(null);
+  const [tenant, setTenant] = useState<PortalOrderResponse["tenant"] | null>(null);
   const [tenantLabel, setTenantLabel] = useState<string>(tenantSlug);
 
   const apiBaseUrl = resolveApiBaseUrl();
 
   const whatsappHref = useMemo(() => {
-    const customerPhone = result?.order.device_info?.customer_phone;
-    return resolveWhatsappHref(customerPhone);
-  }, [result]);
+    const contactPhone = tenant?.contact_phone;
+    return resolveWhatsappHref(contactPhone || undefined);
+  }, [tenant]);
 
   const pdfAttachment = useMemo(() => {
     return result?.pdf_attachment ?? result?.attachments?.[0] ?? null;
@@ -82,10 +89,11 @@ export default function PortalPage() {
     setLoading(true);
     setError(null);
     setResult(null);
+    setTenant(null);
 
     try {
       if (!apiBaseUrl) {
-        throw new Error("NEXT_PUBLIC_API_URL no está configurada");
+        throw new Error("NEXT_PUBLIC_API_URL o NEXT_PUBLIC_API_BASE_URL no está configurada");
       }
 
       const response = await fetch(
@@ -99,6 +107,7 @@ export default function PortalPage() {
 
       if (payload && "success" in payload) {
         setTenantLabel(payload.tenant.name || tenantSlug);
+        setTenant(payload.tenant);
         setResult(payload.data);
       } else {
         throw new Error("Respuesta inválida del servidor");
@@ -224,7 +233,7 @@ export default function PortalPage() {
               <div className="rounded-2xl border border-slate-200 bg-white p-4">
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-500">WhatsApp del taller</p>
                 <p className="mt-1 text-sm text-slate-700">
-                  {result.order.device_info?.customer_phone ?? "No hay teléfono capturado en esta orden"}
+                  {tenant?.contact_phone ?? "No hay teléfono de contacto registrado"}
                 </p>
                 {whatsappHref ? (
                   <a href={whatsappHref} className="mt-3 inline-block font-semibold text-[#245a82]">

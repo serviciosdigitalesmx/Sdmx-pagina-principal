@@ -23,6 +23,8 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const getApiUrl = () => (process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/$/, "");
+
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     setForm((current) => ({ ...current, [name]: value }));
@@ -34,9 +36,9 @@ export default function OnboardingPage() {
     setError(null);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
+      const apiUrl = getApiUrl();
       if (!apiUrl) {
-        throw new Error("API_URL no está configurada.");
+        throw new Error("API base URL no está configurada.");
       }
 
       const response = await fetch(`${apiUrl}/api/auth/register`, {
@@ -76,9 +78,9 @@ export default function OnboardingPage() {
   };
 
   const handleGoogleRegister = () => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
+    const apiUrl = getApiUrl();
     if (!apiUrl) {
-      setError("Falta configurar NEXT_PUBLIC_API_URL.");
+      setError("Falta configurar NEXT_PUBLIC_API_URL o NEXT_PUBLIC_API_BASE_URL.");
       return;
     }
 

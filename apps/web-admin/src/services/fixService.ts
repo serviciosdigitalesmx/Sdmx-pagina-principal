@@ -23,14 +23,36 @@ class FixService {
   }
 
   private get tenantId() {
+    const token = this.getToken();
+    if (token) {
+      const decoded = this.decodeJwt(token);
+      if (decoded && decoded.tenant_id) {
+        return decoded.tenant_id;
+      }
+    }
     if (typeof window !== 'undefined') {
       const host = window.location.host;
-      // Extract subdomain as tenant if not on localhost
+      // Extract subdomain as tenant if not on localhost and not the "app" admin domain
       if (host.includes('.') && !host.includes('localhost') && !host.includes('vercel.app')) {
-        return host.split('.')[0];
+        const sub = host.split('.')[0];
+        if (sub !== 'app') {
+          return sub;
+        }
       }
     }
     return process.env.NEXT_PUBLIC_DEFAULT_TENANT_ID || 'tenant-local';
+  }
+
+  private decodeJwt(token: string) {
+    try {
+      const parts = token.split('.');
+      if (parts.length !== 3) return null;
+      const payload = parts[1];
+      const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+      return JSON.parse(decoded) as { tenant_id?: string };
+    } catch (e) {
+      return null;
+    }
   }
 
   private getToken(): string {

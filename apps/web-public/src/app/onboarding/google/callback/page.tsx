@@ -21,7 +21,7 @@ export default function GoogleCallbackPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  const apiUrl = (process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/$/, "");
 
   useEffect(() => {
     let mounted = true;
@@ -97,7 +97,7 @@ export default function GoogleCallbackPage() {
 
     try {
       if (!apiUrl) {
-        throw new Error('Falta configurar NEXT_PUBLIC_API_URL');
+        throw new Error('Falta configurar NEXT_PUBLIC_API_URL o NEXT_PUBLIC_API_BASE_URL');
       }
 
       const supabase = getBrowserSupabaseClient();

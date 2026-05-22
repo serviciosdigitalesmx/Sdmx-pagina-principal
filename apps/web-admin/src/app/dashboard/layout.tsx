@@ -12,7 +12,10 @@ export default async function DashboardLayout({
 
   let tenantId = process.env.NEXT_PUBLIC_DEFAULT_TENANT_ID ?? 'taller';
   if (host && host.includes('.') && !host.includes('localhost') && !host.includes('vercel.app')) {
-    tenantId = host.split('.')[0];
+    const sub = host.split('.')[0];
+    if (sub !== 'app') {
+      tenantId = sub;
+    }
   }
 
   const tenant = {

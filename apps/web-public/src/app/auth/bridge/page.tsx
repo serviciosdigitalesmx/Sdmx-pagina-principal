@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { saveAuthToken } from "@/lib/auth-storage";
 
 function resolveNextUrl() {
-  return new URL("/hub", window.location.origin).toString();
+  return new URL("/dashboard", window.location.origin).toString();
 }
 
 export default function AuthBridgePage() {
@@ -29,7 +29,7 @@ export default function AuthBridgePage() {
         <p className="text-xs uppercase tracking-[0.35em] text-[#245a82]">Sesión autenticada</p>
         <h1 className="mt-4 text-3xl font-semibold tracking-tight">Preparando el panel</h1>
         <p className="mt-4 text-sm leading-7 text-slate-600">
-          {token ? "La sesión quedó guardada. Redirigiendo al hub..." : "No llegó el token de sesión."}
+          {token ? "La sesión quedó guardada. Redirigiendo al panel..." : "No llegó el token de sesión."}
         </p>
       </div>
     </main>

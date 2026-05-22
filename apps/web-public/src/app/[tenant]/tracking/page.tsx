@@ -16,7 +16,7 @@ export default function TenantTrackingPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
+  const apiUrl = (process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/$/, "");
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -26,7 +26,7 @@ export default function TenantTrackingPage() {
 
     try {
       if (!apiUrl) {
-        throw new Error("Falta configurar NEXT_PUBLIC_API_URL");
+        throw new Error("Falta configurar NEXT_PUBLIC_API_URL o NEXT_PUBLIC_API_BASE_URL");
       }
 
       const url = new URL(`${apiUrl}/api/public/tracking`);

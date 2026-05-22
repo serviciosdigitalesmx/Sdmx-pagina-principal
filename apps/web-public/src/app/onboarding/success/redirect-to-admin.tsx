@@ -5,22 +5,22 @@ import { saveAuthToken } from "@/lib/auth-storage";
 
 function resolveAdminBridgeUrl(token?: string) {
   if (!token) {
-    return null;
+    return new URL("/dashboard", window.location.origin).toString();
   }
 
   const adminUrl = process.env.NEXT_PUBLIC_WEB_ADMIN_URL;
 
   if (!adminUrl) {
-    return null;
+    return new URL("/dashboard", window.location.origin).toString();
   }
 
   if (typeof window !== "undefined") {
     try {
       if (new URL(adminUrl).origin === window.location.origin) {
-        return null;
+        return new URL("/dashboard", window.location.origin).toString();
       }
     } catch {
-      return null;
+      return new URL("/dashboard", window.location.origin).toString();
     }
   }
 
@@ -32,6 +32,7 @@ function resolveAdminBridgeUrl(token?: string) {
 export function AutoRedirectToAdmin({ token }: { token?: string }) {
   useEffect(() => {
     if (!token) {
+      window.location.replace("/dashboard");
       return;
     }
 
@@ -41,6 +42,8 @@ export function AutoRedirectToAdmin({ token }: { token?: string }) {
 
     if (bridgeUrl) {
       window.location.replace(bridgeUrl);
+    } else {
+      window.location.replace("/dashboard");
     }
   }, [token]);
 
