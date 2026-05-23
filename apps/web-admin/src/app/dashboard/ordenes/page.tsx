@@ -68,6 +68,10 @@ function buildPortalUrl(baseUrl: string, tenantSlug: string, folio?: string | nu
   return `${base}/t/${encodeURIComponent(tenantSlug)}/portal${folioQuery}`;
 }
 
+function isUuid(value: string | null | undefined) {
+  return typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
 function whatsappLink(phone?: string | null, tenantSlug?: string | null, portalBaseUrl?: string | null, folio?: string | null) {
   if (!phone) return null;
   const normalized = phone.replace(/\D/g, "");
@@ -247,6 +251,7 @@ export default function OrdenesKanbanPage() {
     try {
       setSaving(true);
       setError("");
+      const branchId = isUuid(sucursalId) ? sucursalId : undefined;
 
       const created = (await fixService.createOrder({
         clientName: form.clientName.trim(),
@@ -256,7 +261,7 @@ export default function OrdenesKanbanPage() {
         deviceModel: form.deviceModel.trim(),
         issue: form.issue.trim(),
         includeIva: form.includeIva,
-        branchId: sucursalId || undefined,
+        branchId,
       })) as OrderRow;
 
       if (!created.id) {
