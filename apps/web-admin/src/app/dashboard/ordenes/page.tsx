@@ -48,6 +48,7 @@ function normalizeStatus(status?: string): OrderStatus {
 
 export default function OrdenesKanbanPage() {
   const { role } = useAuth();
+  const [mounted, setMounted] = useState(false);
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -62,6 +63,10 @@ export default function OrdenesKanbanPage() {
     deviceModel: "",
     issue: "",
   });
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -85,6 +90,30 @@ export default function OrdenesKanbanPage() {
       cancelled = true;
     };
   }, []);
+
+  if (!mounted) {
+    return (
+      <RequireRole allowed={["owner", "manager", "technician"]}>
+        <div className="space-y-6 text-slate-950">
+          <header className="flex flex-col justify-between gap-4 rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_16px_70px_rgba(15,23,42,0.08)] sm:flex-row sm:items-center">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-slate-950 [font-family:var(--font-display)]">
+                Tablero de Órdenes
+              </h1>
+              <p className="mt-1 text-sm text-slate-600">Gestiona el flujo de trabajo del taller con datos reales del API.</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="h-11 w-36 rounded-full bg-slate-100" aria-busy="true" />
+            </div>
+          </header>
+
+          <div className="rounded-[24px] border border-slate-200 bg-white px-4 py-8 text-center text-sm text-slate-500 shadow-[0_12px_50px_rgba(15,23,42,0.06)]">
+            Cargando órdenes...
+          </div>
+        </div>
+      </RequireRole>
+    );
+  }
 
   const columns = useMemo(
     () =>
