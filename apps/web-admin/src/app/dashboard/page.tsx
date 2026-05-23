@@ -1,5 +1,5 @@
-import { OperationalHub } from "@/components/dashboard/operational-hub";
+import { SessionGate } from "@/components/auth/session-gate";
 
 export default function DashboardPage() {
-  return <OperationalHub />;
+  return <SessionGate />;
 }

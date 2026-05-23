@@ -57,9 +57,9 @@ class FixService {
 
   private getToken(): string {
     if (typeof window === 'undefined') {
-      return process.env.NEXT_PUBLIC_DEFAULT_API_TOKEN || '';
+      return '';
     }
-    return readAuthToken() || process.env.NEXT_PUBLIC_DEFAULT_API_TOKEN || '';
+    return readAuthToken() || '';
   }
 
   private async request<T>(path: string, init: RequestInit = {}): Promise<T> {
