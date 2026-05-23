@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import authRouter from './routes/auth';
 import ordersRouter from './routes/orders';
+import requestsRouter from './routes/requests';
 import financeRouter from './routes/finance';
 import customersRouter from './routes/customers';
 import inventoryRouter from './routes/inventory';
@@ -79,6 +80,8 @@ app.use('/api/:tenantSlug/auth', authRouter); // Support for tenant-prefixed aut
 
 app.use('/api/:tenantSlug/orders', ordersRouter);
 app.use('/api/orders', ordersRouter);
+app.use('/api/:tenantSlug/requests', requestsRouter);
+app.use('/api/requests', requestsRouter);
 
 app.use('/api/:tenantSlug/finance', financeRouter);
 app.use('/api/finance', financeRouter);

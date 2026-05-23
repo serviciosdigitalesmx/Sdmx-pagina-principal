@@ -1,16 +1,58 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
 const fieldClassName =
   "w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none transition placeholder:text-slate-400 focus:border-[#2c6e9f] focus:ring-2 focus:ring-[#2c6e9f]/20";
 
+type QuotePayload = {
+  fullName: string;
+  phone: string;
+  email: string;
+  deviceBrand: string;
+  deviceModel: string;
+  issue: string;
+};
+
+type QuoteResponse = {
+  success: true;
+  tenant: {
+    id: string;
+    slug: string;
+    name: string;
+    branding?: {
+      primaryColor?: string;
+      secondaryColor?: string;
+      logoUrl?: string;
+    } | null;
+  };
+  data: {
+    id: string;
+    folio: string;
+    customer_name: string;
+    customer_phone: string;
+    customer_email?: string | null;
+    device_type: string;
+    device_model: string;
+    issue_description: string;
+    status: string;
+  };
+};
+
+function resolveApiUrl() {
+  return (process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/$/, "");
+}
+
+function buildTrackingHref(tenant: string, folio: string) {
+  return `/${encodeURIComponent(tenant)}/tracking?folio=${encodeURIComponent(folio)}`;
+}
+
 export default function TenantQuotePage() {
   const params = useParams<{ tenant: string }>();
   const tenant = params?.tenant ?? "";
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<QuotePayload>({
     fullName: "",
     phone: "",
     email: "",
@@ -21,13 +63,15 @@ export default function TenantQuotePage() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const apiUrl = (process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/$/, "");
+  const [folio, setFolio] = useState<string | null>(null);
+  const apiUrl = useMemo(() => resolveApiUrl(), []);
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setLoading(true);
     setError(null);
     setMessage(null);
+    setFolio(null);
 
     try {
       if (!apiUrl) {
@@ -40,13 +84,18 @@ export default function TenantQuotePage() {
         body: JSON.stringify({ tenantSlug: tenant, ...form }),
       });
 
-      const payload = await response.json().catch(() => null);
+      const payload = (await response.json().catch(() => null)) as QuoteResponse | { error?: string; details?: unknown } | null;
 
       if (!response.ok) {
-        throw new Error(payload?.error ?? "No se pudo enviar tu solicitud");
+        throw new Error(payload && "error" in payload && payload.error ? payload.error : "No se pudo enviar tu solicitud");
       }
 
-      setMessage(`Solicitud enviada. Folio: ${payload.data?.folio ?? "pendiente"}.`);
+      if (!payload || !("success" in payload)) {
+        throw new Error("Respuesta inválida del servidor");
+      }
+
+      setFolio(payload.data.folio);
+      setMessage(`Solicitud enviada. Folio: ${payload.data.folio}. Ya quedó en el buzón del taller.`);
       setForm({
         fullName: "",
         phone: "",
@@ -76,10 +125,10 @@ export default function TenantQuotePage() {
               <span className="font-semibold text-slate-950">{tenant}</span>.
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
-              <Link href={`/${params.tenant}`} className="rounded-full border border-slate-300 px-5 py-3 font-semibold text-slate-800 transition hover:bg-slate-50">
+              <Link href={`/${tenant}`} className="rounded-full border border-slate-300 px-5 py-3 font-semibold text-slate-800 transition hover:bg-slate-50">
                 Volver al tenant
               </Link>
-              <Link href={`/${params.tenant}/tracking`} className="rounded-full border border-slate-300 px-5 py-3 font-semibold text-slate-800 transition hover:bg-slate-50">
+              <Link href={`/${tenant}/tracking`} className="rounded-full border border-slate-300 px-5 py-3 font-semibold text-slate-800 transition hover:bg-slate-50">
                 Ver estatus
               </Link>
             </div>
@@ -90,7 +139,7 @@ export default function TenantQuotePage() {
             <ul className="mt-4 space-y-3 text-sm leading-7 text-slate-700">
               <li>• La solicitud se envía al API real.</li>
               <li>• Se asocia al tenant actual.</li>
-              <li>• Recepción puede darle seguimiento sin perder contexto.</li>
+              <li>• Recepción puede convertirla en orden con un clic.</li>
             </ul>
           </aside>
         </div>
@@ -130,6 +179,14 @@ export default function TenantQuotePage() {
 
           {error ? <p className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p> : null}
           {message ? <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{message}</p> : null}
+          {folio ? (
+            <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 text-sm text-slate-700">
+              <div className="font-semibold text-slate-950">Folio real: {folio}</div>
+              <Link href={buildTrackingHref(tenant, folio)} className="mt-2 inline-flex font-semibold text-[#245a82]">
+                Ir al tracking
+              </Link>
+            </div>
+          ) : null}
 
           <div className="flex flex-wrap items-center gap-3">
             <button disabled={loading} className="rounded-full bg-[#2c6e9f] px-6 py-3 font-semibold text-white transition hover:bg-[#245a82] disabled:opacity-60">

@@ -32,6 +32,26 @@ type SocialLinkPayload = {
   href: string;
 };
 
+type ServiceRequestPayload = {
+  id?: string;
+  tenant_id?: string;
+  folio?: string;
+  customer_name?: string;
+  customer_phone?: string;
+  customer_email?: string | null;
+  device_type?: string | null;
+  device_model?: string | null;
+  issue_description?: string | null;
+  status?: string;
+  quoted_total?: number;
+  deposit_amount?: number;
+  balance_amount?: number;
+  solicitud_origen_ip?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  normalized_status?: string;
+};
+
 type TenantLandingSettings = {
   tenant: {
     id: string;
@@ -240,6 +260,38 @@ class FixService {
       { method: 'GET' }
     );
     return result.data;
+  }
+
+  public async getServiceRequests(): Promise<ServiceRequestPayload[]> {
+    const result = await this.request<ApiListResponse<ServiceRequestPayload[]>>(
+      `/api/${this.tenantId}/requests`,
+      { method: 'GET' }
+    );
+    return result.data;
+  }
+
+  public async getServiceRequestById(id: string): Promise<ServiceRequestPayload> {
+    const result = await this.request<ApiSingleResponse<ServiceRequestPayload>>(
+      `/api/${this.tenantId}/requests/${encodeURIComponent(id)}`,
+      { method: 'GET' }
+    );
+    return result.data;
+  }
+
+  public async convertServiceRequestToOrder(id: string, payload: {
+    estimatedCost: number;
+    deviceType?: string;
+    deviceModel?: string;
+    issue?: string;
+    createCustomer?: boolean;
+  }): Promise<ApiSingleResponse<{ request: ServiceRequestPayload; order: JsonRecord }>> {
+    return this.request<ApiSingleResponse<{ request: ServiceRequestPayload; order: JsonRecord }>>(
+      `/api/${this.tenantId}/requests/${encodeURIComponent(id)}/convert`,
+      {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }
+    );
   }
 
   public async getTenantLandingSettings(): Promise<ApiSingleResponse<TenantLandingSettings>> {
