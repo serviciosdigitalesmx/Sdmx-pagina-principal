@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
+import PDFDocument from 'pdfkit';
 import { getTenantClient, supabaseAdmin } from '@white-label/database';
 
 const orderStatusSchema = z.enum(['recibido', 'diagnostico', 'reparacion', 'listo', 'entregado']);
@@ -94,6 +95,60 @@ function decodeBase64File(base64: string) {
   return Buffer.from(cleaned, 'base64');
 }
 
+async function generateReceiptPdf(options: {
+  order: Record<string, unknown>;
+  photo?: {
+    buffer: Buffer;
+    mimeType: string;
+    fileName: string;
+  } | null;
+}) {
+  const doc = new PDFDocument({ size: 'A4', margin: 40 });
+  const chunks: Buffer[] = [];
+
+  doc.on('data', (chunk: Buffer | Uint8Array) => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)));
+
+  const ended = new Promise<Buffer>((resolve, reject) => {
+    doc.on('end', () => resolve(Buffer.concat(chunks)));
+    doc.on('error', reject);
+  });
+
+  doc.fontSize(20).fillColor('#111827').text('Sr. Fix - Comprobante de Recepción', { align: 'center' });
+  doc.moveDown(0.5);
+  doc.fontSize(10).fillColor('#374151').text(`Folio: ${String(options.order.folio ?? '')}`);
+  doc.text(`Cliente: ${String((options.order.device_info as { customer_name?: string } | undefined)?.customer_name ?? '')}`);
+  doc.text(`Teléfono: ${String((options.order.device_info as { customer_phone?: string } | undefined)?.customer_phone ?? '')}`);
+  doc.text(`Correo: ${String((options.order.device_info as { customer_email?: string } | undefined)?.customer_email ?? '')}`);
+  doc.text(`Equipo: ${String((options.order.device_info as { type?: string } | undefined)?.type ?? options.order.device_type ?? '')} - ${String(options.order.device_model ?? '')}`);
+  doc.text(`Problema: ${String(options.order.problem_description ?? '')}`);
+  doc.text(`Estado: ${String(options.order.status ?? '')}`);
+  doc.text(`Fecha: ${new Date().toLocaleString('es-MX')}`);
+
+  doc.moveDown(0.75);
+  doc.fontSize(12).fillColor('#111827').text('Evidencia fotográfica', { underline: true });
+  doc.moveDown(0.5);
+
+  if (options.photo) {
+    try {
+      doc.image(options.photo.buffer, {
+        fit: [500, 280],
+        align: 'center',
+        valign: 'center',
+      });
+    } catch {
+      doc.fontSize(10).fillColor('#6b7280').text('La evidencia fotográfica no pudo incrustarse en el PDF, pero sí quedó almacenada como archivo.');
+    }
+  } else {
+    doc.fontSize(10).fillColor('#6b7280').text('No se recibió evidencia fotográfica en este flujo.');
+  }
+
+  doc.moveDown(0.8);
+  doc.fontSize(10).fillColor('#6b7280').text('Documento generado automáticamente por Sr. Fix.');
+  doc.end();
+
+  return ended;
+}
+
 async function ensureBucketExists(bucketName: string) {
   const { error } = await supabaseAdmin.storage.getBucket(bucketName);
   if (!error) {
@@ -106,6 +161,34 @@ async function ensureBucketExists(bucketName: string) {
   if (createError) {
     throw new Error(`Unable to ensure storage bucket ${bucketName}: ${createError.message}`);
   }
+}
+
+async function uploadBufferToStorage(options: {
+  tenantId: string;
+  orderId: string;
+  bucketName: string;
+  fileName: string;
+  mimeType: string;
+  buffer: Buffer;
+  fileType: 'intake_photo' | 'attachment_pdf' | 'receipt_pdf';
+}) {
+  const storagePath = `tenant/${options.tenantId}/orders/${options.orderId}/${Date.now()}-${options.fileName.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+  const { error: uploadError } = await supabaseAdmin.storage
+    .from(options.bucketName)
+    .upload(storagePath, options.buffer, {
+      contentType: options.mimeType,
+      upsert: false,
+    });
+
+  if (uploadError) {
+    throw new Error(`Failed to upload ${options.fileType}: ${uploadError.message}`);
+  }
+
+  const { data: publicData } = supabaseAdmin.storage.from(options.bucketName).getPublicUrl(storagePath);
+  return {
+    storagePath,
+    publicUrl: publicData.publicUrl ?? null,
+  };
 }
 
 export const createOrder = async (req: Request, res: Response) => {
@@ -368,18 +451,17 @@ export const uploadOrderAttachments = async (req: Request, res: Response) => {
     await ensureBucketExists(bucketName);
 
     const createdDocuments = [];
+    let uploadedPhoto: { buffer: Buffer; mimeType: string; fileName: string } | null = null;
     for (const file of parsed.files) {
       const fileBuffer = decodeBase64File(file.base64);
       const extension = getFileExtension(file.fileName, file.mimeType);
       const safeName = file.fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
       const storagePath = `tenant/${tenantId}/orders/${orderId}/${Date.now()}-${safeName}`;
 
-      const { error: uploadError } = await supabaseAdmin.storage
-        .from(bucketName)
-        .upload(storagePath, fileBuffer, {
-          contentType: file.mimeType,
-          upsert: false,
-        });
+      const { error: uploadError } = await supabaseAdmin.storage.from(bucketName).upload(storagePath, fileBuffer, {
+        contentType: file.mimeType,
+        upsert: false,
+      });
 
       if (uploadError) {
         return res.status(502).json({
@@ -420,6 +502,74 @@ export const uploadOrderAttachments = async (req: Request, res: Response) => {
         ...docRow,
         extension,
       });
+
+      if (file.fileType === 'intake_photo') {
+        uploadedPhoto = {
+          buffer: fileBuffer,
+          mimeType: file.mimeType,
+          fileName: file.fileName,
+        };
+      }
+    }
+
+    if (uploadedPhoto) {
+      const { data: latestOrder, error: latestOrderError } = await supabase
+        .from('service_orders')
+        .select('*')
+        .eq('tenant_id', tenantId)
+        .eq('id', orderId)
+        .single();
+
+      if (latestOrderError || !latestOrder) {
+        return res.status(404).json({ error: 'Order not found', details: latestOrderError?.message ?? 'Not found' });
+      }
+
+      const receiptPdfBuffer = await generateReceiptPdf({ order: latestOrder, photo: uploadedPhoto });
+      const receiptUpload = await uploadBufferToStorage({
+        tenantId,
+        orderId,
+        bucketName,
+        fileName: 'recepcion.pdf',
+        mimeType: 'application/pdf',
+        buffer: receiptPdfBuffer,
+        fileType: 'receipt_pdf',
+      });
+
+      const { error: receiptUpdateError } = await supabase
+        .from('service_orders')
+        .update({ receipt_url: receiptUpload.publicUrl })
+        .eq('tenant_id', tenantId)
+        .eq('id', orderId);
+
+      if (receiptUpdateError) {
+        return res.status(502).json({
+          error: 'Failed to persist receipt url',
+          details: receiptUpdateError.message,
+        });
+      }
+
+      const { error: receiptDocError } = await supabase.from('service_order_documents').insert([
+        {
+          tenant_id: tenantId,
+          service_order_id: orderId,
+          bucket_name: bucketName,
+          storage_path: receiptUpload.storagePath,
+          public_url: receiptUpload.publicUrl,
+          file_name: 'recepcion.pdf',
+          file_type: 'receipt_pdf',
+          mime_type: 'application/pdf',
+          file_size: receiptPdfBuffer.length,
+          source: 'generated',
+          created_by: null,
+        },
+      ]);
+
+      if (receiptDocError) {
+        return res.status(502).json({
+          error: 'Failed to persist receipt document',
+          details: receiptDocError.message,
+        });
+      }
     }
 
     return res.status(201).json({
