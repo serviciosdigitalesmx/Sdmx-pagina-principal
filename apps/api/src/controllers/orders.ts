@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
+import { randomUUID } from 'crypto';
 import PDFDocument from 'pdfkit';
 import { getTenantClient, supabaseAdmin } from '@white-label/database';
 
@@ -25,6 +26,27 @@ const statusRequestSchema = z.object({
   status: orderStatusSchema,
   note: z.string().optional(),
 });
+
+type EvidenceEntry =
+  | {
+      kind: 'document';
+      id: string;
+      file_name: string;
+      file_type: 'intake_photo' | 'attachment_pdf' | 'receipt_pdf';
+      public_url: string | null;
+      mime_type: string;
+      created_at: string;
+    }
+  | {
+      kind: 'event';
+      id: string;
+      event_type: string;
+      previous_status: string | null;
+      new_status: string | null;
+      note: string | null;
+      actor_name: string | null;
+      created_at: string;
+    };
 
 function buildPdfAttachment(receiptUrl?: string | null) {
   if (!receiptUrl) {
@@ -93,6 +115,17 @@ function getFileExtension(fileName: string, mimeType: string) {
 function decodeBase64File(base64: string) {
   const cleaned = base64.includes(',') ? base64.split(',').pop() ?? '' : base64;
   return Buffer.from(cleaned, 'base64');
+}
+
+function readEvidenceMetadata(input: unknown): EvidenceEntry[] {
+  if (!Array.isArray(input)) {
+    return [];
+  }
+  return input.filter(Boolean) as EvidenceEntry[];
+}
+
+function appendEvidenceEntry(input: unknown, entry: EvidenceEntry) {
+  return [...readEvidenceMetadata(input), entry];
 }
 
 async function generateReceiptPdf(options: {
@@ -268,26 +301,22 @@ export const createOrder = async (req: Request, res: Response) => {
       });
     }
 
-    const { error: eventError } = await supabase.from('service_order_events').insert([
-      {
-        tenant_id: tenantId,
-        service_order_id: data.id,
-        event_type: 'created',
-        previous_status: null,
-        new_status: 'recibido',
-        note: validatedData.issue,
-        actor_name: req.user?.email ?? req.user?.role ?? 'system',
-        created_by: null,
-      },
-    ]);
-
-    if (eventError) {
-      console.error('Supabase event insert error:', eventError.message);
-      return res.status(502).json({
-        error: 'Failed to persist order event',
-        details: eventError.message,
-      });
-    }
+    await supabase
+      .from('service_orders')
+      .update({
+        evidence_metadata: appendEvidenceEntry(data.evidence_metadata, {
+          kind: 'event',
+          id: randomUUID(),
+          event_type: 'created',
+          previous_status: null,
+          new_status: 'recibido',
+          note: validatedData.issue,
+          actor_name: req.user?.email ?? req.user?.role ?? 'system',
+          created_at: new Date().toISOString(),
+        }),
+      })
+      .eq('tenant_id', tenantId)
+      .eq('id', data.id);
 
     const pdfAttachment = buildPdfAttachment(validatedData.receiptUrl || null);
 
@@ -363,25 +392,13 @@ export const getOrderById = async (req: Request, res: Response) => {
     }
 
     const supabase = getTenantClient(tenantId);
-    const [orderResult, docsResult, eventsResult, checklistResult] = await Promise.all([
+    const [orderResult, checklistResult] = await Promise.all([
       supabase
         .from('service_orders')
         .select('*')
         .eq('tenant_id', tenantId)
         .eq('id', orderId)
         .single(),
-      supabase
-        .from('service_order_documents')
-        .select('*')
-        .eq('tenant_id', tenantId)
-        .eq('service_order_id', orderId)
-        .order('created_at', { ascending: false }),
-      supabase
-        .from('service_order_events')
-        .select('*')
-        .eq('tenant_id', tenantId)
-        .eq('service_order_id', orderId)
-        .order('created_at', { ascending: false }),
       supabase
         .from('service_order_checklists')
         .select('*')
@@ -397,24 +414,39 @@ export const getOrderById = async (req: Request, res: Response) => {
       });
     }
 
-    if (docsResult.error) {
-      return res.status(502).json({ error: 'Failed to fetch order documents', details: docsResult.error.message });
-    }
-
-    if (eventsResult.error) {
-      return res.status(502).json({ error: 'Failed to fetch order events', details: eventsResult.error.message });
-    }
-
     if (checklistResult.error) {
       return res.status(502).json({ error: 'Failed to fetch order checklist', details: checklistResult.error.message });
     }
+
+    const evidenceMetadata = readEvidenceMetadata(orderResult.data.evidence_metadata);
+    const documents = evidenceMetadata
+      .filter((entry): entry is Extract<EvidenceEntry, { kind: 'document' }> => entry.kind === 'document')
+      .map((entry) => ({
+        id: entry.id,
+        file_name: entry.file_name,
+        file_type: entry.file_type,
+        public_url: entry.public_url,
+        mime_type: entry.mime_type,
+        created_at: entry.created_at,
+      }));
+    const events = evidenceMetadata
+      .filter((entry): entry is Extract<EvidenceEntry, { kind: 'event' }> => entry.kind === 'event')
+      .map((entry) => ({
+        id: entry.id,
+        event_type: entry.event_type,
+        previous_status: entry.previous_status,
+        new_status: entry.new_status,
+        note: entry.note,
+        actor_name: entry.actor_name,
+        created_at: entry.created_at,
+      }));
 
     return res.json({
       success: true,
       data: {
         order: orderResult.data,
-        documents: docsResult.data ?? [],
-        events: eventsResult.data ?? [],
+        documents,
+        events,
         checklist: checklistResult.data ?? null,
       },
     });
@@ -438,7 +470,7 @@ export const uploadOrderAttachments = async (req: Request, res: Response) => {
 
     const { data: order, error: orderError } = await supabase
       .from('service_orders')
-      .select('id, tenant_id')
+      .select('id, tenant_id, evidence_metadata')
       .eq('tenant_id', tenantId)
       .eq('id', orderId)
       .single();
@@ -471,35 +503,20 @@ export const uploadOrderAttachments = async (req: Request, res: Response) => {
       }
 
       const { data: publicData } = supabaseAdmin.storage.from(bucketName).getPublicUrl(storagePath);
-      const { data: docRow, error: docError } = await supabase
-        .from('service_order_documents')
-        .insert([
-          {
-            tenant_id: tenantId,
-            service_order_id: orderId,
-            bucket_name: bucketName,
-            storage_path: storagePath,
-            public_url: publicData.publicUrl ?? null,
-            file_name: file.fileName,
-            file_type: file.fileType,
-            mime_type: file.mimeType,
-            file_size: fileBuffer.length,
-            source: 'upload',
-            created_by: null,
-          },
-        ])
-        .select()
-        .single();
-
-      if (docError) {
-        return res.status(502).json({
-          error: 'Failed to persist attachment metadata',
-          details: docError.message,
-        });
-      }
-
       createdDocuments.push({
-        ...docRow,
+        id: randomUUID(),
+        tenant_id: tenantId,
+        service_order_id: orderId,
+        bucket_name: bucketName,
+        storage_path: storagePath,
+        public_url: publicData.publicUrl ?? null,
+        file_name: file.fileName,
+        file_type: file.fileType,
+        mime_type: file.mimeType,
+        file_size: fileBuffer.length,
+        source: 'upload',
+        created_by: null,
+        created_at: new Date().toISOString(),
         extension,
       });
 
@@ -537,7 +554,18 @@ export const uploadOrderAttachments = async (req: Request, res: Response) => {
 
       const { error: receiptUpdateError } = await supabase
         .from('service_orders')
-        .update({ receipt_url: receiptUpload.publicUrl })
+        .update({
+          receipt_url: receiptUpload.publicUrl,
+          evidence_metadata: appendEvidenceEntry(order.evidence_metadata, {
+            kind: 'document',
+            id: randomUUID(),
+            file_name: 'recepcion.pdf',
+            file_type: 'receipt_pdf',
+            public_url: receiptUpload.publicUrl,
+            mime_type: 'application/pdf',
+            created_at: new Date().toISOString(),
+          }),
+        })
         .eq('tenant_id', tenantId)
         .eq('id', orderId);
 
@@ -548,29 +576,45 @@ export const uploadOrderAttachments = async (req: Request, res: Response) => {
         });
       }
 
-      const { error: receiptDocError } = await supabase.from('service_order_documents').insert([
-        {
-          tenant_id: tenantId,
-          service_order_id: orderId,
-          bucket_name: bucketName,
-          storage_path: receiptUpload.storagePath,
-          public_url: receiptUpload.publicUrl,
-          file_name: 'recepcion.pdf',
-          file_type: 'receipt_pdf',
-          mime_type: 'application/pdf',
-          file_size: receiptPdfBuffer.length,
-          source: 'generated',
-          created_by: null,
-        },
-      ]);
-
-      if (receiptDocError) {
-        return res.status(502).json({
-          error: 'Failed to persist receipt document',
-          details: receiptDocError.message,
-        });
-      }
+      createdDocuments.push({
+        id: randomUUID(),
+        tenant_id: tenantId,
+        service_order_id: orderId,
+        bucket_name: bucketName,
+        storage_path: receiptUpload.storagePath,
+        public_url: receiptUpload.publicUrl,
+        file_name: 'recepcion.pdf',
+        file_type: 'receipt_pdf',
+        mime_type: 'application/pdf',
+        file_size: receiptPdfBuffer.length,
+        source: 'generated',
+        created_by: null,
+        created_at: new Date().toISOString(),
+      });
     }
+
+    const { data: latestEvidence } = await supabase
+      .from('service_orders')
+      .select('evidence_metadata')
+      .eq('tenant_id', tenantId)
+      .eq('id', orderId)
+      .single();
+
+    const updatedEvidence = appendEvidenceEntry(latestEvidence?.evidence_metadata, {
+      kind: 'document',
+      id: randomUUID(),
+      file_name: parsed.files[0]?.fileName ?? 'archivo',
+      file_type: parsed.files[0]?.fileType ?? 'attachment_pdf',
+      public_url: null,
+      mime_type: parsed.files[0]?.mimeType ?? 'application/octet-stream',
+      created_at: new Date().toISOString(),
+    });
+
+    await supabase
+      .from('service_orders')
+      .update({ evidence_metadata: updatedEvidence })
+      .eq('tenant_id', tenantId)
+      .eq('id', orderId);
 
     return res.status(201).json({
       success: true,
@@ -599,7 +643,7 @@ export const addOrderNote = async (req: Request, res: Response) => {
 
     const { data: order, error: orderError } = await supabase
       .from('service_orders')
-      .select('id, status')
+      .select('id, status, evidence_metadata')
       .eq('tenant_id', tenantId)
       .eq('id', orderId)
       .single();
@@ -608,24 +652,28 @@ export const addOrderNote = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Order not found', details: orderError?.message ?? 'Not found' });
     }
 
-    const { data, error } = await supabase.from('service_order_events').insert([
-      {
-        tenant_id: tenantId,
-        service_order_id: orderId,
-        event_type: 'note',
-        previous_status: order.status,
-        new_status: order.status,
-        note: body.note,
-        actor_name: body.actorName ?? req.user?.email ?? req.user?.role ?? 'system',
-        created_by: null,
-      },
-    ]).select().single();
+    const noteEntry: EvidenceEntry = {
+      kind: 'event',
+      id: randomUUID(),
+      event_type: 'note',
+      previous_status: order.status,
+      new_status: order.status,
+      note: body.note,
+      actor_name: body.actorName ?? req.user?.email ?? req.user?.role ?? 'system',
+      created_at: new Date().toISOString(),
+    };
+
+    const { error } = await supabase
+      .from('service_orders')
+      .update({ evidence_metadata: appendEvidenceEntry((order as { evidence_metadata?: unknown }).evidence_metadata, noteEntry) })
+      .eq('tenant_id', tenantId)
+      .eq('id', orderId);
 
     if (error) {
       return res.status(502).json({ error: 'Failed to persist order note', details: error.message });
     }
 
-    return res.status(201).json({ success: true, data });
+    return res.status(201).json({ success: true, data: noteEntry });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: 'Invalid payload', details: error.errors });
@@ -649,7 +697,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 
     const { data: order, error: orderError } = await supabase
       .from('service_orders')
-      .select('id, status')
+      .select('id, status, evidence_metadata')
       .eq('tenant_id', tenantId)
       .eq('id', orderId)
       .single();
@@ -678,22 +726,22 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
       return res.status(502).json({ error: 'Failed to update order status', details: error.message });
     }
 
-    const { error: historyError } = await supabase.from('service_order_events').insert([
-      {
-        tenant_id: tenantId,
-        service_order_id: orderId,
-        event_type: 'status_changed',
-        previous_status: previousStatus,
-        new_status: nextStatus,
-        note: body.note || null,
-        actor_name: req.user?.email ?? req.user?.role ?? 'system',
-        created_by: null,
-      },
-    ]);
-
-    if (historyError) {
-      return res.status(502).json({ error: 'Failed to persist status history', details: historyError.message });
-    }
+    await supabase
+      .from('service_orders')
+      .update({
+        evidence_metadata: appendEvidenceEntry(data.evidence_metadata, {
+          kind: 'event',
+          id: randomUUID(),
+          event_type: 'status_changed',
+          previous_status: previousStatus,
+          new_status: nextStatus,
+          note: body.note || null,
+          actor_name: req.user?.email ?? req.user?.role ?? 'system',
+          created_at: new Date().toISOString(),
+        }),
+      })
+      .eq('tenant_id', tenantId)
+      .eq('id', orderId);
 
     return res.json({ success: true, data });
   } catch (error) {
