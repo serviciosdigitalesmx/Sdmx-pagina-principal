@@ -80,7 +80,7 @@ function DashboardShellContent({
   }, [auth.role, auth.tenantSlug, auth.userEmail, tenant]);
 
   return (
-    <div className="flex min-h-screen flex-col text-slate-900 bg-[radial-gradient(circle_at_top,_rgba(44,110,159,0.12),_transparent_28%),linear-gradient(180deg,#f4f6f9_0%,#eef2f6_100%)] lg:flex-row">
+    <div key={pathname} className="flex min-h-screen flex-col text-slate-900 bg-[radial-gradient(circle_at_top,_rgba(44,110,159,0.12),_transparent_28%),linear-gradient(180deg,#f4f6f9_0%,#eef2f6_100%)] lg:flex-row">
       <aside className="flex w-full shrink-0 flex-col border-b border-slate-200 bg-white/95 backdrop-blur-xl lg:w-72 lg:border-b-0 lg:border-r">
         <div className="border-b border-slate-200 p-4 sm:p-5">
           <div className="flex items-center gap-3">
