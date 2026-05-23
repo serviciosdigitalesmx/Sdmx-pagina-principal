@@ -4,13 +4,11 @@ import { useEffect } from "react";
 import { saveAuthToken } from "@/lib/auth-storage";
 
 function resolveDashboardUrl() {
-  const adminUrl = process.env.NEXT_PUBLIC_WEB_ADMIN_URL;
-
-  if (!adminUrl) {
+  if (typeof window === "undefined") {
     return null;
   }
 
-  return new URL("/", adminUrl).toString();
+  return new URL("/", window.location.origin).toString();
 }
 
 export default function AuthBridgePage() {
