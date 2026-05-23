@@ -54,6 +54,10 @@ type TenantBranding = {
   logoUrl?: string;
 };
 
+function isUuid(value: unknown) {
+  return typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
 function buildPdfAttachment(receiptUrl?: string | null) {
   if (!receiptUrl) {
     return null;
@@ -283,7 +287,11 @@ export const createOrder = async (req: Request, res: Response) => {
 
     const validatedData = createOrderSchema.parse(req.body);
     const supabase = getTenantClient(tenantId);
-    const requestedBranchId = validatedData.branchId ?? req.user?.sucursalId ?? null;
+    const requestedBranchId = isUuid(validatedData.branchId)
+      ? validatedData.branchId
+      : isUuid(req.user?.sucursalId)
+        ? req.user?.sucursalId
+        : null;
 
     if (req.user?.role === 'manager' && req.user.sucursalId && requestedBranchId && requestedBranchId !== req.user.sucursalId) {
       return res.status(403).json({ error: 'Sucursal mismatch' });
@@ -419,9 +427,9 @@ export const listOrders = async (req: Request, res: Response) => {
       .order('created_at', { ascending: false })
       .limit(50);
 
-    if (branchId) {
+    if (isUuid(branchId)) {
       query = query.eq('branch_id', branchId);
-    } else if (req.user?.role === 'manager' && req.user.sucursalId) {
+    } else if (req.user?.role === 'manager' && isUuid(req.user.sucursalId)) {
       query = query.eq('branch_id', req.user.sucursalId);
     }
 
@@ -465,9 +473,9 @@ export const getOrderById = async (req: Request, res: Response) => {
       .eq('tenant_id', tenantId)
       .eq('id', orderId);
 
-    if (branchId) {
+    if (isUuid(branchId)) {
       orderQuery.eq('branch_id', branchId);
-    } else if (req.user?.role === 'manager' && req.user.sucursalId) {
+    } else if (req.user?.role === 'manager' && isUuid(req.user.sucursalId)) {
       orderQuery.eq('branch_id', req.user.sucursalId);
     }
 
@@ -548,7 +556,7 @@ export const uploadOrderAttachments = async (req: Request, res: Response) => {
       .select('id, tenant_id, evidence_metadata')
       .eq('tenant_id', tenantId)
       .eq('id', orderId)
-      .eq(branchId ? 'branch_id' : 'tenant_id', branchId || tenantId)
+      .eq(isUuid(branchId) ? 'branch_id' : 'tenant_id', isUuid(branchId) ? branchId : tenantId)
       .single();
 
     if (orderError || !order) {
@@ -745,7 +753,7 @@ export const addOrderNote = async (req: Request, res: Response) => {
       .select('id, status, evidence_metadata')
       .eq('tenant_id', tenantId)
       .eq('id', orderId)
-      .eq(branchId ? 'branch_id' : 'tenant_id', branchId || tenantId)
+      .eq(isUuid(branchId) ? 'branch_id' : 'tenant_id', isUuid(branchId) ? branchId : tenantId)
       .single();
 
     if (orderError || !order) {
@@ -801,7 +809,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
       .select('id, status, evidence_metadata')
       .eq('tenant_id', tenantId)
       .eq('id', orderId)
-      .eq(branchId ? 'branch_id' : 'tenant_id', branchId || tenantId)
+      .eq(isUuid(branchId) ? 'branch_id' : 'tenant_id', isUuid(branchId) ? branchId : tenantId)
       .single();
 
     if (orderError || !order) {
