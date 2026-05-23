@@ -108,7 +108,7 @@ export const getTenantSettings = async (req: Request, res: Response) => {
   try {
     const { data, error } = await supabaseAdmin
       .from('tenants')
-      .select('id, slug, name, contact_name, contact_email, contact_phone, branding, landing_content, updated_at')
+      .select('id, slug, name, branding, landing_content, updated_at')
       .eq('slug', tenantSlug)
       .single();
 
@@ -163,7 +163,7 @@ export const updateTenantSettings = async (req: Request, res: Response) => {
       .from('tenants')
       .update(nextUpdate)
       .eq('id', tenantRow.id)
-      .select('id, slug, name, contact_name, contact_email, contact_phone, branding, landing_content, updated_at')
+      .select('id, slug, name, branding, landing_content, updated_at')
       .single();
 
     if (error || !data) {

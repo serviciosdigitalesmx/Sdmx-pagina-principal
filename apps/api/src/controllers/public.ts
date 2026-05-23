@@ -65,7 +65,7 @@ const publicPortalSchema = z.object({
 async function resolveTenantIdBySlug(slug: string) {
   const { data, error } = await supabaseAdmin
     .from('tenants')
-    .select('id, slug, name, contact_phone, contact_email, branding, landing_content')
+    .select('id, slug, name, branding, landing_content')
     .eq('slug', slug)
     .single();
 
@@ -291,8 +291,6 @@ export async function getPublicTenantLanding(req: Request, res: Response) {
           id: tenant.id,
           slug: tenant.slug,
           name: tenant.name,
-          contactPhone: tenant.contact_phone ?? null,
-          contactEmail: tenant.contact_email ?? null,
           branding: tenant.branding ?? null,
         },
         landingContent,
