@@ -48,6 +48,12 @@ type EvidenceEntry =
       created_at: string;
     };
 
+type TenantBranding = {
+  primaryColor?: string;
+  secondaryColor?: string;
+  logoUrl?: string;
+};
+
 function buildPdfAttachment(receiptUrl?: string | null) {
   if (!receiptUrl) {
     return null;
@@ -128,8 +134,27 @@ function appendEvidenceEntry(input: unknown, entry: EvidenceEntry) {
   return [...readEvidenceMetadata(input), entry];
 }
 
+async function getTenantBranding(tenantId: string): Promise<{ name: string; branding: TenantBranding | null }> {
+  const { data, error } = await supabaseAdmin
+    .from('tenants')
+    .select('name, branding')
+    .eq('id', tenantId)
+    .single();
+
+  if (error || !data) {
+    return { name: 'Sr. Fix', branding: null };
+  }
+
+  return {
+    name: String(data.name ?? 'Sr. Fix'),
+    branding: (data.branding as TenantBranding | null) ?? null,
+  };
+}
+
 async function generateReceiptPdf(options: {
   order: Record<string, unknown>;
+  tenantName: string;
+  tenantBranding?: TenantBranding | null;
   photo?: {
     buffer: Buffer;
     mimeType: string;
@@ -146,7 +171,30 @@ async function generateReceiptPdf(options: {
     doc.on('error', reject);
   });
 
-  doc.fontSize(20).fillColor('#111827').text('Sr. Fix - Comprobante de Recepción', { align: 'center' });
+  const primaryColor = options.tenantBranding?.primaryColor || '#2c6e9f';
+  const secondaryColor = options.tenantBranding?.secondaryColor || '#0f172a';
+  const logoUrl = options.tenantBranding?.logoUrl?.trim() || '';
+
+  doc.rect(40, 40, 515, 70).fill(primaryColor);
+  doc.fillColor('#ffffff').fontSize(20).text(options.tenantName || 'Sr. Fix', 58, 58, { width: 340 });
+  doc.fillColor('#ffffff').fontSize(10).text('Comprobante de recepción', 58, 82, { width: 340 });
+  doc.fillColor('#ffffff').fontSize(9).text('Documento generado automáticamente', 420, 60, { width: 120, align: 'right' });
+  doc.moveDown(3.5);
+
+  if (logoUrl) {
+    try {
+      const response = await fetch(logoUrl);
+      if (response.ok) {
+        const arrayBuffer = await response.arrayBuffer();
+        doc.image(Buffer.from(arrayBuffer), 415, 128, { fit: [110, 52] });
+      }
+    } catch {
+      doc.rect(415, 128, 110, 52).lineWidth(1).strokeColor(primaryColor).stroke();
+      doc.fillColor(primaryColor).fontSize(8).text('Logo no disponible', 420, 150, { width: 100, align: 'center' });
+    }
+  }
+
+  doc.fillColor(secondaryColor).fontSize(18).text('Comprobante de Recepción', { align: 'left' });
   doc.moveDown(0.5);
   doc.fontSize(10).fillColor('#374151').text(`Folio: ${String(options.order.folio ?? '')}`);
   doc.text(`Cliente: ${String((options.order.device_info as { customer_name?: string } | undefined)?.customer_name ?? '')}`);
@@ -158,7 +206,7 @@ async function generateReceiptPdf(options: {
   doc.text(`Fecha: ${new Date().toLocaleString('es-MX')}`);
 
   doc.moveDown(0.75);
-  doc.fontSize(12).fillColor('#111827').text('Evidencia fotográfica', { underline: true });
+  doc.fontSize(12).fillColor(secondaryColor).text('Evidencia fotográfica', { underline: true });
   doc.moveDown(0.5);
 
   if (options.photo) {
@@ -176,7 +224,7 @@ async function generateReceiptPdf(options: {
   }
 
   doc.moveDown(0.8);
-  doc.fontSize(10).fillColor('#6b7280').text('Documento generado automáticamente por Sr. Fix.');
+  doc.fontSize(10).fillColor('#6b7280').text(`Documento generado automáticamente por ${options.tenantName || 'Sr. Fix'}.`);
   doc.end();
 
   return ended;
@@ -481,6 +529,7 @@ export const uploadOrderAttachments = async (req: Request, res: Response) => {
 
     const bucketName = getStorageBucketName();
     await ensureBucketExists(bucketName);
+    const tenantBranding = await getTenantBranding(tenantId);
 
     const createdDocuments = [];
     let uploadedPhoto: { buffer: Buffer; mimeType: string; fileName: string } | null = null;
@@ -564,7 +613,12 @@ export const uploadOrderAttachments = async (req: Request, res: Response) => {
         return res.status(404).json({ error: 'Order not found', details: latestOrderError?.message ?? 'Not found' });
       }
 
-      const receiptPdfBuffer = await generateReceiptPdf({ order: latestOrder, photo: uploadedPhoto });
+      const receiptPdfBuffer = await generateReceiptPdf({
+        order: latestOrder,
+        photo: uploadedPhoto,
+        tenantName: tenantBranding.name,
+        tenantBranding: tenantBranding.branding,
+      });
       const receiptUpload = await uploadBufferToStorage({
         tenantId,
         orderId,
@@ -575,11 +629,25 @@ export const uploadOrderAttachments = async (req: Request, res: Response) => {
         fileType: 'receipt_pdf',
       });
 
+      const { data: latestReceiptOrder, error: latestReceiptOrderError } = await supabase
+        .from('service_orders')
+        .select('evidence_metadata')
+        .eq('tenant_id', tenantId)
+        .eq('id', orderId)
+        .single();
+
+      if (latestReceiptOrderError) {
+        return res.status(502).json({
+          error: 'Failed to persist receipt evidence',
+          details: latestReceiptOrderError.message,
+        });
+      }
+
       const { error: receiptUpdateError } = await supabase
         .from('service_orders')
         .update({
           receipt_url: receiptUpload.publicUrl,
-          evidence_metadata: appendEvidenceEntry(order.evidence_metadata, {
+          evidence_metadata: appendEvidenceEntry(latestReceiptOrder?.evidence_metadata, {
             kind: 'document',
             id: randomUUID(),
             file_name: 'recepcion.pdf',
@@ -615,28 +683,7 @@ export const uploadOrderAttachments = async (req: Request, res: Response) => {
         created_at: new Date().toISOString(),
       });
 
-      const { data: latestReceiptEvidence } = await supabase
-        .from('service_orders')
-        .select('evidence_metadata')
-        .eq('tenant_id', tenantId)
-        .eq('id', orderId)
-        .single();
-
-      await supabase
-        .from('service_orders')
-        .update({
-          evidence_metadata: appendEvidenceEntry(latestReceiptEvidence?.evidence_metadata, {
-            kind: 'document',
-            id: randomUUID(),
-            file_name: 'recepcion.pdf',
-            file_type: 'receipt_pdf',
-            public_url: receiptUpload.publicUrl,
-            mime_type: 'application/pdf',
-            created_at: new Date().toISOString(),
-          }),
-        })
-        .eq('tenant_id', tenantId)
-        .eq('id', orderId);
+      // receipt evidence is appended in the single update above to avoid duplicate writes
     }
 
     return res.status(201).json({
