@@ -1,24 +1,57 @@
-# Dependencias
+# Dependencies
 node_modules/
+**/node_modules/
 
-# Compilación Frontend
-js/
-sw.js
+# Build outputs
 dist/
+**/dist/
+.next/
+**/.next/
+out/
+build/
+coverage/
 
-# Compilación Backend
-server/dist/
-server/node_modules/
+# Turbo / caches
+.turbo/
+**/.turbo/
+.cache/
+**/.cache/
 
-# Entorno y Secretos
+# Vercel
+.vercel/
+**/.vercel/
+.vercelignore
+
+# Env / secrets
 .env
-server/.env
-*.log
+.env.*
+!.env.example
+!.env.template
+!.env.sample
 
-# IDE
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+
+# OS / IDE
+.DS_Store
 .vscode/
 .idea/
-.DS_Store
-.vercel
-.turbo/
-.env*.local
+
+# Local temp / audit scripts
+tmp/
+Run
+audit-*.sh
+
+# Python local environments
+.venv/
+.venv-*/
+
+# Local env backups
+.env-backups/
+*.local-backup
+
+# Env example backups
+.env.example.bak
