@@ -15,6 +15,13 @@ type ApiErrorResponse = {
   details?: unknown;
 };
 
+type EncodedFilePayload = {
+  fileName: string;
+  mimeType: string;
+  base64: string;
+  fileType: 'intake_photo' | 'attachment_pdf';
+};
+
 import { readAuthToken } from "@/lib/auth-storage";
 import { getCurrentSession } from "@/lib/session";
 
@@ -104,6 +111,57 @@ class FixService {
     return result.data;
   }
 
+  public async getOrderById(id: string): Promise<JsonRecord> {
+    const result = await this.request<ApiSingleResponse<JsonRecord>>(
+      `/api/${this.tenantId}/orders/${encodeURIComponent(id)}`,
+      { method: 'GET' }
+    );
+    return result.data;
+  }
+
+  public async uploadOrderAttachment(orderId: string, file: File, fileType: 'intake_photo' | 'attachment_pdf'): Promise<JsonRecord> {
+    const base64 = await this.fileToBase64(file);
+    const result = await this.request<ApiListResponse<JsonRecord>>(
+      `/api/${this.tenantId}/orders/${encodeURIComponent(orderId)}/attachments`,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          files: [
+            {
+              fileName: file.name,
+              mimeType: file.type || (fileType === 'attachment_pdf' ? 'application/pdf' : 'image/*'),
+              base64,
+              fileType,
+            } satisfies EncodedFilePayload,
+          ],
+        }),
+      }
+    );
+    return result.data;
+  }
+
+  public async addOrderNote(orderId: string, note: string): Promise<JsonRecord> {
+    const result = await this.request<ApiSingleResponse<JsonRecord>>(
+      `/api/${this.tenantId}/orders/${encodeURIComponent(orderId)}/notes`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ note }),
+      }
+    );
+    return result.data;
+  }
+
+  public async updateOrderStatus(orderId: string, status: string, note?: string): Promise<JsonRecord> {
+    const result = await this.request<ApiSingleResponse<JsonRecord>>(
+      `/api/${this.tenantId}/orders/${encodeURIComponent(orderId)}/status`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify({ status, note }),
+      }
+    );
+    return result.data;
+  }
+
   public async getOrders(): Promise<JsonRecord[]> {
     const result = await this.request<ApiListResponse<JsonRecord[]>>(
       `/api/${this.tenantId}/orders`,
@@ -158,6 +216,18 @@ class FixService {
       { method: 'GET' }
     );
     return result.data;
+  }
+
+  private async fileToBase64(file: File): Promise<string> {
+    return await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const value = typeof reader.result === 'string' ? reader.result : '';
+        resolve(value);
+      };
+      reader.onerror = () => reject(new Error('No se pudo leer el archivo'));
+      reader.readAsDataURL(file);
+    });
   }
 }
 

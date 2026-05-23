@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { requireAuth } from '../middleware/auth';
 import { validateTenant } from '../middleware/validateTenant';
 import { requireRole } from '../middleware/requireRole';
-import { createOrder, listOrders } from '../controllers/orders';
+import { addOrderNote, createOrder, getOrderById, listOrders, updateOrderStatus, uploadOrderAttachments } from '../controllers/orders';
 
 const router = Router({ mergeParams: true });
 
@@ -14,5 +14,9 @@ router.post('/', createOrder);
 
 // Legacy compatibility while migrating clients.
 router.get('/legacy', requireRole('owner', 'manager'), listOrders);
+router.get('/:id', getOrderById);
+router.post('/:id/attachments', uploadOrderAttachments);
+router.post('/:id/notes', addOrderNote);
+router.patch('/:id/status', updateOrderStatus);
 
 export default router;
