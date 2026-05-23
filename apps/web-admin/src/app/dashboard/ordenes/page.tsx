@@ -91,6 +91,25 @@ export default function OrdenesKanbanPage() {
     };
   }, []);
 
+  const columns = useMemo(
+    () =>
+      (["pending", "diagnostico", "reparacion", "listo", "entregado"] as OrderStatus[]).map((id) => ({
+        id,
+        title: columnLabels[id],
+      })),
+    []
+  );
+
+  const mappedRows = useMemo(
+    () =>
+      orders.map((order) => ({
+        ...order,
+        clientName: order.clientName ?? order.customer_name ?? order.device_info?.customer_name ?? "",
+        device_model: order.device_model ?? order.device_info?.model ?? order.device_info?.brand ?? "",
+      })),
+    [orders]
+  );
+
   if (!mounted) {
     return (
       <RequireRole allowed={["owner", "manager", "technician"]}>
@@ -114,25 +133,6 @@ export default function OrdenesKanbanPage() {
       </RequireRole>
     );
   }
-
-  const columns = useMemo(
-    () =>
-      (["pending", "diagnostico", "reparacion", "listo", "entregado"] as OrderStatus[]).map((id) => ({
-        id,
-        title: columnLabels[id],
-      })),
-    []
-  );
-
-  const mappedRows = useMemo(
-    () =>
-      orders.map((order) => ({
-        ...order,
-        clientName: order.clientName ?? order.customer_name ?? order.device_info?.customer_name ?? "",
-        device_model: order.device_model ?? order.device_info?.model ?? order.device_info?.brand ?? "",
-      })),
-    [orders]
-  );
 
   const handleDragStart = (event: React.DragEvent, id?: string) => {
     if (!id) return;
