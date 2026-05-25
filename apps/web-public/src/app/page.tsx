@@ -5,6 +5,7 @@ const legalName = process.env.NEXT_PUBLIC_SAAS_LEGAL_NAME ?? "Servicios Digitale
 const demoUrl = process.env.NEXT_PUBLIC_SAAS_DEMO_URL;
 const contactEmail = process.env.NEXT_PUBLIC_SAAS_CONTACT_EMAIL ?? "contacto@serviciosdigitalesmx.com";
 const contactPhone = process.env.NEXT_PUBLIC_SAAS_CONTACT_PHONE;
+const trialDays = process.env.NEXT_PUBLIC_SAAS_TRIAL_DAYS ?? "14";
 const starterPrice = process.env.NEXT_PUBLIC_SAAS_STARTER_PRICE ?? "$300 MXN";
 const growthPrice = process.env.NEXT_PUBLIC_SAAS_GROWTH_PRICE ?? "$450 MXN";
 const enterprisePrice = process.env.NEXT_PUBLIC_SAAS_ENTERPRISE_PRICE ?? "$600 MXN";
@@ -17,6 +18,7 @@ const metrics = [
   { value: "+40%", label: "Menos llamadas de seguimiento" },
   { value: "100%", label: "Aislamiento con tenant_id + RLS" },
   { value: "0%", label: "Branding genérico visible" },
+  { value: `${trialDays} días`, label: "Prueba gratuita sin tarjeta" },
 ];
 
 const coreCards = [
@@ -130,14 +132,14 @@ export default function Home() {
         <section className="rounded-[2.5rem] border border-cyan-400/15 bg-[linear-gradient(180deg,rgba(8,17,31,0.94),rgba(7,11,20,0.98))] px-5 py-8 shadow-[0_30px_120px_rgba(0,0,0,0.45)] lg:px-8 lg:py-12">
           <div className="mx-auto max-w-5xl text-center">
             <div className="mx-auto inline-flex rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.3em] text-cyan-200">
-              SaaS multitenant para talleres premium
+              SaaS multitenant para talleres premium · {trialDays} días de prueba
             </div>
             <h1 className="mx-auto mt-6 max-w-4xl text-balance text-5xl font-black tracking-[-0.07em] text-white sm:text-6xl lg:text-7xl">
-              Convierte tu taller en una operación premium con <span className="text-cyan-300">FIXIE</span>.
+              Convierte tu taller en una operación premium con <span className="text-cyan-300">{productName}</span>.
             </h1>
             <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-zinc-300 sm:text-lg">
               Cotización, tracking, evidencia, inventario y finanzas en una sola experiencia de marca blanca. FIXIE se ve y se
-              siente como software serio de producción.
+              siente como software serio de producción. Activa tu tenant con {trialDays} días sin tarjeta.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Link

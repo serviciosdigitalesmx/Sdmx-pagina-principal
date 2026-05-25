@@ -63,7 +63,20 @@ type TenantLandingSettings = {
     branding?: Record<string, unknown> | null;
     landing_content?: Record<string, unknown> | null;
     operational_settings?: Record<string, unknown> | null;
+    trial_expires_at?: string | null;
+    billing_exempt?: boolean | null;
     updated_at?: string;
+  };
+  billing?: {
+    tenantId: string;
+    tenantSlug: string;
+    subscriptionStatus: string;
+    trialExpiresAt: string | null;
+    billingExempt: boolean;
+    isTrialActive: boolean;
+    isBillingBlocked: boolean;
+    daysLeft: number | null;
+    upgradeHref: string | null;
   };
 };
 

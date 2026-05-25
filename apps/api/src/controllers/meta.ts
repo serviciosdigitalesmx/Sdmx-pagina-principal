@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { supabaseAdmin } from '@white-label/database';
+import { loadTenantBillingSummary } from '../services/tenant-billing';
 
 export const getApiRoot = (_req: Request, res: Response) => {
   const apiName = process.env.API_NAME ?? 'White-label API';
@@ -108,7 +109,7 @@ export const getTenantSettings = async (req: Request, res: Response) => {
   try {
     const { data, error } = await supabaseAdmin
       .from('tenants')
-      .select('id, slug, name, branding, landing_content, operational_settings')
+      .select('id, slug, name, branding, landing_content, operational_settings, trial_expires_at, billing_exempt')
       .eq('slug', tenantSlug)
       .single();
 
@@ -116,7 +117,15 @@ export const getTenantSettings = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Tenant not found', details: error?.message ?? 'Not found' });
     }
 
-    return res.status(200).json({ success: true, data });
+    const billing = await loadTenantBillingSummary(data.id, data.slug);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        ...data,
+        billing,
+      },
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Internal server error';
     return res.status(500).json({ error: message });
@@ -168,14 +177,22 @@ export const updateTenantSettings = async (req: Request, res: Response) => {
       .from('tenants')
       .update(nextUpdate)
       .eq('id', tenantRow.id)
-      .select('id, slug, name, branding, landing_content, operational_settings')
+      .select('id, slug, name, branding, landing_content, operational_settings, trial_expires_at, billing_exempt')
       .single();
 
     if (error || !data) {
       return res.status(502).json({ error: 'Failed to update tenant settings', details: error?.message ?? 'Unknown error' });
     }
 
-    return res.status(200).json({ success: true, data });
+    const billing = await loadTenantBillingSummary(data.id, data.slug);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        ...data,
+        billing,
+      },
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Internal server error';
     return res.status(500).json({ error: message });

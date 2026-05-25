@@ -18,6 +18,8 @@ const initialState: RegisterState = {
   phone: "",
 };
 
+const trialDays = process.env.NEXT_PUBLIC_SAAS_TRIAL_DAYS ?? "14";
+
 export default function OnboardingPage() {
   const [form, setForm] = useState<RegisterState>(initialState);
   const [loading, setLoading] = useState(false);
@@ -96,16 +98,16 @@ export default function OnboardingPage() {
         <div className="rounded-[2rem] border border-slate-200 bg-white p-8 text-slate-900 shadow-[0_30px_100px_rgba(15,23,42,0.08)] backdrop-blur-xl">
           <p className="text-xs uppercase tracking-[0.35em] text-[#245a82]">Prueba Gratuita</p>
           <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl [font-family:var(--font-display)]">
-            Empieza a operar con FIXI hoy mismo.
+            Empieza a operar con FIXIE hoy mismo.
           </h1>
           <p className="mt-4 max-w-xl text-base leading-7 text-slate-600">
             Regístrate para obtener tu entorno seguro y aislado. Toma el control total de tu taller con el sistema de nueva generación.
           </p>
 
           <div className="mt-8 grid gap-3 sm:grid-cols-2">
-            {[
+              {[
               ["Aislamiento Total", "Tu información y la de tus clientes están separadas en silos seguros."],
-              ["Sin Tarjeta", "Comienza tu prueba de inmediato sin compromisos iniciales."],
+              ["Sin Tarjeta", `Comienza tu prueba de ${trialDays} días sin compromisos iniciales.`],
             ].map(([title, desc]) => (
               <div key={title} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                 <p className="text-sm font-semibold text-slate-900">{title}</p>

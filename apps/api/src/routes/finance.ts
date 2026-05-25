@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth';
 import { validateTenant } from '../middleware/validateTenant';
+import { requireTenantBillingActive } from '../middleware/tenantBilling';
 import { requireRole } from '../middleware/requireRole';
 import { requireFinanceScope } from '../middleware/financeScope';
 import { createExpense, deleteExpense, getBalance, getCashflow, getExpense } from '../controllers/finance';
@@ -9,6 +10,7 @@ const router = Router({ mergeParams: true });
 
 router.use(requireAuth);
 router.use(validateTenant);
+router.use(requireTenantBillingActive);
 
 router.get('/balance', requireRole('owner'), getBalance);
 router.get('/cashflow/:sucursalId', requireRole('owner', 'manager'), requireFinanceScope, getCashflow);

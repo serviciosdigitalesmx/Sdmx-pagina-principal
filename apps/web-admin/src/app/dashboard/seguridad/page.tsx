@@ -17,9 +17,22 @@ type SecuritySummary = {
   canManageTenantSettings: boolean;
 };
 
+type TenantBillingSummary = {
+  tenantId: string;
+  tenantSlug: string;
+  subscriptionStatus: string;
+  trialExpiresAt: string | null;
+  billingExempt: boolean;
+  isTrialActive: boolean;
+  isBillingBlocked: boolean;
+  daysLeft: number | null;
+  upgradeHref: string | null;
+};
+
 export default function SeguridadPage() {
   const { role } = useAuth();
   const [summary, setSummary] = useState<SecuritySummary | null>(null);
+  const [billing, setBilling] = useState<TenantBillingSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -30,8 +43,12 @@ export default function SeguridadPage() {
       try {
         setLoading(true);
         setError("");
-        const data = (await fixService.getSecuritySummary()) as SecuritySummary;
+        const [data, tenantSettings] = await Promise.all([
+          fixService.getSecuritySummary() as Promise<SecuritySummary>,
+          fixService.getTenantSettings(),
+        ]);
         if (!cancelled) setSummary(data);
+        if (!cancelled) setBilling((tenantSettings.data.billing ?? null) as TenantBillingSummary | null);
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err.message : "Error al cargar seguridad");
       } finally {
@@ -51,8 +68,13 @@ export default function SeguridadPage() {
       { label: "Rol", value: summary?.role ?? role, helper: "Consumido desde JWT real." },
       { label: "Usuario", value: summary?.userId ?? "N/D", helper: "Sub del token." },
       { label: "Sucursal", value: summary?.sucursalId ?? "N/D", helper: "Contexto real del tenant." },
+      {
+        label: "Suscripción",
+        value: billing?.subscriptionStatus ?? "trial",
+        helper: billing?.isBillingBlocked ? "Bloqueado por trial vencido." : "Operación habilitada.",
+      },
     ],
-    [role, summary]
+    [billing?.isBillingBlocked, billing?.subscriptionStatus, role, summary]
   );
 
   const rows = summary
@@ -69,7 +91,7 @@ export default function SeguridadPage() {
     <RequireRole allowed={["owner", "manager", "technician"]}>
       <ModuleShell
         title="Seguridad y roles"
-        subtitle="Resumen real de sesión, tenant y permisos derivado del JWT autenticado."
+        subtitle="Resumen real de sesión, tenant, permisos y estado de suscripción derivado del JWT y del tenant."
         icon="fas fa-shield-alt"
         actionLabel="Ver sesión"
         stats={stats}
@@ -81,6 +103,29 @@ export default function SeguridadPage() {
         emptyTitle={loading ? "Cargando seguridad…" : error ? "No pudimos cargar seguridad" : "Sin información de sesión"}
         emptyCopy={error || "La seguridad se resuelve desde el token firmado y la sesión autenticada. No hay placeholders."}
       />
+      <div className="mt-6 grid gap-4 md:grid-cols-3">
+        <article className="rounded-3xl border border-zinc-200 bg-white p-5 text-slate-950 shadow-[0_10px_40px_rgba(15,23,42,0.06)]">
+          <p className="text-xs uppercase tracking-[0.28em] text-[#245a82]">Trial</p>
+          <p className="mt-2 text-2xl font-semibold">{billing?.daysLeft ?? "N/D"} días</p>
+          <p className="mt-2 text-sm text-slate-600">
+            {billing?.trialExpiresAt ? `Expira ${new Date(billing.trialExpiresAt).toLocaleDateString('es-MX')}` : "No hay expiración registrada."}
+          </p>
+        </article>
+        <article className="rounded-3xl border border-zinc-200 bg-white p-5 text-slate-950 shadow-[0_10px_40px_rgba(15,23,42,0.06)]">
+          <p className="text-xs uppercase tracking-[0.28em] text-[#245a82]">Estado</p>
+          <p className="mt-2 text-2xl font-semibold">{billing?.subscriptionStatus ?? "trial"}</p>
+          <p className="mt-2 text-sm text-slate-600">
+            {billing?.billingExempt ? "Tenancy exenta de cobro." : billing?.isBillingBlocked ? "Limitado por suscripción vencida." : "Operación habilitada."}
+          </p>
+        </article>
+        <article className="rounded-3xl border border-zinc-200 bg-white p-5 text-slate-950 shadow-[0_10px_40px_rgba(15,23,42,0.06)]">
+          <p className="text-xs uppercase tracking-[0.28em] text-[#245a82]">Upgrade</p>
+          <p className="mt-2 text-2xl font-semibold">{billing?.upgradeHref ? "Disponible" : "Pendiente"}</p>
+          <p className="mt-2 text-sm text-slate-600 break-all">
+            {billing?.upgradeHref ?? "Configura APP_URL para publicar el enlace de activación."}
+          </p>
+        </article>
+      </div>
     </RequireRole>
   );
 }

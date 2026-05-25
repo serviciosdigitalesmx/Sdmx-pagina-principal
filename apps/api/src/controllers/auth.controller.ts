@@ -169,6 +169,10 @@ export const register = async (req: Request, res: Response) => {
         slug: tenant.tenant_slug,
         trialExpiresAt: tenant.trial_expires_at,
       },
+      billing: {
+        subscriptionStatus: 'trial',
+        billingExempt: false,
+      },
       redirectUrl: `${appUrl}/onboarding/success?tenant=${encodeURIComponent(tenant.tenant_slug)}&token=${encodeURIComponent(token)}`,
     });
   } catch (error) {
@@ -280,6 +284,10 @@ export const completeGoogleRegistration = async (req: Request, res: Response) =>
         id: tenant.tenant_id,
         slug: tenant.tenant_slug,
         trialExpiresAt: tenant.trial_expires_at,
+      },
+      billing: {
+        subscriptionStatus: 'trial',
+        billingExempt: false,
       },
       redirectUrl: `${appUrl}/onboarding/success?tenant=${encodeURIComponent(tenant.tenant_slug)}&token=${encodeURIComponent(authPayload.token)}`,
     });
