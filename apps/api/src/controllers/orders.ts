@@ -54,6 +54,33 @@ type TenantBranding = {
   logoUrl?: string;
 };
 
+type OrderDocumentRow = {
+  id: string;
+  tenant_id: string;
+  service_order_id: string;
+  bucket_name: string;
+  storage_path: string;
+  public_url: string | null;
+  file_name: string;
+  file_type: string;
+  mime_type: string | null;
+  file_size: number | null;
+  source: string;
+  created_at: string;
+};
+
+type OrderEventRow = {
+  id: string;
+  tenant_id: string;
+  service_order_id: string;
+  event_type: string;
+  previous_status: string | null;
+  new_status: string | null;
+  note: string | null;
+  actor_name: string | null;
+  created_at: string;
+};
+
 function isUuid(value: unknown) {
   return typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
@@ -137,6 +164,103 @@ function readEvidenceMetadata(input: unknown): EvidenceEntry[] {
 
 function appendEvidenceEntry(input: unknown, entry: EvidenceEntry) {
   return [...readEvidenceMetadata(input), entry];
+}
+
+function normalizeOrderDocuments(rows: OrderDocumentRow[] | null | undefined, metadata: EvidenceEntry[]) {
+  const tableDocuments = (rows ?? []).map((row) => ({
+    id: row.id,
+    file_name: row.file_name,
+    file_type: row.file_type,
+    public_url: row.public_url,
+    mime_type: row.mime_type ?? 'application/octet-stream',
+    created_at: row.created_at,
+    source: row.source ?? 'upload',
+  }));
+
+  const metadataDocuments = metadata
+    .filter((entry): entry is Extract<EvidenceEntry, { kind: 'document' }> => entry.kind === 'document')
+    .map((entry) => ({
+      id: entry.id,
+      file_name: entry.file_name,
+      file_type: entry.file_type,
+      public_url: entry.public_url,
+      mime_type: entry.mime_type,
+      created_at: entry.created_at,
+      source: 'metadata',
+    }));
+
+  const documents = [...tableDocuments, ...metadataDocuments];
+  const deduped = new Map<string, (typeof documents)[number]>();
+  for (const document of documents) {
+    deduped.set(document.id, document);
+  }
+  return [...deduped.values()];
+}
+
+function normalizeOrderEvents(rows: OrderEventRow[] | null | undefined, metadata: EvidenceEntry[]) {
+  const tableEvents = (rows ?? []).map((row) => ({
+    id: row.id,
+    event_type: row.event_type,
+    previous_status: row.previous_status,
+    new_status: row.new_status,
+    note: row.note,
+    actor_name: row.actor_name,
+    created_at: row.created_at,
+  }));
+
+  const metadataEvents = metadata
+    .filter((entry): entry is Extract<EvidenceEntry, { kind: 'event' }> => entry.kind === 'event')
+    .map((entry) => ({
+      id: entry.id,
+      event_type: entry.event_type,
+      previous_status: entry.previous_status,
+      new_status: entry.new_status,
+      note: entry.note,
+      actor_name: entry.actor_name,
+      created_at: entry.created_at,
+    }));
+
+  const events = [...tableEvents, ...metadataEvents];
+  const deduped = new Map<string, (typeof events)[number]>();
+  for (const event of events) {
+    deduped.set(event.id, event);
+  }
+  return [...deduped.values()];
+}
+
+async function insertOrderDocument(supabase: ReturnType<typeof getTenantClient>, row: {
+  id: string;
+  tenant_id: string;
+  service_order_id: string;
+  bucket_name: string;
+  storage_path: string;
+  public_url: string | null;
+  file_name: string;
+  file_type: string;
+  mime_type: string;
+  file_size: number;
+  source: string;
+}) {
+  const { error } = await supabase.from('service_order_documents').insert([row]);
+  if (error) {
+    throw new Error(`Failed to persist service_order_documents: ${error.message}`);
+  }
+}
+
+async function insertOrderEvent(supabase: ReturnType<typeof getTenantClient>, row: {
+  id: string;
+  tenant_id: string;
+  service_order_id: string;
+  event_type: string;
+  previous_status: string | null;
+  new_status: string | null;
+  note: string | null;
+  actor_name: string | null;
+}) {
+  const { error } = await supabase.from('service_order_events').insert([row]);
+  if (error) {
+    throw new Error(`Failed to persist service_order_events: ${error.message}`);
+  }
 }
 
 async function getTenantBranding(tenantId: string): Promise<{ name: string; branding: TenantBranding | null }> {
@@ -365,12 +489,13 @@ export const createOrder = async (req: Request, res: Response) => {
       });
     }
 
+    const createdEventId = randomUUID();
     await supabase
       .from('service_orders')
       .update({
         evidence_metadata: appendEvidenceEntry(data.evidence_metadata, {
           kind: 'event',
-          id: randomUUID(),
+          id: createdEventId,
           event_type: 'created',
           previous_status: null,
           new_status: 'recibido',
@@ -381,6 +506,17 @@ export const createOrder = async (req: Request, res: Response) => {
       })
       .eq('tenant_id', tenantId)
       .eq('id', data.id);
+
+    await insertOrderEvent(supabase, {
+      id: createdEventId,
+      tenant_id: tenantId,
+      service_order_id: data.id,
+      event_type: 'created',
+      previous_status: null,
+      new_status: 'recibido',
+      note: validatedData.issue,
+      actor_name: req.user?.email ?? req.user?.role ?? 'system',
+    });
 
     const pdfAttachment = buildPdfAttachment(validatedData.receiptUrl || null);
 
@@ -479,7 +615,7 @@ export const getOrderById = async (req: Request, res: Response) => {
       orderQuery.eq('branch_id', req.user.sucursalId);
     }
 
-    const [orderResult, checklistResult] = await Promise.all([
+    const [orderResult, checklistResult, documentsResult, eventsResult] = await Promise.all([
       orderQuery.single(),
       supabase
         .from('service_order_checklists')
@@ -487,6 +623,18 @@ export const getOrderById = async (req: Request, res: Response) => {
         .eq('tenant_id', tenantId)
         .eq('service_order_id', orderId)
         .maybeSingle(),
+      supabase
+        .from('service_order_documents')
+        .select('id, tenant_id, service_order_id, bucket_name, storage_path, public_url, file_name, file_type, mime_type, file_size, source, created_at')
+        .eq('tenant_id', tenantId)
+        .eq('service_order_id', orderId)
+        .order('created_at', { ascending: true }),
+      supabase
+        .from('service_order_events')
+        .select('id, tenant_id, service_order_id, event_type, previous_status, new_status, note, actor_name, created_at')
+        .eq('tenant_id', tenantId)
+        .eq('service_order_id', orderId)
+        .order('created_at', { ascending: true }),
     ]);
 
     if (orderResult.error || !orderResult.data) {
@@ -500,28 +648,20 @@ export const getOrderById = async (req: Request, res: Response) => {
       return res.status(502).json({ error: 'Failed to fetch order checklist', details: checklistResult.error.message });
     }
 
+    if (documentsResult.error) {
+      return res.status(502).json({ error: 'Failed to fetch order documents', details: documentsResult.error.message });
+    }
+
+    if (eventsResult.error) {
+      return res.status(502).json({ error: 'Failed to fetch order events', details: eventsResult.error.message });
+    }
+
     const evidenceMetadata = readEvidenceMetadata(orderResult.data.evidence_metadata);
-    const documents = evidenceMetadata
-      .filter((entry): entry is Extract<EvidenceEntry, { kind: 'document' }> => entry.kind === 'document')
-      .map((entry) => ({
-        id: entry.id,
-        file_name: entry.file_name,
-        file_type: entry.file_type,
-        public_url: entry.public_url,
-        mime_type: entry.mime_type,
-        created_at: entry.created_at,
-      }));
-    const events = evidenceMetadata
-      .filter((entry): entry is Extract<EvidenceEntry, { kind: 'event' }> => entry.kind === 'event')
-      .map((entry) => ({
-        id: entry.id,
-        event_type: entry.event_type,
-        previous_status: entry.previous_status,
-        new_status: entry.new_status,
-        note: entry.note,
-        actor_name: entry.actor_name,
-        created_at: entry.created_at,
-      }));
+    const documents = normalizeOrderDocuments(documentsResult.data ?? [], evidenceMetadata);
+    const events = normalizeOrderEvents(eventsResult.data ?? [], evidenceMetadata);
+    const pdfAttachment = buildPdfAttachment(
+      orderResult.data.receipt_url || documents.find((document) => document.file_type === 'receipt_pdf' && document.public_url)?.public_url || null
+    );
 
     return res.json({
       success: true,
@@ -530,6 +670,8 @@ export const getOrderById = async (req: Request, res: Response) => {
         documents,
         events,
         checklist: checklistResult.data ?? null,
+        pdf_attachment: pdfAttachment,
+        attachments: pdfAttachment ? [pdfAttachment] : [],
       },
     });
   } catch (error) {
@@ -588,8 +730,9 @@ export const uploadOrderAttachments = async (req: Request, res: Response) => {
       }
 
       const { data: publicData } = supabaseAdmin.storage.from(bucketName).getPublicUrl(storagePath);
-      createdDocuments.push({
-        id: randomUUID(),
+      const documentId = randomUUID();
+      const documentRow = {
+        id: documentId,
         tenant_id: tenantId,
         service_order_id: orderId,
         bucket_name: bucketName,
@@ -603,6 +746,21 @@ export const uploadOrderAttachments = async (req: Request, res: Response) => {
         created_by: null,
         created_at: new Date().toISOString(),
         extension,
+      };
+      createdDocuments.push(documentRow);
+
+      await insertOrderDocument(supabase, {
+        id: documentId,
+        tenant_id: tenantId,
+        service_order_id: orderId,
+        bucket_name: bucketName,
+        storage_path: storagePath,
+        public_url: publicData.publicUrl ?? null,
+        file_name: file.fileName,
+        file_type: file.fileType,
+        mime_type: file.mimeType,
+        file_size: fileBuffer.length,
+        source: 'upload',
       });
 
       const { data: latestDocumentEvidence } = await supabase
@@ -617,7 +775,7 @@ export const uploadOrderAttachments = async (req: Request, res: Response) => {
         .update({
           evidence_metadata: appendEvidenceEntry(latestDocumentEvidence?.evidence_metadata, {
             kind: 'document',
-            id: randomUUID(),
+            id: documentId,
             file_name: file.fileName,
             file_type: file.fileType,
             public_url: publicData.publicUrl ?? null,
@@ -679,13 +837,14 @@ export const uploadOrderAttachments = async (req: Request, res: Response) => {
         });
       }
 
+      const receiptDocumentId = randomUUID();
       const { error: receiptUpdateError } = await supabase
         .from('service_orders')
         .update({
           receipt_url: receiptUpload.publicUrl,
           evidence_metadata: appendEvidenceEntry(latestReceiptOrder?.evidence_metadata, {
             kind: 'document',
-            id: randomUUID(),
+            id: receiptDocumentId,
             file_name: 'recepcion.pdf',
             file_type: 'receipt_pdf',
             public_url: receiptUpload.publicUrl,
@@ -704,7 +863,7 @@ export const uploadOrderAttachments = async (req: Request, res: Response) => {
       }
 
       createdDocuments.push({
-        id: randomUUID(),
+        id: receiptDocumentId,
         tenant_id: tenantId,
         service_order_id: orderId,
         bucket_name: bucketName,
@@ -717,6 +876,20 @@ export const uploadOrderAttachments = async (req: Request, res: Response) => {
         source: 'generated',
         created_by: null,
         created_at: new Date().toISOString(),
+      });
+
+      await insertOrderDocument(supabase, {
+        id: receiptDocumentId,
+        tenant_id: tenantId,
+        service_order_id: orderId,
+        bucket_name: bucketName,
+        storage_path: receiptUpload.storagePath,
+        public_url: receiptUpload.publicUrl,
+        file_name: 'recepcion.pdf',
+        file_type: 'receipt_pdf',
+        mime_type: 'application/pdf',
+        file_size: receiptPdfBuffer.length,
+        source: 'generated',
       });
 
       // receipt evidence is appended in the single update above to avoid duplicate writes
@@ -781,6 +954,18 @@ export const addOrderNote = async (req: Request, res: Response) => {
       return res.status(502).json({ error: 'Failed to persist order note', details: error.message });
     }
 
+    const noteEventId = (noteEntry as { id: string }).id;
+    await insertOrderEvent(supabase, {
+      id: noteEventId,
+      tenant_id: tenantId,
+      service_order_id: orderId,
+      event_type: 'note',
+      previous_status: order.status,
+      new_status: order.status,
+      note: body.note,
+      actor_name: body.actorName ?? req.user?.email ?? req.user?.role ?? 'system',
+    });
+
     return res.status(201).json({ success: true, data: noteEntry });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -836,12 +1021,13 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
       return res.status(502).json({ error: 'Failed to update order status', details: error.message });
     }
 
+    const statusEventId = randomUUID();
     await supabase
       .from('service_orders')
       .update({
         evidence_metadata: appendEvidenceEntry(data.evidence_metadata, {
           kind: 'event',
-          id: randomUUID(),
+          id: statusEventId,
           event_type: 'status_changed',
           previous_status: previousStatus,
           new_status: nextStatus,
@@ -852,6 +1038,17 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
       })
       .eq('tenant_id', tenantId)
       .eq('id', orderId);
+
+    await insertOrderEvent(supabase, {
+      id: statusEventId,
+      tenant_id: tenantId,
+      service_order_id: orderId,
+      event_type: 'status_changed',
+      previous_status: previousStatus,
+      new_status: nextStatus,
+      note: body.note || null,
+      actor_name: req.user?.email ?? req.user?.role ?? 'system',
+    });
 
     return res.json({ success: true, data });
   } catch (error) {

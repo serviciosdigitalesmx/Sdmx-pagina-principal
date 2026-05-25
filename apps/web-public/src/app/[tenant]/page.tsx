@@ -9,6 +9,8 @@ type LandingResponse = {
       name: string;
       contactPhone?: string | null;
       contactEmail?: string | null;
+      contact_phone?: string | null;
+      contact_email?: string | null;
       branding?: {
         primaryColor?: string;
         secondaryColor?: string;
@@ -75,7 +77,7 @@ export default async function TenantLandingPage({
   const { tenant } = await params;
   const data = await getTenantLanding(tenant);
   const landing = data.landingContent;
-  const whatsappHref = resolveWhatsappHref(data.tenant.contactPhone ?? landing.contactHref ?? undefined);
+  const whatsappHref = resolveWhatsappHref(data.tenant.contactPhone ?? data.tenant.contact_phone ?? landing.contactHref ?? undefined);
   const primaryHref = landing.primaryCtaHref.startsWith("http")
     ? landing.primaryCtaHref
     : `/${tenant}${landing.primaryCtaHref.startsWith("/") ? landing.primaryCtaHref : `/${landing.primaryCtaHref}`}`;
@@ -145,10 +147,10 @@ export default async function TenantLandingPage({
             <p className="text-sm font-semibold uppercase tracking-[0.24em] text-zinc-400">Contacto</p>
             <div className="mt-4 space-y-3 text-sm leading-7 text-zinc-300">
               <div className="rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3">
-                <span className="font-semibold text-zinc-50">Teléfono:</span> {data.tenant.contactPhone ?? "Sin teléfono"}
+                <span className="font-semibold text-zinc-50">Teléfono:</span> {data.tenant.contactPhone ?? data.tenant.contact_phone ?? "Sin teléfono"}
               </div>
               <div className="rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3">
-                <span className="font-semibold text-zinc-50">Correo:</span> {data.tenant.contactEmail ?? "Sin correo"}
+                <span className="font-semibold text-zinc-50">Correo:</span> {data.tenant.contactEmail ?? data.tenant.contact_email ?? "Sin correo"}
               </div>
               {data.tenant.branding?.logoUrl ? (
                 <div className="rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3">

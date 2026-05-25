@@ -66,6 +66,24 @@ type TenantLandingSettings = {
   };
 };
 
+type PurchaseOrderItemPayload = {
+  productId?: string;
+  skuSnapshot?: string;
+  productNameSnapshot?: string;
+  quantity: number;
+  unitCost: number;
+};
+
+type PurchaseOrderPayload = {
+  supplierId: string;
+  branchId?: string;
+  expectedDate?: string;
+  notes?: string;
+  paymentTerms?: string;
+  reference?: string;
+  items: PurchaseOrderItemPayload[];
+};
+
 import { readAuthToken } from "@/lib/auth-storage";
 import { getCurrentSession } from "@/lib/session";
 
@@ -144,6 +162,36 @@ class FixService {
   public async getInventory(): Promise<JsonRecord[]> {
     const result = await this.request<ApiListResponse<JsonRecord[]>>(
       this.withBranchQuery(`/api/${this.tenantId}/inventory`),
+      { method: 'GET' }
+    );
+    return result.data;
+  }
+
+  public async createInventoryItem(data: { sku: string; description: string; stock: number; branchId?: string }): Promise<JsonRecord> {
+    const result = await this.request<ApiSingleResponse<JsonRecord>>(
+      this.withBranchQuery(`/api/${this.tenantId}/inventory`),
+      {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }
+    );
+    return result.data;
+  }
+
+  public async updateInventoryItem(id: string, data: { description?: string; stock?: number; branchId?: string | null; note?: string }): Promise<JsonRecord> {
+    const result = await this.request<ApiSingleResponse<JsonRecord>>(
+      this.withBranchQuery(`/api/${this.tenantId}/inventory/${encodeURIComponent(id)}`),
+      {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      }
+    );
+    return result.data;
+  }
+
+  public async getInventoryMovements(id: string): Promise<JsonRecord[]> {
+    const result = await this.request<ApiListResponse<JsonRecord[]>>(
+      this.withBranchQuery(`/api/${this.tenantId}/inventory/${encodeURIComponent(id)}/movements`),
       { method: 'GET' }
     );
     return result.data;
@@ -274,6 +322,112 @@ class FixService {
     const result = await this.request<ApiListResponse<JsonRecord[]>>(
       `/api/${this.tenantId}/suppliers`,
       { method: 'GET' }
+    );
+    return result.data;
+  }
+
+  public async getSupplierById(id: string): Promise<JsonRecord> {
+    const result = await this.request<ApiSingleResponse<JsonRecord>>(
+      `/api/${this.tenantId}/suppliers/${encodeURIComponent(id)}`,
+      { method: 'GET' }
+    );
+    return result.data;
+  }
+
+  public async createSupplier(data: JsonRecord): Promise<JsonRecord> {
+    const result = await this.request<ApiSingleResponse<JsonRecord>>(
+      `/api/${this.tenantId}/suppliers`,
+      {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }
+    );
+    return result.data;
+  }
+
+  public async updateSupplier(id: string, data: JsonRecord): Promise<JsonRecord> {
+    const result = await this.request<ApiSingleResponse<JsonRecord>>(
+      `/api/${this.tenantId}/suppliers/${encodeURIComponent(id)}`,
+      {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }
+    );
+    return result.data;
+  }
+
+  public async deleteSupplier(id: string): Promise<JsonRecord> {
+    const result = await this.request<ApiSingleResponse<JsonRecord>>(
+      `/api/${this.tenantId}/suppliers/${encodeURIComponent(id)}`,
+      { method: 'DELETE' }
+    );
+    return result.data;
+  }
+
+  public async getPurchaseOrders(): Promise<JsonRecord[]> {
+    const result = await this.request<ApiListResponse<JsonRecord[]>>(
+      this.withBranchQuery(`/api/${this.tenantId}/purchase-orders`),
+      { method: 'GET' }
+    );
+    return result.data;
+  }
+
+  public async getPurchaseOrderById(id: string): Promise<JsonRecord> {
+    const result = await this.request<ApiSingleResponse<JsonRecord>>(
+      this.withBranchQuery(`/api/${this.tenantId}/purchase-orders/${encodeURIComponent(id)}`),
+      { method: 'GET' }
+    );
+    return result.data;
+  }
+
+  public async createPurchaseOrder(data: PurchaseOrderPayload): Promise<JsonRecord> {
+    const result = await this.request<ApiSingleResponse<JsonRecord>>(
+      this.withBranchQuery(`/api/${this.tenantId}/purchase-orders`),
+      {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }
+    );
+    return result.data;
+  }
+
+  public async updatePurchaseOrder(id: string, data: JsonRecord): Promise<JsonRecord> {
+    const result = await this.request<ApiSingleResponse<JsonRecord>>(
+      this.withBranchQuery(`/api/${this.tenantId}/purchase-orders/${encodeURIComponent(id)}`),
+      {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }
+    );
+    return result.data;
+  }
+
+  public async updatePurchaseOrderStatus(id: string, status: string, note?: string): Promise<JsonRecord> {
+    const result = await this.request<ApiSingleResponse<JsonRecord>>(
+      this.withBranchQuery(`/api/${this.tenantId}/purchase-orders/${encodeURIComponent(id)}/status`),
+      {
+        method: 'PATCH',
+        body: JSON.stringify({ status, note }),
+      }
+    );
+    return result.data;
+  }
+
+  public async receivePurchaseOrder(id: string, payload?: { notes?: string; receivedItems?: Array<{ skuSnapshot?: string; quantity: number }> }): Promise<JsonRecord> {
+    const result = await this.request<ApiSingleResponse<JsonRecord>>(
+      this.withBranchQuery(`/api/${this.tenantId}/purchase-orders/${encodeURIComponent(id)}/receive`),
+      {
+        method: 'POST',
+        body: JSON.stringify(payload ?? {}),
+      }
+    );
+    return result.data;
+  }
+
+  public async deletePurchaseOrder(id: string): Promise<JsonRecord> {
+    const result = await this.request<ApiSingleResponse<JsonRecord>>(
+      this.withBranchQuery(`/api/${this.tenantId}/purchase-orders/${encodeURIComponent(id)}`),
+      { method: 'DELETE' }
     );
     return result.data;
   }

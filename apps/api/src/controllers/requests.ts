@@ -115,6 +115,28 @@ export async function convertServiceRequestToOrder(req: Request, res: Response) 
       return res.status(404).json({ error: 'Request not found', details: requestError?.message ?? 'Not found' });
     }
 
+    let customerId: string | null = null;
+    if (body.createCustomer) {
+      const { data: customerData, error: customerError } = await supabase
+        .from('customers')
+        .insert([
+          {
+            tenant_id: tenantId,
+            name: requestRow.customer_name,
+            phone: requestRow.customer_phone,
+            email: requestRow.customer_email || null,
+          },
+        ])
+        .select('id')
+        .single();
+
+      if (customerError || !customerData) {
+        return res.status(502).json({ error: 'Failed to create customer from request', details: customerError?.message ?? 'Unknown error' });
+      }
+
+      customerId = customerData.id;
+    }
+
     const folioPrefix = process.env.ORDER_FOLIO_PREFIX ?? 'ORD';
     const nextFolio = `ORD-${Date.now().toString(36).toUpperCase()}`;
     const estimatedCost = Number.isFinite(body.estimatedCost) ? body.estimatedCost : Number((requestRow.quoted_total ?? 0) || 0);
@@ -125,6 +147,7 @@ export async function convertServiceRequestToOrder(req: Request, res: Response) 
       .insert([
         {
           tenant_id: tenantId,
+          customer_id: customerId,
           folio: nextFolio.replace('ORD-', `${folioPrefix}-`),
           status: 'recibido',
           device_info: {
@@ -168,6 +191,7 @@ export async function convertServiceRequestToOrder(req: Request, res: Response) 
           status: 'convertida',
         },
         order: orderData,
+        customer_id: customerId,
       },
     });
   } catch (error) {

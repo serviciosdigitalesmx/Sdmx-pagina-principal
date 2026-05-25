@@ -49,6 +49,24 @@ type PortalOrderResponse = {
       mimeType: string;
       source: "stored_url" | "inline_data_url";
     }>;
+    documents: Array<{
+      id: string;
+      file_name: string;
+      file_type: string;
+      public_url: string | null;
+      mime_type: string;
+      created_at: string;
+      source: string;
+    }>;
+    events: Array<{
+      id: string;
+      event_type: string;
+      previous_status: string | null;
+      new_status: string | null;
+      note: string | null;
+      actor_name: string | null;
+      created_at: string;
+    }>;
   };
 };
 
@@ -258,6 +276,40 @@ export default function PortalPage() {
                     Ver PDF de la orden
                   </a>
                 ) : null}
+                {result.documents.length > 0 ? (
+                  <div className="mt-4 space-y-2">
+                    {result.documents.map((document) => (
+                      <div key={document.id} className="rounded-xl border border-zinc-800 bg-zinc-900/70 px-3 py-2">
+                        <div className="text-sm font-semibold text-zinc-50">{document.file_name}</div>
+                        <div className="text-xs uppercase tracking-[0.18em] text-zinc-400">{document.file_type}</div>
+                        {document.public_url ? (
+                          <a href={document.public_url} target="_blank" rel="noreferrer" className="mt-1 inline-block text-sm font-semibold text-cyan-300">
+                            Abrir evidencia
+                          </a>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">Eventos</p>
+                <div className="mt-3 space-y-2">
+                  {result.events.length > 0 ? (
+                    result.events.map((event) => (
+                      <div key={event.id} className="rounded-xl border border-zinc-800 bg-zinc-900/70 px-3 py-2">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-sm font-semibold text-zinc-50">{event.event_type}</span>
+                          <span className="text-[11px] uppercase tracking-[0.18em] text-zinc-400">{new Date(event.created_at).toLocaleString()}</span>
+                        </div>
+                        <p className="mt-1 text-sm text-zinc-300">{event.note ?? "Sin nota"}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-zinc-400">No hay eventos registrados.</p>
+                  )}
+                </div>
               </div>
             </aside>
           </section>

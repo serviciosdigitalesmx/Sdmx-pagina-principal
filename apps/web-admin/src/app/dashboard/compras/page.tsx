@@ -1,82 +1,310 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { RequireRole } from "@/components/guard/RequireRole";
 import { useAuth } from "@/components/guard/use-auth";
 import { ModuleShell } from "@/components/dashboard/module-shell";
 import { fixService } from "@/services/fixService";
 
-type ProcurementSummary = {
-  totalItems: number;
-  lowStockThreshold: number;
-  lowStockCount: number;
-  totalStock: number;
-  lowStockItems: Array<Record<string, unknown>>;
+type PurchaseOrderRow = {
+  id?: string;
+  folio?: string;
+  status?: string;
+  supplier_id?: string;
+  branch_id?: string | null;
+  expected_date?: string | null;
+  total?: number | string;
+  notes?: string | null;
+  items?: Array<Record<string, unknown>>;
 };
 
-export default function Page() {
+type PurchaseOrderDetail = {
+  order?: PurchaseOrderRow;
+  items?: Array<Record<string, unknown>>;
+  movements?: Array<Record<string, unknown>>;
+};
+
+type SupplierRow = {
+  id?: string;
+  business_name?: string;
+};
+
+const emptyForm = {
+  supplierId: "",
+  branchId: "",
+  expectedDate: "",
+  reference: "",
+  paymentTerms: "",
+  notes: "",
+  skuSnapshot: "",
+  productNameSnapshot: "",
+  quantity: "1",
+  unitCost: "0",
+};
+
+export default function ComprasPage() {
   const { role } = useAuth();
-  const [summary, setSummary] = useState<ProcurementSummary | null>(null);
+  const [orders, setOrders] = useState<PurchaseOrderRow[]>([]);
+  const [suppliers, setSuppliers] = useState<SupplierRow[]>([]);
+  const [selectedId, setSelectedId] = useState("");
+  const [selectedOrder, setSelectedOrder] = useState<PurchaseOrderDetail | null>(null);
+  const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    let cancelled = false;
+  async function loadData() {
+    try {
+      setLoading(true);
+      setError("");
+      const [ordersData, suppliersData] = await Promise.all([
+        fixService.getPurchaseOrders(),
+        fixService.getSuppliers(),
+      ]);
+      const typedOrders = ordersData as PurchaseOrderRow[];
+      setOrders(typedOrders);
+      setSuppliers(suppliersData as SupplierRow[]);
+      const currentId = selectedId || typedOrders[0]?.id || "";
+      setSelectedId(currentId);
+      if (currentId) {
+        const detail = await fixService.getPurchaseOrderById(currentId);
+        setSelectedOrder(detail as PurchaseOrderDetail);
+      } else {
+        setSelectedOrder(null);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al cargar compras");
+    } finally {
+      setLoading(false);
+    }
+  }
 
-    async function load() {
+  useEffect(() => {
+    void loadData();
+  }, []);
+
+  useEffect(() => {
+    if (!selectedId) return;
+    let cancelled = false;
+    async function loadDetail() {
       try {
-        setLoading(true);
-        setError("");
-        const data = (await fixService.getProcurementSummary()) as ProcurementSummary;
-        if (!cancelled) setSummary(data);
-      } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : "Error al cargar compras");
-      } finally {
-        if (!cancelled) setLoading(false);
+        const detail = await fixService.getPurchaseOrderById(selectedId);
+        if (!cancelled) setSelectedOrder(detail as PurchaseOrderDetail);
+      } catch {
+        if (!cancelled) setSelectedOrder(null);
       }
     }
-
-    void load();
-
+    void loadDetail();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [selectedId]);
 
   const stats = useMemo(
     () => [
-      { label: "Artículos", value: String(summary?.totalItems ?? 0), helper: "Inventario real del tenant." },
-      { label: "Bajo stock", value: String(summary?.lowStockCount ?? 0), helper: `Umbral ${summary?.lowStockThreshold ?? 5}` },
-      { label: "Stock total", value: String(summary?.totalStock ?? 0), helper: "Suma real de existencias." },
+      { label: "Órdenes", value: String(orders.length), helper: "Compra real del tenant." },
+      { label: "Proveedores", value: String(suppliers.length), helper: "Catálogo operativo." },
+      { label: "Rol", value: role, helper: "Permisos reales por usuario." },
     ],
-    [summary]
+    [orders.length, role, suppliers.length],
   );
 
-  const rows = (summary?.lowStockItems ?? []).map((item) => ({
-    sku: String(item.sku ?? ""),
-    description: String(item.description ?? ""),
-    stock: String(item.stock ?? ""),
-    branch_id: String(item.branch_id ?? ""),
-  }));
+  async function handleCreate(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    try {
+      setSaving(true);
+      setError("");
+      const payload = {
+        supplierId: form.supplierId.trim(),
+        branchId: form.branchId.trim() || undefined,
+        expectedDate: form.expectedDate.trim() || undefined,
+        notes: form.notes.trim() || undefined,
+        paymentTerms: form.paymentTerms.trim() || undefined,
+        reference: form.reference.trim() || undefined,
+        items: [
+          {
+            skuSnapshot: form.skuSnapshot.trim(),
+            productNameSnapshot: form.productNameSnapshot.trim(),
+            quantity: Number(form.quantity || 0),
+            unitCost: Number(form.unitCost || 0),
+          },
+        ],
+      };
+      await fixService.createPurchaseOrder(payload);
+      setForm(emptyForm);
+      setSelectedId("");
+      await loadData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo crear la compra");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleReceive() {
+    if (!selectedId) return;
+    try {
+      setSaving(true);
+      setError("");
+      await fixService.receivePurchaseOrder(selectedId, {
+        notes: `Recepción operativa ${new Date().toISOString()}`,
+        receivedItems: selectedOrder?.items?.map((item) => ({
+          skuSnapshot: String(item.sku_snapshot ?? ""),
+          quantity: Number(item.qty_ordered ?? 0),
+        })) ?? [],
+      });
+      await loadData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo recibir la compra");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
     <RequireRole allowed={["owner", "manager"]}>
       <ModuleShell
         title="Compras"
-        subtitle="Reabasto y alertas de stock derivadas de inventario real."
+        subtitle="Órdenes de compra reales con recepción e impacto en inventario."
         icon="fas fa-cart-shopping"
-        actionLabel={role === "owner" ? "Ver reabasto" : "Solo lectura"}
+        actionLabel="Nueva compra"
+        onAction={() => {
+          setSelectedId("");
+          setSelectedOrder(null);
+          setForm(emptyForm);
+        }}
         stats={stats}
         columns={[
-          { label: "SKU", key: "sku" },
-          { label: "Descripción", key: "description" },
-          { label: "Stock", key: "stock" },
-          { label: "Sucursal", key: "branch_id" },
+          { label: "Folio", key: "folio" },
+          { label: "Estado", key: "status" },
+          { label: "Proveedor", key: "supplier_id" },
+          { label: "Total", key: "total" },
         ]}
-        rows={rows}
-        emptyTitle={loading ? "Cargando compras…" : error ? "No pudimos cargar compras" : "Sin alertas de reabasto"}
-        emptyCopy={error || "Cuando no hay stock bajo, la pantalla muestra vacío real. Los datos vienen de /api/:tenantId/procurement/summary."}
-      />
+        rows={orders.map((order) => ({
+          folio: order.folio ?? "",
+          status: order.status ?? "",
+          supplier_id: order.supplier_id ?? "",
+          total: String(order.total ?? 0),
+        }))}
+        emptyTitle={loading ? "Cargando compras…" : error ? "No pudimos cargar compras" : "No hay compras registradas"}
+        emptyCopy={error || "La lista real sale de /api/:tenantSlug/purchase-orders."}
+      >
+        <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+          <form onSubmit={handleCreate} className="space-y-4 rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-lg font-semibold text-zinc-50">Crear compra real</h2>
+              <button
+                type="submit"
+                disabled={saving}
+                className="rounded-xl bg-cyan-400 px-4 py-2 text-sm font-semibold text-zinc-950 disabled:opacity-60"
+              >
+                {saving ? "Guardando…" : "Guardar"}
+              </button>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              <label className="space-y-1 text-sm text-zinc-300 md:col-span-2">
+                <span>Proveedor</span>
+                <select
+                  value={form.supplierId}
+                  onChange={(event) => setForm((current) => ({ ...current, supplierId: event.target.value }))}
+                  className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-zinc-100 outline-none"
+                >
+                  <option value="">Seleccionar proveedor</option>
+                  {suppliers.map((supplier) => (
+                    <option key={supplier.id} value={supplier.id}>
+                      {supplier.business_name ?? supplier.id}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {[
+                ["branchId", "Sucursal (branchId)"],
+                ["expectedDate", "Fecha esperada"],
+                ["reference", "Referencia"],
+                ["paymentTerms", "Términos de pago"],
+                ["skuSnapshot", "SKU snapshot"],
+                ["productNameSnapshot", "Nombre snapshot"],
+                ["quantity", "Cantidad"],
+                ["unitCost", "Costo unitario"],
+              ].map(([key, label]) => (
+                <label key={key} className="space-y-1 text-sm text-zinc-300">
+                  <span>{label}</span>
+                  <input
+                    value={form[key as keyof typeof form]}
+                    onChange={(event) => setForm((current) => ({ ...current, [key]: event.target.value }))}
+                    className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-zinc-100 outline-none"
+                  />
+                </label>
+              ))}
+              <label className="space-y-1 text-sm text-zinc-300 md:col-span-2">
+                <span>Notas</span>
+                <textarea
+                  value={form.notes}
+                  onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))}
+                  className="min-h-24 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-zinc-100 outline-none"
+                />
+              </label>
+            </div>
+            {error ? <p className="text-sm text-red-300">{error}</p> : null}
+          </form>
+
+          <div className="space-y-4 rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-lg font-semibold text-zinc-50">Detalle y recepción</h2>
+              <button
+                type="button"
+                onClick={() => void handleReceive()}
+                disabled={!selectedId || saving}
+                className="rounded-xl border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-100 disabled:opacity-60"
+              >
+                Recibir compra
+              </button>
+            </div>
+            <label className="space-y-1 text-sm text-zinc-300">
+              <span>Orden activa</span>
+              <select
+                value={selectedId}
+                onChange={(event) => setSelectedId(event.target.value)}
+                className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-zinc-100 outline-none"
+              >
+                <option value="">Nueva orden</option>
+                {orders.map((order) => (
+                  <option key={order.id} value={order.id}>
+                    {order.folio} · {order.status}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className="space-y-3">
+              {selectedOrder ? (
+                <>
+                  <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-4 text-sm text-zinc-200">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-zinc-50">{selectedOrder.order?.folio}</span>
+                      <span>{selectedOrder.order?.status}</span>
+                    </div>
+                    <div className="mt-2 text-zinc-400">Proveedor: {selectedOrder.order?.supplier_id}</div>
+                    <div className="mt-1 text-zinc-400">Total: {String(selectedOrder.order?.total ?? 0)}</div>
+                  </div>
+                  <div className="space-y-2">
+                    {(selectedOrder.items ?? []).map((item, index) => (
+                      <div key={`${selectedOrder.order?.id ?? selectedId}-${index}`} className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-3 text-sm text-zinc-300">
+                        <div className="font-medium text-zinc-50">{String(item.product_name_snapshot ?? item.sku_snapshot ?? "Item")}</div>
+                        <div className="mt-1 flex justify-between">
+                          <span>{String(item.qty_ordered ?? 0)} unidades</span>
+                          <span>${String(item.unit_cost ?? 0)}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <p className="text-sm text-zinc-400">Selecciona una compra para ver su detalle real.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      </ModuleShell>
     </RequireRole>
   );
 }

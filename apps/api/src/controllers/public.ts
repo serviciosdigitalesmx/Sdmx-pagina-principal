@@ -41,6 +41,13 @@ type LandingContent = {
   videoUrl?: string;
 };
 
+type ContactInfo = {
+  contactPhone: string | null;
+  contactEmail: string | null;
+  contact_phone: string | null;
+  contact_email: string | null;
+};
+
 const publicQuoteSchema = z.object({
   tenantSlug: z.string().min(1),
   fullName: z.string().min(1),
@@ -74,6 +81,35 @@ async function resolveTenantIdBySlug(slug: string) {
   }
 
   return data;
+}
+
+function extractContactInfo(input: unknown): ContactInfo {
+  const content = input && typeof input === 'object' ? (input as LandingContent) : {};
+  const rawHref = typeof content.contactHref === 'string' ? content.contactHref.trim() : '';
+  let contactPhone: string | null = null;
+  let contactEmail: string | null = null;
+
+  if (rawHref) {
+    if (rawHref.startsWith('mailto:')) {
+      contactEmail = rawHref.slice('mailto:'.length).trim() || null;
+    } else if (rawHref.startsWith('tel:')) {
+      contactPhone = rawHref.slice('tel:'.length).trim() || null;
+    } else if (rawHref.includes('wa.me')) {
+      const digits = rawHref.replace(/\D/g, '');
+      contactPhone = digits.length > 0 ? digits : null;
+    } else if (rawHref.includes('@')) {
+      contactEmail = rawHref;
+    } else if (/^\+?\d[\d\s().-]+$/.test(rawHref)) {
+      contactPhone = rawHref;
+    }
+  }
+
+  return {
+    contactPhone,
+    contactEmail,
+    contact_phone: contactPhone,
+    contact_email: contactEmail,
+  };
 }
 
 function normalizeLandingContent(input: unknown, tenantName: string, tenantSlug: string): Required<LandingContent> {
@@ -193,7 +229,17 @@ export async function trackPublicOrder(req: Request, res: Response) {
       return res.status(403).json({ error: 'No encontramos una coincidencia con ese correo' });
     }
 
-    return res.json({ success: true, tenant, data });
+    return res.json({
+      success: true,
+      tenant: {
+        id: tenant.id,
+        slug: tenant.slug,
+        name: tenant.name,
+        branding: tenant.branding ?? null,
+        ...extractContactInfo(tenant.landing_content),
+      },
+      data,
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Internal server error';
     return res.status(500).json({ error: message });
@@ -214,7 +260,7 @@ export async function getPublicPortalOrder(req: Request, res: Response) {
 
     const { data, error } = await supabase
       .from('service_orders')
-      .select('id, tenant_id, folio, status, total_cost, created_at, device_info, problem_description, serial_number, receipt_url, estimated_cost, final_cost')
+      .select('id, tenant_id, folio, status, total_cost, created_at, device_info, problem_description, serial_number, receipt_url, estimated_cost, final_cost, evidence_metadata')
       .eq('tenant_id', tenant.id)
       .eq('folio', folio)
       .single();
@@ -223,6 +269,74 @@ export async function getPublicPortalOrder(req: Request, res: Response) {
       return res.status(404).json({ error: 'No encontramos tu reparación', details: error?.message });
     }
 
+    const { data: documents, error: documentsError } = await supabase
+      .from('service_order_documents')
+      .select('id, file_name, file_type, public_url, mime_type, created_at, source')
+      .eq('tenant_id', tenant.id)
+      .eq('service_order_id', data.id)
+      .order('created_at', { ascending: true });
+
+    if (documentsError) {
+      return res.status(502).json({ error: 'Failed to load documents', details: documentsError.message });
+    }
+
+    const { data: events, error: eventsError } = await supabase
+      .from('service_order_events')
+      .select('id, event_type, previous_status, new_status, note, actor_name, created_at')
+      .eq('tenant_id', tenant.id)
+      .eq('service_order_id', data.id)
+      .order('created_at', { ascending: true });
+
+    if (eventsError) {
+      return res.status(502).json({ error: 'Failed to load events', details: eventsError.message });
+    }
+
+    const evidenceMetadata = Array.isArray(data.evidence_metadata) ? data.evidence_metadata : [];
+    const metadataDocuments = evidenceMetadata
+      .filter((entry) => entry && typeof entry === 'object' && (entry as { kind?: string }).kind === 'document')
+      .map((entry) => {
+        const document = entry as Record<string, unknown>;
+        return {
+          id: String(document.id ?? ''),
+          file_name: String(document.file_name ?? ''),
+          file_type: String(document.file_type ?? 'attachment_pdf'),
+          public_url: typeof document.public_url === 'string' ? document.public_url : null,
+          mime_type: String(document.mime_type ?? 'application/octet-stream'),
+          created_at: String(document.created_at ?? new Date().toISOString()),
+          source: 'metadata',
+        };
+      });
+    const metadataEvents = evidenceMetadata
+      .filter((entry) => entry && typeof entry === 'object' && (entry as { kind?: string }).kind === 'event')
+      .map((entry) => {
+        const event = entry as Record<string, unknown>;
+        return {
+          id: String(event.id ?? ''),
+          event_type: String(event.event_type ?? 'note'),
+          previous_status: typeof event.previous_status === 'string' ? event.previous_status : null,
+          new_status: typeof event.new_status === 'string' ? event.new_status : null,
+          note: typeof event.note === 'string' ? event.note : null,
+          actor_name: typeof event.actor_name === 'string' ? event.actor_name : null,
+          created_at: String(event.created_at ?? new Date().toISOString()),
+        };
+      });
+
+    const normalizedDocuments = [
+      ...(documents ?? []).map((entry) => ({
+        id: entry.id,
+        file_name: entry.file_name,
+        file_type: entry.file_type,
+        public_url: entry.public_url,
+        mime_type: entry.mime_type ?? 'application/octet-stream',
+        created_at: entry.created_at,
+        source: entry.source ?? 'upload',
+      })),
+      ...metadataDocuments,
+    ];
+    const normalizedEvents = [...(events ?? []), ...metadataEvents];
+
+    const receiptDocument = normalizedDocuments.find((document) => document.file_type === 'receipt_pdf' && document.public_url);
+    const pdfAttachment = buildPdfAttachment(data.receipt_url || receiptDocument?.public_url || null);
     const statusLabelMap: Record<string, string> = {
       pending: 'Recibido',
       pendiente: 'Recibido',
@@ -233,7 +347,6 @@ export async function getPublicPortalOrder(req: Request, res: Response) {
       listo: 'Listo',
       entregado: 'Entregado',
     };
-
     const statusKey = String(data.status ?? '').toLowerCase();
     const timeline = [
       { label: 'Recepción', status: 'completado' as const, note: 'Orden registrada en el sistema.' },
@@ -254,17 +367,23 @@ export async function getPublicPortalOrder(req: Request, res: Response) {
       },
     ];
 
-    const pdfAttachment = buildPdfAttachment(data.receipt_url);
-
     return res.json({
       success: true,
-      tenant,
+      tenant: {
+        id: tenant.id,
+        slug: tenant.slug,
+        name: tenant.name,
+        branding: tenant.branding ?? null,
+        ...extractContactInfo(tenant.landing_content),
+      },
       data: {
         order: data,
         orderStatusLabel: statusLabelMap[statusKey] ?? String(data.status ?? 'Sin estado'),
         timeline,
         pdf_attachment: pdfAttachment,
         attachments: pdfAttachment ? [pdfAttachment] : [],
+        documents: normalizedDocuments,
+        events: normalizedEvents,
       },
     });
   } catch (error) {
@@ -292,6 +411,7 @@ export async function getPublicTenantLanding(req: Request, res: Response) {
           slug: tenant.slug,
           name: tenant.name,
           branding: tenant.branding ?? null,
+          ...extractContactInfo(tenant.landing_content),
         },
         landingContent,
       },
