@@ -286,7 +286,7 @@ export const updateInventoryItem = async (req: Request, res: Response) => {
         unit_cost: 0,
         reference: 'stock_adjustment',
         notes: body.note || null,
-        created_by: req.user?.sub ?? null,
+        created_by: null,
       }]);
 
       if (movementError) {

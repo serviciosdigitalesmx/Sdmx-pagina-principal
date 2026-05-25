@@ -226,7 +226,7 @@ export const createPurchaseOrder = async (req: Request, res: Response) => {
         tax_amount: taxAmount,
         total,
         notes: body.notes || null,
-        created_by: req.user?.sub ?? null,
+        created_by: null,
       }])
       .select('*')
       .single();
@@ -462,7 +462,7 @@ export const receivePurchaseOrder = async (req: Request, res: Response) => {
         unit_cost: Number(item.unit_cost ?? 0),
         reference: String(order.folio),
         notes: body.notes || null,
-        created_by: req.user?.sub ?? null,
+        created_by: null,
       });
 
       const { error: updateItemError } = await supabase

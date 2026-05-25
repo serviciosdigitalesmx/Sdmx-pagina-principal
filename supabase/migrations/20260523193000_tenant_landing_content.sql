@@ -29,7 +29,7 @@ set landing_content = jsonb_build_object(
   'secondaryCtaLabel', 'Ver estatus',
   'secondaryCtaHref', '/tracking',
   'contactLabel', 'WhatsApp / contacto',
-  'contactHref', coalesce(contact_phone, ''),
+  'contactHref', '',
   'seoTitle', coalesce(name, ''),
   'seoDescription', 'Landing pública del taller con experiencia white-label.',
   'services', '[]'::jsonb,
@@ -58,6 +58,9 @@ where landing_content = jsonb_build_object(
   'showVideo', false,
   'videoUrl', ''
 );
+
+alter table public.tenants
+  drop constraint if exists tenants_landing_content_is_object;
 
 alter table public.tenants
   add constraint tenants_landing_content_is_object
