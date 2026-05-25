@@ -24,6 +24,7 @@ const contactEmailHref = contactEmail ? `mailto:${contactEmail}` : "#contacto";
 const contactPhoneHref = contactPhone ? `tel:${contactPhone.replace(/\s+/g, "")}` : undefined;
 const whatsappHref = contactPhone ? `https://wa.me/${contactPhone.replace(/\D/g, "")}` : undefined;
 const demoHref = demoUrl ?? "/t/demo/portal";
+const mobileAppDownloadHref = "https://docs.google.com/uc?export=download&id=1mWB6HdpHOv5le1Dmo19dEd0ejalaVLdP";
 
 const metrics = [
   { value: "+40%", label: "Menos llamadas de seguimiento" },
@@ -83,6 +84,21 @@ const productProofCards = [
   {
     title: "Portal cliente",
     copy: "Estado, timeline, PDF y evidencia en una experiencia blanca del taller.",
+  },
+];
+
+const mobileAppCards = [
+  {
+    title: "APK para Android",
+    copy: "Instala FIXI en tu celular para probar el acceso móvil del taller con el frontend real.",
+  },
+  {
+    title: "Sesión persistente",
+    copy: "La app móvil conserva la misma sesión del taller para que no tengas que repetir el acceso.",
+  },
+  {
+    title: "Descarga directa",
+    copy: "Baja el APK desde Google Drive y compártelo por enlace cuando quieras instalarlo.",
   },
 ];
 
@@ -258,6 +274,38 @@ export default function Home() {
               </ul>
             </article>
           ))}
+        </section>
+
+        <section
+          id="app-movil"
+          className="grid gap-4 rounded-[2.5rem] border border-zinc-800/70 bg-[linear-gradient(180deg,rgba(9,9,11,0.94),rgba(15,17,21,0.98))] px-5 py-8 lg:px-8"
+        >
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-3xl">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-violet-300">App móvil</p>
+              <h2 className="mt-3 text-4xl font-black tracking-[-0.05em] text-white sm:text-5xl">FIXI también va en tu celular.</h2>
+              <p className="mt-4 text-base leading-8 text-zinc-300">
+                Descarga el APK de Android para probar la experiencia móvil real del taller con la misma cuenta y el mismo flujo.
+              </p>
+            </div>
+            <a
+              href={mobileAppDownloadHref}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center justify-center rounded-full bg-violet-300 px-6 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-violet-200"
+            >
+              Descargar APK de FIXI
+            </a>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            {mobileAppCards.map((card) => (
+              <article key={card.title} className="rounded-[1.5rem] border border-zinc-800 bg-white/5 p-5">
+                <h3 className="text-lg font-semibold text-white">{card.title}</h3>
+                <p className="mt-2 text-sm leading-7 text-zinc-400">{card.copy}</p>
+              </article>
+            ))}
+          </div>
         </section>
 
         <section className="grid gap-4 rounded-[2.5rem] border border-zinc-800/70 bg-zinc-950/85 px-5 py-8 lg:px-8">
