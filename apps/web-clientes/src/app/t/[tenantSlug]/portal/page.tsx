@@ -104,7 +104,7 @@ export default function PortalPage() {
       <section className="mx-auto grid w-full max-w-5xl gap-8 rounded-[2rem] border border-slate-200 bg-white p-8 shadow-[0_24px_90px_rgba(15,23,42,0.08)]">
         <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
           <div>
-            <p className="text-xs uppercase tracking-[0.35em] text-[#245a82]">Portal del cliente</p>
+            <p className="text-xs uppercase tracking-[0.35em] text-[#1f2937]">Portal del cliente</p>
             <h1 className="mt-3 text-4xl font-bold tracking-tight text-slate-950 [font-family:var(--font-cormorant)]">
               Consulta real de reparación
             </h1>
@@ -115,14 +115,14 @@ export default function PortalPage() {
               <Link href="/" className="rounded-full border border-slate-300 px-5 py-3 font-semibold text-slate-800 transition hover:bg-slate-50">
                 Volver al inicio
               </Link>
-              <Link href={`/t/${tenantSlug}/portal`} className="rounded-full bg-[#2c6e9f] px-5 py-3 font-semibold text-white transition hover:bg-[#245a82]">
+              <Link href={`/t/${tenantSlug}/portal`} className="rounded-full bg-[#334155] px-5 py-3 font-semibold text-white transition hover:bg-[#1f2937]">
                 Refrescar portal
               </Link>
             </div>
           </div>
 
           <aside className="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#245a82]">Qué consulta</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#1f2937]">Qué consulta</p>
             <ul className="mt-4 space-y-3 text-sm leading-7 text-slate-700">
               <li>• Estado real de la orden.</li>
               <li>• Equipo, falla y fecha de ingreso.</li>
@@ -138,7 +138,7 @@ export default function PortalPage() {
             <input
               value={folio}
               onChange={(event) => setFolio(event.target.value)}
-              className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none transition placeholder:text-slate-400 focus:border-[#2c6e9f] focus:ring-2 focus:ring-[#2c6e9f]/20"
+              className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none transition placeholder:text-slate-400 focus:border-[#334155] focus:ring-2 focus:ring-[#334155]/20"
               placeholder="ORD-XXXXXXXX"
               required
             />
@@ -147,7 +147,7 @@ export default function PortalPage() {
           {error ? <p className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p> : null}
 
           <div className="flex flex-wrap items-center gap-3">
-            <button disabled={loading} className="rounded-full bg-[#2c6e9f] px-6 py-3 font-semibold text-white transition hover:bg-[#245a82] disabled:opacity-60">
+            <button disabled={loading} className="rounded-full bg-[#334155] px-6 py-3 font-semibold text-white transition hover:bg-[#1f2937] disabled:opacity-60">
               {loading ? "Consultando..." : "Buscar orden"}
             </button>
             <p className="text-sm leading-6 text-slate-600">
@@ -161,10 +161,10 @@ export default function PortalPage() {
             <article className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-[0_16px_60px_rgba(15,23,42,0.08)]">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#245a82]">Orden encontrada</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#1f2937]">Orden encontrada</p>
                   <h2 className="mt-2 text-3xl font-bold text-slate-950">{result.order.folio}</h2>
                 </div>
-                <span className="rounded-full bg-[#1b9e5e]/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#1b9e5e]">
+                <span className="rounded-full bg-[#475569]/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#475569]">
                   {result.orderStatusLabel}
                 </span>
               </div>
@@ -194,7 +194,7 @@ export default function PortalPage() {
               </dl>
 
               <div className="mt-6">
-                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#245a82]">Timeline</p>
+                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#1f2937]">Timeline</p>
                 <div className="mt-4 space-y-3">
                   {result.timeline.map((step) => (
                     <div key={step.label} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
@@ -216,7 +216,7 @@ export default function PortalPage() {
                   {tenant?.contact_phone ?? "No hay teléfono de contacto registrado"}
                 </p>
                 {whatsappHref ? (
-                  <a href={whatsappHref} className="mt-3 inline-block font-semibold text-[#245a82]">
+                  <a href={whatsappHref} className="mt-3 inline-block font-semibold text-[#1f2937]">
                     Abrir WhatsApp
                   </a>
                 ) : null}

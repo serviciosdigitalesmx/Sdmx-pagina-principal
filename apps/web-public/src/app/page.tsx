@@ -175,33 +175,33 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(109,40,217,0.22),_transparent_22%),radial-gradient(circle_at_80%_10%,_rgba(168,85,247,0.16),_transparent_24%),linear-gradient(180deg,#06040c_0%,#0d0917_46%,#09060f_100%)] text-zinc-100">
       <section className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-4 sm:px-6 lg:px-8">
-        <header className="rounded-[2rem] border border-violet-400/15 bg-[linear-gradient(180deg,rgba(11,8,21,0.96),rgba(11,8,21,0.90))] px-5 py-4 shadow-[0_20px_70px_rgba(0,0,0,0.35)] backdrop-blur-xl">
+        <header className="rounded-[2rem] border border-slate-400/15 bg-[linear-gradient(180deg,rgba(11,8,21,0.96),rgba(11,8,21,0.90))] px-5 py-4 shadow-[0_20px_70px_rgba(0,0,0,0.35)] backdrop-blur-xl">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-violet-400/20 bg-[linear-gradient(180deg,rgba(109,40,217,0.32),rgba(15,23,42,0.96))] text-sm font-black text-violet-100 shadow-[0_20px_60px_rgba(109,40,217,0.16)]">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-400/20 bg-[linear-gradient(180deg,rgba(109,40,217,0.32),rgba(15,23,42,0.96))] text-sm font-black text-slate-100 shadow-[0_20px_60px_rgba(109,40,217,0.16)]">
                 FX
               </div>
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.42em] text-violet-300">FIXI</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.42em] text-slate-300">FIXI</p>
                 <p className="mt-1 text-sm text-zinc-400">{legalName}</p>
               </div>
             </div>
 
             <nav className="flex flex-wrap items-center gap-2 text-sm text-zinc-300">
-              <a className="rounded-full border border-zinc-800 px-4 py-2 transition hover:border-violet-400/30 hover:bg-white/5" href="#producto">
+              <a className="rounded-full border border-zinc-800 px-4 py-2 transition hover:border-slate-400/30 hover:bg-white/5" href="#producto">
                 Producto
               </a>
-              <a className="rounded-full border border-zinc-800 px-4 py-2 transition hover:border-violet-400/30 hover:bg-white/5" href="#seguridad">
+              <a className="rounded-full border border-zinc-800 px-4 py-2 transition hover:border-slate-400/30 hover:bg-white/5" href="#seguridad">
                 Seguridad
               </a>
-              <a className="rounded-full border border-zinc-800 px-4 py-2 transition hover:border-violet-400/30 hover:bg-white/5" href="#precios">
+              <a className="rounded-full border border-zinc-800 px-4 py-2 transition hover:border-slate-400/30 hover:bg-white/5" href="#precios">
                 Precios
               </a>
-              <a className="rounded-full border border-zinc-800 px-4 py-2 transition hover:border-violet-400/30 hover:bg-white/5" href="#contacto">
+              <a className="rounded-full border border-zinc-800 px-4 py-2 transition hover:border-slate-400/30 hover:bg-white/5" href="#contacto">
                 Contacto
               </a>
               <Link
-                className="rounded-full border border-violet-400/30 bg-violet-400/10 px-5 py-3 font-semibold text-violet-200 transition hover:border-violet-300/40 hover:bg-violet-400/15"
+                className="rounded-full border border-slate-400/30 bg-slate-400/10 px-5 py-3 font-semibold text-slate-200 transition hover:border-slate-300/40 hover:bg-slate-400/15"
                 href="/onboarding"
               >
                 Crear mi tenant
@@ -210,26 +210,26 @@ export default function Home() {
           </div>
         </header>
 
-        <section className="rounded-[2.5rem] border border-violet-400/15 bg-[linear-gradient(180deg,rgba(11,8,21,0.96),rgba(9,6,15,0.98))] px-5 py-8 shadow-[0_30px_120px_rgba(0,0,0,0.45)] lg:px-8 lg:py-12">
+        <section className="rounded-[2.5rem] border border-slate-400/15 bg-[linear-gradient(180deg,rgba(11,8,21,0.96),rgba(9,6,15,0.98))] px-5 py-8 shadow-[0_30px_120px_rgba(0,0,0,0.45)] lg:px-8 lg:py-12">
           <div className="mx-auto max-w-5xl text-center">
-            <div className="mx-auto inline-flex rounded-full border border-violet-400/20 bg-violet-400/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.3em] text-violet-200">
+            <div className="mx-auto inline-flex rounded-full border border-slate-400/20 bg-slate-400/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-200">
               Plataforma premium para talleres de reparación y gadgets · {trialDays} días de prueba
             </div>
             <h1 className="mx-auto mt-6 max-w-4xl text-balance text-5xl font-black tracking-[-0.07em] text-white sm:text-6xl lg:text-7xl">
-              Convierte tu taller en una operación premium con <span className="text-violet-300">{productName}</span>.
+              Convierte tu taller en una operación premium con <span className="text-slate-300">{productName}</span>.
             </h1>
             <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-zinc-300 sm:text-lg">
               Cotización, tracking, evidencia, inventario y finanzas en una sola experiencia de marca blanca. Activa tu espacio con {trialDays} días sin tarjeta.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Link
-                className="rounded-full bg-violet-300 px-6 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-violet-200"
+                className="rounded-full bg-slate-300 px-6 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-slate-200"
                 href="/onboarding"
               >
                 Crear mi tenant
               </Link>
               <Link
-                className="rounded-full border border-zinc-700 bg-white/5 px-6 py-3 text-sm font-semibold text-zinc-100 transition hover:border-violet-400/30 hover:bg-white/10"
+                className="rounded-full border border-zinc-700 bg-white/5 px-6 py-3 text-sm font-semibold text-zinc-100 transition hover:border-slate-400/30 hover:bg-white/10"
                 href={demoHref}
               >
                 Ver demo en vivo
@@ -260,8 +260,8 @@ export default function Home() {
 
         <section className="grid gap-4 lg:grid-cols-4" id="producto">
           {coreCards.map((card) => (
-            <article key={card.title} className="rounded-[1.75rem] border border-zinc-800/70 bg-zinc-950/85 p-5 shadow-[0_18px_70px_rgba(0,0,0,0.28)] transition hover:-translate-y-0.5 hover:border-violet-400/30">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-violet-300">{card.eyebrow}</p>
+            <article key={card.title} className="rounded-[1.75rem] border border-zinc-800/70 bg-zinc-950/85 p-5 shadow-[0_18px_70px_rgba(0,0,0,0.28)] transition hover:-translate-y-0.5 hover:border-slate-400/30">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-300">{card.eyebrow}</p>
               <h2 className="mt-3 text-xl font-bold text-white">{card.title}</h2>
               <p className="mt-3 text-sm leading-7 text-zinc-400">{card.copy}</p>
               <ul className="mt-4 space-y-2">
@@ -282,7 +282,7 @@ export default function Home() {
         >
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-violet-300">App móvil</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-slate-300">App móvil</p>
               <h2 className="mt-3 text-4xl font-black tracking-[-0.05em] text-white sm:text-5xl">FIXI también va en tu celular.</h2>
               <p className="mt-4 text-base leading-8 text-zinc-300">
                 Descarga el APK de Android para probar la experiencia móvil real del taller con la misma cuenta y el mismo flujo.
@@ -292,7 +292,7 @@ export default function Home() {
               href={mobileAppDownloadHref}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center justify-center rounded-full bg-violet-300 px-6 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-violet-200"
+              className="inline-flex items-center justify-center rounded-full bg-slate-300 px-6 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-slate-200"
             >
               Descargar APK de FIXI
             </a>
@@ -310,7 +310,7 @@ export default function Home() {
 
         <section className="grid gap-4 rounded-[2.5rem] border border-zinc-800/70 bg-zinc-950/85 px-5 py-8 lg:px-8">
           <div className="max-w-3xl">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-violet-300">Capacidades</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-slate-300">Capacidades</p>
             <h2 className="mt-3 text-4xl font-black tracking-[-0.05em] text-white sm:text-5xl">Todo lo que tu taller usa en un solo lugar.</h2>
             <p className="mt-4 text-base leading-8 text-zinc-300">
               FIXI reúne operación, seguimiento y presentación en una experiencia diseñada para verse seria desde el primer vistazo.
@@ -329,7 +329,7 @@ export default function Home() {
 
         <section className="grid gap-4 rounded-[2.5rem] border border-zinc-800/70 bg-[linear-gradient(180deg,rgba(9,9,11,0.94),rgba(15,17,21,0.98))] px-5 py-8 lg:px-8">
           <div className="max-w-3xl">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-violet-300">Cómo funciona</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-slate-300">Cómo funciona</p>
             <h2 className="mt-3 text-4xl font-black tracking-[-0.05em] text-white sm:text-5xl">Tres pasos para empezar sin fricción.</h2>
             <p className="mt-4 text-base leading-8 text-zinc-300">
               La experiencia debe sentirse simple para el taller y clara para el cliente.
@@ -339,7 +339,7 @@ export default function Home() {
           <div className="grid gap-4 lg:grid-cols-3">
             {howItWorks.map((item) => (
               <article key={item.step} className="rounded-[1.5rem] border border-zinc-800 bg-white/5 p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-violet-300">{item.step}</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-300">{item.step}</p>
                 <h3 className="mt-3 text-xl font-semibold text-white">{item.title}</h3>
                 <p className="mt-2 text-sm leading-7 text-zinc-400">{item.copy}</p>
               </article>
@@ -349,7 +349,7 @@ export default function Home() {
 
         <section className="grid gap-4 rounded-[2.5rem] border border-zinc-800/70 bg-[linear-gradient(180deg,rgba(9,9,11,0.92),rgba(15,17,21,0.98))] px-5 py-8 lg:px-8">
           <div className="max-w-3xl">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-violet-300">Adopción</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-slate-300">Adopción</p>
             <h2 className="mt-3 text-4xl font-black tracking-[-0.05em] text-white sm:text-5xl">Alcance visible de FIXI.</h2>
             <p className="mt-4 text-base leading-8 text-zinc-300">
               Estos indicadores deben venir de datos reales. Si no están confirmados, no se muestran.
@@ -383,7 +383,7 @@ export default function Home() {
 
         <section id="seguridad" className="grid gap-4 rounded-[2.5rem] border border-zinc-800/70 bg-[linear-gradient(180deg,rgba(9,9,11,0.92),rgba(15,17,21,0.98))] px-5 py-8 lg:grid-cols-[0.95fr_1.05fr] lg:px-8">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-violet-300">Confianza técnica</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-slate-300">Confianza técnica</p>
             <h2 className="mt-3 text-4xl font-black tracking-[-0.05em] text-white sm:text-5xl">Arquitectura visible.</h2>
             <p className="mt-4 max-w-xl text-base leading-8 text-zinc-300">
               FIXI muestra su arquitectura con claridad: aislamiento, marca blanca y despliegue de producción.
@@ -397,8 +397,8 @@ export default function Home() {
                 <p className="mt-2 text-sm leading-7 text-zinc-400">{block.copy}</p>
               </article>
             ))}
-            <div className="rounded-[1.5rem] border border-violet-400/20 bg-violet-400/10 p-5 text-sm leading-7 text-violet-50">
-              <span className="font-semibold text-violet-200">Contrato de seguridad:</span> cada taller ve sólo su información, su branding
+            <div className="rounded-[1.5rem] border border-slate-400/20 bg-slate-400/10 p-5 text-sm leading-7 text-slate-50">
+              <span className="font-semibold text-slate-200">Contrato de seguridad:</span> cada taller ve sólo su información, su branding
               y su operación.
             </div>
           </div>
@@ -406,7 +406,7 @@ export default function Home() {
 
         <section id="precios" className="space-y-6 rounded-[2.5rem] border border-zinc-800/70 bg-zinc-950/85 px-5 py-8 lg:px-8">
           <div className="max-w-3xl">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-violet-300">Planes</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-slate-300">Planes</p>
             <h2 className="mt-3 text-4xl font-black tracking-[-0.05em] text-white sm:text-5xl">Planes claros para arrancar y escalar.</h2>
             <p className="mt-4 text-base leading-8 text-zinc-300">
               Cada plan incluye los conceptos clave del producto: recepción, inventario, portal cliente, WhatsApp, finanzas y multisucursal.
@@ -420,12 +420,12 @@ export default function Home() {
                 className={[
                   "rounded-[1.75rem] border p-6 shadow-[0_18px_70px_rgba(0,0,0,0.28)]",
                   plan.highlight
-                    ? "border-violet-400/30 bg-[linear-gradient(180deg,rgba(109,40,217,0.14),rgba(9,9,11,1))] ring-1 ring-violet-400/20"
+                    ? "border-slate-400/30 bg-[linear-gradient(180deg,rgba(109,40,217,0.14),rgba(9,9,11,1))] ring-1 ring-slate-400/20"
                     : "border-zinc-800 bg-white/4",
                 ].join(" ")}
               >
                 {plan.highlight ? (
-                  <div className="mb-4 inline-flex rounded-full border border-violet-400/30 bg-violet-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-violet-200">
+                  <div className="mb-4 inline-flex rounded-full border border-slate-400/30 bg-slate-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-slate-200">
                     Más popular
                   </div>
                 ) : null}
@@ -447,7 +447,7 @@ export default function Home() {
                   ))}
                 </ul>
                 <div className="mt-5 rounded-2xl border border-zinc-800 bg-white/5 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-violet-300">Incluye conceptos</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-300">Incluye conceptos</p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {(plan.name === "Starter"
                       ? ["Recepción", "Tracking", "Portal cliente"]
@@ -466,8 +466,8 @@ export default function Home() {
                   className={[
                     "mt-6 inline-flex w-full justify-center rounded-full px-5 py-3 text-sm font-semibold transition",
                     plan.highlight
-                      ? "bg-violet-300 text-zinc-950 hover:bg-violet-200"
-                      : "border border-zinc-700 bg-white/5 text-zinc-100 hover:border-violet-400/30 hover:bg-white/10",
+                      ? "bg-slate-300 text-zinc-950 hover:bg-slate-200"
+                      : "border border-zinc-700 bg-white/5 text-zinc-100 hover:border-slate-400/30 hover:bg-white/10",
                   ].join(" ")}
                 >
                   Iniciar demo gratis con este plan
@@ -482,7 +482,7 @@ export default function Home() {
           className="grid gap-6 rounded-[2.5rem] border border-zinc-800/70 bg-[linear-gradient(180deg,rgba(15,17,21,0.92),rgba(9,9,11,0.98))] px-5 py-8 lg:grid-cols-[1fr_0.95fr] lg:px-8"
         >
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-violet-300">Contacto</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-slate-300">Contacto</p>
             <h2 className="mt-3 text-4xl font-black tracking-[-0.05em] text-white">Contacta a FIXI.</h2>
             <p className="mt-4 max-w-2xl text-base leading-8 text-zinc-300">
               Déjanos tus datos para arrancar una demo o valida el producto con el recorrido público.
@@ -495,7 +495,7 @@ export default function Home() {
                 <span className="mb-2 block text-sm font-medium text-zinc-300">Email</span>
                 <input
                   type="email"
-                className="w-full rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-violet-400/40 focus:ring-2 focus:ring-violet-400/20"
+                className="w-full rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-slate-400/40 focus:ring-2 focus:ring-slate-400/20"
                   placeholder={contactEmail}
                 />
               </label>
@@ -503,16 +503,16 @@ export default function Home() {
                 <span className="mb-2 block text-sm font-medium text-zinc-300">Teléfono</span>
                 <input
                   type="tel"
-                className="w-full rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-violet-400/40 focus:ring-2 focus:ring-violet-400/20"
+                className="w-full rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-slate-400/40 focus:ring-2 focus:ring-slate-400/20"
                   placeholder={contactPhone ?? "55 0000 0000"}
                 />
               </label>
             </div>
             <div className="mt-4 flex flex-wrap gap-3">
-              <a href={contactEmailHref} className="rounded-full bg-violet-300 px-5 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-violet-200">
+              <a href={contactEmailHref} className="rounded-full bg-slate-300 px-5 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-slate-200">
                 Escribir por email
               </a>
-              <a href={contactPhoneHref ?? whatsappHref ?? "#contacto"} className="rounded-full border border-zinc-700 px-5 py-3 text-sm font-semibold text-zinc-100 transition hover:border-violet-400/30 hover:bg-white/10">
+              <a href={contactPhoneHref ?? whatsappHref ?? "#contacto"} className="rounded-full border border-zinc-700 px-5 py-3 text-sm font-semibold text-zinc-100 transition hover:border-slate-400/30 hover:bg-white/10">
                 Llamar o abrir WhatsApp
               </a>
             </div>

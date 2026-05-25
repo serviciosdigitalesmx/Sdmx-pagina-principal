@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 
 const fieldClassName =
-  "w-full rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-50 outline-none transition placeholder:text-zinc-500 focus:border-violet-400/60 focus:ring-2 focus:ring-violet-400/20";
+  "w-full rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-50 outline-none transition placeholder:text-zinc-500 focus:border-slate-400/60 focus:ring-2 focus:ring-slate-400/20";
 
 export default function TenantTrackingPage() {
   const params = useParams<{ tenant: string }>();
@@ -56,7 +56,7 @@ export default function TenantTrackingPage() {
       <section className="mx-auto grid w-full max-w-5xl gap-8 rounded-[2rem] border border-zinc-800/70 bg-zinc-950/85 p-8 shadow-[0_20px_80px_rgba(0,0,0,0.28)]">
         <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
           <div>
-            <p className="text-xs uppercase tracking-[0.35em] text-violet-300">Panel del cliente</p>
+            <p className="text-xs uppercase tracking-[0.35em] text-slate-300">Panel del cliente</p>
             <h1 className="mt-3 text-4xl font-bold tracking-tight text-zinc-50 [font-family:var(--font-cormorant)]">
               Ver estatus de tu reparación
             </h1>
@@ -74,8 +74,8 @@ export default function TenantTrackingPage() {
             </div>
           </div>
 
-          <aside className="rounded-[1.75rem] border border-violet-400/15 bg-violet-400/8 p-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-violet-300">Antes de consultar</p>
+          <aside className="rounded-[1.75rem] border border-slate-400/15 bg-slate-400/8 p-6">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-300">Antes de consultar</p>
             <ul className="mt-4 space-y-3 text-sm leading-7 text-zinc-300">
               <li>• Ten a la mano el folio de recepción.</li>
               <li>• El correo es opcional, pero ayuda a validar la consulta.</li>
@@ -110,7 +110,7 @@ export default function TenantTrackingPage() {
           {status ? <p className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">{status}</p> : null}
 
           <div className="flex flex-wrap items-center gap-3">
-            <button disabled={loading} className="rounded-full bg-violet-500 px-6 py-3 font-semibold text-zinc-950 transition hover:bg-violet-400 disabled:opacity-60">
+            <button disabled={loading} className="rounded-full bg-slate-500 px-6 py-3 font-semibold text-zinc-950 transition hover:bg-slate-400 disabled:opacity-60">
               {loading ? "Consultando..." : "Ver estatus"}
             </button>
             <p className="text-sm leading-6 text-zinc-400">

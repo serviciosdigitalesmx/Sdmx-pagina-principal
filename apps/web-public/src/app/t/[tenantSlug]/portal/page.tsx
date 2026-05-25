@@ -148,7 +148,7 @@ export default function PortalPage() {
       <section className="mx-auto grid w-full max-w-5xl gap-8 rounded-[2rem] border border-zinc-800/70 bg-zinc-950/85 p-8 shadow-[0_24px_90px_rgba(0,0,0,0.28)]">
         <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
           <div>
-            <p className="text-xs uppercase tracking-[0.35em] text-violet-300">Portal del cliente</p>
+            <p className="text-xs uppercase tracking-[0.35em] text-slate-300">Portal del cliente</p>
             <h1 className="mt-3 text-4xl font-bold tracking-tight text-zinc-50 [font-family:var(--font-cormorant)]">
               Consulta real de reparación
             </h1>
@@ -159,14 +159,14 @@ export default function PortalPage() {
               <Link href={`/${tenantSlug}`} className="rounded-full border border-zinc-700 px-5 py-3 font-semibold text-zinc-100 transition hover:bg-zinc-800">
                 Volver al tenant
               </Link>
-              <Link href={`/${tenantSlug}/cotizar`} className="rounded-full bg-violet-500 px-5 py-3 font-semibold text-zinc-950 transition hover:bg-violet-400">
+              <Link href={`/${tenantSlug}/cotizar`} className="rounded-full bg-slate-500 px-5 py-3 font-semibold text-zinc-950 transition hover:bg-slate-400">
                 Solicitar cotización
               </Link>
             </div>
           </div>
 
           <aside className="rounded-[1.75rem] border border-zinc-800 bg-zinc-900/60 p-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-violet-300">Qué consulta</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-300">Qué consulta</p>
             <ul className="mt-4 space-y-3 text-sm leading-7 text-zinc-300">
               <li>• Estado real de la orden.</li>
               <li>• Equipo, falla y fecha de ingreso.</li>
@@ -182,7 +182,7 @@ export default function PortalPage() {
             <input
               value={folio}
               onChange={(event) => setFolio(event.target.value)}
-              className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none transition placeholder:text-slate-400 focus:border-[#2c6e9f] focus:ring-2 focus:ring-[#2c6e9f]/20"
+              className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none transition placeholder:text-slate-400 focus:border-[#334155] focus:ring-2 focus:ring-[#334155]/20"
               placeholder="ORD-XXXXXXXX"
               required
             />
@@ -191,7 +191,7 @@ export default function PortalPage() {
           {error ? <p className="rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{error}</p> : null}
 
           <div className="flex flex-wrap items-center gap-3">
-            <button disabled={loading} className="rounded-full bg-violet-500 px-6 py-3 font-semibold text-zinc-950 transition hover:bg-violet-400 disabled:opacity-60">
+            <button disabled={loading} className="rounded-full bg-slate-500 px-6 py-3 font-semibold text-zinc-950 transition hover:bg-slate-400 disabled:opacity-60">
               {loading ? "Consultando..." : "Buscar orden"}
             </button>
             <p className="text-sm leading-6 text-zinc-400">
@@ -205,7 +205,7 @@ export default function PortalPage() {
             <article className="rounded-[1.75rem] border border-zinc-800 bg-zinc-950/85 p-6 shadow-[0_16px_60px_rgba(0,0,0,0.24)]">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-violet-300">Orden encontrada</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-300">Orden encontrada</p>
                   <h2 className="mt-2 text-3xl font-bold text-zinc-50">{result.order.folio}</h2>
                 </div>
                 <span className="rounded-full bg-emerald-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">
@@ -238,7 +238,7 @@ export default function PortalPage() {
               </dl>
 
               <div className="mt-6">
-                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-violet-300">Timeline</p>
+                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-300">Timeline</p>
                 <div className="mt-4 space-y-3">
                   {result.timeline.map((step) => (
                     <div key={step.label} className="rounded-2xl border border-zinc-800 bg-zinc-900/60 px-4 py-3">
@@ -260,7 +260,7 @@ export default function PortalPage() {
                   {tenant?.contact_phone ?? "No hay teléfono de contacto registrado"}
                 </p>
                 {whatsappHref ? (
-                  <a href={whatsappHref} className="mt-3 inline-block font-semibold text-violet-300">
+                  <a href={whatsappHref} className="mt-3 inline-block font-semibold text-slate-300">
                     Abrir WhatsApp
                   </a>
                 ) : null}
@@ -277,7 +277,7 @@ export default function PortalPage() {
                     target="_blank"
                     rel="noreferrer"
                     download={pdfAttachment.fileName ?? undefined}
-                    className="mt-3 inline-flex rounded-full bg-violet-500 px-4 py-2 font-semibold text-zinc-950"
+                    className="mt-3 inline-flex rounded-full bg-slate-500 px-4 py-2 font-semibold text-zinc-950"
                   >
                     Ver PDF de la orden
                   </a>
@@ -289,7 +289,7 @@ export default function PortalPage() {
                         <div className="text-sm font-semibold text-zinc-50">{document.file_name}</div>
                         <div className="text-xs uppercase tracking-[0.18em] text-zinc-400">{document.file_type}</div>
                         {document.public_url ? (
-                          <a href={document.public_url} target="_blank" rel="noreferrer" className="mt-1 inline-block text-sm font-semibold text-violet-300">
+                          <a href={document.public_url} target="_blank" rel="noreferrer" className="mt-1 inline-block text-sm font-semibold text-slate-300">
                             Abrir evidencia
                           </a>
                         ) : null}

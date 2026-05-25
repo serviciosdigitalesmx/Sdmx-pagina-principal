@@ -79,7 +79,7 @@ export function OrderDetailDrawer({ open, loading, data, customerPortalUrl, stat
       <div className="ml-auto flex h-full w-full max-w-3xl flex-col bg-slate-50 shadow-[0_24px_90px_rgba(15,23,42,0.2)]">
         <div className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
           <div>
-            <p className="text-xs uppercase tracking-[0.24em] text-[#245a82]">Detalle operativo</p>
+            <p className="text-xs uppercase tracking-[0.24em] text-[#1f2937]">Detalle operativo</p>
             <h3 className="text-xl font-semibold text-slate-950">{order?.folio ?? "Orden"}</h3>
           </div>
           <button onClick={onClose} className="rounded-full border border-slate-200 px-3 py-2 text-sm text-slate-600">
@@ -116,7 +116,7 @@ export function OrderDetailDrawer({ open, loading, data, customerPortalUrl, stat
 
             <section className="rounded-3xl border border-slate-200 bg-white p-5">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                <h4 className="text-sm font-semibold uppercase tracking-[0.2em] text-[#245a82]">Acciones</h4>
+                <h4 className="text-sm font-semibold uppercase tracking-[0.2em] text-[#1f2937]">Acciones</h4>
                 <div className="flex flex-wrap gap-2">
                   {(statusOptions ?? [
                     { key: "diagnostico", label: "Diagnóstico" },
@@ -136,7 +136,7 @@ export function OrderDetailDrawer({ open, loading, data, customerPortalUrl, stat
                   <button
                     type="button"
                     onClick={onAddNote}
-                    className="rounded-full bg-[#2c6e9f] px-4 py-2 text-sm font-semibold text-white"
+                    className="rounded-full bg-[#334155] px-4 py-2 text-sm font-semibold text-white"
                   >
                     Agregar nota
                   </button>
@@ -146,7 +146,7 @@ export function OrderDetailDrawer({ open, loading, data, customerPortalUrl, stat
                     rel="noreferrer"
                     aria-disabled={!waLink}
                     className={`rounded-full px-4 py-2 text-sm font-semibold ${
-                      waLink ? "bg-[#1b9e5e] text-white" : "pointer-events-none bg-slate-200 text-slate-400"
+                      waLink ? "bg-[#475569] text-white" : "pointer-events-none bg-slate-200 text-slate-400"
                     }`}
                   >
                     WhatsApp
@@ -175,7 +175,7 @@ export function OrderDetailDrawer({ open, loading, data, customerPortalUrl, stat
             </section>
 
             <section className="rounded-3xl border border-slate-200 bg-white p-5">
-              <h4 className="text-sm font-semibold uppercase tracking-[0.2em] text-[#245a82]">Archivos</h4>
+              <h4 className="text-sm font-semibold uppercase tracking-[0.2em] text-[#1f2937]">Archivos</h4>
               <div className="mt-4 space-y-3">
                 {(data?.documents ?? []).length > 0 ? (
                   data?.documents?.map((document) => (
@@ -197,7 +197,7 @@ export function OrderDetailDrawer({ open, loading, data, customerPortalUrl, stat
             </section>
 
             <section className="rounded-3xl border border-slate-200 bg-white p-5">
-              <h4 className="text-sm font-semibold uppercase tracking-[0.2em] text-[#245a82]">Timeline</h4>
+              <h4 className="text-sm font-semibold uppercase tracking-[0.2em] text-[#1f2937]">Timeline</h4>
               <div className="mt-4">
                 <OrderTimeline events={data?.events ?? []} />
               </div>

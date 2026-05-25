@@ -158,7 +158,7 @@ export default function LoginPage() {
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(44,110,159,0.12),_transparent_30%),radial-gradient(circle_at_20%_20%,_rgba(94,157,201,0.08),_transparent_24%),linear-gradient(180deg,#f4f6f9_0%,#eef2f6_54%,#ffffff_100%)] px-6 py-10 text-slate-950">
       <section className="mx-auto grid w-full max-w-5xl gap-8 lg:grid-cols-[1fr_1.05fr]">
         <div className="rounded-[2rem] border border-slate-200 bg-white p-8 text-slate-900 shadow-[0_30px_100px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-          <p className="text-xs uppercase tracking-[0.35em] text-[#245a82]">Acceso al taller</p>
+          <p className="text-xs uppercase tracking-[0.35em] text-[#1f2937]">Acceso al taller</p>
           <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl [font-family:var(--font-display)]">
             <span className="sm:hidden">Entra al sistema.</span>
             <span className="hidden sm:inline">Entra a FIXI.</span>
@@ -202,7 +202,7 @@ export default function LoginPage() {
                 value={form.email}
                 onChange={handleChange}
                 required
-                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#2c6e9f] focus:ring-2 focus:ring-[#2c6e9f]/20"
+                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#334155] focus:ring-2 focus:ring-[#334155]/20"
                 placeholder="dueno@taller.com"
               />
             </div>
@@ -219,7 +219,7 @@ export default function LoginPage() {
                 value={form.password}
                 onChange={handleChange}
                 required
-                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#2c6e9f] focus:ring-2 focus:ring-[#2c6e9f]/20"
+                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#334155] focus:ring-2 focus:ring-[#334155]/20"
                 placeholder="Tu contraseña"
               />
             </div>
@@ -230,7 +230,7 @@ export default function LoginPage() {
                 name="rememberDevice"
                 checked={form.rememberDevice}
                 onChange={handleChange}
-                className="h-4 w-4 rounded border-slate-300 text-[#2c6e9f] focus:ring-[#2c6e9f]"
+                className="h-4 w-4 rounded border-slate-300 text-[#334155] focus:ring-[#334155]"
               />
               Recordarme en este dispositivo
             </label>
@@ -250,7 +250,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-full bg-[#2c6e9f] px-6 py-3 font-semibold text-white transition hover:bg-[#245a82] disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-full bg-[#334155] px-6 py-3 font-semibold text-white transition hover:bg-[#1f2937] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? "Entrando..." : "Acceder a FIXI"}
             </button>
@@ -259,7 +259,7 @@ export default function LoginPage() {
               type="button"
               onClick={handlePasswordReset}
               disabled={resetLoading}
-              className="w-full rounded-full border border-slate-300 px-6 py-3 font-semibold text-slate-800 transition hover:border-[#2c6e9f]/30 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-full border border-slate-300 px-6 py-3 font-semibold text-slate-800 transition hover:border-[#334155]/30 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {resetLoading ? "Enviando correo..." : "Recuperar contraseña por correo"}
             </button>

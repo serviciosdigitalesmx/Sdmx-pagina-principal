@@ -127,7 +127,7 @@ export default function Page() {
                 minLength={2}
                 value={form.name}
                 onChange={handleChange}
-                className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none transition placeholder:text-zinc-500 focus:border-violet-400/60 focus:ring-2 focus:ring-violet-400/20"
+                className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none transition placeholder:text-zinc-500 focus:border-slate-400/60 focus:ring-2 focus:ring-slate-400/20"
                 placeholder="Nombre del cliente"
               />
             </div>
@@ -143,7 +143,7 @@ export default function Page() {
                 minLength={10}
                 value={form.phone}
                 onChange={handleChange}
-                className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none transition placeholder:text-zinc-500 focus:border-violet-400/60 focus:ring-2 focus:ring-violet-400/20"
+                className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none transition placeholder:text-zinc-500 focus:border-slate-400/60 focus:ring-2 focus:ring-slate-400/20"
                 placeholder="5551234567"
               />
             </div>
@@ -157,7 +157,7 @@ export default function Page() {
                 type="email"
                 value={form.email}
                 onChange={handleChange}
-                className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none transition placeholder:text-zinc-500 focus:border-violet-400/60 focus:ring-2 focus:ring-violet-400/20"
+                className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none transition placeholder:text-zinc-500 focus:border-slate-400/60 focus:ring-2 focus:ring-slate-400/20"
                 placeholder="cliente@correo.com"
               />
             </div>
@@ -165,7 +165,7 @@ export default function Page() {
               <button
                 type="submit"
                 disabled={saving}
-                className="rounded-xl bg-violet-400 px-5 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-violet-300 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-xl bg-slate-400 px-5 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-slate-300 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {saving ? 'Registrando...' : 'Guardar cliente'}
               </button>

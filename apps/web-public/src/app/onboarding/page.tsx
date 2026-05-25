@@ -96,7 +96,7 @@ export default function OnboardingPage() {
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(44,110,159,0.12),_transparent_30%),radial-gradient(circle_at_20%_20%,_rgba(94,157,201,0.08),_transparent_24%),linear-gradient(180deg,#f4f6f9_0%,#eef2f6_54%,#ffffff_100%)] px-6 py-10 text-slate-950">
       <section className="mx-auto grid w-full max-w-5xl gap-8 lg:grid-cols-[1fr_1.05fr]">
         <div className="rounded-[2rem] border border-slate-200 bg-white p-8 text-slate-900 shadow-[0_30px_100px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-          <p className="text-xs uppercase tracking-[0.35em] text-[#245a82]">Prueba Gratuita</p>
+          <p className="text-xs uppercase tracking-[0.35em] text-[#1f2937]">Prueba Gratuita</p>
           <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl [font-family:var(--font-display)]">
             Empieza a operar con FIXIE hoy mismo.
           </h1>
@@ -132,7 +132,7 @@ export default function OnboardingPage() {
                 onChange={handleChange}
                 required
                 minLength={2}
-                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#2c6e9f] focus:ring-2 focus:ring-[#2c6e9f]/20"
+                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#334155] focus:ring-2 focus:ring-[#334155]/20"
                 placeholder="Ej. Motor Fix & Co."
               />
             </div>
@@ -150,7 +150,7 @@ export default function OnboardingPage() {
                 onChange={handleChange}
                 required
                 minLength={7}
-                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#2c6e9f] focus:ring-2 focus:ring-[#2c6e9f]/20"
+                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#334155] focus:ring-2 focus:ring-[#334155]/20"
                 placeholder="Ej. 555 123 4567"
               />
             </div>
@@ -167,7 +167,7 @@ export default function OnboardingPage() {
                 value={form.email}
                 onChange={handleChange}
                 required
-                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#2c6e9f] focus:ring-2 focus:ring-[#2c6e9f]/20"
+                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#334155] focus:ring-2 focus:ring-[#334155]/20"
                 placeholder="dueno@taller.com"
               />
             </div>
@@ -185,7 +185,7 @@ export default function OnboardingPage() {
                 onChange={handleChange}
                 required
                 minLength={8}
-                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#2c6e9f] focus:ring-2 focus:ring-[#2c6e9f]/20"
+                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#334155] focus:ring-2 focus:ring-[#334155]/20"
                 placeholder="Mínimo 8 caracteres"
               />
             </div>
@@ -199,7 +199,7 @@ export default function OnboardingPage() {
             <button
               type="submit"
               disabled={loading}
-              className="mt-2 w-full rounded-full bg-[#2c6e9f] px-6 py-3 font-semibold text-white transition hover:bg-[#245a82] disabled:cursor-not-allowed disabled:opacity-60"
+              className="mt-2 w-full rounded-full bg-[#334155] px-6 py-3 font-semibold text-white transition hover:bg-[#1f2937] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? "Creando cuenta..." : "Comenzar Prueba Gratuita"}
             </button>
@@ -214,7 +214,7 @@ export default function OnboardingPage() {
               type="button"
               onClick={handleGoogleRegister}
               disabled={loading}
-              className="flex w-full items-center justify-center gap-3 rounded-full border border-slate-300 px-6 py-3 font-semibold text-slate-800 transition hover:border-[#2c6e9f]/30 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex w-full items-center justify-center gap-3 rounded-full border border-slate-300 px-6 py-3 font-semibold text-slate-800 transition hover:border-[#334155]/30 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <svg className="h-5 w-5" aria-hidden="true" viewBox="0 0 24 24">
                 <path
@@ -239,7 +239,7 @@ export default function OnboardingPage() {
 
             <p className="text-center text-xs text-slate-400 mt-6">
               ¿Ya tienes cuenta?{' '}
-              <Link href="/login" className="font-semibold text-[#245a82] transition hover:text-[#2c6e9f]">
+              <Link href="/login" className="font-semibold text-[#1f2937] transition hover:text-[#334155]">
                 Inicia sesión aquí
               </Link>
             </p>

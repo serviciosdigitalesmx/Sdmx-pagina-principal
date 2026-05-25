@@ -60,10 +60,10 @@ export function OrderIntakeModal({ open, saving, error, form, files, onClose, on
 
         <div className="space-y-5 p-6">
           <div className="grid gap-4 sm:grid-cols-2">
-            <input name="clientName" value={form.clientName} onChange={(e) => onChange("clientName", e.target.value)} placeholder="Nombre completo" className="rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-[#2c6e9f] focus:ring-2 focus:ring-[#2c6e9f]/20" />
-            <input name="clientPhone" value={form.clientPhone} onChange={(e) => onChange("clientPhone", e.target.value)} placeholder="WhatsApp" className="rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-[#2c6e9f] focus:ring-2 focus:ring-[#2c6e9f]/20" />
-            <input name="clientEmail" value={form.clientEmail} onChange={(e) => onChange("clientEmail", e.target.value)} placeholder="Correo opcional" type="email" className="rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-[#2c6e9f] focus:ring-2 focus:ring-[#2c6e9f]/20" />
-            <select name="deviceType" value={form.deviceType} onChange={(e) => onChange("deviceType", e.target.value)} className="rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-[#2c6e9f] focus:ring-2 focus:ring-[#2c6e9f]/20">
+            <input name="clientName" value={form.clientName} onChange={(e) => onChange("clientName", e.target.value)} placeholder="Nombre completo" className="rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-[#334155] focus:ring-2 focus:ring-[#334155]/20" />
+            <input name="clientPhone" value={form.clientPhone} onChange={(e) => onChange("clientPhone", e.target.value)} placeholder="WhatsApp" className="rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-[#334155] focus:ring-2 focus:ring-[#334155]/20" />
+            <input name="clientEmail" value={form.clientEmail} onChange={(e) => onChange("clientEmail", e.target.value)} placeholder="Correo opcional" type="email" className="rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-[#334155] focus:ring-2 focus:ring-[#334155]/20" />
+            <select name="deviceType" value={form.deviceType} onChange={(e) => onChange("deviceType", e.target.value)} className="rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-[#334155] focus:ring-2 focus:ring-[#334155]/20">
               <option>Smartphone</option>
               <option>Laptop</option>
               <option>Consola</option>
@@ -71,15 +71,15 @@ export function OrderIntakeModal({ open, saving, error, form, files, onClose, on
             </select>
           </div>
 
-          <input name="deviceModel" value={form.deviceModel} onChange={(e) => onChange("deviceModel", e.target.value)} placeholder="Modelo exacto" className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-[#2c6e9f] focus:ring-2 focus:ring-[#2c6e9f]/20" />
-          <textarea name="issue" value={form.issue} onChange={(e) => onChange("issue", e.target.value)} rows={4} placeholder="Describe el problema" className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-[#2c6e9f] focus:ring-2 focus:ring-[#2c6e9f]/20" />
+          <input name="deviceModel" value={form.deviceModel} onChange={(e) => onChange("deviceModel", e.target.value)} placeholder="Modelo exacto" className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-[#334155] focus:ring-2 focus:ring-[#334155]/20" />
+          <textarea name="issue" value={form.issue} onChange={(e) => onChange("issue", e.target.value)} rows={4} placeholder="Describe el problema" className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-[#334155] focus:ring-2 focus:ring-[#334155]/20" />
 
           <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
             <input
               type="checkbox"
               checked={form.includeIva}
               onChange={(e) => onToggleIva(e.target.checked)}
-              className="h-4 w-4 rounded border-slate-300 text-[#2c6e9f] focus:ring-[#2c6e9f]"
+              className="h-4 w-4 rounded border-slate-300 text-[#334155] focus:ring-[#334155]"
             />
             <span className="text-sm font-medium text-slate-700">Aplicar IVA</span>
           </label>
@@ -121,7 +121,7 @@ export function OrderIntakeModal({ open, saving, error, form, files, onClose, on
               rel="noreferrer"
               aria-disabled={!waLink}
               className={`rounded-full px-5 py-3 text-sm font-semibold ${
-                waLink ? "bg-[#1b9e5e] text-white" : "pointer-events-none bg-slate-200 text-slate-400"
+                waLink ? "bg-[#475569] text-white" : "pointer-events-none bg-slate-200 text-slate-400"
               }`}
             >
               WhatsApp directo
@@ -131,7 +131,7 @@ export function OrderIntakeModal({ open, saving, error, form, files, onClose, on
               <button type="button" onClick={onClose} className="rounded-full border border-slate-300 px-5 py-3 font-semibold text-slate-800 transition hover:bg-slate-50">
                 Cancelar
               </button>
-              <button type="button" onClick={onSubmit} disabled={saving} className="rounded-full bg-[#2c6e9f] px-5 py-3 font-semibold text-white transition hover:bg-[#245a82] disabled:cursor-not-allowed disabled:opacity-60">
+              <button type="button" onClick={onSubmit} disabled={saving} className="rounded-full bg-[#334155] px-5 py-3 font-semibold text-white transition hover:bg-[#1f2937] disabled:cursor-not-allowed disabled:opacity-60">
                 {saving ? "Creando..." : "Crear orden"}
               </button>
             </div>

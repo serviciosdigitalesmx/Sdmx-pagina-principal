@@ -192,7 +192,7 @@ export default function HubPage() {
       <section className="mx-auto grid w-full max-w-6xl gap-8 rounded-[2.5rem] border border-slate-200 bg-white p-8 text-slate-900 shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
         <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
           <div>
-            <p className="text-xs uppercase tracking-[0.35em] text-[#245a82]">Acceso al hub</p>
+            <p className="text-xs uppercase tracking-[0.35em] text-[#1f2937]">Acceso al hub</p>
             <h1 className="mt-4 max-w-2xl text-4xl font-semibold tracking-tight sm:text-5xl">{hubName}</h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
               Un solo centro de mando para sincronizar sesión, entrar al taller y abrir la ruta correcta sin perder el contexto.
@@ -200,7 +200,7 @@ export default function HubPage() {
           </div>
 
           <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#245a82]">Estado</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#1f2937]">Estado</p>
             <p className="mt-2 text-lg font-medium text-slate-950">
               {sessionState.tokenState === "present"
                 ? "Redirigiendo al panel administrativo..."
@@ -216,8 +216,8 @@ export default function HubPage() {
 
         <div className="grid gap-4 md:grid-cols-3">
           {hubModules.map((module) => (
-            <article key={module.title} className="rounded-3xl border border-slate-200 bg-white p-5 transition hover:-translate-y-0.5 hover:border-[#2c6e9f]/30">
-              <p className="text-[11px] uppercase tracking-[0.35em] text-[#245a82]">{module.badge}</p>
+            <article key={module.title} className="rounded-3xl border border-slate-200 bg-white p-5 transition hover:-translate-y-0.5 hover:border-[#334155]/30">
+              <p className="text-[11px] uppercase tracking-[0.35em] text-[#1f2937]">{module.badge}</p>
               <h2 className="mt-3 text-xl font-semibold text-slate-950">{module.title}</h2>
               <p className="mt-2 text-sm leading-6 text-slate-600">{module.description}</p>
             </article>
@@ -247,7 +247,7 @@ export default function HubPage() {
             {adminUrl ? (
               <a
                 href={resolveAdminBridgeUrl(readAuthToken() || "") ?? adminUrl}
-                className="rounded-full bg-[#2c6e9f] px-5 py-3 font-semibold text-white transition hover:bg-[#245a82]"
+                className="rounded-full bg-[#334155] px-5 py-3 font-semibold text-white transition hover:bg-[#1f2937]"
               >
                 {targetLabel}
               </a>

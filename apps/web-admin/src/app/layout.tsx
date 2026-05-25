@@ -20,14 +20,14 @@ const cormorant = Cormorant_Garamond({
 
 export const metadata: Metadata = {
   title:
-    process.env.NEXT_PUBLIC_TENANT_META_TITLE ?? "FIXIE | Panel del taller",
+    process.env.NEXT_PUBLIC_TENANT_META_TITLE ?? "FIXI | Panel del taller",
   description:
     process.env.NEXT_PUBLIC_TENANT_META_DESCRIPTION ??
-    "FIXIE: panel white-label para talleres con soporte y experiencia personalizada.",
+    "FIXI: panel white-label para talleres con soporte y experiencia personalizada.",
 };
 
 export const viewport = {
-  themeColor: process.env.NEXT_PUBLIC_TENANT_THEME_COLOR ?? "#0ea5e9",
+  themeColor: process.env.NEXT_PUBLIC_TENANT_THEME_COLOR ?? "#111827",
 };
 
 export default function RootLayout({
@@ -35,9 +35,9 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const themePrimary = process.env.NEXT_PUBLIC_THEME_PRIMARY ?? '#0ea5e9';
-  const themeSecondary = process.env.NEXT_PUBLIC_THEME_SECONDARY ?? '#0f172a';
-  const themeAccent = process.env.NEXT_PUBLIC_THEME_ACCENT ?? '#f97316';
+  const themePrimary = process.env.NEXT_PUBLIC_THEME_PRIMARY ?? '#111827';
+  const themeSecondary = process.env.NEXT_PUBLIC_THEME_SECONDARY ?? '#09090b';
+  const themeAccent = process.env.NEXT_PUBLIC_THEME_ACCENT ?? '#6b7280';
 
   return (
     <html
@@ -51,7 +51,7 @@ export default function RootLayout({
         } as React.CSSProperties
       }
     >
-      <body className="min-h-full flex flex-col bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.12),_transparent_28%),linear-gradient(180deg,#08111f_0%,#091428_46%,#070b14_100%)] text-zinc-100">{children}</body>
+      <body className="min-h-full flex flex-col bg-[radial-gradient(circle_at_top,_rgba(17,24,39,0.16),_transparent_28%),linear-gradient(180deg,#09090b_0%,#111113_46%,#18181b_100%)] text-zinc-100">{children}</body>
     </html>
   );
 }

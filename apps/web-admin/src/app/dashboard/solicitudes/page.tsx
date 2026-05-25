@@ -181,7 +181,7 @@ export default function SolicitudesPage() {
 
         <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
           <section className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_16px_70px_rgba(15,23,42,0.08)]">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[#245a82]">Inbox</h3>
+            <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[#1f2937]">Inbox</h3>
             <div className="mt-4 space-y-3">
               {mappedRows.map((row) => (
                 <button
@@ -189,12 +189,12 @@ export default function SolicitudesPage() {
                   type="button"
                   onClick={() => setSelectedId(row.id ?? null)}
                   className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
-                    selectedId === row.id ? "border-[#2c6e9f]/40 bg-[#2c6e9f]/10" : "border-slate-200 bg-slate-50 hover:bg-white"
+                    selectedId === row.id ? "border-[#334155]/40 bg-[#334155]/10" : "border-slate-200 bg-slate-50 hover:bg-white"
                   }`}
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.2em] text-[#245a82]">{row.folio}</p>
+                      <p className="text-xs uppercase tracking-[0.2em] text-[#1f2937]">{row.folio}</p>
                       <p className="mt-1 font-semibold text-slate-950">{row.customer_name}</p>
                     </div>
                     <span className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">
@@ -208,7 +208,7 @@ export default function SolicitudesPage() {
           </section>
 
           <section className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_16px_70px_rgba(15,23,42,0.08)]">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[#245a82]">Detalle</h3>
+            <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[#1f2937]">Detalle</h3>
             {!selectedId ? (
               <div className="mt-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">
                 Selecciona una solicitud para ver el detalle y convertirla a orden.
@@ -252,7 +252,7 @@ export default function SolicitudesPage() {
                   type="button"
                   onClick={handleConvert}
                   disabled={converting}
-                  className="rounded-full bg-[#2c6e9f] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#245a82] disabled:opacity-60"
+                  className="rounded-full bg-[#334155] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1f2937] disabled:opacity-60"
                 >
                   {converting ? "Convirtiendo..." : "Convertir a orden"}
                 </button>

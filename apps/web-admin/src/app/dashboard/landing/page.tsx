@@ -219,53 +219,53 @@ export default function LandingSettingsPage() {
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-zinc-400">Hero título</label>
-                <input value={landingContent.heroTitle} onChange={(e) => updateField("heroTitle", e.target.value)} className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none focus:border-violet-400/60 focus:ring-2 focus:ring-violet-400/20" />
+                <input value={landingContent.heroTitle} onChange={(e) => updateField("heroTitle", e.target.value)} className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none focus:border-slate-400/60 focus:ring-2 focus:ring-slate-400/20" />
               </div>
               <div>
                 <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-zinc-400">Hero subtítulo</label>
-                <input value={landingContent.heroSubtitle} onChange={(e) => updateField("heroSubtitle", e.target.value)} className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none focus:border-violet-400/60 focus:ring-2 focus:ring-violet-400/20" />
+                <input value={landingContent.heroSubtitle} onChange={(e) => updateField("heroSubtitle", e.target.value)} className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none focus:border-slate-400/60 focus:ring-2 focus:ring-slate-400/20" />
               </div>
               <div className="md:col-span-2">
                 <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-zinc-400">Hero descripción</label>
-                <textarea value={landingContent.heroDescription} onChange={(e) => updateField("heroDescription", e.target.value)} className="min-h-28 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none focus:border-violet-400/60 focus:ring-2 focus:ring-violet-400/20" />
+                <textarea value={landingContent.heroDescription} onChange={(e) => updateField("heroDescription", e.target.value)} className="min-h-28 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none focus:border-slate-400/60 focus:ring-2 focus:ring-slate-400/20" />
               </div>
               <div>
                 <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-zinc-400">CTA principal</label>
-                <input value={landingContent.primaryCtaLabel} onChange={(e) => updateField("primaryCtaLabel", e.target.value)} className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none focus:border-violet-400/60 focus:ring-2 focus:ring-violet-400/20" />
+                <input value={landingContent.primaryCtaLabel} onChange={(e) => updateField("primaryCtaLabel", e.target.value)} className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none focus:border-slate-400/60 focus:ring-2 focus:ring-slate-400/20" />
               </div>
               <div>
                 <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-zinc-400">Href principal</label>
-                <input value={landingContent.primaryCtaHref} onChange={(e) => updateField("primaryCtaHref", e.target.value)} className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none focus:border-violet-400/60 focus:ring-2 focus:ring-violet-400/20" />
+                <input value={landingContent.primaryCtaHref} onChange={(e) => updateField("primaryCtaHref", e.target.value)} className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none focus:border-slate-400/60 focus:ring-2 focus:ring-slate-400/20" />
               </div>
               <div>
                 <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-zinc-400">CTA secundario</label>
-                <input value={landingContent.secondaryCtaLabel} onChange={(e) => updateField("secondaryCtaLabel", e.target.value)} className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none focus:border-violet-400/60 focus:ring-2 focus:ring-violet-400/20" />
+                <input value={landingContent.secondaryCtaLabel} onChange={(e) => updateField("secondaryCtaLabel", e.target.value)} className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none focus:border-slate-400/60 focus:ring-2 focus:ring-slate-400/20" />
               </div>
               <div>
                 <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-zinc-400">Href secundario</label>
-                <input value={landingContent.secondaryCtaHref} onChange={(e) => updateField("secondaryCtaHref", e.target.value)} className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none focus:border-violet-400/60 focus:ring-2 focus:ring-violet-400/20" />
+                <input value={landingContent.secondaryCtaHref} onChange={(e) => updateField("secondaryCtaHref", e.target.value)} className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none focus:border-slate-400/60 focus:ring-2 focus:ring-slate-400/20" />
               </div>
               <div>
                 <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-zinc-400">Contacto</label>
-                <input value={landingContent.contactLabel} onChange={(e) => updateField("contactLabel", e.target.value)} className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none focus:border-violet-400/60 focus:ring-2 focus:ring-violet-400/20" />
+                <input value={landingContent.contactLabel} onChange={(e) => updateField("contactLabel", e.target.value)} className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none focus:border-slate-400/60 focus:ring-2 focus:ring-slate-400/20" />
               </div>
               <div>
                 <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-zinc-400">Href contacto</label>
-                <input value={landingContent.contactHref} onChange={(e) => updateField("contactHref", e.target.value)} className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none focus:border-violet-400/60 focus:ring-2 focus:ring-violet-400/20" placeholder={tenantPhone ?? "https://wa.me/..."} />
+                <input value={landingContent.contactHref} onChange={(e) => updateField("contactHref", e.target.value)} className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none focus:border-slate-400/60 focus:ring-2 focus:ring-slate-400/20" placeholder={tenantPhone ?? "https://wa.me/..."} />
               </div>
               <div>
                 <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-zinc-400">SEO título</label>
-                <input value={landingContent.seoTitle} onChange={(e) => updateField("seoTitle", e.target.value)} className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none focus:border-violet-400/60 focus:ring-2 focus:ring-violet-400/20" />
+                <input value={landingContent.seoTitle} onChange={(e) => updateField("seoTitle", e.target.value)} className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none focus:border-slate-400/60 focus:ring-2 focus:ring-slate-400/20" />
               </div>
               <div>
                 <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-zinc-400">SEO descripción</label>
-                <input value={landingContent.seoDescription} onChange={(e) => updateField("seoDescription", e.target.value)} className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none focus:border-violet-400/60 focus:ring-2 focus:ring-violet-400/20" />
+                <input value={landingContent.seoDescription} onChange={(e) => updateField("seoDescription", e.target.value)} className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none focus:border-slate-400/60 focus:ring-2 focus:ring-slate-400/20" />
               </div>
             </div>
 
             <div className="space-y-4">
               <div className="flex items-center justify-between gap-3">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[#245a82]">Servicios</h3>
+                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[#1f2937]">Servicios</h3>
                 <button type="button" onClick={addService} className="rounded-full border border-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-100">Agregar servicio</button>
               </div>
               {landingContent.services.map((service, index) => (
@@ -278,7 +278,7 @@ export default function LandingSettingsPage() {
 
             <div className="space-y-4">
               <div className="flex items-center justify-between gap-3">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[#245a82]">Redes y contacto</h3>
+                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[#1f2937]">Redes y contacto</h3>
                 <button type="button" onClick={addSocial} className="rounded-full border border-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-100">Agregar red</button>
               </div>
               {landingContent.socialLinks.map((link, index) => (
@@ -314,7 +314,7 @@ export default function LandingSettingsPage() {
 
           <aside className="space-y-6 rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_16px_70px_rgba(15,23,42,0.08)]">
             <div>
-              <p className="text-xs uppercase tracking-[0.24em] text-[#245a82]">Preview público</p>
+              <p className="text-xs uppercase tracking-[0.24em] text-[#1f2937]">Preview público</p>
               <h2 className="mt-2 text-2xl font-semibold text-slate-950">{landingContent.heroTitle || tenantName}</h2>
               <p className="mt-2 text-sm text-slate-600">{tenantEmail ?? "Sin correo"}</p>
             </div>
@@ -323,7 +323,7 @@ export default function LandingSettingsPage() {
               <h3 className="mt-3 text-3xl font-bold text-slate-950">{landingContent.heroTitle || tenantName}</h3>
               <p className="mt-3 text-sm leading-7 text-slate-600">{landingContent.heroDescription}</p>
               <div className="mt-5 flex flex-wrap gap-3">
-                <a href={preview.primaryHref} className="rounded-full bg-[#2c6e9f] px-4 py-2 text-sm font-semibold text-white">{landingContent.primaryCtaLabel}</a>
+                <a href={preview.primaryHref} className="rounded-full bg-[#334155] px-4 py-2 text-sm font-semibold text-white">{landingContent.primaryCtaLabel}</a>
                 <a href={preview.secondaryHref} className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-800">{landingContent.secondaryCtaLabel}</a>
                 <a href={preview.contactHref} className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-800">{landingContent.contactLabel}</a>
               </div>

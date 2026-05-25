@@ -164,7 +164,7 @@ export function OperationalHub() {
         <section className="rounded-[28px] border border-slate-200 bg-[radial-gradient(circle_at_top,rgba(44,110,159,0.08),transparent_32%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-6 shadow-[0_20px_80px_rgba(15,23,42,0.08)]">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#245a82]">Hoy</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#1f2937]">Hoy</p>
               <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl [font-family:var(--font-display)]">
                 Mesa de control operativa
               </h2>
@@ -215,7 +215,7 @@ export function OperationalHub() {
       <section className="rounded-[28px] border border-slate-200 bg-[radial-gradient(circle_at_top,rgba(44,110,159,0.08),transparent_32%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-6 shadow-[0_20px_80px_rgba(15,23,42,0.08)]">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#245a82]">Hoy</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.34em] text-[#1f2937]">Hoy</p>
             <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl [font-family:var(--font-display)]">
               Mesa de control operativa
             </h2>
@@ -224,7 +224,7 @@ export function OperationalHub() {
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <Link href="/dashboard/ordenes" className="rounded-full bg-[#2c6e9f] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#245a82]">
+            <Link href="/dashboard/ordenes" className="rounded-full bg-[#334155] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1f2937]">
               + Nueva orden
             </Link>
             <Link href="/dashboard/finanzas" className="rounded-full border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-50">
@@ -251,7 +251,7 @@ export function OperationalHub() {
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {metrics.map((metric) => (
-          <article key={metric.label} className="rounded-[24px] border border-slate-200 bg-white p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[#2c6e9f]/30">
+          <article key={metric.label} className="rounded-[24px] border border-slate-200 bg-white p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[#334155]/30">
             <p className="text-xs font-semibold uppercase tracking-[0.26em] text-slate-500">{metric.label}</p>
             <p className="mt-3 text-3xl font-black tracking-tight text-slate-950">{metric.value}</p>
             <p className="mt-2 text-sm leading-6 text-slate-600">{metric.helper}</p>
@@ -263,7 +263,7 @@ export function OperationalHub() {
         <article className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_16px_70px_rgba(15,23,42,0.08)]">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#245a82]">Órdenes que requieren acción</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#1f2937]">Órdenes que requieren acción</p>
               <h3 className="mt-3 text-2xl font-black tracking-tight text-slate-950">Lo urgente primero</h3>
             </div>
             <p className="text-sm text-slate-500">
@@ -286,7 +286,7 @@ export function OperationalHub() {
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="text-base font-semibold text-slate-950">{order.folio ?? "Sin folio"}</p>
-                        <span className="rounded-full bg-[#2c6e9f]/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#245a82]">
+                        <span className="rounded-full bg-[#334155]/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1f2937]">
                           {statusLabels[normalized] ?? "Pendiente"}
                         </span>
                       </div>
@@ -316,7 +316,7 @@ export function OperationalHub() {
                           Sin WhatsApp
                         </span>
                       )}
-                      <Link href="/dashboard/finanzas" className="rounded-full bg-[#1b9e5e]/10 px-4 py-2 text-sm font-semibold text-[#1b9e5e] transition hover:bg-[#1b9e5e]/15">
+                      <Link href="/dashboard/finanzas" className="rounded-full bg-[#475569]/10 px-4 py-2 text-sm font-semibold text-[#475569] transition hover:bg-[#475569]/15">
                         Cobrar
                       </Link>
                     </div>
@@ -328,7 +328,7 @@ export function OperationalHub() {
         </article>
 
         <article className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_16px_70px_rgba(15,23,42,0.08)]">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#245a82]">Actividad reciente</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#1f2937]">Actividad reciente</p>
           <h3 className="mt-3 text-2xl font-black tracking-tight text-slate-950">Últimas señales del día</h3>
           <div className="mt-5 space-y-3">
             {recentActivity.length === 0 ? (
@@ -346,9 +346,9 @@ export function OperationalHub() {
             )}
           </div>
           <div className="mt-6 rounded-2xl border border-slate-200 bg-[radial-gradient(circle_at_top,_rgba(44,110,159,0.08),_transparent_34%),linear-gradient(180deg,#f8fafc_0%,#ffffff_100%)] p-5">
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#245a82]">Acción rápida</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#1f2937]">Acción rápida</p>
             <div className="mt-3 flex flex-wrap gap-3">
-              <Link href="/dashboard/ordenes" className="rounded-full bg-[#2c6e9f] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#245a82]">
+              <Link href="/dashboard/ordenes" className="rounded-full bg-[#334155] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1f2937]">
                 Crear orden
               </Link>
               <Link href="/dashboard/stock" className="rounded-full border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-800 transition hover:bg-white">

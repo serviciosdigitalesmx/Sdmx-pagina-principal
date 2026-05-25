@@ -105,21 +105,21 @@ export default function SeguridadPage() {
       />
       <div className="mt-6 grid gap-4 md:grid-cols-3">
         <article className="rounded-3xl border border-zinc-200 bg-white p-5 text-slate-950 shadow-[0_10px_40px_rgba(15,23,42,0.06)]">
-          <p className="text-xs uppercase tracking-[0.28em] text-[#245a82]">Trial</p>
+          <p className="text-xs uppercase tracking-[0.28em] text-[#1f2937]">Trial</p>
           <p className="mt-2 text-2xl font-semibold">{billing?.daysLeft ?? "N/D"} días</p>
           <p className="mt-2 text-sm text-slate-600">
             {billing?.trialExpiresAt ? `Expira ${new Date(billing.trialExpiresAt).toLocaleDateString('es-MX')}` : "No hay expiración registrada."}
           </p>
         </article>
         <article className="rounded-3xl border border-zinc-200 bg-white p-5 text-slate-950 shadow-[0_10px_40px_rgba(15,23,42,0.06)]">
-          <p className="text-xs uppercase tracking-[0.28em] text-[#245a82]">Estado</p>
+          <p className="text-xs uppercase tracking-[0.28em] text-[#1f2937]">Estado</p>
           <p className="mt-2 text-2xl font-semibold">{billing?.subscriptionStatus ?? "trial"}</p>
           <p className="mt-2 text-sm text-slate-600">
             {billing?.billingExempt ? "Tenancy exenta de cobro." : billing?.isBillingBlocked ? "Limitado por suscripción vencida." : "Operación habilitada."}
           </p>
         </article>
         <article className="rounded-3xl border border-zinc-200 bg-white p-5 text-slate-950 shadow-[0_10px_40px_rgba(15,23,42,0.06)]">
-          <p className="text-xs uppercase tracking-[0.28em] text-[#245a82]">Upgrade</p>
+          <p className="text-xs uppercase tracking-[0.28em] text-[#1f2937]">Upgrade</p>
           <p className="mt-2 text-2xl font-semibold">{billing?.upgradeHref ? "Disponible" : "Pendiente"}</p>
           <p className="mt-2 text-sm text-slate-600 break-all">
             {billing?.upgradeHref ?? "Configura APP_URL para publicar el enlace de activación."}

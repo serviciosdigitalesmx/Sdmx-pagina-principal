@@ -27,9 +27,9 @@ export default async function DashboardLayout({
     userSucursalId: process.env.NEXT_PUBLIC_DEFAULT_USER_SUCURSAL_ID ?? 'sucursal-local',
     userRole: (process.env.NEXT_PUBLIC_DEFAULT_USER_ROLE ?? 'owner').toLowerCase(),
     theme: {
-      primary: process.env.NEXT_PUBLIC_THEME_PRIMARY ?? '#2c6e9f',
+      primary: process.env.NEXT_PUBLIC_THEME_PRIMARY ?? '#334155',
       secondary: process.env.NEXT_PUBLIC_THEME_SECONDARY ?? '#1f2937',
-      accent: process.env.NEXT_PUBLIC_THEME_ACCENT ?? '#1b9e5e',
+      accent: process.env.NEXT_PUBLIC_THEME_ACCENT ?? '#475569',
     },
   };
 

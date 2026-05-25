@@ -123,7 +123,7 @@ function DashboardShellContent({
         <div className="border-b border-zinc-800 p-4 sm:p-5">
           <div className="flex items-center gap-3">
             <div
-              className="flex h-10 w-10 items-center justify-center rounded-2xl border border-violet-400/20 bg-[linear-gradient(180deg,rgba(168,85,247,0.22),rgba(9,14,28,0.96))] text-sm font-black text-violet-100"
+              className="flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-400/20 bg-[linear-gradient(180deg,rgba(168,85,247,0.22),rgba(9,14,28,0.96))] text-sm font-black text-slate-100"
             >
               {activeTenant.brandName.slice(0, 2).toUpperCase()}
             </div>
@@ -152,7 +152,7 @@ function DashboardShellContent({
                       'flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm transition-all duration-200',
                       pathname === item.href ||
                       (item.href !== '/dashboard' && pathname?.startsWith(item.href))
-                        ? 'border border-violet-400/20 bg-violet-400/10 text-zinc-50 shadow-[0_10px_30px_rgba(0,0,0,0.18)]'
+                        ? 'border border-slate-400/20 bg-slate-400/10 text-zinc-50 shadow-[0_10px_30px_rgba(0,0,0,0.18)]'
                         : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-50 hover:border hover:border-zinc-800',
                     ].join(' ')}
                   />
