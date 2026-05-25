@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="fixi_primary">#0F172A</color>
+    <color name="fixi_primary_dark">#020617</color>
+    <color name="fixi_accent">#7C3AED</color>
+    <color name="fixi_surface">#08111F</color>
+    <color name="fixi_splash_background">#08111F</color>
+</resources>
