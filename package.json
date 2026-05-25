@@ -7,7 +7,10 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
-    "clean": "turbo run clean && rm -rf node_modules"
+    "clean": "turbo run clean && rm -rf node_modules",
+    "mobile:sync": "pnpm --dir apps/mobile run sync",
+    "mobile:android": "pnpm --dir apps/mobile run android",
+    "mobile:open": "pnpm --dir apps/mobile run open"
   },
   "devDependencies": {
     "@types/react": "^19",

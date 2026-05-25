@@ -2,8 +2,6 @@ import { Request, Response } from 'express';
 import { z } from 'zod';
 import { getTenantClient } from '@white-label/database';
 
-const serviceRequestStatusSchema = z.enum(['pendiente', 'en_revision', 'convertida', 'rechazada']);
-
 const convertRequestSchema = z.object({
   estimatedCost: z.coerce.number().min(0).default(0),
   deviceType: z.string().min(1).optional(),

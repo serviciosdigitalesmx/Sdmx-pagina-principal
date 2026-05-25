@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 
 function buildBridgeUrl(token: string, tenant: string | null) {
@@ -37,35 +37,25 @@ export function RedirectToAdmin() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const tenant = searchParams.get("tenant");
-  const [error, setError] = useState<string | null>(null);
 
-  const targetUrl = useMemo(() => {
+  const bridgeResult = useMemo(() => {
     if (!token) {
-      return null;
+      return { url: null as string | null, error: null as string | null };
     }
 
-    const result = buildBridgeUrl(token, tenant);
-
-    if (result.error) {
-      setError(result.error);
-      return null;
-    }
-
-    return result.url;
+    return buildBridgeUrl(token, tenant);
   }, [tenant, token]);
 
-  useEffect(() => {
-    if (!token) {
-      setError("Falta la sesión en el callback de éxito.");
-      return;
-    }
+  const error = !token ? "Falta la sesión en el callback de éxito." : bridgeResult.error;
+  const targetUrl = bridgeResult.url;
 
+  useEffect(() => {
     if (!targetUrl) {
       return;
     }
 
     window.location.replace(targetUrl);
-  }, [targetUrl, token]);
+  }, [targetUrl]);
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(44,110,159,0.12),_transparent_30%),linear-gradient(180deg,#f4f6f9_0%,#eef2f6_38%,#ffffff_100%)] px-6 py-12 text-slate-950">

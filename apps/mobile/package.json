@@ -1,0 +1,23 @@
+{
+  "name": "@fixi/mobile",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "build": "cap sync android",
+    "lint": "tsc --noEmit",
+    "sync": "cap sync android",
+    "android": "cap run android",
+    "open": "cap open android",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/cli": "^6.1.2",
+    "@capacitor/core": "^6.1.2",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.11",
+    "typescript": "^5.4.5"
+  }
+}

@@ -53,7 +53,6 @@ export const getBalance = async (req: Request, res: Response) => {
     }
 
     const branchId = typeof req.query.branchId === 'string' ? req.query.branchId.trim() : '';
-    const supabase = getTenantClient(tenantId);
     const { orders, expenses } = await loadFinanceFacts(tenantId);
 
     const filteredOrders = branchId

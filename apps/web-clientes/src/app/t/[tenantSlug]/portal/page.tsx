@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 
 type PortalOrderResponse = {
@@ -50,7 +50,7 @@ export default function PortalPage() {
   const params = useParams<{ tenantSlug?: string }>();
   const searchParams = useSearchParams();
   const tenantSlug = typeof params?.tenantSlug === "string" && params.tenantSlug.trim().length > 0 ? params.tenantSlug : "demo";
-  const [folio, setFolio] = useState("");
+  const [folio, setFolio] = useState(() => searchParams.get("folio")?.trim() ?? "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<PortalOrderResponse["data"] | null>(null);
@@ -58,13 +58,6 @@ export default function PortalPage() {
   const [tenantLabel, setTenantLabel] = useState<string>(tenantSlug);
 
   const apiBaseUrl = resolveApiBaseUrl();
-
-  useEffect(() => {
-    const folioFromUrl = searchParams.get("folio")?.trim();
-    if (folioFromUrl) {
-      setFolio(folioFromUrl);
-    }
-  }, [searchParams]);
 
   const whatsappHref = useMemo(() => {
     const contactPhone = tenant?.contact_phone;

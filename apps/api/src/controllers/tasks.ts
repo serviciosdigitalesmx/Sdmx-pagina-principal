@@ -65,10 +65,6 @@ const taskUpdateSchema = z.object({
   }
 });
 
-const taskHistorySchema = z.object({
-  note: z.string().min(1),
-});
-
 async function getTaskStatuses(tenantId: string) {
   const { data, error } = await supabaseAdmin
     .from('tenants')
