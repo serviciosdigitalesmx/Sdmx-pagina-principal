@@ -55,3 +55,4 @@ audit-*.sh
 
 # Env example backups
 .env.example.bak
+.vercel
