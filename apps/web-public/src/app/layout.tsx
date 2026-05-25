@@ -26,7 +26,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport = {
-  themeColor: process.env.NEXT_PUBLIC_SAAS_THEME_COLOR ?? "#111827",
+  themeColor: process.env.NEXT_PUBLIC_SAAS_THEME_COLOR ?? "#111111",
 };
 
 export default function RootLayout({

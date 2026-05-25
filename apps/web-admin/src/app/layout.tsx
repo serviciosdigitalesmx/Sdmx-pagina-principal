@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport = {
-  themeColor: process.env.NEXT_PUBLIC_TENANT_THEME_COLOR ?? "#111827",
+  themeColor: process.env.NEXT_PUBLIC_TENANT_THEME_COLOR ?? "#111111",
 };
 
 export default function RootLayout({
@@ -35,7 +35,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const themePrimary = process.env.NEXT_PUBLIC_THEME_PRIMARY ?? '#111827';
+  const themePrimary = process.env.NEXT_PUBLIC_THEME_PRIMARY ?? '#111111';
   const themeSecondary = process.env.NEXT_PUBLIC_THEME_SECONDARY ?? '#09090b';
   const themeAccent = process.env.NEXT_PUBLIC_THEME_ACCENT ?? '#6b7280';
 
