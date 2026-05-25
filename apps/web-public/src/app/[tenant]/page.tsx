@@ -97,8 +97,8 @@ export default async function TenantLandingPage({
         <header className="rounded-[2rem] border border-zinc-800/70 bg-zinc-950/85 p-6 text-zinc-50 shadow-[0_30px_90px_rgba(0,0,0,0.32)] backdrop-blur-xl">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-3xl">
-              <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">Landing pública del taller</p>
-              <p className="mt-3 inline-flex rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-cyan-200">
+              <p className="text-xs uppercase tracking-[0.35em] text-violet-300">Landing pública del taller</p>
+              <p className="mt-3 inline-flex rounded-full border border-violet-400/20 bg-violet-400/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-violet-200">
                 {landing.heroSubtitle}
               </p>
               <h1 className="mt-4 text-4xl font-black tracking-tight sm:text-5xl [font-family:var(--font-cormorant)]">
@@ -107,7 +107,7 @@ export default async function TenantLandingPage({
               <p className="mt-4 max-w-2xl text-base leading-7 text-zinc-300 sm:leading-8">{landing.heroDescription}</p>
             </div>
             <div className="grid gap-3 rounded-[1.75rem] border border-zinc-800 bg-zinc-900/80 p-5 sm:grid-cols-2">
-              <Link href={primaryHref} className="rounded-2xl bg-cyan-500 px-5 py-4 font-semibold text-zinc-950 transition hover:bg-cyan-400">
+              <Link href={primaryHref} className="rounded-2xl bg-violet-500 px-5 py-4 font-semibold text-zinc-950 transition hover:bg-violet-400">
                 {landing.primaryCtaLabel}
               </Link>
               <Link href={secondaryHref} className="rounded-2xl border border-zinc-700 px-5 py-4 font-semibold text-zinc-100 transition hover:bg-zinc-800">
@@ -128,7 +128,7 @@ export default async function TenantLandingPage({
         <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {landing.services.length > 0 ? landing.services.map((service) => (
             <article key={`${service.title}-${service.description}`} className="rounded-[1.75rem] border border-zinc-800/70 bg-zinc-950/85 p-6 shadow-[0_16px_60px_rgba(0,0,0,0.24)]">
-              <p className="text-sm font-semibold uppercase tracking-[0.28em] text-cyan-300">Servicio</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.28em] text-violet-300">Servicio</p>
               <h2 className="mt-3 text-2xl font-bold text-zinc-50">{service.title}</h2>
               <p className="mt-3 text-sm leading-7 text-zinc-300">{service.description}</p>
             </article>
@@ -137,7 +137,7 @@ export default async function TenantLandingPage({
 
         <section className="grid gap-6 rounded-[2rem] border border-zinc-800/70 bg-zinc-950/85 p-6 shadow-[0_16px_70px_rgba(0,0,0,0.24)] lg:grid-cols-[1fr_0.95fr] lg:p-10">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.28em] text-cyan-300">Operación pública</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.28em] text-violet-300">Operación pública</p>
             <h2 className="mt-3 text-3xl font-bold text-zinc-50 [font-family:var(--font-cormorant)]">
               {data.tenant.name} atiende, cotiza y rastrea desde una sola experiencia.
             </h2>
@@ -163,7 +163,7 @@ export default async function TenantLandingPage({
 
         <section id="contacto" className="grid gap-6 rounded-[2rem] border border-zinc-800/70 bg-zinc-950/85 p-6 shadow-[0_16px_70px_rgba(0,0,0,0.24)] lg:grid-cols-2 lg:p-10">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.28em] text-cyan-300">Redes y acceso</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.28em] text-violet-300">Redes y acceso</p>
             <h2 className="mt-3 text-3xl font-bold text-zinc-50 [font-family:var(--font-cormorant)]">
               {data.tenant.name} mantiene la identidad del taller en todos los puntos de entrada.
             </h2>

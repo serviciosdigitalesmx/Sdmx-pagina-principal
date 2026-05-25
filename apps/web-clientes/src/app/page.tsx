@@ -8,7 +8,7 @@ export default function Home() {
       <section className="mx-auto flex w-full max-w-5xl flex-col gap-8 rounded-[2rem] border border-zinc-800/70 bg-zinc-950/85 p-8 shadow-[0_24px_90px_rgba(0,0,0,0.28)]">
         <header className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div className="max-w-2xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-300">
+            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-violet-300">
               FIXIE · Portal del cliente
             </p>
             <h1 className="mt-3 text-4xl font-bold tracking-tight text-zinc-50 [font-family:var(--font-cormorant)]">
@@ -21,13 +21,13 @@ export default function Home() {
           </div>
 
           <div className="rounded-[1.75rem] border border-zinc-800 bg-zinc-900/60 p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-300">Acceso rápido</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-violet-300">Acceso rápido</p>
             <p className="mt-2 text-sm leading-6 text-zinc-300">
               Si ya conoces tu taller, entra directo al portal.
             </p>
             <Link
               href={`/t/${demoTenant}/portal`}
-              className="mt-4 inline-flex rounded-full bg-cyan-400 px-5 py-3 font-semibold text-zinc-950 transition hover:bg-cyan-300"
+              className="mt-4 inline-flex rounded-full bg-violet-400 px-5 py-3 font-semibold text-zinc-950 transition hover:bg-violet-300"
             >
               Probar portal demo
             </Link>
@@ -36,7 +36,7 @@ export default function Home() {
 
         <section className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="rounded-[1.5rem] border border-zinc-800 bg-zinc-900/60 p-6">
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-cyan-300">Cómo entra el cliente</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-violet-300">Cómo entra el cliente</p>
             <ol className="mt-4 space-y-3 text-sm leading-7 text-zinc-300">
               <li>1. Abre el portal del taller desde el enlace público.</li>
               <li>2. Ingresa el folio de recepción.</li>
@@ -46,7 +46,7 @@ export default function Home() {
           </div>
 
           <div className="rounded-[1.5rem] border border-zinc-800 bg-zinc-950/85 p-6 shadow-[0_16px_60px_rgba(0,0,0,0.24)]">
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-cyan-300">Ruta disponible</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-violet-300">Ruta disponible</p>
             <p className="mt-4 text-sm leading-7 text-zinc-300">
               El portal está disponible por tenant en:
             </p>

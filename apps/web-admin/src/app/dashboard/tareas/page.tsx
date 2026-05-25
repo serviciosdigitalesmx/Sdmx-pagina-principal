@@ -176,7 +176,7 @@ export default function TareasPage() {
               {orders.map((order) => <option key={order.id} value={order.id ?? ""}>{order.folio ?? order.id}</option>)}
             </select>
             <input className="rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm text-zinc-100" placeholder="Fecha límite ISO" value={form.dueDate} onChange={(event) => setForm((current) => ({ ...current, dueDate: event.target.value }))} />
-            <button disabled={saving || !form.title.trim()} onClick={() => void handleCreate()} className="rounded-2xl bg-cyan-400 px-4 py-3 text-sm font-semibold text-zinc-950 disabled:opacity-50">
+            <button disabled={saving || !form.title.trim()} onClick={() => void handleCreate()} className="rounded-2xl bg-violet-400 px-4 py-3 text-sm font-semibold text-zinc-950 disabled:opacity-50">
               {saving ? "Guardando..." : "Crear tarea"}
             </button>
             <textarea className="min-h-28 rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm text-zinc-100 md:col-span-2 xl:col-span-3" placeholder="Descripción" value={form.description} onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))} />

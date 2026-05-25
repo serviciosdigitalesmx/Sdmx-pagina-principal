@@ -44,7 +44,7 @@ export function ModuleShell({
     <div className="space-y-6 text-zinc-100">
       <header className="flex flex-col gap-4 rounded-3xl border border-zinc-800 bg-zinc-950/85 p-6 shadow-[0_16px_70px_rgba(0,0,0,0.24)] backdrop-blur sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-400 text-lg font-black text-zinc-950">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-400 text-lg font-black text-zinc-950">
             <i className={icon} />
           </div>
           <div>
@@ -55,7 +55,7 @@ export function ModuleShell({
         <button
           type="button"
           onClick={() => void onAction?.()}
-          className="inline-flex items-center justify-center rounded-xl bg-cyan-400 px-4 py-2.5 text-sm font-semibold text-zinc-950 transition-colors hover:bg-cyan-300"
+          className="inline-flex items-center justify-center rounded-xl bg-violet-400 px-4 py-2.5 text-sm font-semibold text-zinc-950 transition-colors hover:bg-violet-300"
         >
           {actionLabel}
         </button>
@@ -99,7 +99,7 @@ export function ModuleShell({
           </div>
         ) : (
           <div className="flex min-h-[320px] flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-800 bg-zinc-900/50 px-6 text-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-zinc-950 text-xl text-cyan-300">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-zinc-950 text-xl text-violet-300">
               <i className={icon} />
             </div>
             <h2 className="mt-4 text-lg font-semibold text-zinc-50">{emptyTitle}</h2>

@@ -373,7 +373,7 @@ export default function OrdenesKanbanPage() {
             <h1 className="text-2xl font-bold tracking-tight text-slate-950 [font-family:var(--font-display)]">Tablero de Órdenes</h1>
             <p className="mt-1 text-sm text-zinc-400">Recepción, adjuntos, timeline y detalle de cada orden.</p>
           </div>
-          <button onClick={() => setIsModalOpen(true)} className="rounded-full bg-cyan-400 px-4 py-2.5 text-sm font-semibold text-zinc-950 transition hover:bg-cyan-300">
+          <button onClick={() => setIsModalOpen(true)} className="rounded-full bg-violet-400 px-4 py-2.5 text-sm font-semibold text-zinc-950 transition hover:bg-violet-300">
             Nueva Orden
           </button>
         </header>
@@ -391,7 +391,7 @@ export default function OrdenesKanbanPage() {
                 </div>
                 <div className="space-y-3 p-3">
                   {columnOrders.map((order) => (
-                    <article key={order.id} className="cursor-pointer rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-cyan-400/30" onClick={() => order.id && void openOrder(order.id)}>
+                    <article key={order.id} className="cursor-pointer rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-violet-400/30" onClick={() => order.id && void openOrder(order.id)}>
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#245a82]">{order.folio ?? "ORD-..."}</p>

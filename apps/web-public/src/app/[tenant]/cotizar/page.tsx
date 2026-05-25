@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 
 const fieldClassName =
-  "w-full rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-50 outline-none transition placeholder:text-zinc-500 focus:border-cyan-400/60 focus:ring-2 focus:ring-cyan-400/20";
+  "w-full rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-50 outline-none transition placeholder:text-zinc-500 focus:border-violet-400/60 focus:ring-2 focus:ring-violet-400/20";
 
 type QuotePayload = {
   fullName: string;
@@ -116,7 +116,7 @@ export default function TenantQuotePage() {
       <section className="mx-auto grid w-full max-w-5xl gap-8 rounded-[2rem] border border-zinc-800/70 bg-zinc-950/85 p-8 shadow-[0_20px_80px_rgba(0,0,0,0.28)]">
         <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
           <div>
-              <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">Cotizador</p>
+            <p className="text-xs uppercase tracking-[0.35em] text-violet-300">Cotizador</p>
             <h1 className="mt-3 text-4xl font-bold tracking-tight text-zinc-50 [font-family:var(--font-cormorant)]">
               Solicita tu presupuesto
             </h1>
@@ -134,8 +134,8 @@ export default function TenantQuotePage() {
             </div>
           </div>
 
-          <aside className="rounded-[1.75rem] border border-cyan-400/15 bg-cyan-400/8 p-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-300">Qué ocurre al enviar</p>
+          <aside className="rounded-[1.75rem] border border-violet-400/15 bg-violet-400/8 p-6">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-violet-300">Qué ocurre al enviar</p>
             <ul className="mt-4 space-y-3 text-sm leading-7 text-zinc-300">
               <li>• La solicitud se envía para registrarse.</li>
               <li>• Se asocia al taller actual.</li>
@@ -182,14 +182,14 @@ export default function TenantQuotePage() {
           {folio ? (
             <div className="rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-4 text-sm text-zinc-300">
               <div className="font-semibold text-zinc-50">Folio real: {folio}</div>
-              <Link href={buildTrackingHref(tenant, folio)} className="mt-2 inline-flex font-semibold text-cyan-300">
+              <Link href={buildTrackingHref(tenant, folio)} className="mt-2 inline-flex font-semibold text-violet-300">
                 Ir al tracking
               </Link>
             </div>
           ) : null}
 
           <div className="flex flex-wrap items-center gap-3">
-            <button disabled={loading} className="rounded-full bg-cyan-500 px-6 py-3 font-semibold text-zinc-950 transition hover:bg-cyan-400 disabled:opacity-60">
+            <button disabled={loading} className="rounded-full bg-violet-500 px-6 py-3 font-semibold text-zinc-950 transition hover:bg-violet-400 disabled:opacity-60">
               {loading ? "Enviando..." : "Enviar solicitud"}
             </button>
             <p className="text-sm leading-6 text-zinc-400">

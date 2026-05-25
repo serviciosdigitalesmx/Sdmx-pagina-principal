@@ -196,7 +196,7 @@ export default function ComprasPage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="rounded-xl bg-cyan-400 px-4 py-2 text-sm font-semibold text-zinc-950 disabled:opacity-60"
+                className="rounded-xl bg-violet-400 px-4 py-2 text-sm font-semibold text-zinc-950 disabled:opacity-60"
               >
                 {saving ? "Guardando…" : "Guardar"}
               </button>

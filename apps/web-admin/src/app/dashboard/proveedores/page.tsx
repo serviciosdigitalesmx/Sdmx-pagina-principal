@@ -175,7 +175,7 @@ export default function ProveedoresPage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="rounded-xl bg-cyan-400 px-4 py-2 text-sm font-semibold text-zinc-950 disabled:opacity-60"
+                className="rounded-xl bg-violet-400 px-4 py-2 text-sm font-semibold text-zinc-950 disabled:opacity-60"
               >
                 {saving ? "Guardando…" : "Guardar"}
               </button>
@@ -221,7 +221,7 @@ export default function ProveedoresPage() {
                 <div
                   key={row.id ?? row.business_name}
                   className={`w-full rounded-xl border px-4 py-3 text-left transition-colors ${
-                    row.id === selected?.id ? "border-cyan-400 bg-cyan-400/10" : "border-zinc-800 bg-zinc-900/60 hover:border-zinc-700"
+                    row.id === selected?.id ? "border-violet-400 bg-violet-400/10" : "border-zinc-800 bg-zinc-900/60 hover:border-zinc-700"
                   }`}
                 >
                   <button
