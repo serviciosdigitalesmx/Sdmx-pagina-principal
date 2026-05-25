@@ -91,6 +91,9 @@ importers:
 
   apps/web-admin:
     dependencies:
+      '@supabase/supabase-js':
+        specifier: ^2.43.4
+        version: 2.105.4
       '@tailwindcss/postcss':
         specifier: ^4
         version: 4.3.0

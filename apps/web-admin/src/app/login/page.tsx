@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import Link from "next/link";
+import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { readAuthToken, saveAuthToken } from "@/lib/auth-storage";
 
@@ -18,33 +19,13 @@ const initialState: LoginState = {
 };
 
 function getDashboardRedirectUrl() {
-  const adminUrl = process.env.NEXT_PUBLIC_WEB_ADMIN_URL;
-
-  if (!adminUrl) {
-    return new URL("/dashboard", window.location.origin).toString();
-  }
-
-  try {
-    return new URL("/", adminUrl).toString();
-  } catch {
-    return new URL("/dashboard", window.location.origin).toString();
-  }
+  return "/dashboard";
 }
 
 function getAdminBridgeUrl(token: string) {
-  const adminUrl = process.env.NEXT_PUBLIC_WEB_ADMIN_URL;
-
-  if (!adminUrl) {
-    return getDashboardRedirectUrl();
-  }
-
-  try {
-    const bridgeUrl = new URL("/auth/bridge", adminUrl);
-    bridgeUrl.searchParams.set("token", token);
-    return bridgeUrl.toString();
-  } catch {
-    return getDashboardRedirectUrl();
-  }
+  const bridgeUrl = new URL("/auth/bridge", window.location.origin);
+  bridgeUrl.searchParams.set("token", token);
+  return bridgeUrl.toString();
 }
 
 async function exchangeSessionForApiToken(accessToken: string) {
@@ -72,22 +53,27 @@ async function exchangeSessionForApiToken(accessToken: string) {
 }
 
 export default function LoginPage() {
+  const router = useRouter();
   const [form, setForm] = useState<LoginState>(initialState);
   const [loading, setLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const publicOnboardingHref = useMemo(() => process.env.NEXT_PUBLIC_WEB_PUBLIC_URL ? new URL("/onboarding", process.env.NEXT_PUBLIC_WEB_PUBLIC_URL).toString() : null, []);
 
   useEffect(() => {
     const existing = readAuthToken();
     if (existing) {
-      window.location.replace(getAdminBridgeUrl(existing));
+      router.replace(getDashboardRedirectUrl());
     }
-  }, []);
+  }, [router]);
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = event.target;
-    setForm((current) => ({ ...current, [name]: type === "checkbox" ? checked : value }));
+    setForm((current) => ({
+      ...current,
+      [name]: type === "checkbox" ? checked : value,
+    }));
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -170,9 +156,11 @@ export default function LoginPage() {
             <Link href="/" className="rounded-full border border-slate-300 px-5 py-3 font-semibold text-slate-800 transition hover:bg-slate-50">
               Volver al inicio
             </Link>
-            <Link href="/onboarding" className="rounded-full border border-slate-300 px-5 py-3 font-semibold text-slate-800 transition hover:bg-slate-50">
-              Crear cuenta
-            </Link>
+            {publicOnboardingHref ? (
+              <Link href={publicOnboardingHref} className="rounded-full border border-slate-300 px-5 py-3 font-semibold text-slate-800 transition hover:bg-slate-50">
+                Crear cuenta
+              </Link>
+            ) : null}
           </div>
 
           <div className="mt-8 grid gap-3 sm:grid-cols-2">

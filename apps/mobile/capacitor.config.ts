@@ -19,14 +19,16 @@ const webUrl = (
   ""
 ).trim();
 
+const entryUrl = webUrl ? new URL("/login", webUrl).toString() : "";
+
 const config: CapacitorConfig = {
   appId: "mx.serviciosdigitalesmx.fixi",
   appName: "FIXI",
   webDir: "web",
-  server: webUrl
+  server: entryUrl
     ? {
-        url: webUrl,
-        cleartext: /^http:\/\//i.test(webUrl),
+        url: entryUrl,
+        cleartext: /^http:\/\//i.test(entryUrl),
       }
     : undefined,
   android: {

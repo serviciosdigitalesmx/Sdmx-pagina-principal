@@ -3,14 +3,22 @@
 export const AUTH_TOKEN_KEY = process.env.NEXT_PUBLIC_AUTH_TOKEN_KEY ?? "app_auth_token";
 const AUTH_TOKEN_KEYS = Array.from(new Set([AUTH_TOKEN_KEY, "app_auth_token", "auth_token"]));
 
-export function saveAuthToken(token: string) {
+function writeToken(token: string, persistent: boolean) {
   if (typeof window === "undefined") {
     return;
   }
 
+  const primaryStorage = persistent ? window.localStorage : window.sessionStorage;
+  const secondaryStorage = persistent ? window.sessionStorage : window.localStorage;
+
   for (const key of AUTH_TOKEN_KEYS) {
-    window.localStorage.setItem(key, token);
+    primaryStorage.setItem(key, token);
+    secondaryStorage.removeItem(key);
   }
+}
+
+export function saveAuthToken(token: string, persistent = true) {
+  writeToken(token, persistent);
 }
 
 export function readAuthToken() {
@@ -19,10 +27,14 @@ export function readAuthToken() {
   }
 
   for (const key of AUTH_TOKEN_KEYS) {
-    const value = window.localStorage.getItem(key);
+    const persistentValue = window.localStorage.getItem(key);
+    if (persistentValue) {
+      return persistentValue;
+    }
 
-    if (value) {
-      return value;
+    const sessionValue = window.sessionStorage.getItem(key);
+    if (sessionValue) {
+      return sessionValue;
     }
   }
 
@@ -36,5 +48,6 @@ export function clearAuthToken() {
 
   for (const key of AUTH_TOKEN_KEYS) {
     window.localStorage.removeItem(key);
+    window.sessionStorage.removeItem(key);
   }
 }
