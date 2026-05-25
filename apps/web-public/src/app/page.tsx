@@ -186,7 +186,7 @@ export default function Home() {
             </h1>
             <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-zinc-300 sm:text-lg">
               Cotización, tracking, evidencia, inventario y finanzas en una sola experiencia de marca blanca. FIXI se ve y se
-              siente como software serio de producción, listo para competir con una imagen internacional. Activa tu tenant con {trialDays} días sin tarjeta.
+              siente como software serio de producción. Activa tu tenant con {trialDays} días sin tarjeta.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Link
@@ -246,12 +246,10 @@ export default function Home() {
         <section className="grid gap-4 rounded-[2.5rem] border border-zinc-800/70 bg-zinc-950/85 px-5 py-8 lg:px-8">
           <div className="max-w-3xl">
             <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-cyan-300">Lo que sí trae FIXI</p>
-            <h2 className="mt-3 text-4xl font-black tracking-[-0.05em] text-white sm:text-5xl">
-              Capacidades reales que FIXI ya soporta.
-            </h2>
+            <h2 className="mt-3 text-4xl font-black tracking-[-0.05em] text-white sm:text-5xl">Capacidades reales de FIXI.</h2>
             <p className="mt-4 text-base leading-8 text-zinc-300">
-              La landing debe vender lo que el producto hace hoy: proveedores, garantías, mensajería, checklist propio e historial de órdenes.
-              No promesas vacías, sólo capacidades reales que ya existen en el sistema y que el taller puede usar desde el primer día.
+              La landing debe mostrar lo que el producto hace hoy: proveedores, garantías, mensajería, checklist propio e historial de órdenes.
+              Sólo capacidades reales.
             </p>
           </div>
 
@@ -268,11 +266,9 @@ export default function Home() {
         <section className="grid gap-4 rounded-[2.5rem] border border-zinc-800/70 bg-[linear-gradient(180deg,rgba(9,9,11,0.92),rgba(15,17,21,0.98))] px-5 py-8 lg:px-8">
           <div className="max-w-3xl">
             <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-emerald-300">Prueba social</p>
-            <h2 className="mt-3 text-4xl font-black tracking-[-0.05em] text-white sm:text-5xl">
-              Presencia configurable para competir a nivel internacional.
-            </h2>
+            <h2 className="mt-3 text-4xl font-black tracking-[-0.05em] text-white sm:text-5xl">Alcance visible de FIXI.</h2>
             <p className="mt-4 text-base leading-8 text-zinc-300">
-              Si quieres mostrar alcance real, conecta estos indicadores a datos reales de producción. Si no, déjalos vacíos en lugar de inventarlos.
+              Estos indicadores deben venir de datos reales. Si no están confirmados, no se muestran.
             </p>
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
@@ -304,12 +300,9 @@ export default function Home() {
         <section id="seguridad" className="grid gap-4 rounded-[2.5rem] border border-zinc-800/70 bg-[linear-gradient(180deg,rgba(9,9,11,0.92),rgba(15,17,21,0.98))] px-5 py-8 lg:grid-cols-[0.95fr_1.05fr] lg:px-8">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-cyan-300">Confianza técnica</p>
-            <h2 className="mt-3 text-4xl font-black tracking-[-0.05em] text-white sm:text-5xl">
-              Transparencia que vende seguridad.
-            </h2>
+            <h2 className="mt-3 text-4xl font-black tracking-[-0.05em] text-white sm:text-5xl">Arquitectura visible.</h2>
             <p className="mt-4 max-w-xl text-base leading-8 text-zinc-300">
-              Para talleres serios, FIXI no oculta la arquitectura. La muestra con claridad: aislamiento, marca blanca y
-              despliegue de producción desde el primer vistazo.
+              FIXI muestra su arquitectura con claridad: aislamiento, marca blanca y despliegue de producción.
             </p>
           </div>
 
@@ -330,12 +323,9 @@ export default function Home() {
         <section id="precios" className="space-y-6 rounded-[2.5rem] border border-zinc-800/70 bg-zinc-950/85 px-5 py-8 lg:px-8">
           <div className="max-w-3xl">
             <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-emerald-300">Planes</p>
-            <h2 className="mt-3 text-4xl font-black tracking-[-0.05em] text-white sm:text-5xl">
-              El plan Pro es el punto dulce para vender y operar.
-            </h2>
+            <h2 className="mt-3 text-4xl font-black tracking-[-0.05em] text-white sm:text-5xl">Planes claros para arrancar y escalar.</h2>
             <p className="mt-4 text-base leading-8 text-zinc-300">
-              Cada plan incluye los conceptos clave que ves en la referencia: recepción, inventario, portal cliente, WhatsApp,
-              finanzas y multisucursal, de forma progresiva.
+              Cada plan incluye los conceptos clave del producto: recepción, inventario, portal cliente, WhatsApp, finanzas y multisucursal.
             </p>
           </div>
 
@@ -409,10 +399,9 @@ export default function Home() {
         >
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-cyan-300">Contacto</p>
-            <h2 className="mt-3 text-4xl font-black tracking-[-0.05em] text-white">Cierra la venta con un flujo limpio.</h2>
+            <h2 className="mt-3 text-4xl font-black tracking-[-0.05em] text-white">Contacta a FIXI.</h2>
             <p className="mt-4 max-w-2xl text-base leading-8 text-zinc-300">
-              Déjanos tus datos para arrancar una demo o valida el producto con el recorrido público. FIXI está hecho para
-              verse sólido desde el primer contacto.
+              Déjanos tus datos para arrancar una demo o valida el producto con el recorrido público.
             </p>
           </div>
 
