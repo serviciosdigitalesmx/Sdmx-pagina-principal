@@ -20,10 +20,10 @@ const cormorant = Cormorant_Garamond({
 
 export const metadata: Metadata = {
   title:
-    process.env.NEXT_PUBLIC_TENANT_META_TITLE ?? "FIXIE | Portal operativo del taller",
+    process.env.NEXT_PUBLIC_TENANT_META_TITLE ?? "FIXIE | Panel del taller",
   description:
     process.env.NEXT_PUBLIC_TENANT_META_DESCRIPTION ??
-    "FIXIE: portal operativo white-label para talleres con soporte y experiencia configurable.",
+    "FIXIE: panel white-label para talleres con soporte y experiencia personalizada.",
 };
 
 export const viewport = {

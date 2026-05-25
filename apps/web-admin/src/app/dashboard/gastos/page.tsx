@@ -56,7 +56,7 @@ export default function GastosPage() {
     <RequireRole allowed={['owner', 'manager']}>
       <ModuleShell
         title="Gastos"
-        subtitle="Registro y control de egresos operativos, administrativos y extraordinarios."
+        subtitle="Registro y control de egresos del taller."
         icon="fas fa-receipt"
         actionLabel="+ Registrar gasto"
         stats={stats}
@@ -68,7 +68,7 @@ export default function GastosPage() {
         ]}
         rows={rows}
         emptyTitle={loading ? 'Cargando gastos…' : error ? 'No pudimos cargar gastos' : 'Sin movimientos de gasto todavía'}
-        emptyCopy={error || 'La vista muestra el cashflow del tenant por sucursal.'}
+        emptyCopy={error || 'Aquí verás los egresos del taller por sucursal.'}
       />
     </RequireRole>
   );

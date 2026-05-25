@@ -57,7 +57,7 @@ const emptySocial: SocialLink = { label: "", href: "" };
 
 const defaultLandingContent: LandingContent = {
   heroTitle: "",
-  heroSubtitle: "Landing pública por tenant",
+  heroSubtitle: "Landing pública del taller",
   heroDescription: "",
   primaryCtaLabel: "Cotizar ahora",
   primaryCtaHref: "/cotizar",
@@ -199,20 +199,20 @@ export default function LandingSettingsPage() {
   return (
     <RequireRole allowed={["owner", "manager"]}>
       <ModuleShell
-        title="Landing del tenant"
-        subtitle="Editor real por tenant usando `tenants.landing_content` como fuente de verdad."
+        title="Landing del taller"
+        subtitle="Editor por taller usando `tenants.landing_content` como fuente de verdad."
         icon="fas fa-globe"
         actionLabel={saving ? "Guardando..." : "Guardar landing"}
         onAction={handleSave}
         stats={[
-          { label: "Tenant", value: tenantSlug, helper: "Contenido aislado por tenant_id." },
+          { label: "Taller", value: tenantSlug, helper: "Contenido aislado por taller." },
           { label: "Servicios", value: String(landingContent.services.length), helper: "Bloques visibles en público." },
-          { label: "Redes", value: String(landingContent.socialLinks.length), helper: "Contactos públicos del tenant." },
+          { label: "Redes", value: String(landingContent.socialLinks.length), helper: "Contactos públicos del taller." },
         ]}
         columns={[]}
         rows={[]}
         emptyTitle={loading ? "Cargando landing…" : "Editor listo"}
-        emptyCopy="La landing pública refleja el branding real del tenant."
+        emptyCopy="La landing pública refleja el branding del taller."
       >
         <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
           <section className="space-y-6 rounded-[28px] border border-zinc-800 bg-zinc-950/85 p-6 shadow-[0_16px_70px_rgba(0,0,0,0.24)]">

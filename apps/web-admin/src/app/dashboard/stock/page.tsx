@@ -95,9 +95,9 @@ export default function StockPage() {
 
   const stats = useMemo(
     () => [
-      { label: "Productos", value: String(rows.length), helper: "Inventario real del tenant." },
-      { label: "Sucursal", value: selected?.branch_id || "Global", helper: "Filtro por branch_id." },
-      { label: "Rol", value: role, helper: "Permisos reales por usuario." },
+      { label: "Productos", value: String(rows.length), helper: "Inventario del taller." },
+      { label: "Sucursal", value: selected?.branch_id || "Global", helper: "Filtro por sucursal." },
+      { label: "Rol", value: role, helper: "Permisos por usuario." },
     ],
     [rows.length, role, selected?.branch_id],
   );
@@ -176,7 +176,7 @@ export default function StockPage() {
           branch_id: row.branch_id ?? "Global",
         }))}
         emptyTitle={loading ? "Cargando inventario…" : error ? "No pudimos cargar inventario" : "No hay productos todavía"}
-        emptyCopy={error || "La lista real sale de /api/:tenantSlug/inventory."}
+        emptyCopy={error || "La lista sale del inventario del taller."}
       >
         <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
           <form onSubmit={handleSave} className="space-y-4 rounded-2xl border border-zinc-800 bg-zinc-950 p-5">

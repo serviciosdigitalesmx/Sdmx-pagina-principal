@@ -121,12 +121,12 @@ export default function TenantQuotePage() {
               Solicita tu presupuesto
             </h1>
             <p className="mt-4 max-w-2xl text-lg leading-8 text-zinc-300">
-              Cuéntanos qué equipo tienes, qué falla presenta y lo convertimos en una solicitud real para el tenant{" "}
+              Cuéntanos qué equipo tienes, qué falla presenta y lo convertimos en una solicitud para el taller{" "}
               <span className="font-semibold text-slate-950">{tenant}</span>.
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
               <Link href={`/${tenant}`} className="rounded-full border border-zinc-700 px-5 py-3 font-semibold text-zinc-100 transition hover:bg-zinc-800">
-                Volver al tenant
+                Volver al taller
               </Link>
               <Link href={`/${tenant}/tracking`} className="rounded-full border border-zinc-700 px-5 py-3 font-semibold text-zinc-100 transition hover:bg-zinc-800">
                 Ver estatus
@@ -137,8 +137,8 @@ export default function TenantQuotePage() {
           <aside className="rounded-[1.75rem] border border-cyan-400/15 bg-cyan-400/8 p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-300">Qué ocurre al enviar</p>
             <ul className="mt-4 space-y-3 text-sm leading-7 text-zinc-300">
-              <li>• La solicitud se envía al API real.</li>
-              <li>• Se asocia al tenant actual.</li>
+              <li>• La solicitud se envía para registrarse.</li>
+              <li>• Se asocia al taller actual.</li>
               <li>• Recepción puede convertirla en orden con un clic.</li>
             </ul>
           </aside>
@@ -193,7 +193,7 @@ export default function TenantQuotePage() {
               {loading ? "Enviando..." : "Enviar solicitud"}
             </button>
             <p className="text-sm leading-6 text-zinc-400">
-              La solicitud llega al API real y queda ligada al tenant actual.
+              La solicitud queda ligada al taller actual.
             </p>
           </div>
         </form>

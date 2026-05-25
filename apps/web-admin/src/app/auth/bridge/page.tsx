@@ -25,12 +25,12 @@ export default function AuthBridgePage() {
     }
   })();
   const message = !token
-    ? "No llegó el token de sesión."
+    ? "No llegó la sesión."
     : !adminUrl
-      ? "Falta configurar NEXT_PUBLIC_WEB_ADMIN_URL."
+      ? "Falta configurar la URL del panel."
       : !isCanonicalAdminUrl
-        ? "El origin canónico del admin no coincide con NEXT_PUBLIC_WEB_ADMIN_URL."
-      : "Sesión sincronizada. Redirigiendo al panel...";
+        ? "La URL del panel no coincide con la configuración."
+        : "Sesión sincronizada. Redirigiendo al panel...";
 
   useEffect(() => {
     if (!token || !dashboardUrl || !isCanonicalAdminUrl) {
@@ -51,15 +51,13 @@ export default function AuthBridgePage() {
         {!adminUrl || !isCanonicalAdminUrl ? (
           <div className="mt-6 text-left text-sm text-rose-700">
             <p className="font-semibold">Bloqueado por configuración de origen</p>
-            <p className="mt-2 leading-6">
-              El bridge no puede continuar hasta que `NEXT_PUBLIC_WEB_ADMIN_URL` apunte al origen canónico de admin.
-            </p>
+            <p className="mt-2 leading-6">El acceso no puede continuar hasta que la URL del panel esté bien configurada.</p>
           </div>
         ) : null}
         {token ? (
           <div className="mt-6 rounded-2xl bg-slate-50 px-4 py-3 text-left text-xs leading-5 text-slate-600">
             <p className="font-semibold text-slate-800">Token recibido</p>
-            <p className="mt-1 break-all">Guardado y listo para ir a <code>/dashboard</code>.</p>
+            <p className="mt-1 break-all">Guardado y listo para ir al panel.</p>
           </div>
         ) : null}
         <div className="mt-6 flex flex-wrap justify-center gap-3">

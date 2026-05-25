@@ -155,7 +155,7 @@ export default function LoginPage() {
               <span className="hidden sm:inline">Entra a FIXI.</span>
           </h1>
           <p className="mt-4 max-w-xl text-base leading-7 text-slate-600">
-            <span className="sm:hidden">Tu acceso te lleva al workspace del tenant.</span>
+            <span className="sm:hidden">Tu acceso te lleva al área de trabajo del taller.</span>
             <span className="hidden sm:inline">
               Tu acceso te lleva directo al área de trabajo del taller.
             </span>

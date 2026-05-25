@@ -371,7 +371,7 @@ export default function OrdenesKanbanPage() {
         <header className="flex flex-col justify-between gap-4 rounded-[28px] border border-zinc-800 bg-zinc-950/85 p-6 shadow-[0_16px_70px_rgba(0,0,0,0.24)] sm:flex-row sm:items-center">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-slate-950 [font-family:var(--font-display)]">Tablero de Órdenes</h1>
-            <p className="mt-1 text-sm text-zinc-400">Recepción, adjuntos, timeline y detalle operativo con persistencia real.</p>
+            <p className="mt-1 text-sm text-zinc-400">Recepción, adjuntos, timeline y detalle de cada orden.</p>
           </div>
           <button onClick={() => setIsModalOpen(true)} className="rounded-full bg-cyan-400 px-4 py-2.5 text-sm font-semibold text-zinc-950 transition hover:bg-cyan-300">
             Nueva Orden

@@ -157,14 +157,14 @@ export default function SolicitudesPage() {
     <RequireRole allowed={["owner", "manager", "technician"]}>
       <ModuleShell
         title="Solicitudes"
-        subtitle="Buzón real de solicitudes públicas del tenant."
+        subtitle="Buzón de solicitudes públicas del taller."
         icon="fas fa-envelope-open-text"
         actionLabel={loading ? "Cargando..." : "Refrescar"}
         onAction={refresh}
         stats={[
           { label: "Pendientes", value: String(pendingCount), helper: "Solicitudes sin convertir." },
           { label: "Convertidas", value: String(convertedCount), helper: "Ya pasaron a órdenes." },
-          { label: "Total", value: String(rows.length), helper: "Cargadas desde `service_requests`." },
+          { label: "Total", value: String(rows.length), helper: "Solicitudes registradas." },
         ]}
         columns={[
           { label: "Folio", key: "folio" },
@@ -173,7 +173,7 @@ export default function SolicitudesPage() {
           { label: "Estado", key: "statusLabel" },
         ]}
         rows={mappedRows}
-        emptyTitle={loading ? "Cargando solicitudes…" : "Buzón operativo sin datos"}
+        emptyTitle={loading ? "Cargando solicitudes…" : "Buzón sin datos"}
         emptyCopy="Las solicitudes públicas llegarán desde la landing y se podrán convertir a orden sin salir del panel."
       >
         {error ? <p className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p> : null}

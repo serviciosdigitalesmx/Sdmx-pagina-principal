@@ -86,8 +86,8 @@ export default function ProveedoresPage() {
 
   const stats = useMemo(
     () => [
-      { label: "Activos", value: String(rows.filter((item) => item.is_active !== false && item.is_active !== "false").length), helper: "Datos reales de Supabase." },
-      { label: "Totales", value: String(rows.length), helper: "Listado del tenant." },
+      { label: "Activos", value: String(rows.filter((item) => item.is_active !== false && item.is_active !== "false").length), helper: "Registros activos." },
+      { label: "Totales", value: String(rows.length), helper: "Listado del taller." },
       { label: "Selección", value: selected?.business_name ?? "Ninguno", helper: "Proveedor actual." },
     ],
     [rows, selected],
@@ -148,7 +148,7 @@ export default function ProveedoresPage() {
     <RequireRole allowed={["owner", "manager"]}>
       <ModuleShell
         title="Proveedores"
-        subtitle="Catálogo real del tenant con creación, edición y baja lógica."
+        subtitle="Catálogo de proveedores con creación, edición y baja lógica."
         icon="fas fa-truck"
         actionLabel="Nuevo proveedor"
         onAction={() => setSelectedId("")}
@@ -215,7 +215,7 @@ export default function ProveedoresPage() {
           </form>
 
           <div className="space-y-4 rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
-            <h2 className="text-lg font-semibold text-zinc-50">Listado operativo</h2>
+            <h2 className="text-lg font-semibold text-zinc-50">Listado de proveedores</h2>
             <div className="space-y-3">
               {rows.map((row) => (
                 <div

@@ -40,7 +40,7 @@ export default function OnboardingPage() {
     try {
       const apiUrl = getApiUrl();
       if (!apiUrl) {
-        throw new Error("API base URL no está configurada.");
+        throw new Error("La URL del API no está configurada.");
       }
 
       const response = await fetch(`${apiUrl}/api/auth/register`, {
@@ -83,7 +83,7 @@ export default function OnboardingPage() {
   const handleGoogleRegister = () => {
     const apiUrl = getApiUrl();
     if (!apiUrl) {
-      setError("Falta configurar NEXT_PUBLIC_API_URL o NEXT_PUBLIC_API_BASE_URL.");
+      setError("Falta configurar la URL del API.");
       return;
     }
 

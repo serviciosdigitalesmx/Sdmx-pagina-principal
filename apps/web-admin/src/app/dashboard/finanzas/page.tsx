@@ -47,7 +47,7 @@ export default function Page() {
 
   const stats = useMemo(
     () => [
-      { label: "Registros", value: String(rows.length), helper: "Datos del tenant." },
+      { label: "Registros", value: String(rows.length), helper: "Datos del taller." },
       { label: "Rol", value: role, helper: "Permisos reales por usuario." },
       { label: "Sucursal", value: sucursalId, helper: "Aislamiento por contexto." },
     ],
@@ -58,7 +58,7 @@ export default function Page() {
     <RequireRole allowed={["owner", "manager"]}>
       <ModuleShell
         title="Finanzas"
-        subtitle="Balances y flujo financiero del tenant desde Supabase."
+        subtitle="Balances y flujo financiero del taller."
         icon="fas fa-chart-line"
         actionLabel={role === "owner" ? "Balance global" : "Ver flujo por sucursal"}
         stats={stats}
@@ -70,7 +70,7 @@ export default function Page() {
         ]}
         rows={rows}
         emptyTitle={loading ? "Cargando finanzas…" : error ? "No pudimos cargar las finanzas" : "Sin movimientos financieros todavía"}
-        emptyCopy={error || "Si no hay movimientos, se muestra vacío real. El módulo consume /api/:tenantId/finance/balance o /cashflow/:sucursalId."}
+        emptyCopy={error || "Aquí verás balances, ingresos y egresos cuando el taller registre movimientos."}
       />
     </RequireRole>
   );

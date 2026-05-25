@@ -116,7 +116,7 @@ export default function PortalPage() {
               Consulta real de reparación
             </h1>
             <p className="mt-4 max-w-2xl text-lg leading-8 text-slate-600">
-              Ingresa tu folio para consultar una orden real del tenant <span className="font-semibold text-slate-950">{tenantLabel}</span>.
+              Ingresa tu folio para consultar una orden del taller <span className="font-semibold text-slate-950">{tenantLabel}</span>.
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
               <Link href="/" className="rounded-full border border-slate-300 px-5 py-3 font-semibold text-slate-800 transition hover:bg-slate-50">

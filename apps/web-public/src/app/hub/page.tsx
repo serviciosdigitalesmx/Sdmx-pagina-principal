@@ -195,7 +195,7 @@ export default function HubPage() {
             <p className="text-xs uppercase tracking-[0.35em] text-[#245a82]">Acceso al hub</p>
             <h1 className="mt-4 max-w-2xl text-4xl font-semibold tracking-tight sm:text-5xl">{hubName}</h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
-              Un solo centro de mando para sincronizar sesión, entrar al tenant y abrir la landing correcta sin perder el contexto operativo.
+              Un solo centro de mando para sincronizar sesión, entrar al taller y abrir la ruta correcta sin perder el contexto.
             </p>
           </div>
 
@@ -208,7 +208,7 @@ export default function HubPage() {
             </p>
             <p className="mt-2 text-sm leading-6 text-slate-600">
               {sessionState.tokenState === "present"
-                ? "La sesión existe y puede transferirse al panel administrativo."
+                ? "La sesión existe y puede transferirse al panel."
                 : "Sin sesión guardada todavía. Debes entrar por login u onboarding."}
             </p>
           </div>

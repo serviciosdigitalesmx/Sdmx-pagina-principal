@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   title: "FIXI | Plataforma SaaS para talleres",
   description:
     process.env.NEXT_PUBLIC_SAAS_META_DESCRIPTION ??
-    "FIXIE: SaaS multitenant para talleres con marca blanca, tracking y control operativo.",
+    "FIXI: plataforma para talleres con marca blanca, tracking y control.",
 };
 
 export const viewport = {

@@ -54,13 +54,13 @@ export default function SucursalesPage() {
     <RequireRole allowed={["owner", "manager"]}>
       <ModuleShell
         title="Sucursales"
-        subtitle="Control real de sucursales del tenant con aislamiento por branch_id."
+        subtitle="Control de sucursales con aislamiento por sucursal."
         icon="fas fa-store"
         actionLabel={role === "owner" ? "Agregar sucursal" : "Ver sucursal actual"}
         stats={[
-          { label: "Sucursales", value: String(rows.length), helper: "Cargadas desde la API real." },
-          { label: "Activas", value: String(activeRows.length), helper: "Filtrado por is_active." },
-          { label: "Contexto", value: selectedBranch?.name ?? sucursalId ?? "N/D", helper: "Sucursal del usuario o selector global." },
+          { label: "Sucursales", value: String(rows.length), helper: "Cargadas desde la API." },
+          { label: "Activas", value: String(activeRows.length), helper: "Filtrado por estado." },
+          { label: "Contexto", value: selectedBranch?.name ?? sucursalId ?? "N/D", helper: "Sucursal actual." },
         ]}
         columns={[
           { label: "Nombre", key: "nombre" },
@@ -75,7 +75,7 @@ export default function SucursalesPage() {
           state: row.state ?? "-",
         }))}
         emptyTitle={loading ? "Cargando sucursales…" : error ? "No pudimos cargar sucursales" : "Sin sucursales todavía"}
-        emptyCopy={error || "El módulo consume /api/:tenantId/branches y respeta tenant_id en producción."}
+        emptyCopy={error || "Aquí verás las sucursales del taller cuando estén registradas."}
       />
     </RequireRole>
   );

@@ -7,7 +7,7 @@ function buildBridgeUrl(token: string, tenant: string | null) {
   const adminUrl = process.env.NEXT_PUBLIC_WEB_ADMIN_URL;
 
   if (!adminUrl) {
-    return { url: null, error: "Falta configurar NEXT_PUBLIC_WEB_ADMIN_URL." };
+    return { url: null, error: "Falta configurar la URL del panel." };
   }
 
   let base: URL;
@@ -15,11 +15,11 @@ function buildBridgeUrl(token: string, tenant: string | null) {
   try {
     base = new URL(adminUrl);
   } catch {
-    return { url: null, error: "NEXT_PUBLIC_WEB_ADMIN_URL no es una URL válida." };
+    return { url: null, error: "La URL del panel no es válida." };
   }
 
   if (base.protocol !== "https:") {
-    return { url: null, error: "NEXT_PUBLIC_WEB_ADMIN_URL debe usar https." };
+    return { url: null, error: "La URL del panel debe usar https." };
   }
 
   base.pathname = "/auth/bridge";
@@ -56,7 +56,7 @@ export function RedirectToAdmin() {
 
   useEffect(() => {
     if (!token) {
-      setError("Falta el token de sesión en el callback de éxito.");
+      setError("Falta la sesión en el callback de éxito.");
       return;
     }
 
@@ -73,7 +73,7 @@ export function RedirectToAdmin() {
         <p className="text-xs uppercase tracking-[0.35em] text-[#245a82]">Registro completado</p>
         <h1 className="text-4xl font-semibold tracking-tight">Tu prueba gratuita ya quedó creada.</h1>
         <p className="text-lg leading-8 text-slate-600">
-          {tenant ? `Tenant: ${tenant}.` : "El tenant fue creado correctamente."} La sesión quedó guardada en este navegador.
+          {tenant ? `Taller: ${tenant}.` : "El taller fue creado correctamente."} La sesión quedó guardada en este navegador.
         </p>
         {error ? (
           <div className="rounded-3xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-700">

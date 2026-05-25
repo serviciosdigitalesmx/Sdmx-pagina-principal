@@ -97,7 +97,7 @@ export default async function TenantLandingPage({
         <header className="rounded-[2rem] border border-zinc-800/70 bg-zinc-950/85 p-6 text-zinc-50 shadow-[0_30px_90px_rgba(0,0,0,0.32)] backdrop-blur-xl">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-3xl">
-              <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">Landing pública por tenant</p>
+              <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">Landing pública del taller</p>
               <p className="mt-3 inline-flex rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-cyan-200">
                 {landing.heroSubtitle}
               </p>
@@ -139,7 +139,7 @@ export default async function TenantLandingPage({
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.28em] text-cyan-300">Operación pública</p>
             <h2 className="mt-3 text-3xl font-bold text-zinc-50 [font-family:var(--font-cormorant)]">
-              {data.tenant.name} vende, atiende y rastrea desde una sola experiencia.
+              {data.tenant.name} atiende, cotiza y rastrea desde una sola experiencia.
             </h2>
             <p className="mt-4 text-base leading-7 text-zinc-300 sm:text-lg sm:leading-8">{landing.seoDescription}</p>
           </div>
@@ -207,7 +207,7 @@ export async function generateMetadata({
   } catch {
     return {
       title: tenant,
-      description: "Landing pública del tenant.",
+      description: "Landing pública del taller.",
     };
   }
 }

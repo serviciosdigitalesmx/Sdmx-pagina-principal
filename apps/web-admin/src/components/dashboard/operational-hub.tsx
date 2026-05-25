@@ -96,7 +96,7 @@ export function OperationalHub() {
         setSummary(reportsResult as ReportsSummary);
       } catch (loadError) {
         if (cancelled) return;
-        setError(loadError instanceof Error ? loadError.message : "No pudimos cargar el hub operativo");
+        setError(loadError instanceof Error ? loadError.message : "No pudimos cargar el panel");
       } finally {
         if (!cancelled) {
           setLoading(false);
@@ -245,7 +245,7 @@ export function OperationalHub() {
 
       {error ? (
         <section className="rounded-[24px] border border-rose-200 bg-rose-50 p-6 text-sm text-rose-700">
-          No pudimos cargar el hub operativo. {error}
+          No pudimos cargar el panel. {error}
         </section>
       ) : null}
 

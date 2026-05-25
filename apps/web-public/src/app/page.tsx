@@ -27,7 +27,7 @@ const demoHref = demoUrl ?? "/t/demo/portal";
 
 const metrics = [
   { value: "+40%", label: "Menos llamadas de seguimiento" },
-  { value: "100%", label: "Aislamiento con tenant_id + RLS" },
+  { value: "100%", label: "Aislamiento por taller" },
   { value: "0%", label: "Branding genérico visible" },
   { value: `${trialDays} días`, label: "Prueba gratuita sin tarjeta" },
 ];
@@ -41,14 +41,14 @@ const coreCards = [
   },
   {
     eyebrow: "Tracking",
-    title: "Portal público por tenant",
+    title: "Portal público del taller",
     copy: "El cliente consulta su folio, ve el timeline y entiende el estado sin perseguir al taller.",
     bullets: ["Consulta por folio", "Timeline real", "PDF y evidencia"],
   },
   {
     eyebrow: "Mesa de control",
-    title: "Cockpit operativo del taller",
-    copy: "Recepción, técnico, stock, finanzas y sucursales en un tablero con lectura inmediata.",
+    title: "Centro de control del taller",
+    copy: "Recepción, técnico, stock, finanzas y sucursales en un tablero claro y directo.",
     bullets: ["Kanban operativo", "Stock y finanzas", "Roles por sucursal"],
   },
   {
@@ -82,22 +82,22 @@ const productProofCards = [
   },
   {
     title: "Portal cliente",
-    copy: "Estado, timeline, PDF y evidencia en una experiencia blanca por tenant.",
+    copy: "Estado, timeline, PDF y evidencia en una experiencia blanca del taller.",
   },
 ];
 
 const trustBlocks = [
   {
     title: "Aislamiento estricto",
-    copy: "Cada dato se filtra por tenant_id. La seguridad no es una capa visual: es una regla de datos.",
+    copy: "Cada taller mantiene sus datos privados y separados.",
   },
   {
     title: "White-label real",
-    copy: "Logo, colores, nombre comercial y enlaces mutan por tenant para que el SaaS se sienta del taller.",
+    copy: "Logo, colores, nombre comercial y enlaces se adaptan a cada taller.",
   },
   {
-    title: "Arquitectura de producción",
-    copy: "FIXI corre con Vercel, Render y Supabase con RLS.",
+    title: "Protección de datos",
+    copy: "FIXI protege la información de cada taller con separación real entre cuentas.",
   },
 ];
 
@@ -212,7 +212,7 @@ export default function Home() {
             </div>
 
             <div className="mt-8 flex flex-wrap justify-center gap-2">
-              {["Recepción", "Tracking", "Inventario", "WhatsApp", "Portal cliente", "PDF white-label", "RLS", "tenant_id"].map((tag) => (
+              {["Recepción", "Tracking", "Inventario", "WhatsApp", "Portal cliente", "PDF", "Seguridad", "Aislamiento"].map((tag) => (
                 <span
                   key={tag}
                   className="rounded-full border border-zinc-700 bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-200"
@@ -313,7 +313,7 @@ export default function Home() {
               </article>
             ))}
             <div className="rounded-[1.5rem] border border-cyan-400/20 bg-cyan-400/10 p-5 text-sm leading-7 text-cyan-50">
-              <span className="font-semibold text-cyan-200">Contrato de seguridad:</span> cada tenant ve sólo su información, su branding
+              <span className="font-semibold text-cyan-200">Contrato de seguridad:</span> cada taller ve sólo su información, su branding
               y su operación.
             </div>
           </div>
@@ -350,7 +350,7 @@ export default function Home() {
                   {plan.highlight
                     ? "Ideal para talleres que quieren control real sin complejidad."
                     : plan.name === "Starter"
-                      ? "Para arrancar con presencia, recepción y seguimiento."
+                      ? "Para empezar con recepción, seguimiento y presencia clara."
                       : "Para operaciones que ya requieren control y escala."}
                 </p>
                 <ul className="mt-5 space-y-3">

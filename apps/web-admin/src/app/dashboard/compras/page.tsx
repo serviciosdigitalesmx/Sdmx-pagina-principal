@@ -102,9 +102,9 @@ export default function ComprasPage() {
 
   const stats = useMemo(
     () => [
-      { label: "Órdenes", value: String(orders.length), helper: "Compra real del tenant." },
-      { label: "Proveedores", value: String(suppliers.length), helper: "Catálogo operativo." },
-      { label: "Rol", value: role, helper: "Permisos reales por usuario." },
+      { label: "Órdenes", value: String(orders.length), helper: "Compras registradas." },
+      { label: "Proveedores", value: String(suppliers.length), helper: "Catálogo de abastecimiento." },
+      { label: "Rol", value: role, helper: "Permisos por usuario." },
     ],
     [orders.length, role, suppliers.length],
   );

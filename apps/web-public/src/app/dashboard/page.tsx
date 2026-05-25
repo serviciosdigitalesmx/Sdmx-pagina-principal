@@ -29,8 +29,8 @@ export default function DashboardBridgePage() {
         <h1 className="mt-4 text-3xl font-semibold tracking-tight">Ya entraste al sistema</h1>
         <p className="mt-4 text-sm leading-7 text-slate-600">
           {dashboardTarget
-            ? "La sesión quedó guardada. Redirigiendo al panel administrativo..."
-            : "Falta configurar NEXT_PUBLIC_WEB_ADMIN_URL para enviar la sesión al panel administrativo."}
+            ? "La sesión quedó guardada. Redirigiendo al panel..."
+            : "Falta configurar la URL del panel para continuar."}
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           {dashboardTarget ? (

@@ -98,7 +98,7 @@ export default function Page() {
         stats={[
           { label: 'Activos', value: String(rows.length), helper: 'Cargados desde la API real.' },
           { label: 'Etiquetas', value: '1', helper: 'Listo para segmentación comercial.' },
-          { label: 'Pendientes', value: loading ? '...' : '0', helper: 'Sin datos simulados.' },
+          { label: 'Pendientes', value: loading ? '...' : '0', helper: 'Pendientes por atender.' },
         ]}
         columns={[
           { label: 'Nombre', key: 'name' },
@@ -111,7 +111,7 @@ export default function Page() {
           name: row.name ?? row.full_name ?? '',
         }))}
         emptyTitle={loading ? 'Cargando clientes…' : error ? 'Error al cargar clientes' : 'Clientes listo para integración'}
-        emptyCopy={error || 'La vista conserva el patrón de la plataforma y queda lista para consumir datos reales filtrados por tenant y rol.'}
+        emptyCopy={error || 'La vista queda lista para mostrar clientes del taller cuando haya registros.'}
       >
         {role !== 'technician' ? (
           <form className="grid gap-4 rounded-2xl border border-zinc-800 bg-zinc-950/85 p-5 md:grid-cols-3" onSubmit={handleSubmit}>
@@ -169,7 +169,7 @@ export default function Page() {
               >
                 {saving ? 'Registrando...' : 'Guardar cliente'}
               </button>
-              <p className="text-sm text-zinc-400">Se crea en el tenant actual y queda aislado por `tenant_id`.</p>
+              <p className="text-sm text-zinc-400">Se crea en el taller actual y queda aislado.</p>
             </div>
           </form>
         ) : null}

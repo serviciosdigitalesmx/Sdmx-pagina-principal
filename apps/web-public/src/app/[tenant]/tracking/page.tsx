@@ -61,12 +61,12 @@ export default function TenantTrackingPage() {
               Ver estatus de tu reparación
             </h1>
             <p className="mt-4 max-w-2xl text-lg leading-8 text-zinc-300">
-              Consulta el avance de tu equipo con el folio generado en recepción para el tenant{" "}
+              Consulta el avance de tu equipo con el folio generado en recepción para el taller{" "}
               <span className="font-semibold text-slate-950">{tenant}</span>.
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
               <Link href={`/${params.tenant}`} className="rounded-full border border-zinc-700 px-5 py-3 font-semibold text-zinc-100 transition hover:bg-zinc-800">
-                Volver al tenant
+                Volver al taller
               </Link>
               <Link href={`/${params.tenant}/cotizar`} className="rounded-full border border-zinc-700 px-5 py-3 font-semibold text-zinc-100 transition hover:bg-zinc-800">
                 Solicitar cotización

@@ -23,7 +23,7 @@ export default function Home() {
           <div className="rounded-[1.75rem] border border-zinc-800 bg-zinc-900/60 p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-300">Acceso rápido</p>
             <p className="mt-2 text-sm leading-6 text-zinc-300">
-              Si ya conoces tu tenant, entra directo al portal multi-tenant.
+              Si ya conoces tu taller, entra directo al portal.
             </p>
             <Link
               href={`/t/${demoTenant}/portal`}
@@ -54,7 +54,7 @@ export default function Home() {
               /t/[tenantSlug]/portal
             </div>
             <p className="mt-4 text-sm leading-7 text-zinc-300">
-              El acceso depende de <span className="font-semibold text-zinc-50">tenant_id</span> y responde por el portal del tenant.
+              El acceso depende del taller que consulta la orden.
             </p>
           </div>
         </section>
@@ -63,7 +63,7 @@ export default function Home() {
           <p>Portal del cliente para talleres multi-tenant.</p>
           <div className="flex flex-wrap gap-4">
             <span>Sin panel interno</span>
-            <span>Sin datos simulados</span>
+            <span>Datos reales</span>
             <span>Consulta por folio</span>
           </div>
         </footer>

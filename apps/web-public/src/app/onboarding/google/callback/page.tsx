@@ -32,7 +32,7 @@ export default function GoogleCallbackPage() {
         const code = new URL(window.location.href).searchParams.get('code');
 
         if (code) {
-          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
 
           if (exchangeError) {
             throw exchangeError;
@@ -52,7 +52,7 @@ export default function GoogleCallbackPage() {
         const session = data.session;
 
         if (!session?.access_token) {
-          throw new Error('No se pudo recuperar la sesión de Google');
+          throw new Error('No se pudo recuperar la sesión');
         }
 
         setForm((current) => ({
@@ -97,7 +97,7 @@ export default function GoogleCallbackPage() {
 
     try {
       if (!apiUrl) {
-        throw new Error('Falta configurar NEXT_PUBLIC_API_URL o NEXT_PUBLIC_API_BASE_URL');
+        throw new Error('Falta configurar la URL del API');
       }
 
       const supabase = getBrowserSupabaseClient();
@@ -110,7 +110,7 @@ export default function GoogleCallbackPage() {
       const accessToken = data.session?.access_token;
 
       if (!accessToken) {
-        throw new Error('La sesión de Google no está disponible');
+        throw new Error('La sesión no está disponible');
       }
 
       const response = await fetch(`${apiUrl}/api/auth/google/complete`, {
@@ -129,7 +129,7 @@ export default function GoogleCallbackPage() {
       const payload = await response.json().catch(() => null);
 
       if (!response.ok) {
-        throw new Error(payload?.error ?? 'No se pudo completar el alta con Google');
+        throw new Error(payload?.error ?? 'No se pudo completar el alta');
       }
 
       if (payload?.token) {
