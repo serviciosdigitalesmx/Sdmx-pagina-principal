@@ -4,7 +4,8 @@ import { randomUUID } from 'crypto';
 import PDFDocument from 'pdfkit';
 import { getTenantClient, supabaseAdmin } from '@white-label/database';
 
-const orderStatusSchema = z.enum(['recibido', 'diagnostico', 'reparacion', 'listo', 'entregado']);
+const defaultOrderStatuses = ['recibido', 'diagnostico', 'reparacion', 'listo', 'entregado'] as const;
+const orderStatusSchema = z.string().min(1);
 
 const encodedFileSchema = z.object({
   fileName: z.string().min(1),
@@ -52,6 +53,12 @@ type TenantBranding = {
   primaryColor?: string;
   secondaryColor?: string;
   logoUrl?: string;
+};
+
+type OperationalStatus = {
+  key?: string;
+  label?: string;
+  tone?: string;
 };
 
 type OrderDocumentRow = {
@@ -278,6 +285,35 @@ async function getTenantBranding(tenantId: string): Promise<{ name: string; bran
     name: String(data.name ?? 'Sr. Fix'),
     branding: (data.branding as TenantBranding | null) ?? null,
   };
+}
+
+async function getTenantOperationalStatuses(tenantId: string) {
+  const { data, error } = await supabaseAdmin
+    .from('tenants')
+    .select('operational_settings')
+    .eq('id', tenantId)
+    .single();
+
+  if (error || !data) {
+    return defaultOrderStatuses.map((status) => ({ key: status, label: status, tone: 'zinc' }));
+  }
+
+  const settings = data.operational_settings as { orderStatuses?: OperationalStatus[] } | null;
+  const statuses = settings?.orderStatuses?.filter((item) => typeof item?.key === 'string' && item.key.trim().length > 0);
+  if (statuses && statuses.length > 0) {
+    return statuses.map((status) => ({
+      key: String(status.key),
+      label: String(status.label ?? status.key),
+      tone: String(status.tone ?? 'zinc'),
+    }));
+  }
+
+  return defaultOrderStatuses.map((status) => ({ key: status, label: status, tone: 'zinc' }));
+}
+
+async function getAllowedOrderStatusKeys(tenantId: string) {
+  const statuses = await getTenantOperationalStatuses(tenantId);
+  return new Set(statuses.map((status) => status.key ?? '').filter(Boolean));
 }
 
 async function generateReceiptPdf(options: {
@@ -986,7 +1022,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Tenant context is required' });
     }
 
-    const body = statusRequestSchema.parse(req.body);
+  const body = statusRequestSchema.parse(req.body);
     const supabase = getTenantClient(tenantId);
 
     const { data: order, error: orderError } = await supabase
@@ -1003,6 +1039,11 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 
     const previousStatus = normalizeOrderStatus(order.status);
     const nextStatus = body.status;
+    const allowedStatuses = await getAllowedOrderStatusKeys(tenantId);
+
+    if (!allowedStatuses.has(nextStatus)) {
+      return res.status(400).json({ error: 'Invalid status', details: { allowedStatuses: [...allowedStatuses] } });
+    }
 
     const { data, error } = await supabase
       .from('service_orders')
@@ -1056,6 +1097,177 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Invalid payload', details: error.errors });
     }
     console.error('Error updating status:', error);
+    return res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
+export const getOrderChecklist = async (req: Request, res: Response) => {
+  try {
+    const tenantId = req.tenantId;
+    const orderId = req.params.id;
+    if (!tenantId) return res.status(401).json({ error: 'Tenant context is required' });
+    const supabase = getTenantClient(tenantId);
+    const { data, error } = await supabase
+      .from('service_order_checklists')
+      .select('*')
+      .eq('tenant_id', tenantId)
+      .eq('service_order_id', orderId)
+      .maybeSingle();
+
+    if (error) {
+      return res.status(502).json({ error: 'Failed to fetch order checklist', details: error.message });
+    }
+
+    if (!data) {
+      return res.status(404).json({ error: 'Checklist not found' });
+    }
+
+    return res.json({ success: true, data });
+  } catch (error) {
+    console.error('Error getting checklist:', error);
+    return res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
+const updateChecklistSchema = z.object({
+  hasCharger: z.coerce.boolean().optional(),
+  screenCondition: z.string().optional().or(z.literal('')),
+  powersOn: z.coerce.boolean().optional(),
+  backupRequired: z.coerce.boolean().optional(),
+  notes: z.string().optional().or(z.literal('')),
+});
+
+export const updateOrderChecklist = async (req: Request, res: Response) => {
+  try {
+    const tenantId = req.tenantId;
+    const orderId = req.params.id;
+    if (!tenantId) return res.status(401).json({ error: 'Tenant context is required' });
+
+    const body = updateChecklistSchema.parse(req.body);
+    const supabase = getTenantClient(tenantId);
+
+    const { data: existing, error: existingError } = await supabase
+      .from('service_orders')
+      .select('id')
+      .eq('tenant_id', tenantId)
+      .eq('id', orderId)
+      .maybeSingle();
+
+    if (existingError) {
+      return res.status(502).json({ error: 'Failed to inspect order', details: existingError.message });
+    }
+
+    if (!existing) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    const { data, error } = await supabase
+      .from('service_order_checklists')
+      .upsert({
+        tenant_id: tenantId,
+        service_order_id: orderId,
+        has_charger: body.hasCharger ?? false,
+        screen_condition: body.screenCondition || null,
+        powers_on: body.powersOn ?? false,
+        backup_required: body.backupRequired ?? false,
+        notes: body.notes || null,
+      }, { onConflict: 'service_order_id' })
+      .select('*')
+      .single();
+
+    if (error) {
+      return res.status(502).json({ error: 'Failed to persist order checklist', details: error.message });
+    }
+
+    return res.json({ success: true, data });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: 'Invalid payload', details: error.errors });
+    }
+    console.error('Error updating checklist:', error);
+    return res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
+const warrantySchema = z.object({
+  warrantyUntil: z.string().datetime().optional(),
+  warrantyDays: z.coerce.number().int().positive().optional(),
+  note: z.string().optional().or(z.literal('')),
+});
+
+export const updateOrderWarranty = async (req: Request, res: Response) => {
+  try {
+    const tenantId = req.tenantId;
+    const orderId = req.params.id;
+    if (!tenantId) return res.status(401).json({ error: 'Tenant context is required' });
+
+    const body = warrantySchema.parse(req.body);
+    const supabase = getTenantClient(tenantId);
+    const { data: order, error: orderError } = await supabase
+      .from('service_orders')
+      .select('id, warranty_until, evidence_metadata')
+      .eq('tenant_id', tenantId)
+      .eq('id', orderId)
+      .single();
+
+    if (orderError || !order) {
+      return res.status(404).json({ error: 'Order not found', details: orderError?.message ?? 'Not found' });
+    }
+
+    let warrantyUntil = body.warrantyUntil ?? null;
+    if (!warrantyUntil && body.warrantyDays) {
+      const future = new Date();
+      future.setDate(future.getDate() + body.warrantyDays);
+      warrantyUntil = future.toISOString();
+    }
+
+    const { data, error } = await supabase
+      .from('service_orders')
+      .update({ warranty_until: warrantyUntil })
+      .eq('tenant_id', tenantId)
+      .eq('id', orderId)
+      .select('*')
+      .single();
+
+    if (error) {
+      return res.status(502).json({ error: 'Failed to update warranty', details: error.message });
+    }
+
+    const warrantyEventId = randomUUID();
+    await insertOrderEvent(supabase, {
+      id: warrantyEventId,
+      tenant_id: tenantId,
+      service_order_id: orderId,
+      event_type: 'warranty_updated',
+      previous_status: null,
+      new_status: null,
+      note: body.note || (warrantyUntil ? `Garantía hasta ${warrantyUntil}` : 'Garantía actualizada'),
+      actor_name: req.user?.email ?? req.user?.role ?? 'system',
+    });
+
+    await supabase
+      .from('service_orders')
+      .update({
+        evidence_metadata: appendEvidenceEntry(order.evidence_metadata, {
+          kind: 'event',
+          id: warrantyEventId,
+          event_type: 'warranty_updated',
+          previous_status: null,
+          new_status: null,
+          note: body.note || (warrantyUntil ? `Garantía hasta ${warrantyUntil}` : 'Garantía actualizada'),
+          actor_name: req.user?.email ?? req.user?.role ?? 'system',
+          created_at: new Date().toISOString(),
+        }),
+      })
+      .eq('tenant_id', tenantId)
+      .eq('id', orderId);
+
+    return res.json({ success: true, data });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: 'Invalid payload', details: error.errors });
+    }
+    console.error('Error updating warranty:', error);
     return res.status(500).json({ error: 'Error interno del servidor' });
   }
 };

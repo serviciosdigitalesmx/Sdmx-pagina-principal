@@ -43,6 +43,7 @@ type Props = {
   loading: boolean;
   data: OrderDetailData | null;
   customerPortalUrl: string | null;
+  statusOptions?: Array<{ key: string; label: string }>;
   onClose: () => void;
   onStatusChange: (status: string) => Promise<void>;
   onAddNote: () => Promise<void>;
@@ -63,7 +64,7 @@ function whatsappLink(phone?: string | null, folio?: string | null, customerPort
   return `https://wa.me/${normalized}?text=${message}`;
 }
 
-export function OrderDetailDrawer({ open, loading, data, customerPortalUrl, onClose, onStatusChange, onAddNote }: Props) {
+export function OrderDetailDrawer({ open, loading, data, customerPortalUrl, statusOptions, onClose, onStatusChange, onAddNote }: Props) {
   if (!open) {
     return null;
   }
@@ -117,34 +118,21 @@ export function OrderDetailDrawer({ open, loading, data, customerPortalUrl, onCl
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <h4 className="text-sm font-semibold uppercase tracking-[0.2em] text-[#245a82]">Acciones</h4>
                 <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => onStatusChange("diagnostico")}
-                    className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700"
-                  >
-                    Diagnóstico
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onStatusChange("reparacion")}
-                    className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700"
-                  >
-                    Reparación
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onStatusChange("listo")}
-                    className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700"
-                  >
-                    Lista
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onStatusChange("entregado")}
-                    className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700"
-                  >
-                    Entregada
-                  </button>
+                  {(statusOptions ?? [
+                    { key: "diagnostico", label: "Diagnóstico" },
+                    { key: "reparacion", label: "Reparación" },
+                    { key: "listo", label: "Lista" },
+                    { key: "entregado", label: "Entregada" },
+                  ]).map((status) => (
+                    <button
+                      key={status.key}
+                      type="button"
+                      onClick={() => onStatusChange(status.key)}
+                      className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700"
+                    >
+                      {status.label}
+                    </button>
+                  ))}
                   <button
                     type="button"
                     onClick={onAddNote}

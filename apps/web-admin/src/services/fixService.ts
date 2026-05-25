@@ -62,8 +62,21 @@ type TenantLandingSettings = {
     contact_phone?: string | null;
     branding?: Record<string, unknown> | null;
     landing_content?: Record<string, unknown> | null;
+    operational_settings?: Record<string, unknown> | null;
     updated_at?: string;
   };
+};
+
+type TaskPayload = {
+  title: string;
+  description?: string;
+  status?: string;
+  priority?: string;
+  branchId?: string;
+  serviceOrderId?: string;
+  serviceRequestId?: string;
+  assignedUserId?: string;
+  dueDate?: string;
 };
 
 type PurchaseOrderItemPayload = {
@@ -265,6 +278,36 @@ class FixService {
       {
         method: 'PATCH',
         body: JSON.stringify({ status, note }),
+      }
+    );
+    return result.data;
+  }
+
+  public async getOrderChecklist(orderId: string): Promise<JsonRecord> {
+    const result = await this.request<ApiSingleResponse<JsonRecord>>(
+      this.withBranchQuery(`/api/${this.tenantId}/orders/${encodeURIComponent(orderId)}/checklist`),
+      { method: 'GET' }
+    );
+    return result.data;
+  }
+
+  public async updateOrderChecklist(orderId: string, data: JsonRecord): Promise<JsonRecord> {
+    const result = await this.request<ApiSingleResponse<JsonRecord>>(
+      this.withBranchQuery(`/api/${this.tenantId}/orders/${encodeURIComponent(orderId)}/checklist`),
+      {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }
+    );
+    return result.data;
+  }
+
+  public async updateOrderWarranty(orderId: string, data: { warrantyUntil?: string; warrantyDays?: number; note?: string }): Promise<JsonRecord> {
+    const result = await this.request<ApiSingleResponse<JsonRecord>>(
+      this.withBranchQuery(`/api/${this.tenantId}/orders/${encodeURIComponent(orderId)}/warranty`),
+      {
+        method: 'PATCH',
+        body: JSON.stringify(data),
       }
     );
     return result.data;
@@ -476,6 +519,88 @@ class FixService {
     return this.request<ApiSingleResponse<TenantLandingSettings>>(`/api/auth/tenant/${encodeURIComponent(this.tenantId)}/settings`, {
       method: 'GET',
     });
+  }
+
+  public async getTenantSettings(): Promise<ApiSingleResponse<TenantLandingSettings>> {
+    return this.request<ApiSingleResponse<TenantLandingSettings>>(`/api/auth/tenant/${encodeURIComponent(this.tenantId)}/settings`, {
+      method: 'GET',
+    });
+  }
+
+  public async updateTenantSettings(payload: {
+    branding?: Record<string, unknown>;
+    landingContent?: Record<string, unknown>;
+    operationalSettings?: Record<string, unknown>;
+  }): Promise<ApiSingleResponse<TenantLandingSettings>> {
+    return this.request<ApiSingleResponse<TenantLandingSettings>>(`/api/auth/tenant/${encodeURIComponent(this.tenantId)}/settings`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  public async getTasks(): Promise<JsonRecord[]> {
+    const result = await this.request<ApiListResponse<JsonRecord[]>>(
+      this.withBranchQuery(`/api/${this.tenantId}/tasks`),
+      { method: 'GET' }
+    );
+    return result.data;
+  }
+
+  public async getTaskById(id: string): Promise<JsonRecord> {
+    const result = await this.request<ApiSingleResponse<JsonRecord>>(
+      this.withBranchQuery(`/api/${this.tenantId}/tasks/${encodeURIComponent(id)}`),
+      { method: 'GET' }
+    );
+    return result.data;
+  }
+
+  public async createTask(data: TaskPayload): Promise<JsonRecord> {
+    const result = await this.request<ApiSingleResponse<JsonRecord>>(
+      this.withBranchQuery(`/api/${this.tenantId}/tasks`),
+      {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }
+    );
+    return result.data;
+  }
+
+  public async updateTask(id: string, data: TaskPayload): Promise<JsonRecord> {
+    const result = await this.request<ApiSingleResponse<JsonRecord>>(
+      this.withBranchQuery(`/api/${this.tenantId}/tasks/${encodeURIComponent(id)}`),
+      {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }
+    );
+    return result.data;
+  }
+
+  public async updateTaskStatus(id: string, status: string, note?: string): Promise<JsonRecord> {
+    const result = await this.request<ApiSingleResponse<JsonRecord>>(
+      this.withBranchQuery(`/api/${this.tenantId}/tasks/${encodeURIComponent(id)}/status`),
+      {
+        method: 'PATCH',
+        body: JSON.stringify({ status, note }),
+      }
+    );
+    return result.data;
+  }
+
+  public async getTaskHistory(id: string): Promise<JsonRecord[]> {
+    const result = await this.request<ApiListResponse<JsonRecord[]>>(
+      this.withBranchQuery(`/api/${this.tenantId}/tasks/${encodeURIComponent(id)}/history`),
+      { method: 'GET' }
+    );
+    return result.data;
+  }
+
+  public async deleteTask(id: string): Promise<JsonRecord> {
+    const result = await this.request<ApiSingleResponse<JsonRecord>>(
+      this.withBranchQuery(`/api/${this.tenantId}/tasks/${encodeURIComponent(id)}`),
+      { method: 'DELETE' }
+    );
+    return result.data;
   }
 
   public async updateTenantLandingSettings(payload: {

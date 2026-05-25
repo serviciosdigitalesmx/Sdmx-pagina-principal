@@ -27,15 +27,15 @@ type OrderRow = {
   };
 };
 
-type OrderColumn = "recibido" | "diagnostico" | "reparacion" | "listo" | "entregado";
+type OrderStatusOption = { key: string; label: string };
 
-const columnLabels: Record<OrderColumn, string> = {
-  recibido: "Recibido",
-  diagnostico: "Diagnóstico",
-  reparacion: "En reparación",
-  listo: "Listo",
-  entregado: "Entregado",
-};
+const defaultStatusOptions: OrderStatusOption[] = [
+  { key: "recibido", label: "Recibido" },
+  { key: "diagnostico", label: "Diagnóstico" },
+  { key: "reparacion", label: "En reparación" },
+  { key: "listo", label: "Listo" },
+  { key: "entregado", label: "Entregado" },
+];
 
 const initialForm: OrderIntakeFormState = {
   clientName: "",
@@ -52,8 +52,9 @@ const initialFiles: OrderIntakeFiles = {
   documents: [],
 };
 
-function normalizeStatus(status?: string) {
+function normalizeStatus(status?: string, allowedStatuses: string[] = defaultStatusOptions.map((item) => item.key)) {
   const value = (status ?? "").toLowerCase();
+  if (allowedStatuses.includes(value)) return value;
   if (value.includes("diag")) return "diagnostico";
   if (value.includes("repar")) return "reparacion";
   if (value.includes("list")) return "listo";
@@ -148,6 +149,7 @@ export default function OrdenesKanbanPage() {
   const [form, setForm] = useState<OrderIntakeFormState>(initialForm);
   const [files, setFiles] = useState<OrderIntakeFiles>(initialFiles);
   const [creationSummary, setCreationSummary] = useState<{ folio: string; orderId: string; phone: string; portalUrl: string | null } | null>(null);
+  const [statusOptions, setStatusOptions] = useState<OrderStatusOption[]>(defaultStatusOptions);
 
   const customerPortalBase =
     process.env.NEXT_PUBLIC_CUSTOMER_TRACKING_URL ||
@@ -188,6 +190,31 @@ export default function OrdenesKanbanPage() {
   useEffect(() => {
     let cancelled = false;
 
+    async function loadSettings() {
+      try {
+        const settings = await fixService.getTenantSettings();
+        const operational = (settings.data.tenant.operational_settings as { orderStatuses?: Array<{ key?: string; label?: string }> } | undefined) ?? undefined;
+        const options = operational?.orderStatuses?.filter((item) => typeof item?.key === "string" && item.key.trim().length > 0).map((item) => ({
+          key: String(item.key),
+          label: String(item.label ?? item.key),
+        }));
+        if (!cancelled && options && options.length > 0) {
+          setStatusOptions(options);
+        }
+      } catch {
+        if (!cancelled) setStatusOptions(defaultStatusOptions);
+      }
+    }
+
+    void loadSettings();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
     async function loadDetail(orderId: string) {
       try {
         setDetailLoading(true);
@@ -213,11 +240,11 @@ export default function OrdenesKanbanPage() {
 
   const columns = useMemo(
     () =>
-      (["recibido", "diagnostico", "reparacion", "listo", "entregado"] as OrderColumn[]).map((id) => ({
-        id,
-        title: columnLabels[id],
+      statusOptions.map((item) => ({
+        id: item.key,
+        title: item.label,
       })),
-    []
+    [statusOptions]
   );
 
   const mappedRows = useMemo(
@@ -355,7 +382,7 @@ export default function OrdenesKanbanPage() {
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
           {columns.map((column) => {
-            const columnOrders = mappedRows.filter((order) => normalizeStatus(order.status) === column.id);
+            const columnOrders = mappedRows.filter((order) => normalizeStatus(order.status, statusOptions.map((option) => option.key)) === column.id);
             return (
               <div key={column.id} className="min-w-[260px] rounded-[24px] border border-zinc-800 bg-zinc-950/85 shadow-[0_12px_50px_rgba(0,0,0,0.24)]">
                 <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
@@ -489,6 +516,7 @@ export default function OrdenesKanbanPage() {
           loading={detailLoading}
           data={detail}
           customerPortalUrl={customerPortalUrl}
+          statusOptions={statusOptions}
           onClose={() => setSelectedOrderId(null)}
           onStatusChange={(status) => handleStatusChange(status)}
           onAddNote={() => handleAddNote()}

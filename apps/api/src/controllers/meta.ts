@@ -108,7 +108,7 @@ export const getTenantSettings = async (req: Request, res: Response) => {
   try {
     const { data, error } = await supabaseAdmin
       .from('tenants')
-      .select('id, slug, name, branding, landing_content')
+      .select('id, slug, name, branding, landing_content, operational_settings')
       .eq('slug', tenantSlug)
       .single();
 
@@ -145,6 +145,7 @@ export const updateTenantSettings = async (req: Request, res: Response) => {
     const branding = (body.branding && typeof body.branding === 'object') ? body.branding : null;
     const landingContent = (body.landingContent && typeof body.landingContent === 'object') ? body.landingContent : null;
 
+    const operationalSettings = (body.operationalSettings && typeof body.operationalSettings === 'object') ? body.operationalSettings : null;
     const nextUpdate: Record<string, unknown> = {};
 
     if (branding) {
@@ -155,6 +156,10 @@ export const updateTenantSettings = async (req: Request, res: Response) => {
       nextUpdate.landing_content = landingContent;
     }
 
+    if (operationalSettings) {
+      nextUpdate.operational_settings = operationalSettings;
+    }
+
     if (!Object.keys(nextUpdate).length) {
       return res.status(400).json({ error: 'No fields to update' });
     }
@@ -163,7 +168,7 @@ export const updateTenantSettings = async (req: Request, res: Response) => {
       .from('tenants')
       .update(nextUpdate)
       .eq('id', tenantRow.id)
-      .select('id, slug, name, branding, landing_content')
+      .select('id, slug, name, branding, landing_content, operational_settings')
       .single();
 
     if (error || !data) {
