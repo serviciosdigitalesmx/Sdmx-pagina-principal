@@ -134,6 +134,9 @@ importers:
 
   apps/web-clientes:
     dependencies:
+      '@white-label/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       next:
         specifier: 16.2.6
         version: 16.2.6(@babel/core@7.29.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -174,6 +177,9 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.43.4
         version: 2.105.4
+      '@white-label/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       next:
         specifier: 16.2.6
         version: 16.2.6(@babel/core@7.29.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
