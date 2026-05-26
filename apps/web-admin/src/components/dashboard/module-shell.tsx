@@ -44,7 +44,7 @@ export function ModuleShell({
     <div className="space-y-6 text-zinc-100">
       <header className="flex flex-col gap-4 rounded-[2rem] border border-amber-700/15 bg-[linear-gradient(180deg,rgba(16,14,12,0.96),rgba(14,13,12,0.92))] p-6 shadow-[0_16px_70px_rgba(0,0,0,0.24)] backdrop-blur sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-amber-700/20 bg-amber-500/10 text-lg font-black text-amber-50">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-amber-700/20 bg-amber-500/10 text-lg font-black text-amber-50 shadow-[0_12px_30px_rgba(0,0,0,0.18)]">
             <i className={icon} />
           </div>
           <div>
@@ -63,8 +63,8 @@ export function ModuleShell({
 
       <section className="grid gap-4 md:grid-cols-3">
         {stats.map((stat) => (
-          <div key={stat.label} className="rounded-[1.5rem] border border-stone-700/70 bg-white/4 p-4">
-            <div className="text-xs uppercase tracking-[0.2em] text-amber-100/60">{stat.label}</div>
+          <div key={stat.label} className="rounded-[1.5rem] border border-stone-700/70 bg-white/4 p-4 shadow-[0_12px_40px_rgba(0,0,0,0.18)]">
+            <div className="text-[11px] uppercase tracking-[0.22em] text-amber-100/60">{stat.label}</div>
             <div className="mt-3 text-2xl font-semibold text-zinc-50">{stat.value}</div>
             <div className="mt-2 text-sm text-zinc-400">{stat.helper}</div>
           </div>
@@ -86,10 +86,10 @@ export function ModuleShell({
               </thead>
               <tbody className="divide-y divide-zinc-800">
                 {rows.map((row, index) => (
-                    <tr key={`${title}-${index}`} className="bg-zinc-950">
-                      {columns.map((column) => (
-                        <td key={column.key} className="px-4 py-3 text-zinc-300">
-                          {row[column.key]}
+                  <tr key={`${title}-${index}`} className="bg-zinc-950">
+                    {columns.map((column) => (
+                      <td key={column.key} className="px-4 py-3 text-zinc-300">
+                        {row[column.key]}
                       </td>
                     ))}
                   </tr>

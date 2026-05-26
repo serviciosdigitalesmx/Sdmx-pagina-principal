@@ -354,10 +354,10 @@ export default function OrdenesKanbanPage() {
         <div className="space-y-6 text-slate-950">
           <header className="flex flex-col justify-between gap-4 rounded-[28px] border border-zinc-800 bg-zinc-950/85 p-6 shadow-[0_16px_70px_rgba(0,0,0,0.24)] sm:flex-row sm:items-center">
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-zinc-50 [font-family:var(--font-display)]">Tablero de Órdenes</h1>
-              <p className="mt-1 text-sm text-zinc-400">Gestiona el flujo operativo real del taller desde el integrador.</p>
+              <h1 className="text-2xl font-bold tracking-tight text-zinc-50 [font-family:var(--font-display)]">Nueva Orden de Servicio</h1>
+              <p className="mt-1 text-sm text-zinc-400">Recepción profesional · seguimiento técnico · salida directa a WhatsApp.</p>
             </div>
-            <div className="h-11 w-36 rounded-full bg-slate-100" aria-busy="true" />
+            <div className="h-11 w-36 rounded-full bg-zinc-800" aria-busy="true" />
           </header>
           <div className="rounded-[24px] border border-zinc-800 bg-zinc-950/85 px-4 py-8 text-center text-sm text-zinc-400 shadow-[0_12px_50px_rgba(0,0,0,0.24)]">Cargando órdenes...</div>
         </div>
@@ -370,15 +370,15 @@ export default function OrdenesKanbanPage() {
       <div className="space-y-6 text-slate-950">
         <header className="flex flex-col justify-between gap-4 rounded-[28px] border border-zinc-800 bg-zinc-950/85 p-6 shadow-[0_16px_70px_rgba(0,0,0,0.24)] sm:flex-row sm:items-center">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-zinc-50 [font-family:var(--font-display)]">Tablero de Órdenes</h1>
-            <p className="mt-1 text-sm text-zinc-400">Recepción, adjuntos, timeline y detalle de cada orden.</p>
+            <h1 className="text-2xl font-bold tracking-tight text-zinc-50 [font-family:var(--font-display)]">Nueva Orden de Servicio</h1>
+            <p className="mt-1 text-sm text-zinc-400">Recepción profesional · adjuntos · timeline · detalle real.</p>
           </div>
           <button onClick={() => setIsModalOpen(true)} className="rounded-full bg-amber-50 px-4 py-2.5 text-sm font-semibold text-zinc-950 transition hover:bg-amber-100">
-            Nueva Orden
+            Nueva recepción
           </button>
         </header>
 
-        {error ? <p className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p> : null}
+        {error ? <p className="rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{error}</p> : null}
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
           {columns.map((column) => {
@@ -475,7 +475,7 @@ export default function OrdenesKanbanPage() {
         ) : null}
 
         <section className="rounded-[28px] border border-zinc-800 bg-zinc-950/85 p-6 shadow-[0_16px_70px_rgba(0,0,0,0.24)]">
-          <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#1f2937]">Tabla real</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.24em] text-amber-100/70">Tabla real</p>
           <Table<OrderRow>
             columns={[
               { label: "Folio", key: "folio" },

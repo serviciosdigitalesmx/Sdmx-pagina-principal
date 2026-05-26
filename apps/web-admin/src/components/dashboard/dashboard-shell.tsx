@@ -118,7 +118,7 @@ function DashboardShellContent({
       <aside className="flex w-full shrink-0 flex-col border-b border-amber-700/15 bg-[linear-gradient(180deg,rgba(16,14,12,0.98),rgba(14,13,12,0.96))] backdrop-blur-xl lg:w-80 lg:border-b-0 lg:border-r">
         <div className="border-b border-amber-700/15 p-5">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-amber-700/20 bg-[linear-gradient(180deg,rgba(124,45,18,0.26),rgba(15,23,42,0.96))] text-sm font-black text-amber-50">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-amber-700/20 bg-[linear-gradient(180deg,rgba(124,45,18,0.26),rgba(15,23,42,0.96))] text-sm font-black text-amber-50 shadow-[0_14px_40px_rgba(0,0,0,0.24)]">
               {activeTenant.brandName.slice(0, 2).toUpperCase()}
             </div>
             <div>
@@ -165,7 +165,7 @@ function DashboardShellContent({
       <div className="flex flex-1 flex-col">
         <header className="flex items-start justify-between gap-4 border-b border-amber-700/15 bg-[linear-gradient(180deg,rgba(14,13,12,0.96),rgba(16,14,12,0.90))] px-4 py-4 backdrop-blur-xl sm:items-center sm:px-6 sm:py-0 sm:h-16">
           <div className="min-w-0">
-            <div className="text-sm font-semibold text-zinc-50 [font-family:var(--font-display)]">Integrador interno</div>
+            <div className="text-sm font-semibold text-zinc-50 [font-family:var(--font-display)]">SR FIX · Integrador Interno</div>
             <div className="text-xs leading-5 text-zinc-400">
               Tenant: {activeTenant.tenantId} · Rol: {activeTenant.userRole} · Sucursal: {activeTenant.branchName}
             </div>
@@ -182,7 +182,7 @@ function DashboardShellContent({
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-amber-700/15 bg-zinc-950/60 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-zinc-400 sm:px-6">
           <span>BUILD: {ADMIN_BUILD_MARKER}</span>
           <div className="flex flex-wrap items-center gap-2 normal-case tracking-normal">
-            <span className="text-[11px] uppercase tracking-[0.18em] text-zinc-400">Sucursal</span>
+            <span className="text-[11px] uppercase tracking-[0.18em] text-zinc-400">Todas las sucursales</span>
             <select
               value={branchId}
               onChange={(event) => updateBranch(event.target.value)}

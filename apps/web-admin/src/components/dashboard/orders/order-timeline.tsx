@@ -28,8 +28,8 @@ export function OrderTimeline({ events, statusLabels }: Props) {
 
   if (events.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
-        Aún no hay eventos registrados.
+      <div className="rounded-2xl border border-dashed border-zinc-700 bg-black/20 p-4 text-sm text-zinc-400">
+        Sin avances registrados por el momento.
       </div>
     );
   }
@@ -37,19 +37,19 @@ export function OrderTimeline({ events, statusLabels }: Props) {
   return (
     <div className="space-y-3">
       {events.map((event) => (
-        <article key={event.id ?? `${event.event_type}-${event.created_at}`} className="rounded-2xl border border-slate-200 bg-white p-4">
+        <article key={event.id ?? `${event.event_type}-${event.created_at}`} className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="text-sm font-semibold text-slate-950">
+            <div className="text-sm font-semibold text-zinc-50">
               {labels[event.new_status ?? ""] ?? event.event_type ?? "Evento"}
             </div>
-            <time className="text-xs uppercase tracking-[0.2em] text-slate-400">
+            <time className="text-xs uppercase tracking-[0.2em] text-zinc-400">
               {event.created_at ? new Date(event.created_at).toLocaleString("es-MX") : "Sin fecha"}
             </time>
           </div>
-          <p className="mt-2 text-sm text-slate-600">
+          <p className="mt-2 text-sm text-zinc-300">
             {event.note || "Sin nota"}
           </p>
-          <p className="mt-2 text-xs uppercase tracking-[0.18em] text-slate-400">
+          <p className="mt-2 text-xs uppercase tracking-[0.18em] text-zinc-400">
             {event.actor_name || "Sistema"}
           </p>
         </article>

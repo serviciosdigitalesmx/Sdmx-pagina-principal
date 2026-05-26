@@ -226,7 +226,7 @@ export function OperationalHub() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-[1.75rem] border border-amber-700/15 bg-black/20 p-3">
+      <section className="rounded-[1.75rem] border border-amber-700/15 bg-black/20 p-3 shadow-[0_12px_40px_rgba(0,0,0,0.14)]">
         <div className="flex flex-wrap gap-2">
           {shortcuts.map((item) => (
             <Link
@@ -243,9 +243,9 @@ export function OperationalHub() {
       <section className="rounded-[2rem] border border-amber-700/15 bg-[linear-gradient(180deg,rgba(16,14,12,0.96),rgba(22,18,14,0.98))] p-6 shadow-[0_20px_80px_rgba(0,0,0,0.18)]">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.34em] text-amber-100/70">Hoy</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.34em] text-amber-100/70">Centro de control live</p>
             <h2 className="mt-3 text-3xl font-black tracking-tight text-zinc-50 sm:text-4xl [font-family:var(--font-display)]">
-              Integrador operativo
+              Mesa de control operativa
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-zinc-300">
               Lo urgente primero: órdenes activas, pendientes de acción y lectura inmediata de cobro, stock y movimiento del día.
@@ -253,13 +253,13 @@ export function OperationalHub() {
           </div>
           <div className="flex flex-wrap gap-3">
             <Link href="/dashboard/ordenes" className="rounded-full bg-amber-50 px-5 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-amber-100">
-              + Nueva orden
+              Nueva recepción
             </Link>
             <Link href="/dashboard/finanzas" className="rounded-full border border-stone-700 px-5 py-3 text-sm font-semibold text-zinc-100 transition hover:bg-white/5">
-              Cobrar / Finanzas
+              Finanzas
             </Link>
             <Link href="/dashboard/clientes" className="rounded-full border border-stone-700 px-5 py-3 text-sm font-semibold text-zinc-100 transition hover:bg-white/5">
-              Abrir cliente
+              Clientes
             </Link>
           </div>
         </div>

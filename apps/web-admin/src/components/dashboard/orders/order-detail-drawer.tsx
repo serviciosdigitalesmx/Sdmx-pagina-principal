@@ -76,47 +76,48 @@ export function OrderDetailDrawer({ open, loading, data, customerPortalUrl, stat
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/55 backdrop-blur-sm">
-      <div className="ml-auto flex h-full w-full max-w-3xl flex-col bg-slate-50 shadow-[0_24px_90px_rgba(15,23,42,0.2)]">
-        <div className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
+      <div className="ml-auto flex h-full w-full max-w-3xl flex-col bg-[linear-gradient(180deg,rgba(16,14,12,0.98),rgba(14,13,12,0.96))] text-zinc-100 shadow-[0_24px_90px_rgba(15,23,42,0.2)]">
+        <div className="flex items-center justify-between border-b border-amber-700/15 px-6 py-4">
           <div>
-            <p className="text-xs uppercase tracking-[0.24em] text-[#1f2937]">Detalle operativo</p>
-            <h3 className="text-xl font-semibold text-slate-950">{order?.folio ?? "Orden"}</h3>
+            <p className="text-xs uppercase tracking-[0.24em] text-amber-100/70">Recepción profesional</p>
+            <h3 className="text-xl font-semibold text-zinc-50">{order?.folio ?? "Orden"}</h3>
+            <p className="mt-1 text-sm text-zinc-400">Detalles operativos · timeline · archivos · acciones.</p>
           </div>
-          <button onClick={onClose} className="rounded-full border border-slate-200 px-3 py-2 text-sm text-slate-600">
-            Cerrar
+          <button onClick={onClose} className="rounded-full border border-zinc-700 px-3 py-2 text-sm text-zinc-300">
+            Salir
           </button>
         </div>
 
         {loading ? (
-          <div className="p-6 text-sm text-slate-500">Cargando detalle...</div>
+          <div className="p-6 text-sm text-zinc-400">Cargando detalle...</div>
         ) : (
           <div className="flex-1 space-y-6 overflow-y-auto p-6">
-            <section className="grid gap-4 rounded-3xl border border-slate-200 bg-white p-5 md:grid-cols-2">
+            <section className="grid gap-4 rounded-3xl border border-zinc-800 bg-black/20 p-5 md:grid-cols-2">
               <div>
-                <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Cliente</div>
-                <div className="mt-2 text-lg font-semibold text-slate-950">{(order?.device_info as { customer_name?: string } | undefined)?.customer_name ?? "Sin cliente"}</div>
-                <div className="mt-1 text-sm text-slate-600">{phone ?? "Sin teléfono"}</div>
-                <div className="mt-1 text-sm text-slate-600">{(order?.device_info as { customer_email?: string } | undefined)?.customer_email ?? "Sin correo"}</div>
+                <div className="text-xs uppercase tracking-[0.2em] text-zinc-400">Cliente</div>
+                <div className="mt-2 text-lg font-semibold text-zinc-50">{(order?.device_info as { customer_name?: string } | undefined)?.customer_name ?? "Sin cliente"}</div>
+                <div className="mt-1 text-sm text-zinc-300">{phone ?? "Sin teléfono"}</div>
+                <div className="mt-1 text-sm text-zinc-300">{(order?.device_info as { customer_email?: string } | undefined)?.customer_email ?? "Sin correo"}</div>
               </div>
-              <div className="grid gap-3">
+                <div className="grid gap-3">
+                  <div>
+                    <div className="text-xs uppercase tracking-[0.2em] text-zinc-400">Estado</div>
+                    <div className="mt-2 text-sm font-semibold text-zinc-50">{order?.status ?? "Sin estado"}</div>
+                  </div>
                 <div>
-                  <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Estado</div>
-                  <div className="mt-2 text-sm font-semibold text-slate-950">{order?.status ?? "Sin estado"}</div>
+                  <div className="text-xs uppercase tracking-[0.2em] text-zinc-400">Equipo</div>
+                  <div className="mt-2 text-sm text-zinc-300">{order?.device_model ?? "Sin modelo"}</div>
                 </div>
                 <div>
-                  <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Equipo</div>
-                  <div className="mt-2 text-sm text-slate-700">{order?.device_model ?? "Sin modelo"}</div>
-                </div>
-                <div>
-                  <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Problema</div>
-                  <div className="mt-2 text-sm text-slate-700">{order?.problem_description ?? "Sin descripción"}</div>
+                  <div className="text-xs uppercase tracking-[0.2em] text-zinc-400">Problema</div>
+                  <div className="mt-2 text-sm text-zinc-300">{order?.problem_description ?? "Sin descripción"}</div>
                 </div>
               </div>
             </section>
 
-            <section className="rounded-3xl border border-slate-200 bg-white p-5">
+            <section className="rounded-3xl border border-zinc-800 bg-black/20 p-5">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                <h4 className="text-sm font-semibold uppercase tracking-[0.2em] text-[#1f2937]">Acciones</h4>
+                <h4 className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-100/70">Acciones</h4>
                 <div className="flex flex-wrap gap-2">
                   {(statusOptions ?? [
                     { key: "diagnostico", label: "Diagnóstico" },
@@ -128,7 +129,7 @@ export function OrderDetailDrawer({ open, loading, data, customerPortalUrl, stat
                       key={status.key}
                       type="button"
                       onClick={() => onStatusChange(status.key)}
-                      className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700"
+                      className="rounded-full border border-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-200"
                     >
                       {status.label}
                     </button>
@@ -136,7 +137,7 @@ export function OrderDetailDrawer({ open, loading, data, customerPortalUrl, stat
                   <button
                     type="button"
                     onClick={onAddNote}
-                    className="rounded-full bg-[#334155] px-4 py-2 text-sm font-semibold text-white"
+                    className="rounded-full bg-amber-50 px-4 py-2 text-sm font-semibold text-zinc-950"
                   >
                     Agregar nota
                   </button>
@@ -146,7 +147,7 @@ export function OrderDetailDrawer({ open, loading, data, customerPortalUrl, stat
                     rel="noreferrer"
                     aria-disabled={!waLink}
                     className={`rounded-full px-4 py-2 text-sm font-semibold ${
-                      waLink ? "bg-[#475569] text-white" : "pointer-events-none bg-slate-200 text-slate-400"
+                      waLink ? "bg-amber-500/10 text-amber-100" : "pointer-events-none bg-zinc-800 text-zinc-500"
                     }`}
                   >
                     WhatsApp
@@ -156,26 +157,26 @@ export function OrderDetailDrawer({ open, loading, data, customerPortalUrl, stat
                       href={pdfUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white"
+                      className="rounded-full bg-zinc-950 px-4 py-2 text-sm font-semibold text-white"
                     >
                       Generar PDF
                     </a>
                   ) : (
-                    <span className="rounded-full bg-slate-200 px-4 py-2 text-sm font-semibold text-slate-500">
+                    <span className="rounded-full bg-zinc-800 px-4 py-2 text-sm font-semibold text-zinc-500">
                       PDF pendiente
                     </span>
                   )}
                 </div>
               </div>
-              <div className="grid gap-3 text-sm text-slate-600">
+              <div className="grid gap-3 text-sm text-zinc-300">
                 <div>Folio: {order?.folio ?? "-"}</div>
                 <div>Creada: {order?.created_at ? new Date(order.created_at).toLocaleString("es-MX") : "-"}</div>
                 <div>Actualizada: {order?.updated_at ? new Date(order.updated_at).toLocaleString("es-MX") : "-"}</div>
               </div>
             </section>
 
-            <section className="rounded-3xl border border-slate-200 bg-white p-5">
-              <h4 className="text-sm font-semibold uppercase tracking-[0.2em] text-[#1f2937]">Archivos</h4>
+            <section className="rounded-3xl border border-zinc-800 bg-black/20 p-5">
+              <h4 className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-100/70">Archivos</h4>
               <div className="mt-4 space-y-3">
                 {(data?.documents ?? []).length > 0 ? (
                   data?.documents?.map((document) => (
@@ -184,20 +185,20 @@ export function OrderDetailDrawer({ open, loading, data, customerPortalUrl, stat
                       href={document.public_url ?? "#"}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex items-center justify-between rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700"
+                      className="flex items-center justify-between rounded-2xl border border-zinc-800 px-4 py-3 text-sm text-zinc-200"
                     >
                       <span>{document.file_name ?? "Documento"}</span>
-                      <span className="text-xs uppercase tracking-[0.2em] text-slate-400">{document.file_type ?? ""}</span>
+                      <span className="text-xs uppercase tracking-[0.2em] text-zinc-400">{document.file_type ?? ""}</span>
                     </a>
                   ))
                 ) : (
-                  <p className="text-sm text-slate-500">Sin archivos.</p>
+                  <p className="text-sm text-zinc-500">Sin archivos.</p>
                 )}
               </div>
             </section>
 
-            <section className="rounded-3xl border border-slate-200 bg-white p-5">
-              <h4 className="text-sm font-semibold uppercase tracking-[0.2em] text-[#1f2937]">Timeline</h4>
+            <section className="rounded-3xl border border-zinc-800 bg-black/20 p-5">
+              <h4 className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-100/70">Timeline</h4>
               <div className="mt-4">
                 <OrderTimeline events={data?.events ?? []} />
               </div>
