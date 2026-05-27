@@ -559,7 +559,7 @@ export async function loadTenantRuntimeConfig(tenantId: string): Promise<{
   ] = await Promise.all([
     supabaseAdmin
       .from('tenants')
-      .select('id, slug, name, branding, landing_content, trial_expires_at, billing_exempt, contact_name, contact_email, contact_phone, updated_at')
+      .select('id, slug, name, branding, landing_content, trial_expires_at, billing_exempt, updated_at')
       .eq('id', tenantId)
       .maybeSingle(),
     supabaseAdmin
