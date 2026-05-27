@@ -13,8 +13,12 @@ export default function AuthBridgePage() {
   const dashboardUrl = resolveDashboardUrl();
   const adminUrl = process.env.NEXT_PUBLIC_WEB_ADMIN_URL;
   const isCanonicalAdminUrl = (() => {
-    if (!adminUrl || typeof window === "undefined") {
+    if (typeof window === "undefined") {
       return false;
+    }
+
+    if (!adminUrl) {
+      return true;
     }
 
     try {
@@ -27,20 +31,20 @@ export default function AuthBridgePage() {
   const message = !token
     ? "No llegó la sesión."
     : !adminUrl
-      ? "Falta configurar la URL del panel."
+      ? "La URL canónica del panel no está configurada; se usará este origen."
       : !isCanonicalAdminUrl
-        ? "La URL del panel no coincide con la configuración."
+        ? "La URL del panel no coincide con la configuración, pero la sesión puede continuar en este origen."
         : "Sesión sincronizada. Redirigiendo al panel...";
 
   useEffect(() => {
-    if (!token || !dashboardUrl || !isCanonicalAdminUrl) {
+    if (!token || !dashboardUrl) {
       return;
     }
 
     saveAuthToken(token);
 
     window.location.replace(dashboardUrl);
-  }, [dashboardUrl, isCanonicalAdminUrl, token]);
+  }, [dashboardUrl, token]);
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(44,110,159,0.12),_transparent_28%),linear-gradient(180deg,#f4f6f9_0%,#eef2f6_100%)] px-6 text-slate-950">
@@ -51,7 +55,7 @@ export default function AuthBridgePage() {
         {!adminUrl || !isCanonicalAdminUrl ? (
           <div className="mt-6 text-left text-sm text-rose-700">
             <p className="font-semibold">Bloqueado por configuración de origen</p>
-            <p className="mt-2 leading-6">El acceso no puede continuar hasta que la URL del panel esté bien configurada.</p>
+            <p className="mt-2 leading-6">La sesión seguirá por este mismo origen mientras terminas de alinear la URL canónica.</p>
           </div>
         ) : null}
         {token ? (
