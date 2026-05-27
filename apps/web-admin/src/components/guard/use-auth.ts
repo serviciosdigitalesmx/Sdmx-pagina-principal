@@ -20,7 +20,13 @@ export function useAuth(): AuthState {
   const [session, setSession] = useState<ReturnType<typeof getCurrentSession> | null>(null);
 
   useEffect(() => {
-    setSession(getCurrentSession());
+    const sessionTimer = window.setTimeout(() => {
+      setSession(getCurrentSession());
+    }, 0);
+
+    return () => {
+      window.clearTimeout(sessionTimer);
+    };
   }, []);
 
   return useMemo(() => {

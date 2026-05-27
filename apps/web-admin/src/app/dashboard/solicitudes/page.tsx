@@ -44,7 +44,7 @@ const defaultTenantLabels: TenantLabels = {
 };
 
 export default function SolicitudesPage() {
-  const { role } = useAuth();
+  useAuth();
   const [rows, setRows] = useState<ServiceRequestRow[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detail, setDetail] = useState<ServiceRequestRow | null>(null);
@@ -135,7 +135,14 @@ export default function SolicitudesPage() {
     if (selectedId) {
       void loadDetail(selectedId);
     } else {
-      setDetail(null);
+      const timer = window.setTimeout(() => {
+        setDetail(null);
+      }, 0);
+
+      return () => {
+        window.clearTimeout(timer);
+        cancelled = true;
+      };
     }
 
     return () => {

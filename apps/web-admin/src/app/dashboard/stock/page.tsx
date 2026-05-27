@@ -67,27 +67,44 @@ export default function StockPage() {
   }
 
   useEffect(() => {
-    void loadInventory();
-    void loadAlerts();
+    const timer = window.setTimeout(() => {
+      void loadInventory();
+      void loadAlerts();
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
   }, []);
 
   const selected = useMemo(() => rows.find((item) => item.id === selectedId) ?? null, [rows, selectedId]);
 
   useEffect(() => {
     if (!selected) return;
-    setForm({
-      sku: selected.sku ?? "",
-      description: selected.description ?? "",
-      stock: String(selected.stock ?? 0),
-      branchId: selected.branch_id ?? "",
-    });
+    const timer = window.setTimeout(() => {
+      setForm({
+        sku: selected.sku ?? "",
+        description: selected.description ?? "",
+        stock: String(selected.stock ?? 0),
+        branchId: selected.branch_id ?? "",
+      });
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
   }, [selected]);
 
   useEffect(() => {
     const selectedInventoryId = selected?.id ?? "";
     if (!selectedInventoryId) {
-      setSelectedMovements([]);
-      return;
+      const timer = window.setTimeout(() => {
+        setSelectedMovements([]);
+      }, 0);
+
+      return () => {
+        window.clearTimeout(timer);
+      };
     }
     let cancelled = false;
     async function loadMovements() {

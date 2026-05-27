@@ -38,7 +38,7 @@ const emptyForm = {
 };
 
 export default function ProveedoresPage() {
-  const { role } = useAuth();
+  useAuth();
   const [rows, setRows] = useState<SupplierRow[]>([]);
   const [selectedId, setSelectedId] = useState("");
   const [form, setForm] = useState(emptyForm);
@@ -72,27 +72,39 @@ export default function ProveedoresPage() {
   }
 
   useEffect(() => {
-    void loadSuppliers();
+    const timer = window.setTimeout(() => {
+      void loadSuppliers();
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
   }, []);
 
   const selected = useMemo(() => rows.find((item) => item.id === selectedId) ?? null, [rows, selectedId]);
 
   useEffect(() => {
     if (!selected) return;
-    setForm({
-      businessName: selected.business_name ?? "",
-      legalName: selected.legal_name ?? "",
-      contactName: selected.contact_name ?? "",
-      phone: selected.phone ?? "",
-      whatsapp: selected.whatsapp ?? "",
-      email: selected.email ?? "",
-      address: "",
-      city: selected.city ?? "",
-      state: selected.state ?? "",
-      categories: selected.categories ?? "",
-      paymentTerms: selected.payment_terms ?? "",
-      notes: "",
-    });
+    const timer = window.setTimeout(() => {
+      setForm({
+        businessName: selected.business_name ?? "",
+        legalName: selected.legal_name ?? "",
+        contactName: selected.contact_name ?? "",
+        phone: selected.phone ?? "",
+        whatsapp: selected.whatsapp ?? "",
+        email: selected.email ?? "",
+        address: "",
+        city: selected.city ?? "",
+        state: selected.state ?? "",
+        categories: selected.categories ?? "",
+        paymentTerms: selected.payment_terms ?? "",
+        notes: "",
+      });
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
   }, [selected]);
 
   const stats = useMemo(
