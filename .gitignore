@@ -21,6 +21,12 @@ coverage/
 .vercel/
 **/.vercel/
 .vercelignore
+.e2e.env
+fixie-roadmap-checklist.html
+supabase/.temp/
+**/.temp/
+apps/**/apps/
+**/.next 2
 
 # Env / secrets
 .env

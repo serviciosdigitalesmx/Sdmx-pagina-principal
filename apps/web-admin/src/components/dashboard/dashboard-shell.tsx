@@ -30,7 +30,7 @@ const navGroups: NavGroup[] = [
       { href: "/dashboard/ordenes", label: "Órdenes", allowedRoles: ["owner", "manager", "technician"] },
       { href: "/dashboard/archivo", label: "Archivo", allowedRoles: ["owner", "manager", "technician"] },
       { href: "/dashboard/solicitudes", label: "Solicitudes", allowedRoles: ["owner", "manager", "technician"] },
-      { href: "/dashboard/landing", label: "Landing", allowedRoles: ["owner", "manager"] },
+      { href: "/dashboard/landing", label: "Sitio del tenant", allowedRoles: ["owner", "manager"] },
     ],
   },
   {
@@ -172,7 +172,7 @@ function DashboardShellContent({
           </div>
           <div className="flex items-center gap-3 sm:gap-4">
             <Link href="/dashboard/landing" className="rounded-full border border-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-200 transition hover:bg-white/5">
-              Editar landing
+              Configurar sitio
             </Link>
             <div className="flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold text-zinc-950" style={{ backgroundColor: theme.accent }}>
               {activeTenant.userEmail.slice(0, 1).toUpperCase()}

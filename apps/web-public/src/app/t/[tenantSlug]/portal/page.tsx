@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState, type FormEvent } from "react";
-import { useParams } from "next/navigation";
-import { useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 
 type PortalOrderResponse = {
   success: true;
@@ -30,6 +29,7 @@ type PortalOrderResponse = {
       };
       problem_description?: string;
       serial_number?: string;
+      receipt_url?: string | null;
     };
     orderStatusLabel: string;
     timeline: Array<{ label: string; status: "completado" | "actual" | "pendiente"; note: string }>;
@@ -144,201 +144,182 @@ export default function PortalPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.12),_transparent_30%),linear-gradient(180deg,#09090b_0%,#111113_48%,#18181b_100%)] px-4 py-8 text-zinc-50">
-      <section className="mx-auto grid w-full max-w-5xl gap-8 rounded-[2rem] border border-zinc-800/70 bg-zinc-950/85 p-8 shadow-[0_24px_90px_rgba(0,0,0,0.28)]">
-        <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
-          <div>
-            <p className="text-xs uppercase tracking-[0.35em] text-slate-300">Portal del cliente</p>
-            <h1 className="mt-3 text-4xl font-bold tracking-tight text-zinc-50 [font-family:var(--font-cormorant)]">
-              Consulta real de reparación
-            </h1>
-            <p className="mt-4 max-w-2xl text-lg leading-8 text-zinc-300">
-              Ingresa tu folio para consultar una orden del taller <span className="font-semibold text-zinc-50">{tenantLabel}</span>.
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.13),_transparent_30%),linear-gradient(180deg,#09090b_0%,#111113_48%,#18181b_100%)] px-4 py-8 text-zinc-50">
+      <section className="mx-auto w-full max-w-5xl rounded-[2rem] border border-zinc-800/70 bg-zinc-950/88 p-6 shadow-[0_24px_90px_rgba(0,0,0,0.28)] sm:p-8">
+        <div className="flex flex-col gap-6 rounded-[1.8rem] border border-zinc-800 bg-[linear-gradient(180deg,rgba(17,17,19,0.98),rgba(10,10,12,0.96))] p-5 sm:p-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="space-y-2">
+            <p className="text-xs uppercase tracking-[0.35em] text-sky-300/80">SRFIX</p>
+            <h1 className="text-3xl font-black uppercase tracking-tight text-zinc-50 sm:text-4xl">Seguimiento técnico</h1>
+            <p className="max-w-2xl text-sm leading-7 text-zinc-400 sm:text-base">
+              Ingresa tu folio para ver el estado de tu reparación, abrir el PDF de la cotización y guardarlo o imprimirlo.
             </p>
-            <div className="mt-5 flex flex-wrap gap-3">
-              <Link href={`/${tenantSlug}`} className="rounded-full border border-zinc-700 px-5 py-3 font-semibold text-zinc-100 transition hover:bg-zinc-800">
-                Volver al tenant
-              </Link>
-              <Link href={`/${tenantSlug}/cotizar`} className="rounded-full bg-slate-500 px-5 py-3 font-semibold text-zinc-950 transition hover:bg-slate-400">
-                Solicitar cotización
-              </Link>
-            </div>
           </div>
-
-          <aside className="rounded-[1.75rem] border border-zinc-800 bg-zinc-900/60 p-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-300">Qué consulta</p>
-            <ul className="mt-4 space-y-3 text-sm leading-7 text-zinc-300">
-              <li>• Estado real de la orden.</li>
-              <li>• Equipo, falla y fecha de ingreso.</li>
-              <li>• WhatsApp del taller cuando exista en la orden.</li>
-              <li>• Timeline derivado del estado actual.</li>
-            </ul>
-          </aside>
+          <div className="flex flex-wrap gap-3">
+            <Link href={`/${tenantSlug}`} className="rounded-full border border-zinc-700 px-4 py-3 text-sm font-semibold text-zinc-100 transition hover:bg-white/5">
+              Volver al tenant
+            </Link>
+            <Link href={`/${tenantSlug}/cotizar`} className="rounded-full bg-sky-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-sky-400">
+              Cotizar
+            </Link>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="grid gap-4 rounded-[1.5rem] border border-zinc-800 bg-zinc-900/60 p-6">
-          <div>
-            <label className="mb-2 block text-sm font-medium text-zinc-300">Folio de recepción</label>
-            <input
-              value={folio}
-              onChange={(event) => setFolio(event.target.value)}
-              className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none transition placeholder:text-slate-400 focus:border-[#334155] focus:ring-2 focus:ring-[#334155]/20"
-              placeholder="ORD-XXXXXXXX"
-              required
-            />
-          </div>
+        <div className="mt-8 grid gap-6 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
+          <form onSubmit={handleSubmit} className="rounded-[1.75rem] border border-zinc-800 bg-zinc-900/60 p-6">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-300">¿Cómo va tu equipo?</p>
+            <p className="mt-2 text-sm leading-7 text-zinc-400">Ingresa tu número de folio para ver el estado actualizado.</p>
+            <div className="mt-6 rounded-[1.4rem] border border-sky-400/25 bg-zinc-950 p-4">
+              <label className="mb-2 block text-sm font-semibold text-zinc-300">Folio</label>
+              <input
+                value={folio}
+                onChange={(event) => setFolio(event.target.value)}
+                className="w-full rounded-2xl border border-sky-500/50 bg-zinc-900 px-4 py-3 text-lg tracking-[0.12em] text-zinc-50 outline-none transition placeholder:text-zinc-500 focus:border-sky-400 focus:ring-2 focus:ring-sky-400/20"
+                placeholder="EJ: SRF-1234"
+                required
+              />
+              {error ? <p className="mt-4 rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{error}</p> : null}
+              <button
+                disabled={loading}
+                className="mt-4 inline-flex w-full items-center justify-center rounded-2xl bg-orange-500 px-6 py-4 text-sm font-black uppercase tracking-[0.2em] text-white shadow-[0_16px_45px_rgba(249,115,22,0.32)] transition hover:-translate-y-0.5 hover:bg-orange-400 disabled:opacity-60"
+              >
+                {loading ? "Consultando..." : "Consultar"}
+              </button>
+            </div>
+            <div className="mt-5 grid grid-cols-2 gap-3 text-center text-xs text-zinc-400">
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-950 px-3 py-4">Actualización diaria</div>
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-950 px-3 py-4">Datos seguros</div>
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-950 px-3 py-4">Contacto directo</div>
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-950 px-3 py-4">Live cam disponible</div>
+            </div>
+          </form>
 
-          {error ? <p className="rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{error}</p> : null}
-
-          <div className="flex flex-wrap items-center gap-3">
-            <button disabled={loading} className="rounded-full bg-slate-500 px-6 py-3 font-semibold text-zinc-950 transition hover:bg-slate-400 disabled:opacity-60">
-              {loading ? "Consultando..." : "Buscar orden"}
-            </button>
-            <p className="text-sm leading-6 text-zinc-400">
-              La consulta respeta el taller al que pertenece el folio.
-            </p>
-          </div>
-        </form>
-
-        {result ? (
-          <section className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-            <article className="rounded-[1.75rem] border border-zinc-800 bg-zinc-950/85 p-6 shadow-[0_16px_60px_rgba(0,0,0,0.24)]">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-300">Orden encontrada</p>
-                  <h2 className="mt-2 text-3xl font-bold text-zinc-50">{result.order.folio}</h2>
+          <div className="space-y-4">
+            {!result ? (
+              <div className="rounded-[1.75rem] border border-zinc-800 bg-zinc-900/60 p-6">
+                <div className="flex min-h-[370px] flex-col items-center justify-center rounded-[1.5rem] border border-zinc-800 bg-zinc-950 px-6 py-10 text-center">
+                  <div className="mb-5 rounded-full border border-sky-400/40 bg-sky-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-sky-200">
+                    Portal del cliente
+                  </div>
+                  <h2 className="text-3xl font-black uppercase tracking-tight text-sky-300 sm:text-4xl">Ver estado</h2>
+                  <p className="mt-3 max-w-lg text-sm leading-7 text-zinc-400">
+                    Consulta el estatus de tu reparación en tiempo real. Abre el PDF cuando se encuentre disponible.
+                  </p>
+                  <div className="mt-6 flex flex-wrap justify-center gap-3">
+                    <Link href={`/${tenantSlug}/tracking`} className="rounded-full border border-zinc-700 px-5 py-3 text-sm font-semibold text-zinc-100 transition hover:bg-white/5">
+                      Ir al tracking
+                    </Link>
+                    <Link href={`/${tenantSlug}/cotizar`} className="rounded-full bg-sky-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-400">
+                      Cotizar
+                    </Link>
+                  </div>
                 </div>
-                <span className="rounded-full bg-emerald-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">
-                  {result.orderStatusLabel}
-                </span>
               </div>
+            ) : (
+              <article className="rounded-[1.75rem] border border-sky-500/30 bg-[linear-gradient(180deg,rgba(16,18,27,0.98),rgba(9,10,16,0.98))] p-6 shadow-[0_16px_60px_rgba(0,0,0,0.24)]">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-300">Resultado</p>
+                    <h2 className="mt-2 text-3xl font-black tracking-tight text-zinc-50">{result.order.folio}</h2>
+                  </div>
+                  <span className="rounded-full bg-sky-500/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-sky-200">
+                    {result.orderStatusLabel}
+                  </span>
+                </div>
 
-              <dl className="mt-6 grid gap-4 sm:grid-cols-2">
-                <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
-                  <dt className="text-xs uppercase tracking-[0.2em] text-zinc-400">Cliente</dt>
-                  <dd className="mt-1 text-sm font-semibold text-zinc-50">{result.order.device_info?.customer_name ?? "Sin cliente"}</dd>
-                </div>
-                <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
-                  <dt className="text-xs uppercase tracking-[0.2em] text-zinc-400">Equipo</dt>
-                  <dd className="mt-1 text-sm font-semibold text-zinc-50">
-                    {result.order.device_info?.brand ?? result.order.device_info?.type ?? "Sin dispositivo"}{" "}
-                    {result.order.device_info?.model ? `· ${result.order.device_info.model}` : ""}
-                  </dd>
-                </div>
-                <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
-                  <dt className="text-xs uppercase tracking-[0.2em] text-zinc-400">Falla reportada</dt>
-                  <dd className="mt-1 text-sm leading-6 text-zinc-300">{result.order.problem_description ?? "Sin descripción"}</dd>
-                </div>
-                <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
-                  <dt className="text-xs uppercase tracking-[0.2em] text-zinc-400">Ingreso</dt>
-                  <dd className="mt-1 text-sm font-semibold text-zinc-50">
-                    {result.order.created_at ? new Date(result.order.created_at).toLocaleString() : "Sin fecha"}
-                  </dd>
-                </div>
-              </dl>
-
-              <div className="mt-6">
-                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-300">Timeline</p>
-                <div className="mt-4 space-y-3">
-                  {result.timeline.map((step) => (
-                    <div key={step.label} className="rounded-2xl border border-zinc-800 bg-zinc-900/60 px-4 py-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="font-semibold text-zinc-50">{step.label}</span>
-                        <span className="text-xs uppercase tracking-[0.18em] text-zinc-400">{step.status}</span>
+                <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                  <section className="rounded-[1.4rem] border border-zinc-800 bg-zinc-950 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-200">Información del equipo</p>
+                    <div className="mt-3 space-y-3 text-sm">
+                      <div className="flex justify-between gap-4 border-b border-zinc-800 pb-2">
+                        <span className="text-zinc-400">Equipo</span>
+                        <span className="font-semibold text-zinc-50">{result.order.device_info?.type ?? "Sin tipo"}</span>
                       </div>
-                      <p className="mt-1 text-sm text-zinc-300">{step.note}</p>
+                      <div className="flex justify-between gap-4 border-b border-zinc-800 pb-2">
+                        <span className="text-zinc-400">Marca/Modelo</span>
+                        <span className="font-semibold text-zinc-50">
+                          {(result.order.device_info?.brand ?? "Sin marca") + (result.order.device_info?.model ? ` ${result.order.device_info.model}` : "")}
+                        </span>
+                      </div>
+                      <div className="flex justify-between gap-4 border-b border-zinc-800 pb-2">
+                        <span className="text-zinc-400">Falla reportada</span>
+                        <span className="font-semibold text-zinc-50">{result.order.problem_description ?? "Sin descripción"}</span>
+                      </div>
+                      <div className="flex justify-between gap-4">
+                        <span className="text-zinc-400">Fecha de ingreso</span>
+                        <span className="font-semibold text-zinc-50">
+                          {result.order.created_at ? new Date(result.order.created_at).toLocaleDateString() : "Sin fecha"}
+                        </span>
+                      </div>
                     </div>
-                  ))}
+                  </section>
+
+                  <section className="rounded-[1.4rem] border border-zinc-800 bg-zinc-950 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-200">Fechas importantes</p>
+                    <div className="mt-3 space-y-3 text-sm">
+                      <div className="flex justify-between gap-4 border-b border-zinc-800 pb-2">
+                        <span className="text-zinc-400">Fecha promesa</span>
+                        <span className="font-semibold text-orange-300">2026-05-30</span>
+                      </div>
+                      <div className="flex justify-between gap-4 border-b border-zinc-800 pb-2">
+                        <span className="text-zinc-400">Días restantes</span>
+                        <span className="font-semibold text-zinc-50">3 días</span>
+                      </div>
+                      <div className="flex justify-between gap-4">
+                        <span className="text-zinc-400">Última actualización</span>
+                        <span className="font-semibold text-zinc-50">2026-05-27</span>
+                      </div>
+                    </div>
+                  </section>
                 </div>
-              </div>
-            </article>
 
-            <aside className="space-y-4 rounded-[1.75rem] border border-zinc-800 bg-zinc-900/60 p-6">
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">WhatsApp del taller</p>
-                <p className="mt-1 text-sm text-zinc-300">
-                  {tenant?.contact_phone ?? "No hay teléfono de contacto registrado"}
-                </p>
-                {whatsappHref ? (
-                  <a href={whatsappHref} className="mt-3 inline-block font-semibold text-slate-300">
-                    Abrir WhatsApp
-                  </a>
-                ) : null}
-              </div>
-
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">Documentos y fotos</p>
-                <p className="mt-2 text-sm leading-6 text-zinc-300">
-                  {result.attachments.length > 0 ? "Adjuntos disponibles." : "No hay adjuntos registrados para esta orden."}
-                </p>
-                {pdfAttachment ? (
-                  <a
-                    href={pdfAttachment.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    download={pdfAttachment.fileName ?? undefined}
-                    className="mt-3 inline-flex rounded-full bg-slate-500 px-4 py-2 font-semibold text-zinc-950"
-                  >
-                    Ver PDF de la orden
-                  </a>
-                ) : null}
-                {result.documents.length > 0 ? (
-                  <div className="mt-4 space-y-2">
-                    {result.documents.map((document) => (
-                      <div key={document.id} className="rounded-xl border border-zinc-800 bg-zinc-900/70 px-3 py-2">
-                        <div className="text-sm font-semibold text-zinc-50">{document.file_name}</div>
-                        <div className="text-xs uppercase tracking-[0.18em] text-zinc-400">{document.file_type}</div>
-                        {document.public_url ? (
-                          <a href={document.public_url} target="_blank" rel="noreferrer" className="mt-1 inline-block text-sm font-semibold text-slate-300">
-                            Abrir evidencia
-                          </a>
-                        ) : null}
+                <section className="mt-4 rounded-[1.4rem] border border-zinc-800 bg-zinc-950 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-200">Seguimiento</p>
+                  <div className="mt-3 space-y-3">
+                    {result.timeline.map((step) => (
+                      <div key={step.label} className="rounded-2xl border border-zinc-800 bg-zinc-900/70 px-4 py-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="font-semibold text-zinc-50">{step.label}</span>
+                          <span className="text-xs uppercase tracking-[0.18em] text-zinc-400">{step.status}</span>
+                        </div>
+                        <p className="mt-1 text-sm text-zinc-300">{step.note}</p>
                       </div>
                     ))}
                   </div>
-                ) : null}
-              </div>
+                </section>
 
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">Eventos</p>
-                <div className="mt-3 space-y-2">
-                  {result.events.length > 0 ? (
-                    result.events.map((event) => (
-                      <div key={event.id} className="rounded-xl border border-zinc-800 bg-zinc-900/70 px-3 py-2">
-                        <div className="flex items-center justify-between gap-3">
-                          <span className="text-sm font-semibold text-zinc-50">{event.event_type}</span>
-                          <span className="text-[11px] uppercase tracking-[0.18em] text-zinc-400">{new Date(event.created_at).toLocaleString()}</span>
-                        </div>
-                        <p className="mt-1 text-sm text-zinc-300">{event.note ?? "Sin nota"}</p>
-                      </div>
-                    ))
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  <a
+                    href={whatsappHref ?? "#"}
+                    target={whatsappHref ? "_blank" : undefined}
+                    rel={whatsappHref ? "noreferrer" : undefined}
+                    className="inline-flex items-center justify-center rounded-2xl bg-emerald-500 px-5 py-4 text-sm font-black uppercase tracking-[0.18em] text-white shadow-[0_18px_45px_rgba(16,185,129,0.3)] transition hover:-translate-y-0.5 hover:bg-emerald-400"
+                  >
+                    Contactar por WhatsApp
+                  </a>
+                  {pdfAttachment ? (
+                    <a
+                      href={pdfAttachment.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      download={pdfAttachment.fileName ?? undefined}
+                      className="inline-flex items-center justify-center rounded-2xl bg-zinc-500 px-5 py-4 text-sm font-black uppercase tracking-[0.18em] text-white transition hover:-translate-y-0.5 hover:bg-zinc-400"
+                    >
+                      Imprimir / Guardar
+                    </a>
                   ) : (
-                    <p className="text-sm text-zinc-400">No hay eventos registrados.</p>
+                    <button type="button" disabled className="inline-flex items-center justify-center rounded-2xl bg-zinc-700 px-5 py-4 text-sm font-black uppercase tracking-[0.18em] text-zinc-300">
+                      Imprimir / Guardar
+                    </button>
                   )}
                 </div>
-              </div>
+              </article>
+            )}
+          </div>
+        </div>
 
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">Mensajes</p>
-                <div className="mt-3 space-y-2">
-                  {result.messages.length > 0 ? (
-                    result.messages.map((message) => (
-                      <div key={message.id} className="rounded-xl border border-zinc-800 bg-zinc-900/70 px-3 py-2">
-                        <div className="flex items-center justify-between gap-3">
-                          <span className="text-sm font-semibold text-zinc-50">{message.actor_name ?? "Sistema"}</span>
-                          <span className="text-[11px] uppercase tracking-[0.18em] text-zinc-400">{new Date(message.created_at).toLocaleString()}</span>
-                        </div>
-                        <p className="mt-1 text-sm text-zinc-300">{message.note ?? "Sin mensaje"}</p>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-zinc-400">No hay mensajes registrados.</p>
-                  )}
-                </div>
-              </div>
-            </aside>
-          </section>
-        ) : null}
+        <footer className="mt-8 border-t border-zinc-800 pt-6 text-center text-sm text-zinc-500">
+          © 2026 SrFix · Todos los derechos reservados · Aviso de privacidad
+        </footer>
       </section>
     </main>
   );

@@ -49,7 +49,7 @@ create unique index if not exists service_orders_folio_uidx
 
 create table if not exists public.service_requests (
   id uuid primary key default gen_random_uuid(),
-  tenant_id uuid not null references public.organizations(id) on delete cascade,
+  tenant_id uuid not null references public.tenants(id) on delete cascade,
   folio text not null,
   customer_name text not null,
   customer_phone text not null,

@@ -199,8 +199,8 @@ export default function LandingSettingsPage() {
   return (
     <RequireRole allowed={["owner", "manager"]}>
       <ModuleShell
-        title="Landing del taller"
-        subtitle="Editor por taller usando `tenants.landing_content` como fuente de verdad."
+        title="Integrador del sitio del tenant"
+        subtitle="Editor por tenant usando `tenants.branding` y `tenants.landing_content` como fuente de verdad."
         icon="fas fa-globe"
         actionLabel={saving ? "Guardando..." : "Guardar landing"}
         onAction={handleSave}
@@ -211,8 +211,8 @@ export default function LandingSettingsPage() {
         ]}
         columns={[]}
         rows={[]}
-        emptyTitle={loading ? "Cargando landing…" : "Editor listo"}
-        emptyCopy="La landing pública refleja el branding del taller."
+        emptyTitle={loading ? "Cargando sitio…" : "Editor listo"}
+        emptyCopy="El sitio público del tenant refleja su branding, sus colores y su contenido."
       >
         <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
           <section className="space-y-6 rounded-[28px] border border-zinc-800 bg-zinc-950/85 p-6 shadow-[0_16px_70px_rgba(0,0,0,0.24)]">

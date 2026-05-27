@@ -49,13 +49,13 @@ function resolveWhatsappHref(phone?: string) {
 export default function PortalPage() {
   const params = useParams<{ tenantSlug?: string }>();
   const searchParams = useSearchParams();
-  const tenantSlug = typeof params?.tenantSlug === "string" && params.tenantSlug.trim().length > 0 ? params.tenantSlug : "demo";
+  const tenantSlug = typeof params?.tenantSlug === "string" && params.tenantSlug.trim().length > 0 ? params.tenantSlug : "";
   const [folio, setFolio] = useState(() => searchParams.get("folio")?.trim() ?? "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<PortalOrderResponse["data"] | null>(null);
   const [tenant, setTenant] = useState<PortalOrderResponse["tenant"] | null>(null);
-  const [tenantLabel, setTenantLabel] = useState<string>(tenantSlug);
+  const [tenantLabel, setTenantLabel] = useState<string>(tenantSlug || "Tenant");
 
   const apiBaseUrl = resolveApiBaseUrl();
 
@@ -74,6 +74,10 @@ export default function PortalPage() {
     try {
       if (!apiBaseUrl) {
         throw new Error("NEXT_PUBLIC_API_URL o NEXT_PUBLIC_API_BASE_URL no está configurada");
+      }
+
+      if (!tenantSlug) {
+        throw new Error("Tenant slug ausente en la ruta");
       }
 
       const response = await fetch(
@@ -112,12 +116,20 @@ export default function PortalPage() {
               Ingresa tu folio para consultar una orden del taller <span className="font-semibold text-slate-950">{tenantLabel}</span>.
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
-              <Link href="/" className="rounded-full border border-slate-300 px-5 py-3 font-semibold text-slate-800 transition hover:bg-slate-50">
-                Volver al inicio
-              </Link>
-              <Link href={`/t/${tenantSlug}/portal`} className="rounded-full bg-[#334155] px-5 py-3 font-semibold text-white transition hover:bg-[#1f2937]">
-                Refrescar portal
-              </Link>
+              {tenantSlug ? (
+                <>
+                  <Link href={`/${tenantSlug}`} className="rounded-full border border-slate-300 px-5 py-3 font-semibold text-slate-800 transition hover:bg-slate-50">
+                    Volver al inicio
+                  </Link>
+                  <Link href={`/t/${tenantSlug}/portal`} className="rounded-full bg-[#334155] px-5 py-3 font-semibold text-white transition hover:bg-[#1f2937]">
+                    Refrescar portal
+                  </Link>
+                </>
+              ) : (
+                <span className="rounded-full border border-slate-300 px-5 py-3 font-semibold text-slate-500">
+                  Define el tenant en la URL
+                </span>
+              )}
             </div>
           </div>
 
