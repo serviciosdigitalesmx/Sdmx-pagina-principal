@@ -5,7 +5,7 @@ import { RequireRole } from "@/components/guard/RequireRole";
 import { useAuth } from "@/components/guard/use-auth";
 import { ModuleShell } from "@/components/dashboard/module-shell";
 import { OrderDetailDrawer, type OrderDetailData } from "@/components/dashboard/orders/order-detail-drawer";
-import { OrderIntakeModal, type OrderIntakeFiles, type OrderIntakeFormState } from "@/components/dashboard/orders/order-intake-modal";
+import { OrderIntakeModal, type OrderCreationSummary, type OrderIntakeFiles, type OrderIntakeFormState } from "@/components/dashboard/orders/order-intake-modal";
 import { fixService } from "@/services/fixService";
 
 type OrderRow = {
@@ -44,12 +44,20 @@ const defaultStatusOptions: OrderStatusOption[] = [
 ];
 
 const initialForm: OrderIntakeFormState = {
+  quoteFolio: "",
   clientName: "",
   clientPhone: "",
   clientEmail: "",
   deviceType: "Smartphone",
   deviceModel: "",
   issue: "",
+  hasCharger: false,
+  screenCondition: false,
+  powersOn: false,
+  backupRequired: false,
+  intakeNotes: "",
+  promisedDate: "",
+  estimatedCost: "",
   includeIva: false,
 };
 
@@ -224,14 +232,7 @@ export default function OrdenesKanbanPage() {
   const [detailChecklist, setDetailChecklist] = useState<OrderChecklist | null>(null);
   const [form, setForm] = useState<OrderIntakeFormState>(initialForm);
   const [files, setFiles] = useState<OrderIntakeFiles>(initialFiles);
-  const [creationSummary, setCreationSummary] = useState<{
-    folio: string;
-    orderId: string;
-    phone: string;
-    portalUrl: string | null;
-    pdfUrl: string | null;
-    whatsappUrl: string | null;
-  } | null>(null);
+  const [creationSummary, setCreationSummary] = useState<OrderCreationSummary | null>(null);
   const [statusOptions, setStatusOptions] = useState<OrderStatusOption[]>(defaultStatusOptions);
   const [copiedText, setCopiedText] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -387,6 +388,26 @@ export default function OrdenesKanbanPage() {
   const detailPhone = getDetailPhone(detailOrder as OrderRow | null);
   const detailWaLink = whatsappLink(detailPhone, tenantSlug, customerPortalBase, detailOrder?.folio);
 
+  async function handleEditOrderDetails(payload: {
+    clientName?: string;
+    clientPhone?: string;
+    clientEmail?: string;
+    deviceType?: string;
+    deviceModel?: string;
+    issue?: string;
+    promisedDate?: string;
+  }) {
+    if (!detailOrder?.id) return;
+    try {
+      await fixService.updateOrderDetails(detailOrder.id, payload);
+      await refreshOrders();
+      const updated = (await fixService.getOrderById(detailOrder.id)) as OrderDetailData;
+      setDetail(updated);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al actualizar ficha");
+    }
+  }
+
   async function refreshOrders() {
     const data = await fixService.getOrders();
     setOrders(data as OrderRow[]);
@@ -420,7 +441,18 @@ export default function OrdenesKanbanPage() {
         deviceType: form.deviceType.trim(),
         deviceModel: form.deviceModel.trim(),
         issue: form.issue.trim(),
+        quoteFolio: form.quoteFolio.trim() || undefined,
+        promisedDate: form.promisedDate || undefined,
+        estimatedCost: Number(form.estimatedCost || 0),
         includeIva: form.includeIva,
+        checklist: {
+          hasCharger: form.hasCharger,
+          screenCondition: form.screenCondition ? "OK" : "",
+          powersOn: form.powersOn,
+          backupRequired: form.backupRequired,
+          notes: form.intakeNotes.trim(),
+        },
+        receiptUrl: "",
         branchId,
       })) as OrderRow;
 
@@ -442,8 +474,6 @@ export default function OrdenesKanbanPage() {
       const whatsappUrl = created.folio
         ? whatsappLink(form.clientPhone.trim(), tenantSlug, customerPortalBase, created.folio) ?? null
         : null;
-      setIsModalOpen(false);
-      setForm(initialForm);
       setFiles(initialFiles);
       if (created.id) {
         setSelectedOrderId(created.id);
@@ -863,9 +893,19 @@ export default function OrdenesKanbanPage() {
           error={error}
           form={form}
           files={files}
-          onClose={() => setIsModalOpen(false)}
+          successSummary={creationSummary}
+          customerPortalBase={customerPortalBase}
+          tenantSlug={tenantSlug}
+          onClose={() => {
+            setIsModalOpen(false);
+            setCreationSummary(null);
+          }}
+          onResetFlow={() => {
+            setCreationSummary(null);
+            setForm(initialForm);
+            setIsModalOpen(false);
+          }}
           onChange={(name, value) => setForm((current) => ({ ...current, [name]: value }))}
-          onToggleIva={(checked) => setForm((current) => ({ ...current, includeIva: checked }))}
           onPhotoChange={(photos) => {
             void compressImageFiles(photos).then((compressed) => {
               setFiles((current) => ({ ...current, intakePhotos: compressed.slice(0, 3) }));
@@ -874,6 +914,7 @@ export default function OrdenesKanbanPage() {
             });
           }}
           onSubmit={() => void handleSubmit()}
+          onCopy={(value, label) => void copyToClipboard(value, label)}
         />
 
         <OrderDetailDrawer
@@ -889,6 +930,7 @@ export default function OrdenesKanbanPage() {
           onOpenPdf={openReceiptPdf}
           onPrintReceipt={printReceipt}
           onEditFinancials={() => void handleUpdateFinancials()}
+          onEditDetails={(payload) => handleEditOrderDetails(payload)}
           onEditChecklist={() => void handleUpdateChecklist()}
           onArchive={() => void handleArchiveOrder(detailOrder?.id ?? "")}
         />

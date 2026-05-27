@@ -35,6 +35,16 @@ const financialUpdateSchema = z.object({
   note: z.string().optional(),
 });
 
+const orderDetailsUpdateSchema = z.object({
+  clientName: z.string().min(1).optional(),
+  clientPhone: z.string().min(7).optional(),
+  clientEmail: z.string().email().optional().or(z.literal('')),
+  deviceType: z.string().min(1).optional(),
+  deviceModel: z.string().min(1).optional(),
+  issue: z.string().min(1).optional(),
+  promisedDate: z.string().optional().or(z.literal('')),
+});
+
 type EvidenceEntry =
   | {
       kind: 'document';
@@ -1198,6 +1208,70 @@ export const updateOrderFinancials = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Invalid payload', details: error.errors });
     }
     console.error('Error updating order financials:', error);
+    return res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
+export const updateOrderDetails = async (req: Request, res: Response) => {
+  try {
+    const tenantId = req.tenantId;
+    const orderId = req.params.id;
+    const branchId = typeof req.query.branchId === 'string' ? req.query.branchId.trim() : '';
+
+    if (!tenantId) {
+      return res.status(401).json({ error: 'Tenant context is required' });
+    }
+
+    const body = orderDetailsUpdateSchema.parse(req.body);
+    const supabase = getTenantClient(tenantId);
+
+    const { data: existing, error: existingError } = await supabase
+      .from('service_orders')
+      .select('id, device_info')
+      .eq('tenant_id', tenantId)
+      .eq('id', orderId)
+      .eq(isUuid(branchId) ? 'branch_id' : 'tenant_id', isUuid(branchId) ? branchId : tenantId)
+      .single();
+
+    if (existingError || !existing) {
+      return res.status(404).json({ error: 'Order not found', details: existingError?.message ?? 'Not found' });
+    }
+
+    const currentDeviceInfo = (existing.device_info as Record<string, unknown> | null) ?? {};
+    const nextDeviceInfo = {
+      ...currentDeviceInfo,
+      customer_name: body.clientName ?? String(currentDeviceInfo.customer_name ?? ''),
+      customer_phone: body.clientPhone ?? String(currentDeviceInfo.customer_phone ?? ''),
+      customer_email: body.clientEmail === undefined ? currentDeviceInfo.customer_email ?? null : body.clientEmail || null,
+      type: body.deviceType ?? String(currentDeviceInfo.type ?? ''),
+      brand: body.deviceModel ?? String(currentDeviceInfo.brand ?? ''),
+      model: body.deviceModel ?? String(currentDeviceInfo.model ?? ''),
+    };
+
+    const { data, error } = await supabase
+      .from('service_orders')
+      .update({
+        device_info: nextDeviceInfo,
+        device_type: body.deviceType ?? undefined,
+        device_model: body.deviceModel ?? undefined,
+        problem_description: body.issue ?? undefined,
+        promised_date: body.promisedDate === '' ? null : body.promisedDate,
+      })
+      .eq('tenant_id', tenantId)
+      .eq('id', orderId)
+      .select()
+      .single();
+
+    if (error) {
+      return res.status(502).json({ error: 'Failed to update order details', details: error.message });
+    }
+
+    return res.json({ success: true, data });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: 'Invalid payload', details: error.errors });
+    }
+    console.error('Error updating order details:', error);
     return res.status(500).json({ error: 'Error interno del servidor' });
   }
 };
