@@ -296,6 +296,17 @@ class FixService {
     return result.data;
   }
 
+  public async updateOrderFinancials(orderId: string, data: { estimatedCost?: number; finalCost?: number; receiptUrl?: string; note?: string }): Promise<JsonRecord> {
+    const result = await this.request<ApiSingleResponse<JsonRecord>>(
+      this.withBranchQuery(`/api/${this.tenantId}/orders/${encodeURIComponent(orderId)}/financials`),
+      {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      }
+    );
+    return result.data;
+  }
+
   public async getOrderChecklist(orderId: string): Promise<JsonRecord> {
     const result = await this.request<ApiSingleResponse<JsonRecord>>(
       this.withBranchQuery(`/api/${this.tenantId}/orders/${encodeURIComponent(orderId)}/checklist`),

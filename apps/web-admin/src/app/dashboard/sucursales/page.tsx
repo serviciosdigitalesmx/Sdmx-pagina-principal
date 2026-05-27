@@ -25,15 +25,25 @@ export default function SucursalesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  async function refresh() {
+    try {
+      setLoading(true);
+      setError("");
+      const data = await fixService.getBranches();
+      setRows(data as BranchRow[]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al cargar sucursales");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
       try {
-        setLoading(true);
-        setError("");
-        const data = await fixService.getBranches();
-        if (!cancelled) setRows(data as BranchRow[]);
+        await refresh();
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err.message : "Error al cargar sucursales");
       } finally {
@@ -57,6 +67,8 @@ export default function SucursalesPage() {
         subtitle="Control de sucursales con aislamiento por sucursal."
         icon="fas fa-store"
         actionLabel={role === "owner" ? "Agregar sucursal" : "Ver sucursal actual"}
+        secondaryActionLabel="Actualizar"
+        secondaryOnAction={() => void refresh()}
         stats={[
           { label: "Sucursales", value: String(rows.length), helper: "Cargadas desde la API." },
           { label: "Activas", value: String(activeRows.length), helper: "Filtrado por estado." },

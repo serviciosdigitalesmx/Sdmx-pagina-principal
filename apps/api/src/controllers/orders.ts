@@ -28,6 +28,13 @@ const statusRequestSchema = z.object({
   note: z.string().optional(),
 });
 
+const financialUpdateSchema = z.object({
+  estimatedCost: z.coerce.number().min(0).optional(),
+  finalCost: z.coerce.number().min(0).optional(),
+  receiptUrl: z.string().url().optional().or(z.literal('')),
+  note: z.string().optional(),
+});
+
 type EvidenceEntry =
   | {
       kind: 'document';
@@ -1099,6 +1106,98 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Invalid payload', details: error.errors });
     }
     console.error('Error updating status:', error);
+    return res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
+export const updateOrderFinancials = async (req: Request, res: Response) => {
+  try {
+    const tenantId = req.tenantId;
+    const orderId = req.params.id;
+    const branchId = typeof req.query.branchId === 'string' ? req.query.branchId.trim() : '';
+
+    if (!tenantId) {
+      return res.status(401).json({ error: 'Tenant context is required' });
+    }
+
+    const body = financialUpdateSchema.parse(req.body);
+    const supabase = getTenantClient(tenantId);
+
+    const { data: order, error: orderError } = await supabase
+      .from('service_orders')
+      .select('id, estimated_cost, final_cost, evidence_metadata')
+      .eq('tenant_id', tenantId)
+      .eq('id', orderId)
+      .eq(isUuid(branchId) ? 'branch_id' : 'tenant_id', isUuid(branchId) ? branchId : tenantId)
+      .single();
+
+    if (orderError || !order) {
+      return res.status(404).json({ error: 'Order not found', details: orderError?.message ?? 'Not found' });
+    }
+
+    const nextEstimatedCost = typeof body.estimatedCost === 'number' ? body.estimatedCost : Number(order.estimated_cost ?? 0);
+    const nextFinalCost = typeof body.finalCost === 'number' ? body.finalCost : Number(order.final_cost ?? nextEstimatedCost);
+
+    const { data, error } = await supabase
+      .from('service_orders')
+      .update({
+        estimated_cost: nextEstimatedCost,
+        final_cost: nextFinalCost,
+        receipt_url: body.receiptUrl || undefined,
+      })
+      .eq('tenant_id', tenantId)
+      .eq('id', orderId)
+      .select()
+      .single();
+
+    if (error) {
+      return res.status(502).json({ error: 'Failed to update order financials', details: error.message });
+    }
+
+    const noteEntry = body.note?.trim()
+      ? {
+          kind: 'event' as const,
+          id: randomUUID(),
+          event_type: 'financials_updated',
+          previous_status: null,
+          new_status: null,
+          note: body.note.trim(),
+          actor_name: req.user?.email ?? req.user?.role ?? 'system',
+          created_at: new Date().toISOString(),
+        }
+      : null;
+
+    if (noteEntry) {
+      const { error: metadataError } = await supabase
+        .from('service_orders')
+        .update({
+          evidence_metadata: appendEvidenceEntry((order as { evidence_metadata?: unknown }).evidence_metadata, noteEntry),
+        })
+        .eq('tenant_id', tenantId)
+        .eq('id', orderId);
+
+      if (metadataError) {
+        return res.status(502).json({ error: 'Failed to persist financial note', details: metadataError.message });
+      }
+
+      await insertOrderEvent(supabase, {
+        id: noteEntry.id,
+        tenant_id: tenantId,
+        service_order_id: orderId,
+        event_type: noteEntry.event_type,
+        previous_status: null,
+        new_status: null,
+        note: noteEntry.note,
+        actor_name: noteEntry.actor_name,
+      });
+    }
+
+    return res.json({ success: true, data });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: 'Invalid payload', details: error.errors });
+    }
+    console.error('Error updating order financials:', error);
     return res.status(500).json({ error: 'Error interno del servidor' });
   }
 };

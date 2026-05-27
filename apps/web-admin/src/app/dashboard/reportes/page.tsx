@@ -72,6 +72,21 @@ export default function Page() {
         subtitle="KPIs reales agregados desde órdenes, clientes, inventario y finanzas."
         icon="fas fa-chart-pie"
         actionLabel={role === "owner" ? "Ver agregado" : "Solo lectura"}
+        secondaryActionLabel="Actualizar"
+        secondaryOnAction={() => {
+          void (async () => {
+            try {
+              setLoading(true);
+              setError("");
+              const data = (await fixService.getReportsSummary()) as ReportsSummary;
+              setSummary(data);
+            } catch (err) {
+              setError(err instanceof Error ? err.message : "Error al cargar reportes");
+            } finally {
+              setLoading(false);
+            }
+          })();
+        }}
         stats={stats}
         columns={[
           { label: "Métrica", key: "metric" },

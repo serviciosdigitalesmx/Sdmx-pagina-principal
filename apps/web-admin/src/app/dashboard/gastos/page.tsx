@@ -12,23 +12,31 @@ export default function GastosPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  async function refresh() {
+    try {
+      setLoading(true);
+      setError('');
+      const data = await fixService.getCashflow(sucursalId);
+      setRows(
+        (data as Array<Record<string, unknown>>).map((row) =>
+          Object.fromEntries(
+            Object.entries(row).map(([key, value]) => [key, value == null ? '' : String(value)])
+          ) as Record<string, string>
+        )
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al cargar gastos');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
       try {
-        setLoading(true);
-        setError('');
-        const data = await fixService.getCashflow(sucursalId);
-        if (!cancelled) {
-          setRows(
-            (data as Array<Record<string, unknown>>).map((row) =>
-              Object.fromEntries(
-                Object.entries(row).map(([key, value]) => [key, value == null ? '' : String(value)])
-              ) as Record<string, string>
-            )
-          );
-        }
+        await refresh();
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err.message : 'Error al cargar gastos');
       } finally {
@@ -59,6 +67,8 @@ export default function GastosPage() {
         subtitle="Registro y control de egresos del taller."
         icon="fas fa-receipt"
         actionLabel="+ Registrar gasto"
+        secondaryActionLabel="Actualizar"
+        secondaryOnAction={() => void refresh()}
         stats={stats}
         columns={[
           { label: 'ID', key: 'id' },

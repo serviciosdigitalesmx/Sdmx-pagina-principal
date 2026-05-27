@@ -52,6 +52,17 @@ export default function ComprasPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [copied, setCopied] = useState("");
+
+  async function copyText(text: string, label: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(label);
+      window.setTimeout(() => setCopied(""), 1800);
+    } catch {
+      setError("No se pudo copiar el texto.");
+    }
+  }
 
   async function loadData() {
     try {
@@ -173,6 +184,8 @@ export default function ComprasPage() {
           setSelectedOrder(null);
           setForm(emptyForm);
         }}
+        secondaryActionLabel="Actualizar"
+        secondaryOnAction={() => void loadData()}
         stats={stats}
         columns={[
           { label: "Folio", key: "folio" },
@@ -251,14 +264,23 @@ export default function ComprasPage() {
           <div className="space-y-4 rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg font-semibold text-zinc-50">Detalle y recepción</h2>
-              <button
-                type="button"
-                onClick={() => void handleReceive()}
-                disabled={!selectedId || saving}
-                className="rounded-xl border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-100 disabled:opacity-60"
-              >
-                Recibir compra
-              </button>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => void loadData()}
+                  className="rounded-xl border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-100"
+                >
+                  Actualizar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleReceive()}
+                  disabled={!selectedId || saving}
+                  className="rounded-xl border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-100 disabled:opacity-60"
+                >
+                  Recibir compra
+                </button>
+              </div>
             </div>
             <label className="space-y-1 text-sm text-zinc-300">
               <span>Orden activa</span>
@@ -281,7 +303,18 @@ export default function ComprasPage() {
                   <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-4 text-sm text-zinc-200">
                     <div className="flex items-center justify-between">
                       <span className="font-semibold text-zinc-50">{selectedOrder.order?.folio}</span>
-                      <span>{selectedOrder.order?.status}</span>
+                      <div className="flex items-center gap-2">
+                        {selectedOrder.order?.folio ? (
+                          <button
+                            type="button"
+                            onClick={() => void copyText(selectedOrder.order?.folio ?? "", "Folio copiado")}
+                            className="rounded-full border border-zinc-700 px-3 py-1 text-xs font-semibold text-zinc-200"
+                          >
+                            Copiar folio
+                          </button>
+                        ) : null}
+                        <span>{selectedOrder.order?.status}</span>
+                      </div>
                     </div>
                     <div className="mt-2 text-zinc-400">Proveedor: {selectedOrder.order?.supplier_id}</div>
                     <div className="mt-1 text-zinc-400">Total: {String(selectedOrder.order?.total ?? 0)}</div>
@@ -302,6 +335,7 @@ export default function ComprasPage() {
                 <p className="text-sm text-zinc-400">Selecciona una compra para ver su detalle real.</p>
               )}
             </div>
+            {copied ? <p className="text-xs uppercase tracking-[0.18em] text-emerald-300">{copied}</p> : null}
           </div>
         </div>
       </ModuleShell>

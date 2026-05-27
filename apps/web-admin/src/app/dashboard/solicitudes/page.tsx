@@ -43,6 +43,7 @@ export default function SolicitudesPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [estimatedCost, setEstimatedCost] = useState("0");
+  const [copied, setCopied] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -127,6 +128,17 @@ export default function SolicitudesPage() {
     setRows(data);
   }
 
+  async function copyText(text: string, label: string) {
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(label);
+      window.setTimeout(() => setCopied(""), 1600);
+    } catch {
+      setError("No se pudo copiar al portapapeles");
+    }
+  }
+
   async function handleConvert() {
     if (!selectedId) return;
     setConverting(true);
@@ -161,6 +173,11 @@ export default function SolicitudesPage() {
         icon="fas fa-envelope-open-text"
         actionLabel={loading ? "Cargando..." : "Refrescar"}
         onAction={refresh}
+        secondaryActionLabel="Limpiar selección"
+        secondaryOnAction={() => {
+          setSelectedId(null);
+          setDetail(null);
+        }}
         stats={[
           { label: "Pendientes", value: String(pendingCount), helper: "Solicitudes sin convertir." },
           { label: "Convertidas", value: String(convertedCount), helper: "Ya pasaron a órdenes reales." },
@@ -178,6 +195,7 @@ export default function SolicitudesPage() {
       >
         {error ? <p className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p> : null}
         {success ? <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{success}</p> : null}
+        {copied ? <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{copied} copiado.</p> : null}
 
         <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
           <section className="rounded-[28px] border border-amber-700/15 bg-[linear-gradient(180deg,rgba(16,14,12,0.96),rgba(22,18,14,0.98))] p-5 shadow-[0_16px_70px_rgba(15,23,42,0.08)]">
@@ -231,6 +249,24 @@ export default function SolicitudesPage() {
                 <div className="rounded-2xl border border-stone-700/70 bg-zinc-950/60 p-4">
                   <div className="text-xs uppercase tracking-[0.2em] text-zinc-400">Problema</div>
                   <div className="mt-2 text-sm text-zinc-300">{detail.issue_description ?? "Sin descripción"}</div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void copyText(detail.folio ?? "", `Folio ${detail.folio ?? ""}`)}
+                    className="rounded-full border border-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-200"
+                  >
+                    Copiar folio
+                  </button>
+                  <a
+                    href={detail.customer_phone ? `https://wa.me/${detail.customer_phone.replace(/\D/g, "")}` : "#"}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-disabled={!detail.customer_phone}
+                    className="rounded-full border border-green-400/30 px-4 py-2 text-sm font-semibold text-green-200"
+                  >
+                    WhatsApp
+                  </a>
                 </div>
                 <div className="grid gap-3 md:grid-cols-2">
                   <label className="block">

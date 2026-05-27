@@ -19,6 +19,10 @@ type ModuleShellProps = {
   icon: string;
   actionLabel: string;
   onAction?: () => void | Promise<void>;
+  secondaryActionLabel?: string;
+  secondaryOnAction?: () => void | Promise<void>;
+  tertiaryActionLabel?: string;
+  tertiaryOnAction?: () => void | Promise<void>;
   stats: Stat[];
   columns: Column[];
   rows: Row[];
@@ -33,6 +37,10 @@ export function ModuleShell({
   icon,
   actionLabel,
   onAction,
+  secondaryActionLabel,
+  secondaryOnAction,
+  tertiaryActionLabel,
+  tertiaryOnAction,
   stats,
   columns,
   rows,
@@ -52,13 +60,33 @@ export function ModuleShell({
             <p className="mt-1 text-sm text-zinc-400">{subtitle}</p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() => void onAction?.()}
-          className="inline-flex items-center justify-center rounded-full bg-amber-50 px-4 py-2.5 text-sm font-semibold text-zinc-950 transition-colors hover:bg-amber-100"
-        >
-          {actionLabel}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          {secondaryActionLabel ? (
+            <button
+              type="button"
+              onClick={() => void secondaryOnAction?.()}
+              className="inline-flex items-center justify-center rounded-full border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-sm font-semibold text-zinc-100 transition-colors hover:bg-white/5"
+            >
+              {secondaryActionLabel}
+            </button>
+          ) : null}
+          {tertiaryActionLabel ? (
+            <button
+              type="button"
+              onClick={() => void tertiaryOnAction?.()}
+              className="inline-flex items-center justify-center rounded-full border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-sm font-semibold text-zinc-100 transition-colors hover:bg-white/5"
+            >
+              {tertiaryActionLabel}
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => void onAction?.()}
+            className="inline-flex items-center justify-center rounded-full bg-amber-50 px-4 py-2.5 text-sm font-semibold text-zinc-950 transition-colors hover:bg-amber-100"
+          >
+            {actionLabel}
+          </button>
+        </div>
       </header>
 
       <section className="grid gap-4 md:grid-cols-3">

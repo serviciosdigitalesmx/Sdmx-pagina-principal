@@ -36,6 +36,7 @@ export default function StockPage() {
   const [rows, setRows] = useState<InventoryRow[]>([]);
   const [selectedId, setSelectedId] = useState("");
   const [selectedMovements, setSelectedMovements] = useState<MovementRow[]>([]);
+  const [alerts, setAlerts] = useState<Array<{ id?: string; description?: string; sku?: string; severity?: string }>>([]);
   const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -56,8 +57,18 @@ export default function StockPage() {
     }
   }
 
+  async function loadAlerts() {
+    try {
+      const data = await fixService.getStockAlerts();
+      setAlerts(data as Array<{ id?: string; description?: string; sku?: string; severity?: string }>);
+    } catch {
+      setAlerts([]);
+    }
+  }
+
   useEffect(() => {
     void loadInventory();
+    void loadAlerts();
   }, []);
 
   const selected = useMemo(() => rows.find((item) => item.id === selectedId) ?? null, [rows, selectedId]);
@@ -158,6 +169,10 @@ export default function StockPage() {
         subtitle="Productos, existencias y movimientos del módulo Stock."
         icon="fas fa-boxes-stacked"
         actionLabel="Nuevo producto"
+        secondaryActionLabel="Actualizar"
+        secondaryOnAction={() => void loadInventory()}
+        tertiaryActionLabel="Alertas"
+        tertiaryOnAction={() => void loadAlerts()}
         onAction={() => {
           setSelectedId("");
           setForm(emptyForm);
@@ -232,6 +247,13 @@ export default function StockPage() {
               </button>
               <button
                 type="button"
+                onClick={() => void loadAlerts()}
+                className="rounded-full border border-stone-700 px-4 py-2 text-sm font-medium text-zinc-100"
+              >
+                Ver alertas
+              </button>
+              <button
+                type="button"
                 onClick={() => {
                   setSelectedId("");
                   setForm(emptyForm);
@@ -258,6 +280,27 @@ export default function StockPage() {
               )) : (
                 <p className="text-sm text-zinc-400">Selecciona un producto para ver sus movimientos reales.</p>
               )}
+            </div>
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-100/70">Alertas</h3>
+                <button type="button" onClick={() => void loadAlerts()} className="rounded-full border border-zinc-700 px-3 py-1 text-xs font-semibold text-zinc-200">
+                  Recargar alertas
+                </button>
+              </div>
+              <div className="mt-3 space-y-2">
+                {alerts.length > 0 ? alerts.map((alert) => (
+                  <div key={alert.id ?? `${alert.sku}-${alert.description}`} className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3 text-sm text-zinc-200">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-semibold text-zinc-50">{alert.sku ?? "SKU"}</span>
+                      <span className="rounded-full border border-amber-400/20 px-2 py-0.5 text-[11px] uppercase tracking-[0.18em] text-amber-100/70">{alert.severity ?? "alerta"}</span>
+                    </div>
+                    <p className="mt-1 text-zinc-400">{alert.description ?? "Stock por revisar"}</p>
+                  </div>
+                )) : (
+                  <p className="text-sm text-zinc-400">Sin alertas de stock.</p>
+                )}
+              </div>
             </div>
           </div>
         </div>

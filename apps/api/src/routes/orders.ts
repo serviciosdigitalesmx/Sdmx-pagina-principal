@@ -3,7 +3,7 @@ import { requireAuth } from '../middleware/auth';
 import { validateTenant } from '../middleware/validateTenant';
 import { requireTenantBillingActive } from '../middleware/tenantBilling';
 import { requireRole } from '../middleware/requireRole';
-import { addOrderMessage, addOrderNote, createOrder, getOrderById, getOrderChecklist, listOrders, updateOrderChecklist, updateOrderStatus, updateOrderWarranty, uploadOrderAttachments } from '../controllers/orders';
+import { addOrderMessage, addOrderNote, createOrder, getOrderById, getOrderChecklist, listOrders, updateOrderChecklist, updateOrderFinancials, updateOrderStatus, updateOrderWarranty, uploadOrderAttachments } from '../controllers/orders';
 
 const router = Router({ mergeParams: true });
 
@@ -21,6 +21,7 @@ router.post('/:id/attachments', uploadOrderAttachments);
 router.post('/:id/notes', addOrderNote);
 router.post('/:id/messages', addOrderMessage);
 router.patch('/:id/status', updateOrderStatus);
+router.patch('/:id/financials', updateOrderFinancials);
 router.get('/:id/checklist', getOrderChecklist);
 router.put('/:id/checklist', updateOrderChecklist);
 router.patch('/:id/warranty', updateOrderWarranty);

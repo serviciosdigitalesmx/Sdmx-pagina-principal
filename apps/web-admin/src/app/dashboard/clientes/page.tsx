@@ -36,6 +36,7 @@ export default function Page() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [form, setForm] = useState<CustomerFormState>(initialFormState);
+  const [copied, setCopied] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -88,6 +89,30 @@ export default function Page() {
     }
   };
 
+  async function refreshCustomers() {
+    try {
+      setLoading(true);
+      setError('');
+      const data = await fixService.getCustomers();
+      setRows(data as CustomerRow[]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al cargar clientes');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function copyText(text: string, label: string) {
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(label);
+      window.setTimeout(() => setCopied(''), 1600);
+    } catch {
+      setError('No se pudo copiar al portapapeles');
+    }
+  }
+
   return (
     <RequireRole allowed={['owner', 'manager', 'technician']}>
       <ModuleShell
@@ -95,6 +120,8 @@ export default function Page() {
         subtitle="Clientes, duplicados y acceso rápido a órdenes."
         icon="fas fa-users"
         actionLabel={role === 'technician' ? 'Solo lectura' : 'Nuevo cliente'}
+        secondaryActionLabel="Actualizar"
+        secondaryOnAction={() => void refreshCustomers()}
         stats={[
           { label: 'Activos', value: String(rows.length), helper: 'Cargados desde la API real.' },
           { label: 'Duplicados', value: '0', helper: 'Lista para detectar teléfonos repetidos.' },
@@ -179,6 +206,7 @@ export default function Page() {
             {success}
           </p>
         ) : null}
+        {copied ? <p className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200">{copied} copiado.</p> : null}
 
         {error ? (
           <p className="rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
@@ -192,6 +220,30 @@ export default function Page() {
             { label: 'Teléfono', key: 'phone' },
             { label: 'Correo', key: 'email' },
             { label: 'Etiqueta', key: 'tag' },
+            {
+              label: 'Acciones',
+              key: 'actions',
+              render: (row) => (
+                <div className="flex flex-wrap gap-2">
+                  <a
+                    href={row.phone ? `https://wa.me/${row.phone.replace(/\D/g, '')}` : '#'}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="rounded-full border border-green-400/30 px-3 py-1 text-[11px] font-semibold text-green-200"
+                    aria-disabled={!row.phone}
+                  >
+                    WhatsApp
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => void copyText(row.phone ?? '', `Teléfono ${row.name ?? ''}`)}
+                    className="rounded-full border border-zinc-700 px-3 py-1 text-[11px] font-semibold text-zinc-200"
+                  >
+                    Copiar teléfono
+                  </button>
+                </div>
+              ),
+            },
           ]}
           rows={rows.map((row) => ({
             ...row,

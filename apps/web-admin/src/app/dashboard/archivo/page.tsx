@@ -103,6 +103,37 @@ export default function ArchivoPage() {
     };
   }, []);
 
+  async function refresh() {
+    try {
+      setLoading(true);
+      const data = await fixService.getOrders();
+      const archived = (data as Array<Record<string, unknown>>)
+        .filter((order) => {
+          const status = String(order.status ?? "").toLowerCase();
+          return [
+            "list",
+            "entreg",
+            "cerr",
+            "complete",
+            "ready",
+            "delivered",
+            "waiting",
+          ].some((value) => status.includes(value));
+        })
+        .map((order) => ({
+          folio: String(order.folio ?? ""),
+          client: String((order.device_info as { customer_name?: string } | undefined)?.customer_name ?? ""),
+          cierre: resolveCloseDate(order),
+          estado: normalizeStatus(String(order.status ?? "")),
+        }));
+      setRows(archived);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al cargar archivo");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   const stats = useMemo(
     () => [
       { label: "Órdenes cerradas", value: String(rows.length), helper: "Derivado de órdenes reales." },
@@ -119,6 +150,8 @@ export default function ArchivoPage() {
         subtitle="Archivo operativo de órdenes cerradas y entregadas."
         icon="fas fa-archive"
         actionLabel={role === "technician" ? "Solo lectura" : "Buscar archivo"}
+        secondaryActionLabel="Actualizar"
+        secondaryOnAction={() => void refresh()}
         stats={stats}
         columns={[
           { label: "Folio", key: "folio" },

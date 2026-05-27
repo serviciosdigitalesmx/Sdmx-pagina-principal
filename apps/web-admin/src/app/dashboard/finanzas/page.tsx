@@ -61,6 +61,27 @@ export default function Page() {
         subtitle="Balances y flujo financiero del taller."
         icon="fas fa-chart-line"
         actionLabel={role === "owner" ? "Balance global" : "Ver flujo por sucursal"}
+        secondaryActionLabel="Actualizar"
+        secondaryOnAction={() => {
+          void (async () => {
+            try {
+              setLoading(true);
+              setError("");
+              const data = role === "owner" ? await fixService.getBalance() : await fixService.getCashflow(sucursalId);
+              setRows(
+                (data as Record<string, unknown>[]).map((row) =>
+                  Object.fromEntries(
+                    Object.entries(row).map(([key, value]) => [key, value == null ? "" : String(value)])
+                  ) as FinanceRow
+                )
+              );
+            } catch (err) {
+              setError(err instanceof Error ? err.message : "Error al cargar finanzas");
+            } finally {
+              setLoading(false);
+            }
+          })();
+        }}
         stats={stats}
         columns={[
           { label: "ID", key: "id" },

@@ -63,6 +63,23 @@ export default function SeguridadPage() {
     };
   }, []);
 
+  async function refreshSecurity() {
+    try {
+      setLoading(true);
+      setError("");
+      const [data, tenantSettings] = await Promise.all([
+        fixService.getSecuritySummary() as Promise<SecuritySummary>,
+        fixService.getTenantSettings(),
+      ]);
+      setSummary(data);
+      setBilling((tenantSettings.data.billing ?? null) as TenantBillingSummary | null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al cargar seguridad");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   const stats = useMemo(
     () => [
       { label: "Rol", value: summary?.role ?? role, helper: "Tu rol actual." },
@@ -94,6 +111,10 @@ export default function SeguridadPage() {
         subtitle="Resumen de sesión, tenant, permisos y estado de suscripción."
         icon="fas fa-shield-alt"
         actionLabel="Ver sesión"
+        secondaryActionLabel="Actualizar"
+        secondaryOnAction={() => void refreshSecurity()}
+        tertiaryActionLabel="Recargar"
+        tertiaryOnAction={() => void refreshSecurity()}
         stats={stats}
         columns={[
           { label: "Campo", key: "field" },

@@ -45,6 +45,17 @@ export default function ProveedoresPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [copied, setCopied] = useState("");
+
+  async function copyText(text: string, label: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(label);
+      window.setTimeout(() => setCopied(""), 1800);
+    } catch {
+      setError("No se pudo copiar el texto.");
+    }
+  }
 
   async function loadSuppliers() {
     try {
@@ -152,6 +163,8 @@ export default function ProveedoresPage() {
         icon="fas fa-truck"
         actionLabel="Nuevo proveedor"
         onAction={() => setSelectedId("")}
+        secondaryActionLabel="Actualizar"
+        secondaryOnAction={() => void loadSuppliers()}
         stats={stats}
         columns={[
           { label: "Proveedor", key: "business_name" },
@@ -256,18 +269,40 @@ export default function ProveedoresPage() {
                     <span className="text-xs text-zinc-500">{row.city || "Sin ciudad"}</span>
                   </div>
                   </button>
-                  <div className="mt-3">
-                    <button
-                      type="button"
-                      onClick={() => void handleDeactivate(row.id ?? "")}
-                      className="rounded-lg border border-zinc-700 px-3 py-1 text-xs text-zinc-200"
-                    >
-                      Desactivar
-                    </button>
+                <div className="mt-3">
+                    <div className="flex flex-wrap gap-2">
+                      {row.whatsapp ? (
+                        <a
+                          href={`https://wa.me/${String(row.whatsapp).replace(/\D/g, "")}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="rounded-lg border border-zinc-700 px-3 py-1 text-xs text-zinc-200"
+                        >
+                          WhatsApp
+                        </a>
+                      ) : null}
+                      {row.phone ? (
+                        <button
+                          type="button"
+                          onClick={() => void copyText(row.phone ?? "", "Teléfono copiado")}
+                          className="rounded-lg border border-zinc-700 px-3 py-1 text-xs text-zinc-200"
+                        >
+                          Copiar teléfono
+                        </button>
+                      ) : null}
+                      <button
+                        type="button"
+                        onClick={() => void handleDeactivate(row.id ?? "")}
+                        className="rounded-lg border border-zinc-700 px-3 py-1 text-xs text-zinc-200"
+                      >
+                        Desactivar
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
+            {copied ? <p className="text-xs uppercase tracking-[0.18em] text-emerald-300">{copied}</p> : null}
           </div>
         </div>
       </ModuleShell>

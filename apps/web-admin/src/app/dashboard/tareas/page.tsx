@@ -49,6 +49,17 @@ export default function TareasPage() {
   const [detail, setDetail] = useState<{ task?: TaskRow; history?: Array<{ event_type?: string; comment?: string | null; created_at?: string }> } | null>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(defaultForm);
+  const [copied, setCopied] = useState("");
+
+  async function copyText(text: string, label: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(label);
+      window.setTimeout(() => setCopied(""), 1800);
+    } catch {
+      setError("No se pudo copiar el texto.");
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -152,6 +163,8 @@ export default function TareasPage() {
         icon="ri-task-line"
         actionLabel="Crear tarea"
         onAction={() => setSelectedId(null)}
+        secondaryActionLabel="Actualizar"
+        secondaryOnAction={() => void refresh()}
         stats={[]}
         columns={[]}
         rows={[]}
@@ -216,6 +229,22 @@ export default function TareasPage() {
               <h2 className="text-lg font-semibold text-zinc-50">Detalle</h2>
               {selectedId ? (
                 <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void refresh()}
+                    className="rounded-full border border-zinc-700 px-3 py-2 text-xs font-semibold text-zinc-200"
+                  >
+                    Recargar
+                  </button>
+                  {detail?.task?.title ? (
+                    <button
+                      type="button"
+                      onClick={() => void copyText(detail.task?.title ?? "", "Título copiado")}
+                      className="rounded-full border border-zinc-700 px-3 py-2 text-xs font-semibold text-zinc-200"
+                    >
+                      Copiar título
+                    </button>
+                  ) : null}
                   {statuses.map((status) => (
                     <button key={status.key} onClick={() => void handleStatusChange(selectedId, status.key)} className="rounded-full border border-zinc-700 px-3 py-2 text-xs font-semibold text-zinc-200">
                       {status.label}
@@ -249,6 +278,7 @@ export default function TareasPage() {
             ) : (
               <p className="mt-4 text-sm text-zinc-500">{loading ? "Cargando..." : "Selecciona una tarea para ver el detalle."}</p>
             )}
+            {copied ? <p className="mt-3 text-xs uppercase tracking-[0.18em] text-emerald-300">{copied}</p> : null}
           </section>
         </div>
       </ModuleShell>

@@ -3,7 +3,9 @@ import { HeroButton, ShellBadge, StatCard, srFixTheme } from "@/components/srfix
 
 const productName = process.env.NEXT_PUBLIC_SAAS_BRAND_NAME ?? "FIXI";
 const legalName = process.env.NEXT_PUBLIC_SAAS_LEGAL_NAME ?? "Servicios Digitales MX";
-const demoHref = process.env.NEXT_PUBLIC_SAAS_DEMO_URL ?? "/t/demo/portal";
+const demoTenantSlug = process.env.NEXT_PUBLIC_SAAS_DEMO_TENANT_SLUG ?? "demo";
+const quoteHref = `/${encodeURIComponent(demoTenantSlug)}/cotizar`;
+const portalHref = `/t/${encodeURIComponent(demoTenantSlug)}/portal`;
 
 const metrics = [
   { value: "1", label: "Experiencia por tenant" },
@@ -56,15 +58,49 @@ export default function Home() {
               Cada tenant tiene su propia landing, su portal público y su operación interna, conectados a Supabase y al API real. El cliente ve su taller, no una plantilla genérica.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <HeroButton href="/onboarding">Crear mi tenant</HeroButton>
-              <HeroButton href={demoHref} secondary>Ver demo en vivo</HeroButton>
+              <HeroButton href={quoteHref}>Ir al cotizador</HeroButton>
+              <HeroButton href={portalHref} secondary>
+                Entrar al panel del cliente
+              </HeroButton>
+              <HeroButton href="/onboarding" secondary>
+                Crear mi tenant
+              </HeroButton>
             </div>
+            <p className="mt-4 text-sm text-zinc-400">
+              Demo pública configurada para el tenant <span className="font-semibold text-zinc-200">{demoTenantSlug}</span>.
+            </p>
             <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {metrics.map((metric) => (
                 <StatCard key={metric.label} value={metric.value} label={metric.label} />
               ))}
             </div>
           </div>
+        </section>
+
+        <section className="grid gap-5 md:grid-cols-2">
+          <article className="rounded-[1.75rem] border border-stone-700/70 bg-white/4 p-6 shadow-[0_16px_60px_rgba(0,0,0,0.24)] backdrop-blur">
+            <p className="text-xs font-semibold uppercase tracking-[0.26em] text-amber-100/70">Cotizador</p>
+            <h2 className="mt-3 text-2xl font-bold text-zinc-50">Enviar una solicitud real al taller</h2>
+            <p className="mt-3 text-sm leading-7 text-zinc-300">
+              El cliente captura su nombre, contacto, equipo y falla para generar un folio real y dejarlo listo para recepción.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <HeroButton href={quoteHref}>Abrir cotizador</HeroButton>
+            </div>
+          </article>
+
+          <article className="rounded-[1.75rem] border border-stone-700/70 bg-white/4 p-6 shadow-[0_16px_60px_rgba(0,0,0,0.24)] backdrop-blur">
+            <p className="text-xs font-semibold uppercase tracking-[0.26em] text-amber-100/70">Panel del cliente</p>
+            <h2 className="mt-3 text-2xl font-bold text-zinc-50">Consultar folio, timeline y evidencia</h2>
+            <p className="mt-3 text-sm leading-7 text-zinc-300">
+              El cliente entra al portal del taller para revisar su orden sin mezclar información con otros tenants.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <HeroButton href={portalHref} secondary>
+                Abrir portal
+              </HeroButton>
+            </div>
+          </article>
         </section>
 
         <section id="producto" className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
