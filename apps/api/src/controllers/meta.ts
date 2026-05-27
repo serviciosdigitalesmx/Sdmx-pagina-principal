@@ -101,17 +101,20 @@ export const resolveTenantForSupabaseUser = async (req: Request, res: Response) 
 
 export const getTenantSettings = async (req: Request, res: Response) => {
   const tenantSlug = req.params.tenantSlug;
+  const tenantId = req.tenantId ?? null;
 
-  if (!tenantSlug) {
+  if (!tenantSlug && !tenantId) {
     return res.status(400).json({ error: 'Tenant slug is required' });
   }
 
   try {
-    const { data, error } = await supabaseAdmin
+    const query = supabaseAdmin
       .from('tenants')
-      .select('id, slug, name, branding, landing_content, operational_settings, trial_expires_at, billing_exempt')
-      .eq('slug', tenantSlug)
-      .single();
+      .select('id, slug, name, branding, landing_content, operational_settings, trial_expires_at, billing_exempt');
+
+    const { data, error } = tenantId
+      ? await query.eq('id', tenantId).maybeSingle()
+      : await query.eq('slug', tenantSlug).maybeSingle();
 
     if (error || !data) {
       return res.status(404).json({ error: 'Tenant not found', details: error?.message ?? 'Not found' });
@@ -134,17 +137,20 @@ export const getTenantSettings = async (req: Request, res: Response) => {
 
 export const updateTenantSettings = async (req: Request, res: Response) => {
   const tenantSlug = req.params.tenantSlug;
+  const tenantId = req.tenantId ?? null;
 
-  if (!tenantSlug) {
+  if (!tenantSlug && !tenantId) {
     return res.status(400).json({ error: 'Tenant slug is required' });
   }
 
   try {
-    const { data: tenantRow, error: tenantError } = await supabaseAdmin
+    const tenantQuery = supabaseAdmin
       .from('tenants')
-      .select('id, slug')
-      .eq('slug', tenantSlug)
-      .single();
+      .select('id, slug');
+
+    const { data: tenantRow, error: tenantError } = tenantId
+      ? await tenantQuery.eq('id', tenantId).maybeSingle()
+      : await tenantQuery.eq('slug', tenantSlug).maybeSingle();
 
     if (tenantError || !tenantRow) {
       return res.status(404).json({ error: 'Tenant not found', details: tenantError?.message ?? 'Not found' });

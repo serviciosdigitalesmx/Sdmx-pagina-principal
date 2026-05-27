@@ -38,7 +38,12 @@ type LandingResponse = {
 };
 
 function resolveApiBaseUrl() {
-  return (process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/$/, "");
+  return (
+    process.env.NEXT_PUBLIC_API_URL ||
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    process.env.NEXT_PUBLIC_RENDER_API_URL ||
+    "https://sdmx-backend-api.onrender.com"
+  ).replace(/\/$/, "");
 }
 
 function resolveWhatsappHref(phone?: string | null) {

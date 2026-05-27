@@ -29,7 +29,12 @@ function getAdminBridgeUrl(token: string) {
 }
 
 async function exchangeSessionForApiToken(accessToken: string) {
-  const apiUrl = (process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/$/, "");
+  const apiUrl = (
+    process.env.NEXT_PUBLIC_API_URL ||
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    process.env.NEXT_PUBLIC_RENDER_API_URL ||
+    "https://sdmx-backend-api.onrender.com"
+  ).replace(/\/$/, "");
 
   if (!apiUrl) {
     throw new Error("API base URL no está configurada.");

@@ -22,7 +22,12 @@ export default function GoogleCallbackPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const apiUrl = (process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/$/, "");
+  const apiUrl = (
+    process.env.NEXT_PUBLIC_API_URL ||
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    process.env.NEXT_PUBLIC_RENDER_API_URL ||
+    "https://sdmx-backend-api.onrender.com"
+  ).replace(/\/$/, "");
 
   useEffect(() => {
     let mounted = true;

@@ -115,7 +115,12 @@ import { getCurrentSession } from "@/lib/session";
 
 class FixService {
   private get apiUrl() {
-    return (process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000').replace(/\/$/, '');
+    return (
+      process.env.NEXT_PUBLIC_API_URL ||
+      process.env.NEXT_PUBLIC_API_BASE_URL ||
+      process.env.NEXT_PUBLIC_RENDER_API_URL ||
+      'https://sdmx-backend-api.onrender.com'
+    ).replace(/\/$/, '');
   }
 
   private get tenantId() {
