@@ -25,7 +25,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport = {
-  themeColor: requireEnv("NEXT_PUBLIC_TENANT_THEME_COLOR"),
+  themeColor: requireEnv("NEXT_PUBLIC_THEME_PRIMARY"),
 };
 
 export default function RootLayout({
