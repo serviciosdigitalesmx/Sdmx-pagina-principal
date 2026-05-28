@@ -154,7 +154,7 @@ const createOrderSchema = z.object({
     notes: '',
   }),
   receiptUrl: z.string().optional().or(z.literal('')),
-  branchId: z.string().min(1).optional(),
+  sucursalId: z.string().min(1).optional(),
   metadata: z.record(z.unknown()).optional(),
 });
 
@@ -458,13 +458,13 @@ export const createOrder = async (req: Request, res: Response) => {
 
     const validatedData = createOrderSchema.parse(req.body);
     const supabase = getTenantClient(tenantId);
-    const requestedBranchId = isUuid(validatedData.branchId)
-      ? validatedData.branchId
+    const requestedSucursalId = isUuid(validatedData.sucursalId)
+      ? validatedData.sucursalId
       : isUuid(req.user?.sucursalId)
         ? req.user?.sucursalId
         : null;
 
-    if (req.user?.role === 'manager' && req.user.sucursalId && requestedBranchId && requestedBranchId !== req.user.sucursalId) {
+    if (req.user?.role === 'manager' && req.user.sucursalId && requestedSucursalId && requestedSucursalId !== req.user.sucursalId) {
       return res.status(403).json({ error: 'Sucursal mismatch' });
     }
 
@@ -479,7 +479,7 @@ export const createOrder = async (req: Request, res: Response) => {
       .insert([
         {
           tenant_id: tenantId,
-          branch_id: requestedBranchId,
+          sucursal_id: requestedSucursalId,
           folio: newFolio,
           status: 'recibido',
           device_info: {
@@ -576,7 +576,7 @@ export const createOrder = async (req: Request, res: Response) => {
         final_cost: finalCost,
         estimated_cost: estimatedCost,
         receipt_url: validatedData.receiptUrl || null,
-        branch_id: requestedBranchId,
+        sucursal_id: requestedSucursalId,
         pdf_attachment: pdfAttachment,
         attachments: pdfAttachment ? [pdfAttachment] : [],
         include_iva: validatedData.includeIva,
@@ -597,7 +597,7 @@ export const createOrder = async (req: Request, res: Response) => {
 export const listOrders = async (req: Request, res: Response) => {
   try {
     const tenantId = req.tenantId;
-    const branchId = typeof req.query.branchId === 'string' ? req.query.branchId.trim() : '';
+    const sucursalId = typeof req.query.sucursalId === 'string' ? req.query.sucursalId.trim() : '';
 
     if (!tenantId) {
       return res.status(401).json({ error: 'Tenant context is required' });
@@ -611,10 +611,10 @@ export const listOrders = async (req: Request, res: Response) => {
       .order('created_at', { ascending: false })
       .limit(50);
 
-    if (isUuid(branchId)) {
-      query = query.eq('branch_id', branchId);
+    if (isUuid(sucursalId)) {
+      query = query.eq('sucursal_id', sucursalId);
     } else if (req.user?.role === 'manager' && isUuid(req.user.sucursalId)) {
-      query = query.eq('branch_id', req.user.sucursalId);
+      query = query.eq('sucursal_id', req.user.sucursalId);
     }
 
     const { data, error } = await query;
@@ -646,7 +646,7 @@ export const getOrderById = async (req: Request, res: Response) => {
   try {
     const tenantId = req.tenantId;
     const orderId = req.params.id;
-    const branchId = typeof req.query.branchId === 'string' ? req.query.branchId.trim() : '';
+    const sucursalId = typeof req.query.sucursalId === 'string' ? req.query.sucursalId.trim() : '';
 
     if (!tenantId) {
       return res.status(401).json({ error: 'Tenant context is required' });
@@ -663,10 +663,10 @@ export const getOrderById = async (req: Request, res: Response) => {
       .eq('tenant_id', tenantId)
       .eq('id', orderId);
 
-    if (isUuid(branchId)) {
-      orderQuery.eq('branch_id', branchId);
+    if (isUuid(sucursalId)) {
+      orderQuery.eq('sucursal_id', sucursalId);
     } else if (req.user?.role === 'manager' && isUuid(req.user.sucursalId)) {
-      orderQuery.eq('branch_id', req.user.sucursalId);
+      orderQuery.eq('sucursal_id', req.user.sucursalId);
     }
 
     const [orderResult, checklistResult, documentsResult, eventsResult, runtimeConfig] = await Promise.all([
@@ -753,7 +753,7 @@ export const uploadOrderAttachments = async (req: Request, res: Response) => {
   try {
     const tenantId = req.tenantId;
     const orderId = req.params.id;
-    const branchId = typeof req.query.branchId === 'string' ? req.query.branchId.trim() : '';
+    const sucursalId = typeof req.query.sucursalId === 'string' ? req.query.sucursalId.trim() : '';
 
     if (!tenantId) {
       return res.status(401).json({ error: 'Tenant context is required' });
@@ -767,7 +767,7 @@ export const uploadOrderAttachments = async (req: Request, res: Response) => {
       .select('id, tenant_id, evidence_metadata')
       .eq('tenant_id', tenantId)
       .eq('id', orderId)
-      .eq(isUuid(branchId) ? 'branch_id' : 'tenant_id', isUuid(branchId) ? branchId : tenantId)
+      .eq(isUuid(sucursalId) ? 'sucursal_id' : 'tenant_id', isUuid(sucursalId) ? sucursalId : tenantId)
       .single();
 
     if (orderError || !order) {
@@ -981,7 +981,7 @@ export const addOrderNote = async (req: Request, res: Response) => {
   try {
     const tenantId = req.tenantId;
     const orderId = req.params.id;
-    const branchId = typeof req.query.branchId === 'string' ? req.query.branchId.trim() : '';
+    const sucursalId = typeof req.query.sucursalId === 'string' ? req.query.sucursalId.trim() : '';
 
     if (!tenantId) {
       return res.status(401).json({ error: 'Tenant context is required' });
@@ -995,7 +995,7 @@ export const addOrderNote = async (req: Request, res: Response) => {
       .select('id, status, evidence_metadata')
       .eq('tenant_id', tenantId)
       .eq('id', orderId)
-      .eq(isUuid(branchId) ? 'branch_id' : 'tenant_id', isUuid(branchId) ? branchId : tenantId)
+      .eq(isUuid(sucursalId) ? 'sucursal_id' : 'tenant_id', isUuid(sucursalId) ? sucursalId : tenantId)
       .single();
 
     if (orderError || !order) {
@@ -1051,7 +1051,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
   try {
     const tenantId = req.tenantId;
     const orderId = req.params.id;
-    const branchId = typeof req.query.branchId === 'string' ? req.query.branchId.trim() : '';
+    const sucursalId = typeof req.query.sucursalId === 'string' ? req.query.sucursalId.trim() : '';
 
     if (!tenantId) {
       return res.status(401).json({ error: 'Tenant context is required' });
@@ -1065,7 +1065,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
       .select('id, status, evidence_metadata')
       .eq('tenant_id', tenantId)
       .eq('id', orderId)
-      .eq(isUuid(branchId) ? 'branch_id' : 'tenant_id', isUuid(branchId) ? branchId : tenantId)
+      .eq(isUuid(sucursalId) ? 'sucursal_id' : 'tenant_id', isUuid(sucursalId) ? sucursalId : tenantId)
       .single();
 
     if (orderError || !order) {
@@ -1140,7 +1140,7 @@ export const updateOrderFinancials = async (req: Request, res: Response) => {
   try {
     const tenantId = req.tenantId;
     const orderId = req.params.id;
-    const branchId = typeof req.query.branchId === 'string' ? req.query.branchId.trim() : '';
+    const sucursalId = typeof req.query.sucursalId === 'string' ? req.query.sucursalId.trim() : '';
 
     if (!tenantId) {
       return res.status(401).json({ error: 'Tenant context is required' });
@@ -1154,7 +1154,7 @@ export const updateOrderFinancials = async (req: Request, res: Response) => {
       .select('id, estimated_cost, final_cost, evidence_metadata')
       .eq('tenant_id', tenantId)
       .eq('id', orderId)
-      .eq(isUuid(branchId) ? 'branch_id' : 'tenant_id', isUuid(branchId) ? branchId : tenantId)
+      .eq(isUuid(sucursalId) ? 'sucursal_id' : 'tenant_id', isUuid(sucursalId) ? sucursalId : tenantId)
       .single();
 
     if (orderError || !order) {
@@ -1232,7 +1232,7 @@ export const updateOrderDetails = async (req: Request, res: Response) => {
   try {
     const tenantId = req.tenantId;
     const orderId = req.params.id;
-    const branchId = typeof req.query.branchId === 'string' ? req.query.branchId.trim() : '';
+    const sucursalId = typeof req.query.sucursalId === 'string' ? req.query.sucursalId.trim() : '';
 
     if (!tenantId) {
       return res.status(401).json({ error: 'Tenant context is required' });
@@ -1246,7 +1246,7 @@ export const updateOrderDetails = async (req: Request, res: Response) => {
       .select('id, device_info')
       .eq('tenant_id', tenantId)
       .eq('id', orderId)
-      .eq(isUuid(branchId) ? 'branch_id' : 'tenant_id', isUuid(branchId) ? branchId : tenantId)
+      .eq(isUuid(sucursalId) ? 'sucursal_id' : 'tenant_id', isUuid(sucursalId) ? sucursalId : tenantId)
       .single();
 
     if (existingError || !existing) {

@@ -6,7 +6,7 @@ export type TenantConfig = {
   tenantId: string;
   tenantName: string;
   brandName: string;
-  branchName: string;
+  sucursalName: string;
   userSucursalId: string;
   userEmail: string;
   userRole: string;

@@ -16,7 +16,7 @@ Applied migration chain:
 
 Notes:
 - The repository previously contained RLS policies targeting older table names.
-- The current project schema uses tables such as `service_orders`, `service_requests`, `branch_inventory`, `products`, `suppliers`, and `tasks`.
+- The current project schema uses tables such as `service_orders`, `service_requests`, `sucursal_inventory`, `products`, `suppliers`, and `tasks`.
 - Any new migration should be incremental and should be validated against the pulled remote schema before pushing to staging or production.
 
 Recommended workflow for future schema changes:

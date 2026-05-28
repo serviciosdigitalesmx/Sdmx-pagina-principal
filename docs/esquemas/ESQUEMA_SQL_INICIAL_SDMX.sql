@@ -35,7 +35,7 @@ create table if not exists public.tenants (
   updated_at timestamptz not null default timezone('utc', now())
 );
 
-create table if not exists public.branches (
+create table if not exists public.sucursales (
   id uuid primary key default gen_random_uuid(),
   tenant_id uuid not null references public.tenants(id) on delete cascade,
   name text not null,
@@ -49,14 +49,14 @@ create table if not exists public.branches (
   updated_at timestamptz not null default timezone('utc', now())
 );
 
-create unique index if not exists branches_tenant_code_uidx
-  on public.branches (tenant_id, code)
+create unique index if not exists sucursales_tenant_code_uidx
+  on public.sucursales (tenant_id, code)
   where code is not null;
 
 create table if not exists public.users (
   id uuid primary key default gen_random_uuid(),
   tenant_id uuid not null references public.tenants(id) on delete cascade,
-  branch_id uuid references public.branches(id) on delete set null,
+  sucursal_id uuid references public.sucursales(id) on delete set null,
   auth_user_id uuid,
   full_name text not null,
   email text not null,
@@ -99,7 +99,7 @@ create index if not exists customers_tenant_email_idx on public.customers (tenan
 create table if not exists public.service_requests (
   id uuid primary key default gen_random_uuid(),
   tenant_id uuid not null references public.tenants(id) on delete cascade,
-  branch_id uuid references public.branches(id) on delete set null,
+  sucursal_id uuid references public.sucursales(id) on delete set null,
   folio text not null,
   customer_name text not null,
   customer_phone text,
@@ -127,7 +127,7 @@ create unique index if not exists service_requests_tenant_folio_uidx
 create table if not exists public.service_orders (
   id uuid primary key default gen_random_uuid(),
   tenant_id uuid not null references public.tenants(id) on delete cascade,
-  branch_id uuid references public.branches(id) on delete set null,
+  sucursal_id uuid references public.sucursales(id) on delete set null,
   customer_id uuid references public.customers(id) on delete set null,
   service_request_id uuid references public.service_requests(id) on delete set null,
   folio text not null,
@@ -156,8 +156,8 @@ create table if not exists public.service_orders (
 create unique index if not exists service_orders_tenant_folio_uidx
   on public.service_orders (tenant_id, folio);
 
-create index if not exists service_orders_tenant_branch_idx
-  on public.service_orders (tenant_id, branch_id);
+create index if not exists service_orders_tenant_sucursal_idx
+  on public.service_orders (tenant_id, sucursal_id);
 
 create index if not exists service_orders_tenant_status_idx
   on public.service_orders (tenant_id, status);
@@ -199,7 +199,7 @@ create index if not exists service_order_status_history_order_idx
 create table if not exists public.tasks (
   id uuid primary key default gen_random_uuid(),
   tenant_id uuid not null references public.tenants(id) on delete cascade,
-  branch_id uuid references public.branches(id) on delete set null,
+  sucursal_id uuid references public.sucursales(id) on delete set null,
   service_order_id uuid references public.service_orders(id) on delete set null,
   service_request_id uuid references public.service_requests(id) on delete set null,
   title text not null,
@@ -214,7 +214,7 @@ create table if not exists public.tasks (
   updated_at timestamptz not null default timezone('utc', now())
 );
 
-create index if not exists tasks_tenant_branch_idx on public.tasks (tenant_id, branch_id);
+create index if not exists tasks_tenant_sucursal_idx on public.tasks (tenant_id, sucursal_id);
 create index if not exists tasks_tenant_status_idx on public.tasks (tenant_id, status);
 create index if not exists tasks_assigned_idx on public.tasks (assigned_user_id);
 
@@ -282,22 +282,22 @@ create table if not exists public.products (
 create unique index if not exists products_tenant_sku_uidx
   on public.products (tenant_id, sku);
 
-create table if not exists public.branch_inventory (
+create table if not exists public.sucursal_inventory (
   id uuid primary key default gen_random_uuid(),
   tenant_id uuid not null references public.tenants(id) on delete cascade,
-  branch_id uuid not null references public.branches(id) on delete cascade,
+  sucursal_id uuid not null references public.sucursales(id) on delete cascade,
   product_id uuid not null references public.products(id) on delete cascade,
   stock_current numeric(12,2) not null default 0,
   updated_at timestamptz not null default timezone('utc', now())
 );
 
-create unique index if not exists branch_inventory_uidx
-  on public.branch_inventory (tenant_id, branch_id, product_id);
+create unique index if not exists sucursal_inventory_uidx
+  on public.sucursal_inventory (tenant_id, sucursal_id, product_id);
 
 create table if not exists public.purchase_orders (
   id uuid primary key default gen_random_uuid(),
   tenant_id uuid not null references public.tenants(id) on delete cascade,
-  branch_id uuid references public.branches(id) on delete set null,
+  sucursal_id uuid references public.sucursales(id) on delete set null,
   supplier_id uuid references public.suppliers(id) on delete set null,
   related_service_order_id uuid references public.service_orders(id) on delete set null,
   folio text not null,
@@ -336,7 +336,7 @@ create table if not exists public.purchase_order_items (
 create table if not exists public.inventory_movements (
   id uuid primary key default gen_random_uuid(),
   tenant_id uuid not null references public.tenants(id) on delete cascade,
-  branch_id uuid references public.branches(id) on delete set null,
+  sucursal_id uuid references public.sucursales(id) on delete set null,
   product_id uuid not null references public.products(id) on delete cascade,
   service_order_id uuid references public.service_orders(id) on delete set null,
   purchase_order_id uuid references public.purchase_orders(id) on delete set null,
@@ -355,7 +355,7 @@ create index if not exists inventory_movements_tenant_product_idx
 create table if not exists public.stock_alerts (
   id uuid primary key default gen_random_uuid(),
   tenant_id uuid not null references public.tenants(id) on delete cascade,
-  branch_id uuid references public.branches(id) on delete set null,
+  sucursal_id uuid references public.sucursales(id) on delete set null,
   product_id uuid not null references public.products(id) on delete cascade,
   severity text not null,
   acknowledged_by uuid references public.users(id) on delete set null,
@@ -370,7 +370,7 @@ create table if not exists public.stock_alerts (
 create table if not exists public.expenses (
   id uuid primary key default gen_random_uuid(),
   tenant_id uuid not null references public.tenants(id) on delete cascade,
-  branch_id uuid references public.branches(id) on delete set null,
+  sucursal_id uuid references public.sucursales(id) on delete set null,
   supplier_id uuid references public.suppliers(id) on delete set null,
   service_order_id uuid references public.service_orders(id) on delete set null,
   purchase_order_id uuid references public.purchase_orders(id) on delete set null,
@@ -394,7 +394,7 @@ create index if not exists expenses_tenant_date_idx
 create table if not exists public.customer_payments (
   id uuid primary key default gen_random_uuid(),
   tenant_id uuid not null references public.tenants(id) on delete cascade,
-  branch_id uuid references public.branches(id) on delete set null,
+  sucursal_id uuid references public.sucursales(id) on delete set null,
   customer_id uuid references public.customers(id) on delete set null,
   service_order_id uuid references public.service_orders(id) on delete set null,
   service_request_id uuid references public.service_requests(id) on delete set null,
@@ -415,7 +415,7 @@ create table if not exists public.customer_payments (
 create table if not exists public.file_assets (
   id uuid primary key default gen_random_uuid(),
   tenant_id uuid not null references public.tenants(id) on delete cascade,
-  branch_id uuid references public.branches(id) on delete set null,
+  sucursal_id uuid references public.sucursales(id) on delete set null,
   service_order_id uuid references public.service_orders(id) on delete set null,
   service_request_id uuid references public.service_requests(id) on delete set null,
   file_type text not null,
@@ -447,9 +447,9 @@ create trigger trg_tenants_updated_at
 before update on public.tenants
 for each row execute function public.set_updated_at();
 
-drop trigger if exists trg_branches_updated_at on public.branches;
-create trigger trg_branches_updated_at
-before update on public.branches
+drop trigger if exists trg_sucursales_updated_at on public.sucursales;
+create trigger trg_sucursales_updated_at
+before update on public.sucursales
 for each row execute function public.set_updated_at();
 
 drop trigger if exists trg_users_updated_at on public.users;
@@ -492,9 +492,9 @@ create trigger trg_products_updated_at
 before update on public.products
 for each row execute function public.set_updated_at();
 
-drop trigger if exists trg_branch_inventory_updated_at on public.branch_inventory;
-create trigger trg_branch_inventory_updated_at
-before update on public.branch_inventory
+drop trigger if exists trg_sucursal_inventory_updated_at on public.sucursal_inventory;
+create trigger trg_sucursal_inventory_updated_at
+before update on public.sucursal_inventory
 for each row execute function public.set_updated_at();
 
 drop trigger if exists trg_purchase_orders_updated_at on public.purchase_orders;

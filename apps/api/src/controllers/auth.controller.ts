@@ -79,7 +79,7 @@ function signJwt(payload: Record<string, unknown>) {
   return `${signingInput}.${signature}`;
 }
 
-function buildAuthPayload(user: { id: string; email?: string | null }, tenant: { id: string; slug?: string | null }, role: string, branchId?: string | null) {
+function buildAuthPayload(user: { id: string; email?: string | null }, tenant: { id: string; slug?: string | null }, role: string, sucursalId?: string | null) {
   return {
     token: signJwt({
       sub: user.id,
@@ -87,7 +87,7 @@ function buildAuthPayload(user: { id: string; email?: string | null }, tenant: {
       role,
       tenant_id: tenant.id,
       tenant_slug: tenant.slug ?? undefined,
-      sucursal_id: branchId ?? undefined,
+      sucursal_id: sucursalId ?? undefined,
     }),
     user: {
       sub: user.id,
@@ -95,7 +95,7 @@ function buildAuthPayload(user: { id: string; email?: string | null }, tenant: {
       role,
       tenantId: tenant.id,
       tenantSlug: tenant.slug ?? null,
-      branchId: branchId ?? null,
+      sucursalId: sucursalId ?? null,
     },
   };
 }
@@ -322,7 +322,7 @@ export const exchangeSupabaseSession = async (req: Request, res: Response) => {
 
     const { data: userRow, error: userRowError } = await supabaseAdmin
       .from('users')
-      .select('tenant_id, role, branch_id')
+      .select('tenant_id, role, sucursal_id')
       .eq('auth_user_id', data.user.id)
       .maybeSingle();
 
@@ -352,7 +352,7 @@ export const exchangeSupabaseSession = async (req: Request, res: Response) => {
       { id: data.user.id, email: data.user.email },
       { id: tenantRow.id, slug: tenantRow.slug },
       userRow.role,
-      userRow.branch_id
+      userRow.sucursal_id
     );
 
     return res.status(200).json({

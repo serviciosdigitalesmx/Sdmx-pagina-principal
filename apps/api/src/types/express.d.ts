@@ -9,7 +9,7 @@ declare global {
       locked_modules: string[];
       limits: {
         users: number | null;
-        branches: number | null;
+        sucursales: number | null;
         monthly_orders: number | null;
         storage_mb: number | null;
         public_portal: boolean;

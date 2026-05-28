@@ -16,6 +16,10 @@ coverage/
 **/.turbo/
 .cache/
 **/.cache/
+.pnpm-store/
+**/.pnpm-store/
+*.tsbuildinfo
+**/*.tsbuildinfo
 
 # Vercel
 .vercel/
@@ -25,8 +29,6 @@ coverage/
 fixie-roadmap-checklist.html
 supabase/.temp/
 **/.temp/
-apps/**/apps/
-**/.next 2
 
 # Env / secrets
 .env
@@ -43,6 +45,7 @@ yarn-debug.log*
 
 # OS / IDE
 .DS_Store
+**/.DS_Store
 .vscode/
 .idea/
 
@@ -61,4 +64,3 @@ audit-*.sh
 
 # Env example backups
 .env.example.bak
-.vercel

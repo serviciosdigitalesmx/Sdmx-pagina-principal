@@ -10,7 +10,7 @@ const taskBaseSchema = z.object({
   description: z.string().optional().or(z.literal('')),
   status: z.string().optional().or(z.literal('')),
   priority: z.string().optional().or(z.literal('')),
-  branchId: z.string().optional().or(z.literal('')),
+  sucursalId: z.string().optional().or(z.literal('')),
   serviceOrderId: z.string().optional().or(z.literal('')),
   serviceRequestId: z.string().optional().or(z.literal('')),
   assignedUserId: z.string().optional().or(z.literal('')),
@@ -38,7 +38,7 @@ const taskUpdateSchema = z.object({
   description: z.string().optional().or(z.literal('')),
   status: z.string().optional().or(z.literal('')),
   priority: z.string().optional().or(z.literal('')),
-  branchId: z.string().optional().or(z.literal('')),
+  sucursalId: z.string().optional().or(z.literal('')),
   serviceOrderId: z.string().optional().or(z.literal('')),
   serviceRequestId: z.string().optional().or(z.literal('')),
   assignedUserId: z.string().optional().or(z.literal('')),
@@ -110,13 +110,13 @@ export const listTasks = async (req: Request, res: Response) => {
   try {
     const tenantId = req.tenantId;
     if (!tenantId) return res.status(401).json({ error: 'Tenant context is required' });
-    const branchId = typeof req.query.branchId === 'string' ? req.query.branchId.trim() : '';
+    const sucursalId = typeof req.query.sucursalId === 'string' ? req.query.sucursalId.trim() : '';
     const supabase = getTenantClient(tenantId);
     let query = supabase.from('tasks').select('*').eq('tenant_id', tenantId).order('created_at', { ascending: false }).limit(100);
-    if (branchId) {
-      query = query.eq('branch_id', branchId);
+    if (sucursalId) {
+      query = query.eq('sucursal_id', sucursalId);
     } else if (req.user?.role === 'manager' && req.user.sucursalId) {
-      query = query.eq('branch_id', req.user.sucursalId);
+      query = query.eq('sucursal_id', req.user.sucursalId);
     }
     const { data, error } = await query;
     if (error) return res.status(502).json({ error: 'Failed to fetch tasks', details: error.message });
@@ -161,7 +161,7 @@ export const createTask = async (req: Request, res: Response) => {
 
     const { data, error } = await supabase.from('tasks').insert([{
       tenant_id: tenantId,
-      branch_id: body.branchId || null,
+      sucursal_id: body.sucursalId || null,
       service_order_id: body.serviceOrderId || null,
       service_request_id: body.serviceRequestId || null,
       title: body.title,
@@ -209,7 +209,7 @@ export const updateTask = async (req: Request, res: Response) => {
     const payload: Record<string, unknown> = {};
     if (body.title !== undefined) payload.title = body.title;
     if (body.description !== undefined) payload.description = body.description || null;
-    if (body.branchId !== undefined) payload.branch_id = body.branchId || null;
+    if (body.sucursalId !== undefined) payload.sucursal_id = body.sucursalId || null;
     if (body.serviceOrderId !== undefined) payload.service_order_id = body.serviceOrderId || null;
     if (body.serviceRequestId !== undefined) payload.service_request_id = body.serviceRequestId || null;
     if (body.priority !== undefined) payload.priority = body.priority || 'media';

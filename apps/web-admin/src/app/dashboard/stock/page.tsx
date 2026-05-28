@@ -10,8 +10,8 @@ type InventoryRow = {
   id?: string;
   sku?: string;
   description?: string;
-  stock?: number | string;
-  branch_id?: string | null;
+  stock_current?: number | string;
+  sucursal_id?: string | null;
   created_at?: string;
 };
 
@@ -28,7 +28,7 @@ const emptyForm = {
   sku: "",
   description: "",
   stock: "0",
-  branchId: "",
+  sucursalId: "",
 };
 
 export default function StockPage() {
@@ -85,8 +85,8 @@ export default function StockPage() {
       setForm({
         sku: selected.sku ?? "",
         description: selected.description ?? "",
-        stock: String(selected.stock ?? 0),
-        branchId: selected.branch_id ?? "",
+        stock: String(selected.stock_current ?? 0),
+        sucursalId: selected.sucursal_id ?? "",
       });
     }, 0);
 
@@ -124,10 +124,10 @@ export default function StockPage() {
   const stats = useMemo(
     () => [
       { label: "Productos", value: String(rows.length), helper: "Inventario del taller." },
-      { label: "Sucursal", value: selected?.branch_id || "Global", helper: "Filtro por sucursal." },
+      { label: "Sucursal", value: selected?.sucursal_id || "Global", helper: "Filtro por sucursal." },
       { label: "Rol", value: role, helper: "Permisos por usuario." },
     ],
-    [rows.length, role, selected?.branch_id],
+    [rows.length, role, selected?.sucursal_id],
   );
 
   async function handleSave(event: FormEvent<HTMLFormElement>) {
@@ -139,14 +139,14 @@ export default function StockPage() {
         sku: form.sku.trim(),
         description: form.description.trim(),
         stock: Number(form.stock || 0),
-        branchId: form.branchId.trim() || undefined,
+        sucursalId: form.sucursalId.trim() || undefined,
       };
 
       if (selected?.id) {
         await fixService.updateInventoryItem(selected.id, {
           description: payload.description,
           stock: payload.stock,
-          branchId: payload.branchId ?? null,
+          sucursalId: payload.sucursalId ?? null,
         });
       } else {
         await fixService.createInventoryItem(payload);
@@ -169,7 +169,7 @@ export default function StockPage() {
       await fixService.updateInventoryItem(selected.id, {
         stock: Number(form.stock || 0),
         description: form.description.trim(),
-        branchId: form.branchId.trim() || null,
+        sucursalId: form.sucursalId.trim() || null,
       });
       await loadInventory();
     } catch (err) {
@@ -198,14 +198,14 @@ export default function StockPage() {
         columns={[
           { label: "SKU", key: "sku" },
           { label: "Descripción", key: "description" },
-          { label: "Stock", key: "stock" },
-          { label: "Sucursal", key: "branch_id" },
+          { label: "Stock", key: "stock_current" },
+          { label: "Sucursal", key: "sucursal_id" },
         ]}
         rows={rows.map((row) => ({
           sku: row.sku ?? "",
           description: row.description ?? "",
-          stock: String(row.stock ?? 0),
-          branch_id: row.branch_id ?? "Global",
+          stock_current: String(row.stock_current ?? 0),
+          sucursal_id: row.sucursal_id ?? "Global",
         }))}
         emptyTitle={loading ? "Cargando inventario…" : error ? "No pudimos cargar inventario" : "No hay productos todavía"}
         emptyCopy={error || "La lista sale del inventario del taller y cruza con compras y alertas."}
@@ -242,7 +242,7 @@ export default function StockPage() {
                 ["sku", "SKU"],
                 ["description", "Descripción"],
                 ["stock", "Stock"],
-                ["branchId", "Sucursal (branchId)"],
+                ["sucursalId", "Sucursal (sucursalId)"],
               ].map(([key, label]) => (
                 <label key={key} className="space-y-1 text-sm text-zinc-300">
                   <span>{label}</span>

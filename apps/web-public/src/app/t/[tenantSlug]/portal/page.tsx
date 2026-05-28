@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState, type FormEvent } from "react";
 import { useParams, useSearchParams } from "next/navigation";
+import { resolveApiBaseUrl } from "@white-label/config";
 
 type PortalOrderResponse = {
   success: true;
@@ -82,15 +83,6 @@ type PortalOrderResponse = {
   };
 };
 
-function resolveApiBaseUrl() {
-  return (
-    process.env.NEXT_PUBLIC_API_URL ||
-    process.env.NEXT_PUBLIC_API_BASE_URL ||
-    process.env.NEXT_PUBLIC_RENDER_API_URL ||
-    "https://sdmx-backend-api.onrender.com"
-  ).replace(/\/$/, "");
-}
-
 function resolveWhatsappHref(phone?: string) {
   if (!phone) return undefined;
   const digits = phone.replace(/\D/g, "");
@@ -120,6 +112,24 @@ export default function PortalPage() {
     return result?.pdf_attachment ?? result?.attachments?.[0] ?? null;
   }, [result]);
 
+  const dateSummary = useMemo(() => {
+    if (!result?.order.created_at) {
+      return null;
+    }
+    const createdAt = new Date(result.order.created_at);
+    const promiseAt = new Date(createdAt);
+    promiseAt.setDate(promiseAt.getDate() + 3);
+    const now = new Date();
+    const remainingMs = promiseAt.getTime() - now.getTime();
+    const remainingDays = Math.max(0, Math.ceil(remainingMs / (1000 * 60 * 60 * 24)));
+
+    return {
+      promiseDate: promiseAt.toLocaleDateString(),
+      remainingDays,
+      lastUpdate: createdAt.toLocaleDateString(),
+    };
+  }, [result?.order.created_at]);
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setLoading(true);
@@ -128,10 +138,6 @@ export default function PortalPage() {
     setTenant(null);
 
     try {
-      if (!apiBaseUrl) {
-        throw new Error("NEXT_PUBLIC_API_URL o NEXT_PUBLIC_API_BASE_URL no está configurada");
-      }
-
       if (!tenantSlug) {
         throw new Error("Tenant slug ausente en la ruta");
       }
@@ -280,15 +286,15 @@ export default function PortalPage() {
                     <div className="mt-3 space-y-3 text-sm">
                       <div className="flex justify-between gap-4 border-b border-zinc-800 pb-2">
                         <span className="text-zinc-400">Fecha promesa</span>
-                        <span className="font-semibold text-orange-300">2026-05-30</span>
+                        <span className="font-semibold text-orange-300">{dateSummary?.promiseDate ?? "Sin definir"}</span>
                       </div>
                       <div className="flex justify-between gap-4 border-b border-zinc-800 pb-2">
                         <span className="text-zinc-400">Días restantes</span>
-                        <span className="font-semibold text-zinc-50">3 días</span>
+                        <span className="font-semibold text-zinc-50">{dateSummary ? `${dateSummary.remainingDays} día${dateSummary.remainingDays === 1 ? "" : "s"}` : "Sin definir"}</span>
                       </div>
                       <div className="flex justify-between gap-4">
                         <span className="text-zinc-400">Última actualización</span>
-                        <span className="font-semibold text-zinc-50">2026-05-27</span>
+                        <span className="font-semibold text-zinc-50">{dateSummary?.lastUpdate ?? "Sin definir"}</span>
                       </div>
                     </div>
                   </section>

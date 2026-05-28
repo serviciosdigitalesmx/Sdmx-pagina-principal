@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { requireEnv } from "@white-label/config";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,14 +20,12 @@ const cormorant = Cormorant_Garamond({
 });
 
 export const metadata: Metadata = {
-  title: process.env.NEXT_PUBLIC_SAAS_BRAND_NAME ?? "FIXI",
-  description:
-    process.env.NEXT_PUBLIC_SAAS_META_DESCRIPTION ??
-    "FIXI: plataforma para talleres con marca blanca, tracking y control.",
+  title: requireEnv("NEXT_PUBLIC_SAAS_BRAND_NAME"),
+  description: requireEnv("NEXT_PUBLIC_SAAS_META_DESCRIPTION"),
 };
 
 export const viewport = {
-  themeColor: process.env.NEXT_PUBLIC_SAAS_THEME_COLOR ?? "#111111",
+  themeColor: requireEnv("NEXT_PUBLIC_SAAS_THEME_COLOR"),
 };
 
 export default function RootLayout({

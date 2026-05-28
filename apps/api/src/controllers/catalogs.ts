@@ -13,13 +13,13 @@ const createInventorySchema = z.object({
   sku: z.string().min(1),
   description: z.string().min(1),
   stock: z.number().int().nonnegative(),
-  branchId: z.string().min(1).optional(),
+  sucursalId: z.string().min(1).optional(),
 });
 
 const updateInventorySchema = z.object({
   description: z.string().min(1).optional(),
   stock: z.number().int().nonnegative().optional(),
-  branchId: z.string().min(1).optional().nullable(),
+  sucursalId: z.string().min(1).optional().nullable(),
   note: z.string().optional().or(z.literal('')),
 });
 
@@ -77,20 +77,73 @@ async function ensureProductCatalogRecord(
   return createdProduct;
 }
 
-async function validateBranchOwnership(
+async function ensureSucursalInventoryRow(
   supabase: ReturnType<typeof getTenantClient>,
   tenantId: string,
-  branchId?: string | null,
+  sucursalId: string | null,
+  productId: string,
+  stock: number,
 ) {
-  if (!branchId) {
+  const { data: existingRow, error: existingError } = await supabase
+    .from('sucursal_inventory')
+    .select('id, tenant_id, sucursal_id, product_id, stock_current')
+    .eq('tenant_id', tenantId)
+    .eq('product_id', productId)
+    .eq('sucursal_id', sucursalId)
+    .maybeSingle();
+
+  if (existingError) {
+    throw existingError;
+  }
+
+  if (existingRow) {
+    const { data, error } = await supabase
+      .from('sucursal_inventory')
+      .update({ stock_current: stock })
+      .eq('tenant_id', tenantId)
+      .eq('id', existingRow.id)
+      .select('id, tenant_id, sucursal_id, product_id, stock_current')
+      .single();
+
+    if (error || !data) {
+      throw error ?? new Error('Unable to update sucursal inventory row');
+    }
+
+    return data;
+  }
+
+  const { data, error } = await supabase
+    .from('sucursal_inventory')
+    .insert([{
+      tenant_id: tenantId,
+      sucursal_id: sucursalId,
+      product_id: productId,
+      stock_current: stock,
+    }])
+    .select('id, tenant_id, sucursal_id, product_id, stock_current')
+    .single();
+
+  if (error || !data) {
+    throw error ?? new Error('Unable to create sucursal inventory row');
+  }
+
+  return data;
+}
+
+async function validateSucursalOwnership(
+  supabase: ReturnType<typeof getTenantClient>,
+  tenantId: string,
+  sucursalId?: string | null,
+) {
+  if (!sucursalId) {
     return true;
   }
 
   const { data, error } = await supabase
-    .from('branches')
+    .from('sucursales')
     .select('id')
     .eq('tenant_id', tenantId)
-    .eq('id', branchId)
+    .eq('id', sucursalId)
     .maybeSingle();
 
   if (error) {
@@ -144,24 +197,50 @@ export const listInventory = async (req: Request, res: Response) => {
   try {
     const tenantId = req.tenantId;
     if (!tenantId) return res.status(401).json({ error: 'Tenant context is required' });
-    const branchId = typeof req.query.branchId === 'string' ? req.query.branchId.trim() : '';
+    const sucursalId = typeof req.query.sucursalId === 'string' ? req.query.sucursalId.trim() : '';
     const supabase = getTenantClient(tenantId);
+    const effectiveSucursalId = sucursalId || (req.user?.role === 'manager' ? req.user.sucursalId ?? '' : '');
+
+    if (effectiveSucursalId && !(await validateSucursalOwnership(supabase, tenantId, effectiveSucursalId))) {
+      return res.status(403).json({ error: 'Sucursal mismatch' });
+    }
+
     let query = supabase
-      .from('inventory')
-      .select('*')
+      .from('sucursal_inventory')
+      .select('id, tenant_id, sucursal_id, product_id, stock_current, created_at, updated_at')
       .eq('tenant_id', tenantId)
       .order('created_at', { ascending: false })
       .limit(100);
 
-    if (branchId) {
-      query = query.eq('branch_id', branchId);
-    } else if (req.user?.role === 'manager' && req.user.sucursalId) {
-      query = query.eq('branch_id', req.user.sucursalId);
+    if (effectiveSucursalId) {
+      query = query.eq('sucursal_id', effectiveSucursalId);
     }
 
     const { data, error } = await query;
     if (error) return res.status(502).json({ error: 'Failed to fetch inventory', details: error.message });
-    return res.json({ success: true, data });
+
+    const rows = Array.isArray(data) ? data : [];
+    const productIds = rows.map((row) => String((row as { product_id?: string }).product_id ?? '')).filter(Boolean);
+    const { data: products, error: productsError } = productIds.length > 0
+      ? await supabase.from('products').select('id, sku, name, tenant_id').eq('tenant_id', tenantId).in('id', productIds)
+      : { data: [], error: null };
+
+    if (productsError) {
+      return res.status(502).json({ error: 'Failed to resolve inventory products', details: productsError.message });
+    }
+
+    const productMap = new Map((products ?? []).map((product) => [String((product as { id?: string }).id ?? ''), product]));
+    const result = rows.map((row) => {
+      const product = productMap.get(String((row as { product_id?: string }).product_id ?? '')) as Record<string, unknown> | undefined;
+      return {
+        ...row,
+        sku: product?.sku ?? null,
+        description: product?.name ?? null,
+        stock: Number((row as { stock_current?: number }).stock_current ?? 0),
+      };
+    });
+
+    return res.json({ success: true, data: result });
   } catch (error) {
     console.error('Error listing inventory:', error);
     return res.status(500).json({ error: 'Error interno del servidor' });
@@ -175,52 +254,29 @@ export const createInventoryItem = async (req: Request, res: Response) => {
     const body = createInventorySchema.parse(req.body);
     const supabase = getTenantClient(tenantId);
 
-    if (body.branchId && !isUuid(body.branchId)) {
-      return res.status(400).json({ error: 'Invalid branchId' });
+    if (body.sucursalId && !isUuid(body.sucursalId)) {
+      return res.status(400).json({ error: 'Invalid sucursalId' });
     }
-    if (body.branchId && !(await validateBranchOwnership(supabase, tenantId, body.branchId))) {
-      return res.status(404).json({ error: 'Branch not found' });
+    if (body.sucursalId && !(await validateSucursalOwnership(supabase, tenantId, body.sucursalId))) {
+      return res.status(403).json({ error: 'Sucursal mismatch' });
+    }
+
+    if (req.user?.role === 'manager' && req.user.sucursalId && body.sucursalId && body.sucursalId !== req.user.sucursalId) {
+      return res.status(403).json({ error: 'Sucursal mismatch' });
     }
 
     const productRow = await ensureProductCatalogRecord(supabase, tenantId, body.sku, body.description, body.description);
-
-    const { data: existingRow, error: existingError } = await supabase
-      .from('inventory')
-      .select('id')
-      .eq('tenant_id', tenantId)
-      .eq('sku', body.sku)
-      .maybeSingle();
-
-    if (existingError) return res.status(502).json({ error: 'Failed to inspect inventory item', details: existingError.message });
-
-    if (existingRow) {
-      const { data, error } = await supabase
-        .from('inventory')
-        .update({
-          description: body.description,
-          stock: body.stock,
-          branch_id: body.branchId ?? null,
-        })
-        .eq('tenant_id', tenantId)
-        .eq('sku', body.sku)
-        .select()
-        .single();
-      if (error) return res.status(502).json({ error: 'Failed to update inventory item', details: error.message });
-      await refreshInventoryAlert(tenantId, productRow.id, body.branchId ?? null, Number(body.stock));
-      return res.status(200).json({ success: true, data });
-    }
-
-    const { data, error } = await supabase.from('inventory').insert([{
-      id: productRow.id,
-      tenant_id: tenantId,
-      sku: body.sku,
-      description: body.description,
-      stock: body.stock,
-      branch_id: body.branchId ?? null,
-    }]).select().single();
-    if (error) return res.status(502).json({ error: 'Failed to create inventory item', details: error.message });
-    await refreshInventoryAlert(tenantId, productRow.id, body.branchId ?? null, Number(body.stock));
-    return res.status(201).json({ success: true, data });
+    const inventoryRow = await ensureSucursalInventoryRow(supabase, tenantId, body.sucursalId ?? null, productRow.id, Number(body.stock));
+    await refreshInventoryAlert(tenantId, productRow.id, body.sucursalId ?? null, Number(body.stock));
+    return res.status(201).json({
+      success: true,
+      data: {
+        ...inventoryRow,
+        sku: body.sku,
+        description: body.description,
+        stock: Number(body.stock),
+      },
+    });
   } catch (error) {
     if (error instanceof z.ZodError) return res.status(400).json({ error: 'Invalid payload', details: error.errors });
     console.error('Error creating inventory item:', error);
@@ -238,8 +294,8 @@ export const updateInventoryItem = async (req: Request, res: Response) => {
     const supabase = getTenantClient(tenantId);
 
     const { data: currentRow, error: currentError } = await supabase
-      .from('inventory')
-      .select('id, tenant_id, branch_id, sku, description, stock, created_at')
+      .from('sucursal_inventory')
+      .select('id, tenant_id, sucursal_id, product_id, stock_current, created_at')
       .eq('tenant_id', tenantId)
       .eq('id', inventoryId)
       .single();
@@ -248,41 +304,52 @@ export const updateInventoryItem = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Inventory item not found', details: currentError?.message ?? 'Not found' });
     }
 
-    const nextStock = typeof body.stock === 'number' ? body.stock : currentRow.stock;
-    const nextDescription = body.description ?? currentRow.description;
-    const nextBranchId = body.branchId === null ? null : (body.branchId ?? currentRow.branch_id ?? null);
+    const nextStock = typeof body.stock === 'number' ? body.stock : Number(currentRow.stock_current ?? 0);
+    const nextSucursalId = body.sucursalId === null ? null : (body.sucursalId ?? currentRow.sucursal_id ?? null);
 
-    if (body.branchId && !isUuid(body.branchId)) {
-      return res.status(400).json({ error: 'Invalid branchId' });
+    if (body.sucursalId && !isUuid(body.sucursalId)) {
+      return res.status(400).json({ error: 'Invalid sucursalId' });
     }
-    if (body.branchId && !(await validateBranchOwnership(supabase, tenantId, body.branchId))) {
-      return res.status(404).json({ error: 'Branch not found' });
+    if (body.sucursalId && !(await validateSucursalOwnership(supabase, tenantId, body.sucursalId))) {
+      return res.status(403).json({ error: 'Sucursal mismatch' });
     }
 
-    const productRow = await ensureProductCatalogRecord(supabase, tenantId, currentRow.sku, nextDescription, nextDescription);
+    if (req.user?.role === 'manager' && req.user.sucursalId && body.sucursalId && body.sucursalId !== req.user.sucursalId) {
+      return res.status(403).json({ error: 'Sucursal mismatch' });
+    }
+
+    const { data: productRow, error: productError } = await supabase
+      .from('products')
+      .select('id, tenant_id, sku, name')
+      .eq('tenant_id', tenantId)
+      .eq('id', currentRow.product_id)
+      .maybeSingle();
+
+    if (productError || !productRow) {
+      return res.status(404).json({ error: 'Product not found for inventory row', details: productError?.message ?? 'Not found' });
+    }
 
     const { data: updatedRow, error: updateError } = await supabase
-      .from('inventory')
+      .from('sucursal_inventory')
       .update({
-        description: nextDescription,
-        stock: nextStock,
-        branch_id: nextBranchId,
+        stock_current: nextStock,
+        sucursal_id: nextSucursalId,
       })
       .eq('tenant_id', tenantId)
       .eq('id', inventoryId)
-      .select('*')
+      .select('id, tenant_id, sucursal_id, product_id, stock_current, created_at')
       .single();
 
     if (updateError) {
       return res.status(502).json({ error: 'Failed to update inventory item', details: updateError.message });
     }
 
-    if (typeof body.stock === 'number' && body.stock !== Number(currentRow.stock ?? 0)) {
-      const movementType = body.stock > Number(currentRow.stock ?? 0) ? 'in' : 'out';
-      const quantity = Math.abs(body.stock - Number(currentRow.stock ?? 0));
+    if (typeof body.stock === 'number' && body.stock !== Number(currentRow.stock_current ?? 0)) {
+      const movementType = body.stock > Number(currentRow.stock_current ?? 0) ? 'in' : 'out';
+      const quantity = Math.abs(body.stock - Number(currentRow.stock_current ?? 0));
       const { error: movementError } = await supabase.from('inventory_movements').insert([{
         tenant_id: tenantId,
-        branch_id: nextBranchId,
+        sucursal_id: nextSucursalId,
         product_id: productRow.id,
         movement_type: movementType,
         quantity,
@@ -295,7 +362,7 @@ export const updateInventoryItem = async (req: Request, res: Response) => {
       if (movementError) {
         return res.status(502).json({ error: 'Failed to persist inventory movement', details: movementError.message });
       }
-      await refreshInventoryAlert(tenantId, productRow.id, nextBranchId, nextStock);
+      await refreshInventoryAlert(tenantId, productRow.id, nextSucursalId, nextStock);
     }
 
     return res.json({ success: true, data: updatedRow });
@@ -312,18 +379,22 @@ export const listInventoryMovements = async (req: Request, res: Response) => {
   try {
     const tenantId = req.tenantId;
     if (!tenantId) return res.status(401).json({ error: 'Tenant context is required' });
-    const productId = req.params.id;
+    const inventoryId = req.params.id;
     const supabase = getTenantClient(tenantId);
 
     const { data: inventoryRow, error: inventoryError } = await supabase
-      .from('inventory')
-      .select('id, tenant_id, sku, description, stock, branch_id')
+      .from('sucursal_inventory')
+      .select('id, tenant_id, product_id, stock_current, sucursal_id')
       .eq('tenant_id', tenantId)
-      .eq('id', productId)
+      .eq('id', inventoryId)
       .maybeSingle();
 
     if (inventoryError) {
       return res.status(502).json({ error: 'Failed to fetch inventory item', details: inventoryError.message });
+    }
+
+    if (inventoryRow?.sucursal_id && !(await validateSucursalOwnership(supabase, tenantId, inventoryRow.sucursal_id))) {
+      return res.status(403).json({ error: 'Sucursal mismatch' });
     }
 
     if (!inventoryRow) {
@@ -334,7 +405,7 @@ export const listInventoryMovements = async (req: Request, res: Response) => {
       .from('products')
       .select('id, tenant_id, sku, name')
       .eq('tenant_id', tenantId)
-      .eq('sku', inventoryRow.sku)
+      .eq('id', inventoryRow.product_id)
       .maybeSingle();
 
     if (productError) {
@@ -343,9 +414,9 @@ export const listInventoryMovements = async (req: Request, res: Response) => {
 
     const { data, error } = await supabase
       .from('inventory_movements')
-      .select('id, tenant_id, branch_id, product_id, service_order_id, purchase_order_id, movement_type, quantity, unit_cost, reference, notes, created_by, created_at')
+      .select('id, tenant_id, sucursal_id, product_id, service_order_id, purchase_order_id, movement_type, quantity, unit_cost, reference, notes, created_by, created_at')
       .eq('tenant_id', tenantId)
-      .eq('product_id', productRow?.id ?? productId)
+      .eq('product_id', productRow?.id ?? inventoryId)
       .order('created_at', { ascending: false })
       .limit(100);
 

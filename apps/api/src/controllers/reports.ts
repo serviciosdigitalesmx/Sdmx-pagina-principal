@@ -14,7 +14,7 @@ export const getReportsSummary = async (req: Request, res: Response) => {
     const [ordersResult, customersResult, inventoryResult, financeResult] = await Promise.all([
       supabase.from('service_orders').select('id, status, created_at, total_cost, final_cost').eq('tenant_id', tenantId).limit(500),
       supabase.from('customers').select('id').eq('tenant_id', tenantId).limit(500),
-      supabase.from('inventory').select('id, stock').eq('tenant_id', tenantId).limit(500),
+      supabase.from('sucursal_inventory').select('id, stock_current, product_id, sucursal_id').eq('tenant_id', tenantId).limit(500),
       supabase.from('finances').select('id, balance, income, expense, created_at').eq('tenant_id', tenantId).limit(500),
     ]);
 
@@ -43,7 +43,7 @@ export const getReportsSummary = async (req: Request, res: Response) => {
     );
     const totalExpense = finances.reduce((sum, item) => sum + Number((item as { expense?: number }).expense ?? 0), 0);
     const totalBalance = Number((totalIncome - totalExpense).toFixed(2));
-    const lowStockCount = inventory.filter((item) => Number((item as { stock?: number }).stock ?? 0) <= Number(process.env.LOW_STOCK_THRESHOLD ?? 5)).length;
+    const lowStockCount = inventory.filter((item) => Number((item as { stock_current?: number }).stock_current ?? 0) <= Number(process.env.LOW_STOCK_THRESHOLD ?? 5)).length;
 
     return res.json({
       success: true,

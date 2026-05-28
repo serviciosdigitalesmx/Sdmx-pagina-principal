@@ -123,7 +123,7 @@ Objetivo:
     "user": {
       "id": "uuid",
       "tenantId": "uuid",
-      "branchId": "uuid",
+      "sucursalId": "uuid",
       "fullName": "Juan Perez",
       "email": "usuario@negocio.com",
       "role": "admin"
@@ -152,7 +152,7 @@ Objetivo:
     "user": {
       "id": "uuid",
       "tenantId": "uuid",
-      "branchId": "uuid",
+      "sucursalId": "uuid",
       "fullName": "Juan Perez",
       "email": "usuario@negocio.com",
       "role": "admin"
@@ -279,7 +279,7 @@ Objetivo:
 
 ```json
 {
-  "branchId": "uuid",
+  "sucursalId": "uuid",
   "customerId": "uuid",
   "serviceRequestId": null,
   "deviceType": "Laptop",
@@ -295,7 +295,7 @@ Objetivo:
 
 ### Validaciones mínimas
 
-- `branchId` requerido
+- `sucursalId` requerido
 - `customerId` requerido
 - `deviceType` requerido
 - `reportedIssue` requerido
@@ -308,7 +308,7 @@ Objetivo:
   "data": {
     "id": "uuid",
     "tenantId": "uuid",
-    "branchId": "uuid",
+    "sucursalId": "uuid",
     "customerId": "uuid",
     "folio": "ORD-000001",
     "status": "recibido",
@@ -334,7 +334,7 @@ Objetivo:
 - `page`
 - `pageSize`
 - `status`
-- `branchId`
+- `sucursalId`
 - `search`
 
 ### Response 200

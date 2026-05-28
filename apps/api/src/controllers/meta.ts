@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { supabaseAdmin } from '@white-label/database';
 import { loadTenantBillingSummary } from '../services/tenant-billing';
-import { getIndustryTemplate, loadTenantRuntimeConfig } from '../services/tenant-config';
+import { getIndustryTemplate, listAvailableIndustries, loadTenantRuntimeConfig } from '../services/tenant-config';
 import { resolveTenantCapabilities } from '../services/tenant-capabilities';
 
 export const getApiRoot = (_req: Request, res: Response) => {
@@ -59,7 +59,7 @@ export const resolveTenantForSupabaseUser = async (req: Request, res: Response) 
 
     const { data: userRow, error: userRowError } = await supabaseAdmin
       .from('users')
-      .select('tenant_id, role, branch_id')
+      .select('tenant_id, role, sucursal_id')
       .eq('auth_user_id', data.user.id)
       .maybeSingle();
 
@@ -92,7 +92,7 @@ export const resolveTenantForSupabaseUser = async (req: Request, res: Response) 
         tenantId: tenantRow.id,
         tenantSlug: tenantRow.slug,
         role: userRow.role,
-        branchId: userRow.branch_id ?? null,
+        sucursalId: userRow.sucursal_id ?? null,
       },
     });
   } catch (error) {
@@ -152,9 +152,11 @@ export const getTenantSettings = async (req: Request, res: Response) => {
           capabilities,
         },
         billing,
+        availableIndustries: listAvailableIndustries(),
         config: {
           ...config,
           capabilities,
+          availableIndustries: listAvailableIndustries(),
         },
       },
     });
@@ -261,8 +263,9 @@ export const updateTenantSettings = async (req: Request, res: Response) => {
       ? String((industryProfile as Record<string, unknown>).industry_key ?? (industryProfile as Record<string, unknown>).industryKey ?? 'electronics_repair').trim() || 'electronics_repair'
       : 'electronics_repair';
     const industryTemplate = getIndustryTemplate(currentIndustryKey);
+    const industryChanged = Boolean(industryProfile);
 
-    if (Array.isArray(enabledModules) || industryProfile) {
+    if (Array.isArray(enabledModules) || industryChanged) {
       const moduleSource = Array.isArray(enabledModules) ? enabledModules : industryTemplate.enabledModules;
       const rows = moduleSource
         .filter((item) => item && typeof item === 'object')
@@ -279,7 +282,7 @@ export const updateTenantSettings = async (req: Request, res: Response) => {
         })
         .filter((item) => item.module_key.length > 0);
 
-      if (Array.isArray(enabledModules) || industryProfile) {
+      if (Array.isArray(enabledModules) || industryChanged) {
         const { error: deleteModulesError } = await supabaseAdmin
           .from('tenant_enabled_modules')
           .delete()
@@ -301,8 +304,9 @@ export const updateTenantSettings = async (req: Request, res: Response) => {
       }
     }
 
-    if (Array.isArray(labelOverrides)) {
-      const rows = labelOverrides
+    if (Array.isArray(labelOverrides) || industryChanged) {
+      const labelSource = Array.isArray(labelOverrides) ? labelOverrides : [];
+      const rows = labelSource
         .filter((item) => item && typeof item === 'object')
         .map((item) => {
           const record = item as Record<string, unknown>;
@@ -335,7 +339,7 @@ export const updateTenantSettings = async (req: Request, res: Response) => {
       }
     }
 
-    if (Array.isArray(workflowStatuses) || industryProfile) {
+    if (Array.isArray(workflowStatuses) || industryChanged) {
       const workflowSource = Array.isArray(workflowStatuses) ? workflowStatuses : industryTemplate.workflowStatuses;
       const rows = workflowSource
         .filter((item) => item && typeof item === 'object')
@@ -355,7 +359,7 @@ export const updateTenantSettings = async (req: Request, res: Response) => {
         })
         .filter((item) => item.workflow_key.length > 0 && item.status_key.length > 0 && item.label.length > 0);
 
-      if (Array.isArray(workflowStatuses) || industryProfile) {
+      if (Array.isArray(workflowStatuses) || industryChanged) {
         const { error: deleteWorkflowsError } = await supabaseAdmin
           .from('tenant_workflow_statuses')
           .delete()
@@ -377,7 +381,7 @@ export const updateTenantSettings = async (req: Request, res: Response) => {
       }
     }
 
-    if (Array.isArray(fieldDefinitions) || industryProfile) {
+    if (Array.isArray(fieldDefinitions) || industryChanged) {
       const fieldSource = Array.isArray(fieldDefinitions) ? fieldDefinitions : industryTemplate.fieldDefinitions;
       const rows = fieldSource
         .filter((item) => item && typeof item === 'object')
@@ -404,7 +408,7 @@ export const updateTenantSettings = async (req: Request, res: Response) => {
         })
         .filter((item) => item.entity.length > 0 && item.field_key.length > 0 && item.field_label.length > 0);
 
-      if (Array.isArray(fieldDefinitions) || industryProfile) {
+      if (Array.isArray(fieldDefinitions) || industryChanged) {
         const { error: deleteFieldsError } = await supabaseAdmin
           .from('tenant_field_definitions')
           .delete()
@@ -426,7 +430,7 @@ export const updateTenantSettings = async (req: Request, res: Response) => {
       }
     }
 
-    if (Array.isArray(semaphoreRules) || industryProfile) {
+    if (Array.isArray(semaphoreRules) || industryChanged) {
       const semaphoreSource = Array.isArray(semaphoreRules) ? semaphoreRules : industryTemplate.semaphoreRules;
       const rows = semaphoreSource
         .filter((item) => item && typeof item === 'object')
@@ -453,7 +457,7 @@ export const updateTenantSettings = async (req: Request, res: Response) => {
         })
         .filter((item) => item.status_key.length > 0 && item.metric.length > 0);
 
-      if (Array.isArray(semaphoreRules) || industryProfile) {
+      if (Array.isArray(semaphoreRules) || industryChanged) {
         const { error: deleteSemaphoreError } = await supabaseAdmin
           .from('tenant_semaphore_rules')
           .delete()

@@ -3,7 +3,7 @@ import { getTenantClient } from '@white-label/database';
 export type StockAlertRow = {
   id: string;
   tenant_id: string;
-  branch_id: string | null;
+  sucursal_id: string | null;
   product_id: string;
   severity: string;
   acknowledged_by: string | null;
@@ -19,13 +19,13 @@ function getLowStockThreshold() {
 export async function syncStockAlertForInventoryRow(params: {
   tenantId: string;
   productId: string;
-  branchId?: string | null;
+  sucursalId?: string | null;
   stock: number;
 }) {
   const supabase = getTenantClient(params.tenantId);
   const threshold = getLowStockThreshold();
   const isLowStock = Number(params.stock ?? 0) <= threshold;
-  const branchId = params.branchId ?? null;
+  const sucursalId = params.sucursalId ?? null;
 
   const baseQuery = supabase
     .from('stock_alerts')
@@ -33,9 +33,9 @@ export async function syncStockAlertForInventoryRow(params: {
     .eq('tenant_id', params.tenantId)
     .eq('product_id', params.productId);
 
-  const lookup = branchId === null
-    ? await baseQuery.is('branch_id', null).maybeSingle()
-    : await baseQuery.eq('branch_id', branchId).maybeSingle();
+  const lookup = sucursalId === null
+    ? await baseQuery.is('sucursal_id', null).maybeSingle()
+    : await baseQuery.eq('sucursal_id', sucursalId).maybeSingle();
 
   if (lookup.error) {
     throw lookup.error;
@@ -48,7 +48,7 @@ export async function syncStockAlertForInventoryRow(params: {
         .delete()
         .eq('tenant_id', params.tenantId)
         .eq('product_id', params.productId);
-      const { error } = branchId === null ? await deleteQuery.is('branch_id', null) : await deleteQuery.eq('branch_id', branchId);
+      const { error } = sucursalId === null ? await deleteQuery.is('sucursal_id', null) : await deleteQuery.eq('sucursal_id', sucursalId);
       if (error) throw error;
     }
     return null;
@@ -56,7 +56,7 @@ export async function syncStockAlertForInventoryRow(params: {
 
   const payload = {
     tenant_id: params.tenantId,
-    branch_id: branchId,
+    sucursal_id: sucursalId,
     product_id: params.productId,
     severity: threshold <= 3 ? 'critical' : 'warning',
     acknowledged_by: null,
@@ -69,7 +69,7 @@ export async function syncStockAlertForInventoryRow(params: {
       .update(payload)
       .eq('tenant_id', params.tenantId)
       .eq('product_id', params.productId)
-      .is('branch_id', branchId)
+      .is('sucursal_id', sucursalId)
       .select('id')
       .maybeSingle();
     if (error) throw error;
@@ -85,7 +85,7 @@ export async function listStockAlerts(tenantId: string) {
   const supabase = getTenantClient(tenantId);
   const { data, error } = await supabase
     .from('stock_alerts')
-    .select('id, tenant_id, branch_id, product_id, severity, acknowledged_by, acknowledged_at, created_at')
+    .select('id, tenant_id, sucursal_id, product_id, severity, acknowledged_by, acknowledged_at, created_at')
     .eq('tenant_id', tenantId)
     .order('created_at', { ascending: false })
     .limit(200);

@@ -18,12 +18,27 @@ function resolveOrderIncome(order: { total_cost?: number | null; final_cost?: nu
   return Number(order.total_cost ?? order.final_cost ?? 0);
 }
 
+async function assertSucursalOwnership(supabase: ReturnType<typeof getTenantClient>, tenantId: string, sucursalId: string) {
+  const { data, error } = await supabase
+    .from('sucursales')
+    .select('id')
+    .eq('tenant_id', tenantId)
+    .eq('id', sucursalId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return Boolean(data);
+}
+
 async function loadFinanceFacts(tenantId: string) {
   const supabase = getTenantClient(tenantId);
   const [ordersResult, expensesResult] = await Promise.all([
     supabase
       .from('service_orders')
-      .select('id, tenant_id, branch_id, total_cost, final_cost, created_at, status')
+      .select('id, tenant_id, sucursal_id, total_cost, final_cost, created_at, status')
       .eq('tenant_id', tenantId)
       .limit(1000),
     supabase
@@ -52,14 +67,14 @@ export const getBalance = async (req: Request, res: Response) => {
       return res.status(403).json({ error: 'Only owner can access global balance' });
     }
 
-    const branchId = typeof req.query.branchId === 'string' ? req.query.branchId.trim() : '';
+    const sucursalId = typeof req.query.sucursalId === 'string' ? req.query.sucursalId.trim() : '';
     const { orders, expenses } = await loadFinanceFacts(tenantId);
 
-    const filteredOrders = branchId
-      ? orders.filter((order) => String((order as { branch_id?: string | null }).branch_id ?? '') === branchId)
+    const filteredOrders = sucursalId
+      ? orders.filter((order) => String((order as { sucursal_id?: string | null }).sucursal_id ?? '') === sucursalId)
       : orders;
-    const filteredExpenses = branchId
-      ? expenses.filter((expense) => String((expense as { sucursal_id?: string | null }).sucursal_id ?? '') === branchId)
+    const filteredExpenses = sucursalId
+      ? expenses.filter((expense) => String((expense as { sucursal_id?: string | null }).sucursal_id ?? '') === sucursalId)
       : expenses;
 
     const totalIncome = filteredOrders.reduce((sum, order) => sum + resolveOrderIncome(order as { total_cost?: number | null; final_cost?: number | null }), 0);
@@ -111,13 +126,18 @@ export const getCashflow = async (req: Request, res: Response) => {
     if (!tenantId) return res.status(401).json({ error: 'Tenant context is required' });
     if (!sucursalId) return res.status(400).json({ error: 'Missing sucursalId' });
 
+    const supabase = getTenantClient(tenantId);
+    if (!(await assertSucursalOwnership(supabase, tenantId, sucursalId))) {
+      return res.status(403).json({ error: 'Sucursal mismatch' });
+    }
+
     const { orders, expenses } = await loadFinanceFacts(tenantId);
-    const branchOrders = orders.filter((order) => String((order as { branch_id?: string | null }).branch_id ?? '') === sucursalId);
-    const branchExpenses = expenses.filter((expense) => String((expense as { sucursal_id?: string | null }).sucursal_id ?? '') === sucursalId);
+    const sucursalOrders = orders.filter((order) => String((order as { sucursal_id?: string | null }).sucursal_id ?? '') === sucursalId);
+    const sucursalExpenses = expenses.filter((expense) => String((expense as { sucursal_id?: string | null }).sucursal_id ?? '') === sucursalId);
 
     const grouped = new Map<string, { id: string; tenant_id: string; sucursal_id: string; balance: number; income: number; expense: number; created_at: string }>();
 
-    for (const order of branchOrders) {
+    for (const order of sucursalOrders) {
       const day = toDayKey((order as { created_at?: string }).created_at ?? null);
       const current = grouped.get(day) ?? { id: `${sucursalId}-${day}`, tenant_id: tenantId, sucursal_id: sucursalId, balance: 0, income: 0, expense: 0, created_at: day };
       const income = resolveOrderIncome(order as { total_cost?: number | null; final_cost?: number | null });
@@ -126,7 +146,7 @@ export const getCashflow = async (req: Request, res: Response) => {
       grouped.set(day, current);
     }
 
-    for (const expense of branchExpenses) {
+    for (const expense of sucursalExpenses) {
       const day = toDayKey((expense as { expense_date?: string; created_at?: string }).expense_date ?? (expense as { created_at?: string }).created_at ?? null);
       const current = grouped.get(day) ?? { id: `${sucursalId}-${day}`, tenant_id: tenantId, sucursal_id: sucursalId, balance: 0, income: 0, expense: 0, created_at: day };
       const amount = Number((expense as { expense?: number }).expense ?? 0);
@@ -150,12 +170,16 @@ export const createExpense = async (req: Request, res: Response) => {
 
     const body = createExpenseSchema.parse(req.body);
     const tokenSucursalId = req.user?.sucursalId;
+    const supabase = getTenantClient(tenantId);
+
+    if (!(await assertSucursalOwnership(supabase, tenantId, body.sucursalId))) {
+      return res.status(403).json({ error: 'Sucursal mismatch' });
+    }
 
     if (req.user?.role === 'manager' && tokenSucursalId && body.sucursalId !== tokenSucursalId) {
       return res.status(403).json({ error: 'Sucursal mismatch' });
     }
 
-    const supabase = getTenantClient(tenantId);
     const { data, error } = await supabase
       .from('finances')
       .insert([
@@ -201,6 +225,10 @@ export const getExpense = async (req: Request, res: Response) => {
 
     if (error) {
       return res.status(502).json({ error: 'Failed to fetch expense', details: error.message });
+    }
+
+    if (data?.sucursal_id && !(await assertSucursalOwnership(supabase, tenantId, data.sucursal_id))) {
+      return res.status(403).json({ error: 'Sucursal mismatch' });
     }
 
     if (req.user?.role === 'manager' && req.user.sucursalId && data.sucursal_id !== req.user.sucursalId) {

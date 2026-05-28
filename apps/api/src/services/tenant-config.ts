@@ -115,7 +115,7 @@ const CELLPHONE_REPAIR_TEMPLATE: IndustryTemplate = {
     { module_key: 'orders', module_label: 'Órdenes', enabled: true, sort_order: 4, metadata: {} },
     { module_key: 'appointments', module_label: 'Citas', enabled: true, sort_order: 5, metadata: {} },
     { module_key: 'assets', module_label: 'Equipo', enabled: true, sort_order: 6, metadata: {} },
-    { module_key: 'inventory', module_label: 'Inventario', enabled: true, sort_order: 7, metadata: {} },
+    { module_key: 'stock', module_label: 'Stock', enabled: true, sort_order: 7, metadata: {} },
     { module_key: 'expenses', module_label: 'Gastos', enabled: true, sort_order: 8, metadata: {} },
     { module_key: 'documents', module_label: 'Documentos', enabled: true, sort_order: 9, metadata: {} },
     { module_key: 'portal', module_label: 'Portal cliente', enabled: true, sort_order: 10, metadata: {} },
@@ -145,7 +145,21 @@ const CELLPHONE_REPAIR_TEMPLATE: IndustryTemplate = {
     ...entry,
     metadata: {},
   })),
-  fieldDefinitions: [],
+  fieldDefinitions: [
+    templateField('service_requests', 'device_type', 'Tipo de equipo', 'select', ['Celular', 'Tablet', 'Laptop', 'Computadora', 'Consola', 'Otro'], { required: true, field_order: 1, placeholder: 'Selecciona el equipo' }),
+    templateField('service_requests', 'device_brand', 'Marca', 'text', [], { required: true, field_order: 2, placeholder: 'Ej. Apple, Samsung, Dell' }),
+    templateField('service_requests', 'device_model', 'Modelo', 'text', [], { required: true, field_order: 3, placeholder: 'Ej. iPhone 13, Galaxy S22' }),
+    templateField('service_requests', 'serial_number', 'Serie / IMEI', 'text', [], { required: false, field_order: 4, placeholder: 'IMEI o número de serie' }),
+    templateField('service_requests', 'accessory_included', 'Incluye accesorios', 'boolean', [], { required: false, field_order: 5 }),
+    templateField('service_requests', 'issue_description', 'Problema reportado', 'textarea', [], { required: true, field_order: 6, placeholder: 'Describe la falla con detalle' }),
+    templateField('service_requests', 'priority_level', 'Nivel de urgencia', 'select', ['Normal', 'Alta', 'Urgente'], { required: false, field_order: 7, placeholder: 'Selecciona la urgencia' }),
+    templateField('service_requests', 'password_or_pin', 'PIN / contraseña', 'text', [], { required: false, field_order: 8, placeholder: 'Solo si el cliente desea compartirlo' }),
+    templateField('service_requests', 'authorization_note', 'Autorización / notas', 'textarea', [], { required: false, field_order: 9, placeholder: 'Observaciones de autorización' }),
+    templateField('service_orders', 'diagnosis_summary', 'Resumen del diagnóstico', 'textarea', [], { required: false, field_order: 1, placeholder: 'Hallazgos del técnico' }),
+    templateField('service_orders', 'repair_estimate', 'Estimado de reparación', 'number', [], { required: false, field_order: 2, placeholder: 'Monto estimado' }),
+    templateField('service_orders', 'parts_required', 'Refacciones necesarias', 'textarea', [], { required: false, field_order: 3, placeholder: 'Lista de partes y consumibles' }),
+    templateField('service_orders', 'warranty_days', 'Días de garantía', 'number', [], { required: false, field_order: 4, placeholder: 'Ej. 30' }),
+  ],
   semaphoreRules: [
     templateSemaphoreRule('recibido', 'minutes_since_status_changed', { green: 24 * 60, yellow: 48 * 60, red: 48 * 60 }, 'Pendiente de diagnóstico', 'Asignar técnico o actualizar diagnóstico', {
       industry_key: 'electronics_repair',
@@ -177,8 +191,8 @@ const CELLPHONE_REPAIR_TEMPLATE: IndustryTemplate = {
     ],
     landing: {
       heroTitle: 'Reparación profesional de electrónicos',
-      heroSubtitle: 'Landing pública por tenant',
-      heroDescription: 'Cotización, estado y contacto directo con marca propia.',
+      heroSubtitle: 'Celulares, computadoras, consolas y tablets',
+      heroDescription: 'Cotización, estado, diagnóstico y contacto directo con marca propia.',
       primaryCtaLabel: 'Cotizar ahora',
       primaryCtaHref: '/onboarding',
       secondaryCtaLabel: 'Ver estatus',
@@ -186,9 +200,9 @@ const CELLPHONE_REPAIR_TEMPLATE: IndustryTemplate = {
       contactLabel: 'WhatsApp / contacto',
       contactHref: '',
       services: [
-        { title: 'Laptops & Surface', description: 'Microsoft Surface, MacBooks y laptops de todas las marcas.' },
-        { title: 'Tarjetas de video (GPU)', description: 'Reballing, reemplazo de chips y recuperación de tarjetas.' },
-        { title: 'Consolas & controles', description: 'Reparación express de controles, consolas y joysticks.' },
+        { title: 'Celulares', description: 'Pantallas, baterías, carga, software y recuperación de datos.' },
+        { title: 'Computadoras', description: 'Laptops, equipos de escritorio, SSD, memoria y limpieza interna.' },
+        { title: 'Consolas', description: 'Controles, puertos HDMI, fuentes, ventilación y mantenimiento.' },
       ],
       showMap: false,
       mapEmbedUrl: '',
@@ -219,7 +233,7 @@ const HVAC_TEMPLATE: IndustryTemplate = {
     { module_key: 'orders', module_label: 'Servicios', enabled: true, sort_order: 4, metadata: {} },
     { module_key: 'appointments', module_label: 'Visitas', enabled: true, sort_order: 5, metadata: {} },
     { module_key: 'assets', module_label: 'Equipo HVAC', enabled: true, sort_order: 6, metadata: {} },
-    { module_key: 'inventory', module_label: 'Inventario', enabled: true, sort_order: 7, metadata: {} },
+    { module_key: 'stock', module_label: 'Stock', enabled: true, sort_order: 7, metadata: {} },
     { module_key: 'expenses', module_label: 'Gastos', enabled: true, sort_order: 8, metadata: {} },
     { module_key: 'documents', module_label: 'Documentos', enabled: true, sort_order: 9, metadata: {} },
     { module_key: 'portal', module_label: 'Portal cliente', enabled: true, sort_order: 10, metadata: {} },
@@ -386,6 +400,25 @@ const INDUSTRY_TEMPLATES: Record<string, IndustryTemplate> = {
 
 export function getIndustryTemplate(industryKey?: string | null) {
   return INDUSTRY_TEMPLATES[(industryKey ?? '').trim()] ?? INDUSTRY_TEMPLATES.electronics_repair;
+}
+
+export function listAvailableIndustries() {
+  return [
+    {
+      key: 'electronics_repair',
+      label: 'Reparación de electrónicos',
+      description: 'Celulares, tablets, laptops, consolas y soporte técnico general.',
+      defaultWorkflowKey: 'service_orders',
+      modules: CELLPHONE_REPAIR_TEMPLATE.enabledModules.map((module) => module.module_key),
+    },
+    {
+      key: 'hvac_service',
+      label: 'Servicios HVAC',
+      description: 'Instalación, mantenimiento y seguimiento de servicios de climatización.',
+      defaultWorkflowKey: 'service_orders',
+      modules: HVAC_TEMPLATE.enabledModules.map((module) => module.module_key),
+    },
+  ];
 }
 
 function normalizeText(value: unknown) {

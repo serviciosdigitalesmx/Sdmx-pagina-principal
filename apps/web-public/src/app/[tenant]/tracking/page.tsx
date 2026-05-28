@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { resolveApiBaseUrl } from "@white-label/config";
 
 const fieldClassName =
   "w-full rounded-2xl border border-stone-700 bg-zinc-950 px-4 py-3 text-zinc-50 outline-none transition placeholder:text-zinc-500 focus:border-amber-400/60 focus:ring-2 focus:ring-amber-400/20";
@@ -17,12 +18,7 @@ export default function TenantTrackingPage() {
   const [loading, setLoading] = useState(false);
   const [portalTemplate, setPortalTemplate] = useState<Record<string, unknown> | null>(null);
 
-  const apiUrl = (
-    process.env.NEXT_PUBLIC_API_URL ||
-    process.env.NEXT_PUBLIC_API_BASE_URL ||
-    process.env.NEXT_PUBLIC_RENDER_API_URL ||
-    "https://sdmx-backend-api.onrender.com"
-  ).replace(/\/$/, "");
+  const apiUrl = resolveApiBaseUrl();
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -31,10 +27,6 @@ export default function TenantTrackingPage() {
     setStatus(null);
 
     try {
-      if (!apiUrl) {
-        throw new Error("Falta configurar NEXT_PUBLIC_API_URL o NEXT_PUBLIC_API_BASE_URL");
-      }
-
       const url = new URL(`${apiUrl}/api/public/tracking`);
       url.searchParams.set("tenantSlug", tenant);
       url.searchParams.set("folio", folio.trim());

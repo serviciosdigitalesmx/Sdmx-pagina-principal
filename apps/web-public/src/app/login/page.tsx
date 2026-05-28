@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ShellBadge, StatCard, srFixTheme } from "@/components/srfix-theme";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { readAuthToken, saveAuthToken } from "@/lib/auth-storage";
+import { resolveApiBaseUrl } from "@white-label/config";
 
 type LoginState = {
   email: string;
@@ -49,16 +50,7 @@ function getAdminBridgeUrl(token: string) {
 }
 
 async function exchangeSessionForApiToken(accessToken: string) {
-  const apiUrl = (
-    process.env.NEXT_PUBLIC_API_URL ||
-    process.env.NEXT_PUBLIC_API_BASE_URL ||
-    process.env.NEXT_PUBLIC_RENDER_API_URL ||
-    "https://sdmx-backend-api.onrender.com"
-  ).replace(/\/$/, "");
-
-  if (!apiUrl) {
-    throw new Error("API base URL no está configurada.");
-  }
+  const apiUrl = resolveApiBaseUrl();
 
   const response = await fetch(`${apiUrl}/api/auth/exchange`, {
     method: "POST",

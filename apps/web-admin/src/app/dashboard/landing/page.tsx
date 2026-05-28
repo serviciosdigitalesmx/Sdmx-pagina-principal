@@ -37,6 +37,13 @@ type LandingContent = {
 };
 
 type TenantLandingSettings = {
+  availableIndustries?: Array<{
+    key: string;
+    label: string;
+    description: string;
+    defaultWorkflowKey: string;
+    modules: string[];
+  }>;
   tenant: {
     id: string;
     slug: string;
@@ -49,25 +56,43 @@ type TenantLandingSettings = {
       logoUrl?: string;
     } | null;
     landing_content?: Partial<LandingContent> | null;
+    industry_profile?: {
+      industry_key?: string | null;
+      industry_label?: string | null;
+      asset_label?: string | null;
+      order_label?: string | null;
+      request_label?: string | null;
+      customer_label?: string | null;
+      portal_label?: string | null;
+      quote_label?: string | null;
+      default_workflow_key?: string | null;
+      is_active?: boolean | null;
+      metadata?: Record<string, unknown> | null;
+    } | null;
   };
 };
 
 const emptyService: LandingService = { title: "", description: "" };
 const emptySocial: SocialLink = { label: "", href: "" };
+const DEFAULT_INDUSTRY_KEY = "electronics_repair";
 
 const defaultLandingContent: LandingContent = {
-  heroTitle: "",
-  heroSubtitle: "Landing pública del taller",
-  heroDescription: "",
+  heroTitle: "Reparación profesional de electrónicos",
+  heroSubtitle: "Celulares, computadoras, consolas y tablets",
+  heroDescription: "Cotización, seguimiento y contacto directo con marca propia.",
   primaryCtaLabel: "Cotizar ahora",
   primaryCtaHref: "/cotizar",
   secondaryCtaLabel: "Ver estatus",
   secondaryCtaHref: "/tracking",
   contactLabel: "WhatsApp / contacto",
   contactHref: "",
-  seoTitle: "",
-  seoDescription: "",
-  services: [emptyService],
+  seoTitle: "Taller de reparación",
+  seoDescription: "Landing pública por tenant para talleres de reparación de electrónicos.",
+  services: [
+    { title: "Celulares", description: "Pantallas, baterías, carga y software." },
+    { title: "Computadoras", description: "Laptops, desktops, SSD, memoria y limpieza." },
+    { title: "Consolas", description: "Puertos, fuentes, ventilación y controles." },
+  ],
   socialLinks: [emptySocial],
   showMap: false,
   mapEmbedUrl: "",
@@ -114,6 +139,7 @@ export default function LandingSettingsPage() {
   const [success, setSuccess] = useState("");
   const [settings, setSettings] = useState<TenantLandingSettings | null>(null);
   const [landingContent, setLandingContent] = useState<LandingContent>(defaultLandingContent);
+  const [industryKey, setIndustryKey] = useState<string>(DEFAULT_INDUSTRY_KEY);
 
   useEffect(() => {
     let cancelled = false;
@@ -126,6 +152,7 @@ export default function LandingSettingsPage() {
         if (cancelled) return;
         setSettings(result.data);
         setLandingContent(normalizeLandingContent(result.data.tenant.landing_content ?? null));
+        setIndustryKey(typeof result.data.tenant.industry_profile?.industry_key === "string" ? result.data.tenant.industry_profile.industry_key : DEFAULT_INDUSTRY_KEY);
       } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : "Error al cargar la landing");
@@ -171,6 +198,9 @@ export default function LandingSettingsPage() {
   const addService = () => setLandingContent((current) => ({ ...current, services: [...current.services, emptyService] }));
   const addSocial = () => setLandingContent((current) => ({ ...current, socialLinks: [...current.socialLinks, emptySocial] }));
 
+  const availableIndustries = settings?.availableIndustries ?? [];
+  const selectedIndustry = availableIndustries.find((item) => item.key === industryKey) ?? availableIndustries[0] ?? null;
+
   const handleSave = async () => {
     setSaving(true);
     setError("");
@@ -180,10 +210,26 @@ export default function LandingSettingsPage() {
       const result = await fixService.updateTenantLandingSettings({
         branding: settings?.tenant.branding ?? undefined,
         landingContent,
+        industryProfile: {
+          industry_key: industryKey,
+          industry_label: selectedIndustry?.label ?? settings?.tenant.industry_profile?.industry_label ?? null,
+          asset_label: settings?.tenant.industry_profile?.asset_label ?? null,
+          order_label: settings?.tenant.industry_profile?.order_label ?? null,
+          request_label: settings?.tenant.industry_profile?.request_label ?? null,
+          customer_label: settings?.tenant.industry_profile?.customer_label ?? null,
+          portal_label: settings?.tenant.industry_profile?.portal_label ?? null,
+          quote_label: settings?.tenant.industry_profile?.quote_label ?? null,
+          default_workflow_key: selectedIndustry?.defaultWorkflowKey ?? settings?.tenant.industry_profile?.default_workflow_key ?? "service_orders",
+          is_active: true,
+          metadata: {
+            source: "dashboard_landing_editor",
+          },
+        },
       });
 
       setSettings(result.data);
       setLandingContent(normalizeLandingContent(result.data.tenant.landing_content ?? null));
+      setIndustryKey(typeof result.data.tenant.industry_profile?.industry_key === "string" ? result.data.tenant.industry_profile.industry_key : DEFAULT_INDUSTRY_KEY);
       setSuccess("Landing guardada correctamente.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al guardar landing");
@@ -216,6 +262,31 @@ export default function LandingSettingsPage() {
       >
         <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
           <section className="space-y-6 rounded-[28px] border border-zinc-800 bg-zinc-950/85 p-6 shadow-[0_16px_70px_rgba(0,0,0,0.24)]">
+            <div className="grid gap-4 rounded-2xl border border-sky-500/20 bg-sky-500/5 p-4 md:grid-cols-[1.1fr_0.9fr]">
+              <div>
+                <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-zinc-400">Giro del tenant</label>
+                <select
+                  value={industryKey}
+                  onChange={(e) => setIndustryKey(e.target.value)}
+                  className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none focus:border-slate-400/60 focus:ring-2 focus:ring-slate-400/20"
+                >
+                  {availableIndustries.length > 0 ? (
+                    availableIndustries.map((industry) => (
+                      <option key={industry.key} value={industry.key}>
+                        {industry.label}
+                      </option>
+                    ))
+                  ) : (
+                    <option value={DEFAULT_INDUSTRY_KEY}>Reparación de electrónicos</option>
+                  )}
+                </select>
+              </div>
+              <div className="rounded-xl border border-zinc-800 bg-zinc-950/80 p-4 text-sm text-zinc-300">
+                <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">Plantilla activa</p>
+                <p className="mt-2 font-semibold text-zinc-50">{selectedIndustry?.label ?? settings?.tenant.industry_profile?.industry_label ?? "Reparación de electrónicos"}</p>
+                <p className="mt-1 leading-6 text-zinc-400">{selectedIndustry?.description ?? "Se regeneran módulos, campos, flujos y semáforos desde el backend."}</p>
+              </div>
+            </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-zinc-400">Hero título</label>

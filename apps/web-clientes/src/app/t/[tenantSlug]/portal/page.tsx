@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState, type FormEvent } from "react";
 import { useParams, useSearchParams } from "next/navigation";
+import { resolveApiBaseUrl } from "@white-label/config";
 
 type PortalOrderResponse = {
   success: true;
@@ -36,15 +37,6 @@ type PortalOrderResponse = {
   };
 };
 
-function resolveApiBaseUrl() {
-  return (
-    process.env.NEXT_PUBLIC_API_URL ||
-    process.env.NEXT_PUBLIC_API_BASE_URL ||
-    process.env.NEXT_PUBLIC_RENDER_API_URL ||
-    "https://sdmx-backend-api.onrender.com"
-  ).replace(/\/$/, "");
-}
-
 function resolveWhatsappHref(phone?: string) {
   if (!phone) return undefined;
   const digits = phone.replace(/\D/g, "");
@@ -77,10 +69,6 @@ export default function PortalPage() {
     setTenant(null);
 
     try {
-      if (!apiBaseUrl) {
-        throw new Error("NEXT_PUBLIC_API_URL o NEXT_PUBLIC_API_BASE_URL no está configurada");
-      }
-
       if (!tenantSlug) {
         throw new Error("Tenant slug ausente en la ruta");
       }

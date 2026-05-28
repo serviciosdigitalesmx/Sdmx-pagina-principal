@@ -71,7 +71,7 @@ Rules:
 
 Checklist:
 
-1. Confirm the repo points to the right branch.
+1. Confirm the repo points to the right Sucursal.
 2. Confirm the root directory for each Vercel project.
 3. Confirm Render is building the latest commit.
 4. Confirm the env var set matches the code path used by the app.

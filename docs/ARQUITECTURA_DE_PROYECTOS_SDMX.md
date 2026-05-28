@@ -26,7 +26,7 @@ Debe separarse en capas claras:
 La arquitectura recomendada es:
 
 - `frontend-web` en Next.js
-- `backend-api` en ASP.NET Core
+- `backend-api` en API Node/Express
 - `supabase` para SQL, auth, storage y políticas
 
 ## 4. Estrategia de Repositorio
@@ -186,18 +186,18 @@ apps/frontend-web/
       ui/
       customers/
       service-orders/
-      inventory/
+      stock/
       purchases/
       finance/
     features/
       auth/
       tenants/
-      branches/
+      sucursales/
       customers/
       service-orders/
       requests/
       tasks/
-      inventory/
+      stock/
       suppliers/
       purchases/
       expenses/
@@ -278,7 +278,7 @@ Los dominios recomendados son:
 
 - Auth
 - Tenants
-- Branches
+- Sucursales
 - Users
 - Customers
 - ServiceRequests
@@ -302,7 +302,7 @@ Ejemplo de estructura:
 - `/api/health`
 - `/api/auth`
 - `/api/tenants`
-- `/api/branches`
+- `/api/sucursales`
 - `/api/customers`
 - `/api/service-requests`
 - `/api/service-orders`

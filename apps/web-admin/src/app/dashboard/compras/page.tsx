@@ -11,7 +11,7 @@ type PurchaseOrderRow = {
   folio?: string;
   status?: string;
   supplier_id?: string;
-  branch_id?: string | null;
+  sucursal_id?: string | null;
   expected_date?: string | null;
   total?: number | string;
   notes?: string | null;
@@ -31,7 +31,7 @@ type SupplierRow = {
 
 const emptyForm = {
   supplierId: "",
-  branchId: "",
+  sucursalId: "",
   expectedDate: "",
   reference: "",
   paymentTerms: "",
@@ -133,7 +133,7 @@ export default function ComprasPage() {
       setError("");
       const payload = {
         supplierId: form.supplierId.trim(),
-        branchId: form.branchId.trim() || undefined,
+        sucursalId: form.sucursalId.trim() || undefined,
         expectedDate: form.expectedDate.trim() || undefined,
         notes: form.notes.trim() || undefined,
         paymentTerms: form.paymentTerms.trim() || undefined,
@@ -237,7 +237,7 @@ export default function ComprasPage() {
                 </select>
               </label>
               {[
-                ["branchId", "Sucursal (branchId)"],
+                ["sucursalId", "Sucursal (sucursalId)"],
                 ["expectedDate", "Fecha esperada"],
                 ["reference", "Referencia"],
                 ["paymentTerms", "Términos de pago"],

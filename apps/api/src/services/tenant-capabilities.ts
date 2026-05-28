@@ -25,7 +25,7 @@ export const MODULE_REGISTRY: ModuleRegistryEntry[] = [
   { key: 'orders', label: 'Órdenes', description: 'Órdenes, seguimiento y cierre', category: 'operations', frontend_routes: ['/dashboard/ordenes', '/dashboard/archivo'], backend_permissions: [], default_enabled_by_industry: ['electronics_repair', 'hvac_service'], required_plan: null, aliases: [] },
   { key: 'appointments', label: 'Citas', description: 'Agenda y visitas', category: 'operations', frontend_routes: ['/dashboard/citas'], backend_permissions: [], default_enabled_by_industry: ['hvac_service'], required_plan: null, aliases: [] },
   { key: 'assets', label: 'Activos', description: 'Elementos atendidos', category: 'operations', frontend_routes: ['/dashboard/activos'], backend_permissions: [], default_enabled_by_industry: ['electronics_repair', 'hvac_service'], required_plan: null, aliases: [] },
-  { key: 'inventory', label: 'Inventario', description: 'Productos y existencias', category: 'control', frontend_routes: ['/dashboard/stock'], backend_permissions: [], default_enabled_by_industry: ['electronics_repair', 'hvac_service'], required_plan: 'pro', aliases: [] },
+  { key: 'stock', label: 'Stock', description: 'Productos, existencias y movimientos', category: 'control', frontend_routes: ['/dashboard/stock'], backend_permissions: [], default_enabled_by_industry: ['electronics_repair', 'hvac_service'], required_plan: 'pro', aliases: ['inventory'] },
   { key: 'suppliers', label: 'Proveedores', description: 'Catálogo de proveedores', category: 'control', frontend_routes: ['/dashboard/proveedores'], backend_permissions: [], default_enabled_by_industry: ['electronics_repair', 'hvac_service'], required_plan: 'pro', aliases: [] },
   { key: 'purchase-orders', label: 'Compras', description: 'Órdenes de compra y abastecimiento', category: 'control', frontend_routes: ['/dashboard/compras'], backend_permissions: [], default_enabled_by_industry: ['electronics_repair', 'hvac_service'], required_plan: 'pro', aliases: ['purchases'] },
   { key: 'expenses', label: 'Gastos', description: 'Control de egresos', category: 'control', frontend_routes: ['/dashboard/gastos'], backend_permissions: [], default_enabled_by_industry: ['electronics_repair', 'hvac_service'], required_plan: 'pro', aliases: [] },
@@ -38,7 +38,7 @@ export const MODULE_REGISTRY: ModuleRegistryEntry[] = [
   { key: 'warranty', label: 'Garantía', description: 'Seguimiento de garantía', category: 'operations', frontend_routes: ['/dashboard/garantia'], backend_permissions: [], default_enabled_by_industry: ['electronics_repair', 'hvac_service'], required_plan: null, aliases: [] },
   { key: 'billing', label: 'Billing', description: 'Plan y facturación', category: 'admin', frontend_routes: ['/dashboard/billing'], backend_permissions: [], default_enabled_by_industry: ['electronics_repair', 'hvac_service'], required_plan: null, aliases: [] },
   { key: 'settings', label: 'Ajustes', description: 'Configuración del tenant', category: 'admin', frontend_routes: ['/dashboard/landing'], backend_permissions: [], default_enabled_by_industry: ['electronics_repair', 'hvac_service'], required_plan: null, aliases: [] },
-  { key: 'branches', label: 'Sucursales', description: 'Sucursales y contexto operativo', category: 'admin', frontend_routes: ['/dashboard/sucursales'], backend_permissions: [], default_enabled_by_industry: ['electronics_repair', 'hvac_service'], required_plan: 'pro', aliases: [] },
+  { key: 'sucursales', label: 'Sucursales', description: 'Sucursales y contexto operativo', category: 'admin', frontend_routes: ['/dashboard/sucursales'], backend_permissions: [], default_enabled_by_industry: ['electronics_repair', 'hvac_service'], required_plan: 'pro', aliases: [] },
   { key: 'users', label: 'Usuarios', description: 'Usuarios y roles', category: 'admin', frontend_routes: ['/dashboard/seguridad'], backend_permissions: [], default_enabled_by_industry: ['electronics_repair', 'hvac_service'], required_plan: 'pro', aliases: [] },
   { key: 'tasks', label: 'Tareas', description: 'Seguimiento interno', category: 'operations', frontend_routes: ['/dashboard/tareas'], backend_permissions: [], default_enabled_by_industry: ['electronics_repair', 'hvac_service'], required_plan: null, aliases: [] },
   { key: 'security', label: 'Seguridad', description: 'Permisos y auditoría', category: 'admin', frontend_routes: ['/dashboard/seguridad'], backend_permissions: [], default_enabled_by_industry: ['electronics_repair', 'hvac_service'], required_plan: 'pro', aliases: [] },
@@ -47,15 +47,15 @@ export const MODULE_REGISTRY: ModuleRegistryEntry[] = [
 export const PLAN_REGISTRY: Record<TenantCapabilities['plan_key'], { module_allowlist: string[]; limits: TenantPlanLimits }> = {
   basic: {
     module_allowlist: ['dashboard', 'customers', 'requests', 'orders', 'portal', 'landing', 'whatsapp', 'documents'],
-    limits: { users: 3, branches: 1, monthly_orders: 50, storage_mb: 500, public_portal: true, whatsapp_templates: 5, document_templates: 3 },
+    limits: { users: 3, sucursales: 1, monthly_orders: 50, storage_mb: 500, public_portal: true, whatsapp_templates: 5, document_templates: 3 },
   },
   pro: {
-    module_allowlist: ['dashboard', 'customers', 'requests', 'orders', 'appointments', 'assets', 'inventory', 'suppliers', 'purchase-orders', 'expenses', 'reports', 'documents', 'portal', 'landing', 'whatsapp', 'warranty', 'billing', 'settings', 'branches', 'tasks', 'security'],
-    limits: { users: 10, branches: 5, monthly_orders: 500, storage_mb: 5000, public_portal: true, whatsapp_templates: 50, document_templates: 20 },
+    module_allowlist: ['dashboard', 'customers', 'requests', 'orders', 'appointments', 'assets', 'stock', 'suppliers', 'purchase-orders', 'expenses', 'reports', 'documents', 'portal', 'landing', 'whatsapp', 'warranty', 'billing', 'settings', 'sucursales', 'tasks', 'security'],
+    limits: { users: 10, sucursales: 5, monthly_orders: 500, storage_mb: 5000, public_portal: true, whatsapp_templates: 50, document_templates: 20 },
   },
   scale: {
     module_allowlist: MODULE_REGISTRY.map((module) => module.key),
-    limits: { users: null, branches: null, monthly_orders: null, storage_mb: null, public_portal: true, whatsapp_templates: null, document_templates: null },
+    limits: { users: null, sucursales: null, monthly_orders: null, storage_mb: null, public_portal: true, whatsapp_templates: null, document_templates: null },
   },
 };
 

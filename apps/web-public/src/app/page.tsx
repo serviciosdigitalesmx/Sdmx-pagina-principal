@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { HeroButton, ShellBadge, StatCard, srFixTheme } from "@/components/srfix-theme";
+import { requireEnv } from "@white-label/config";
 
-const productName = process.env.NEXT_PUBLIC_SAAS_BRAND_NAME ?? "FIXI";
-const legalName = process.env.NEXT_PUBLIC_SAAS_LEGAL_NAME ?? "Servicios Digitales MX";
-const demoTenantSlug = process.env.NEXT_PUBLIC_SAAS_DEMO_TENANT_SLUG ?? "demo";
+const productName = requireEnv("NEXT_PUBLIC_SAAS_BRAND_NAME");
+const legalName = requireEnv("NEXT_PUBLIC_SAAS_LEGAL_NAME");
+const demoTenantSlug = requireEnv("NEXT_PUBLIC_SAAS_DEMO_TENANT_SLUG");
 const quoteHref = `/${encodeURIComponent(demoTenantSlug)}/cotizar`;
 const portalHref = `/t/${encodeURIComponent(demoTenantSlug)}/portal`;
 

@@ -4,6 +4,7 @@ import { useState, type ChangeEvent, type FormEvent } from "react";
 import { saveAuthToken } from "@/lib/auth-storage";
 import Link from "next/link";
 import { ShellBadge, StatCard, srFixTheme } from "@/components/srfix-theme";
+import { resolveApiBaseUrl, requireEnv } from "@white-label/config";
 
 type RegisterState = {
   workshopName: string;
@@ -19,19 +20,14 @@ const initialState: RegisterState = {
   phone: "",
 };
 
-const trialDays = process.env.NEXT_PUBLIC_SAAS_TRIAL_DAYS ?? "14";
+const trialDays = requireEnv("NEXT_PUBLIC_SAAS_TRIAL_DAYS");
 
 export default function OnboardingPage() {
   const [form, setForm] = useState<RegisterState>(initialState);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const getApiUrl = () => (
-    process.env.NEXT_PUBLIC_API_URL ||
-    process.env.NEXT_PUBLIC_API_BASE_URL ||
-    process.env.NEXT_PUBLIC_RENDER_API_URL ||
-    "https://sdmx-backend-api.onrender.com"
-  ).replace(/\/$/, "");
+  const getApiUrl = () => resolveApiBaseUrl();
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;

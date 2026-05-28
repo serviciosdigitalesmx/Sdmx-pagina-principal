@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { srFixTheme } from "@/components/srfix-theme";
+import { resolveApiBaseUrl as getApiBaseUrl } from "@white-label/config";
 
 type LandingResponse = {
   success: true;
@@ -43,15 +44,6 @@ type LandingResponse = {
   };
 };
 
-function resolveApiBaseUrl() {
-  return (
-    process.env.NEXT_PUBLIC_API_URL ||
-    process.env.NEXT_PUBLIC_API_BASE_URL ||
-    process.env.NEXT_PUBLIC_RENDER_API_URL ||
-    "https://sdmx-backend-api.onrender.com"
-  ).replace(/\/$/, "");
-}
-
 function resolveWhatsappHref(phone?: string | null) {
   if (!phone) return undefined;
   const digits = phone.replace(/\D/g, "");
@@ -59,8 +51,7 @@ function resolveWhatsappHref(phone?: string | null) {
 }
 
 async function getTenantLanding(tenant: string): Promise<LandingResponse["data"]> {
-  const apiBaseUrl = resolveApiBaseUrl();
-  if (!apiBaseUrl) throw new Error("NEXT_PUBLIC_API_URL o NEXT_PUBLIC_API_BASE_URL no está configurada");
+  const apiBaseUrl = getApiBaseUrl();
   const response = await fetch(`${apiBaseUrl}/api/public/tenant/${encodeURIComponent(tenant)}/landing`, { cache: "no-store" });
   const payload = (await response.json().catch(() => null)) as LandingResponse | { error?: string } | null;
   if (!response.ok || !payload || !("success" in payload)) {
@@ -90,6 +81,7 @@ export default async function TenantLandingPage({ params }: { params: Promise<{ 
   const templateLanding = data.tenant.config?.templates?.landing ?? {};
   const labels = data.tenant.config?.labels ?? {};
   const services = Array.isArray(templateLanding.services) && templateLanding.services.length > 0 ? templateLanding.services : landing.services;
+  const socialLinks = Array.isArray(landing.socialLinks) ? landing.socialLinks : [];
   const heroTitle = typeof templateLanding.heroTitle === "string" && templateLanding.heroTitle.trim().length > 0 ? templateLanding.heroTitle : landing.heroTitle;
   const heroSubtitle = typeof templateLanding.heroSubtitle === "string" && templateLanding.heroSubtitle.trim().length > 0 ? templateLanding.heroSubtitle : landing.heroSubtitle;
   const heroDescription = typeof templateLanding.heroDescription === "string" && templateLanding.heroDescription.trim().length > 0 ? templateLanding.heroDescription : landing.heroDescription;
@@ -133,14 +125,25 @@ export default async function TenantLandingPage({ params }: { params: Promise<{ 
             <Link href={portalHref} className="rounded-full px-4 py-2 text-sm font-semibold uppercase tracking-[0.2em] text-zinc-300 transition hover:bg-white/5">
               Estado
             </Link>
+            {socialLinks.slice(0, 2).map((link) => (
+              <a
+                key={link.label}
+                href={link.href}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-full px-4 py-2 text-sm font-semibold uppercase tracking-[0.2em] text-zinc-300 transition hover:bg-white/5"
+              >
+                {link.label}
+              </a>
+            ))}
           </div>
         </header>
 
         <section id="inicio" className="grid gap-8 px-2 py-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:py-16">
           <div className="space-y-8">
             <div className="inline-flex items-center gap-3 rounded-2xl border border-sky-500/50 bg-sky-500/10 px-5 py-3 text-xs font-semibold uppercase tracking-[0.26em] text-sky-300">
-              <span className="text-lg">★</span>
-              5.0 estrellas en Google Maps
+              <span className="text-lg">◉</span>
+              Operación real del taller conectada al tenant
             </div>
 
             <div className="space-y-4">
@@ -263,17 +266,17 @@ export default async function TenantLandingPage({ params }: { params: Promise<{ 
 
         <section className="grid gap-6 rounded-[2rem] border border-zinc-800 bg-[linear-gradient(180deg,rgba(17,17,19,0.98),rgba(10,10,12,0.95))] p-6 lg:grid-cols-[1fr_0.92fr] lg:p-10">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.28em] text-sky-300">Ubicación</p>
-            <h2 className="mt-3 text-3xl font-black uppercase tracking-tight text-zinc-50 sm:text-4xl">Visítanos en Plaza Chapultepec</h2>
+            <p className="text-sm font-semibold uppercase tracking-[0.28em] text-sky-300">Contacto</p>
+            <h2 className="mt-3 text-3xl font-black uppercase tracking-tight text-zinc-50 sm:text-4xl">Atención del taller sin inventar datos</h2>
             <p className="mt-4 max-w-xl text-base leading-7 text-zinc-400">
-              Ubicados en el corazón de San Nicolás de los Garza, fácil acceso y estacionamiento disponible.
+              La ubicación, teléfono y enlaces salen de la configuración real del tenant. Si no hay mapa configurado, mostramos contacto directo.
             </p>
             <div className="mt-6 space-y-4">
               {[
-                ["Dirección", "Av. Juan Pablo II 310, Plaza Chapultepec, San Nicolás de los Garza, N.L."],
-                ["Horario", "Lunes a Sábado: 11:00 a.m. - 8:00 p.m. · Domingo: Cerrado"],
-                ["Teléfono / WhatsApp", data.tenant.contactPhone ?? data.tenant.contact_phone ?? "81 1700 6536"],
-                ["Ubicación exacta", "Dentro de Plaza Chapultepec, local en planta baja"],
+                ["Teléfono / WhatsApp", data.tenant.contactPhone ?? data.tenant.contact_phone ?? "No configurado"],
+                ["Correo", data.tenant.contactEmail ?? data.tenant.contact_email ?? "No configurado"],
+                ["Mapa", landing.showMap && landing.mapEmbedUrl ? "Disponible" : "No configurado"],
+                ["Enlaces", socialLinks.length > 0 ? `${socialLinks.length} publicados` : "Sin enlaces publicados"],
               ].map(([title, value]) => (
                 <div key={title} className="rounded-[1.4rem] border border-sky-400/25 bg-white/4 px-5 py-4">
                   <p className="text-sm font-semibold uppercase tracking-[0.22em] text-sky-300">{title}</p>
@@ -288,20 +291,39 @@ export default async function TenantLandingPage({ params }: { params: Promise<{ 
                   href={whatsappHref}
                   className="inline-flex items-center justify-center rounded-2xl border border-emerald-400/70 bg-emerald-500 px-5 py-4 text-center text-sm font-semibold uppercase tracking-[0.18em] text-white transition hover:-translate-y-0.5 hover:bg-emerald-400"
                 >
-                  Cómo llegar
+                  Abrir WhatsApp
                 </a>
               ) : null}
             </div>
           </div>
 
           <div className="overflow-hidden rounded-[1.8rem] border border-sky-500/60 bg-zinc-950 shadow-[0_20px_70px_rgba(0,0,0,0.35)]">
-            <iframe
-              title="Ubicación SrFix"
-              src={landing.mapEmbedUrl || "https://www.google.com/maps?q=Plaza%20Chapultepec%20San%20Nicol%C3%A1s&output=embed"}
-              className="h-[420px] w-full border-0"
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
+            {landing.showMap && landing.mapEmbedUrl ? (
+              <iframe
+                title={`${data.tenant.name} ubicación`}
+                src={landing.mapEmbedUrl}
+                className="h-[420px] w-full border-0"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            ) : (
+              <div className="flex h-[420px] flex-col justify-between p-6">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-zinc-400">Mapa no configurado</p>
+                  <p className="mt-4 text-3xl font-black uppercase leading-tight text-zinc-50">
+                    Publica la ubicación real del taller desde el panel del tenant.
+                  </p>
+                </div>
+                <div className="grid gap-3">
+                  <div className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-4 text-sm leading-6 text-zinc-400">
+                    Sin mapa embebido no mostramos una dirección inventada.
+                  </div>
+                  <div className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-4 text-sm leading-6 text-zinc-400">
+                    Configura `landing_content.mapEmbedUrl` o publica enlaces externos reales.
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </section>
 

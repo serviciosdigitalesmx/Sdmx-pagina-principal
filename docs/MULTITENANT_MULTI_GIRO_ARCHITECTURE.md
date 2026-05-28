@@ -57,7 +57,7 @@ Examples:
 - `orders`
 - `appointments`
 - `assets`
-- `inventory`
+- `stock`
 - `expenses`
 - `documents`
 - `portal`

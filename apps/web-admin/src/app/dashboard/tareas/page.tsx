@@ -11,7 +11,7 @@ type TaskRow = {
   description?: string | null;
   status?: string;
   priority?: string;
-  branch_id?: string | null;
+  sucursal_id?: string | null;
   service_order_id?: string | null;
   service_request_id?: string | null;
   assigned_user_id?: string | null;

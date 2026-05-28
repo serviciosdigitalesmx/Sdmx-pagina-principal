@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { readAuthToken, saveAuthToken } from "@/lib/auth-storage";
+import { requireEnv, resolveApiBaseUrl } from "@white-label/config";
 
-const hubName = process.env.NEXT_PUBLIC_HUB_NAME ?? "Hub operativo";
-const adminUrl = process.env.NEXT_PUBLIC_WEB_ADMIN_URL;
-const publicHomeLabel = process.env.NEXT_PUBLIC_SAAS_BRAND_NAME ?? "Plataforma SaaS";
-const tenantLandingTemplate = process.env.NEXT_PUBLIC_TENANT_LANDING_URL_TEMPLATE ?? "/{tenant}";
+const hubName = requireEnv("NEXT_PUBLIC_HUB_NAME");
+const adminUrl = requireEnv("NEXT_PUBLIC_WEB_ADMIN_URL");
+const publicHomeLabel = requireEnv("NEXT_PUBLIC_SAAS_BRAND_NAME");
+const tenantLandingTemplate = requireEnv("NEXT_PUBLIC_TENANT_LANDING_URL_TEMPLATE");
 const hubModules = [
   {
     title: "Recepción",
@@ -90,16 +91,7 @@ function readTenantSlugFromToken(token: string) {
 }
 
 async function resolveTenantSlugFromApi(token: string) {
-  const apiUrl = (
-    process.env.NEXT_PUBLIC_API_URL ||
-    process.env.NEXT_PUBLIC_API_BASE_URL ||
-    process.env.NEXT_PUBLIC_RENDER_API_URL ||
-    "https://sdmx-backend-api.onrender.com"
-  ).replace(/\/$/, "");
-
-  if (!apiUrl) {
-    return null;
-  }
+  const apiUrl = resolveApiBaseUrl();
 
   const response = await fetch(`${apiUrl}/api/auth/session`, {
     headers: {

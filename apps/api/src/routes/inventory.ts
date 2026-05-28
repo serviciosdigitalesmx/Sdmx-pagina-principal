@@ -13,9 +13,9 @@ router.use(validateTenant);
 router.use(requireTenantBillingActive);
 router.use(attachTenantCapabilities);
 
-router.get('/', requireTenantModule('inventory'), requireRole('owner', 'manager', 'technician'), listInventory);
-router.post('/', requireTenantModule('inventory'), requireRole('owner', 'manager'), createInventoryItem);
-router.patch('/:id', requireTenantModule('inventory'), requireRole('owner', 'manager'), updateInventoryItem);
-router.get('/:id/movements', requireTenantModule('inventory'), requireRole('owner', 'manager', 'technician'), listInventoryMovements);
+router.get('/', requireTenantModule('stock'), requireRole('owner', 'manager', 'technician'), listInventory);
+router.post('/', requireTenantModule('stock'), requireRole('owner', 'manager'), createInventoryItem);
+router.patch('/:id', requireTenantModule('stock'), requireRole('owner', 'manager'), updateInventoryItem);
+router.get('/:id/movements', requireTenantModule('stock'), requireRole('owner', 'manager', 'technician'), listInventoryMovements);
 
 export default router;

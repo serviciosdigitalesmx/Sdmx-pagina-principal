@@ -66,10 +66,10 @@ This document maps the production screens to the backend routes and Supabase tab
 
 - Frontend route: `/dashboard/stock`
 - Backend routes:
-  - `GET /api/:tenantId/inventory`
-  - `POST /api/:tenantId/inventory`
+  - `GET /api/:tenantId/stock`
+  - `POST /api/:tenantId/stock`
 - Supabase table:
-  - `inventory`
+  - `sucursal_inventory`
 - Operation:
   - Read / Create
 - Tenant isolation:
@@ -81,9 +81,9 @@ This document maps the production screens to the backend routes and Supabase tab
 - Backend route:
   - `GET /api/:tenantId/procurement/summary`
 - Supabase tables:
-  - `inventory`
+  - `sucursal_inventory`
 - Operation:
-  - Read summary derived from real inventory
+  - Read summary derived from real stock by sucursal
 - Tenant isolation:
   - Applied by authenticated tenant context and `tenant_id`
 
@@ -124,7 +124,7 @@ This document maps the production screens to the backend routes and Supabase tab
 - Supabase tables:
   - `service_orders`
   - `customers`
-  - `inventory`
+  - `sucursal_inventory`
   - `finances`
 - Operation:
   - Read summary derived from real operational tables

@@ -8,7 +8,7 @@ export interface TenantContext {
   tenantId: string;
   tenantName: string;
   brandName: string;
-  branchName: string;
+  sucursalName: string;
   userEmail: string;
   userSucursalId: string;
   userRole: string;
@@ -135,7 +135,7 @@ export interface TenantModuleRegistryItem {
 
 export interface TenantPlanLimits {
   users: number | null;
-  branches: number | null;
+  sucursales: number | null;
   monthly_orders: number | null;
   storage_mb: number | null;
   public_portal: boolean;

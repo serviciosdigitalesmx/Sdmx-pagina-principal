@@ -38,6 +38,6 @@ export const acknowledgeAlert = async (req: Request, res: Response) => {
   }
 };
 
-export async function refreshInventoryAlert(tenantId: string, productId: string, branchId: string | null | undefined, stock: number) {
-  await syncStockAlertForInventoryRow({ tenantId, productId, branchId, stock });
+export async function refreshInventoryAlert(tenantId: string, productId: string, sucursalId: string | null | undefined, stock: number) {
+  await syncStockAlertForInventoryRow({ tenantId, productId, sucursalId, stock });
 }

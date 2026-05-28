@@ -16,7 +16,7 @@ const purchaseOrderItemSchema = z.object({
 
 const createPurchaseOrderSchema = z.object({
   supplierId: z.string().uuid(),
-  branchId: z.string().uuid().optional().or(z.literal('')),
+  sucursalId: z.string().uuid().optional().or(z.literal('')),
   expectedDate: z.string().optional().or(z.literal('')),
   notes: z.string().optional().or(z.literal('')),
   paymentTerms: z.string().optional().or(z.literal('')),
@@ -26,7 +26,7 @@ const createPurchaseOrderSchema = z.object({
 
 const updatePurchaseOrderSchema = z.object({
   supplierId: z.string().uuid().optional(),
-  branchId: z.string().uuid().optional().or(z.literal('')).nullable(),
+  sucursalId: z.string().uuid().optional().or(z.literal('')).nullable(),
   expectedDate: z.string().optional().or(z.literal('')).nullable(),
   notes: z.string().optional().or(z.literal('')).nullable(),
   paymentTerms: z.string().optional().or(z.literal('')).nullable(),
@@ -50,15 +50,15 @@ function isUuid(value: unknown) {
   return typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
-async function validateBranchOwnership(supabase: ReturnType<typeof getTenantClient>, tenantId: string, branchId?: string | null) {
-  if (!branchId) {
+async function validateSucursalOwnership(supabase: ReturnType<typeof getTenantClient>, tenantId: string, sucursalId?: string | null) {
+  if (!sucursalId) {
     return true;
   }
   const { data, error } = await supabase
-    .from('branches')
+    .from('sucursales')
     .select('id')
     .eq('tenant_id', tenantId)
-    .eq('id', branchId)
+    .eq('id', sucursalId)
     .maybeSingle();
   if (error) throw new Error(error.message);
   return Boolean(data);
@@ -140,7 +140,7 @@ async function getPurchaseOrderDetail(supabase: ReturnType<typeof getTenantClien
   const [order, items, documents] = await Promise.all([
     supabase.from('purchase_orders').select('*').eq('tenant_id', tenantId).eq('id', orderId).maybeSingle(),
     supabase.from('purchase_order_items').select('*').eq('tenant_id', tenantId).eq('purchase_order_id', orderId).order('created_at', { ascending: true }),
-    supabase.from('inventory_movements').select('id, tenant_id, branch_id, product_id, purchase_order_id, movement_type, quantity, unit_cost, reference, notes, created_by, created_at').eq('tenant_id', tenantId).eq('purchase_order_id', orderId).order('created_at', { ascending: true }),
+    supabase.from('inventory_movements').select('id, tenant_id, sucursal_id, product_id, purchase_order_id, movement_type, quantity, unit_cost, reference, notes, created_by, created_at').eq('tenant_id', tenantId).eq('purchase_order_id', orderId).order('created_at', { ascending: true }),
   ]);
 
   return {
@@ -157,7 +157,7 @@ export const listPurchaseOrders = async (req: Request, res: Response) => {
     const supabase = getTenantClient(tenantId);
     const { data, error } = await supabase
       .from('purchase_orders')
-      .select('id, tenant_id, branch_id, supplier_id, related_service_order_id, folio, status, reference, payment_terms, expected_date, subtotal, tax_amount, total, notes, created_at, updated_at')
+      .select('id, tenant_id, sucursal_id, supplier_id, related_service_order_id, folio, status, reference, payment_terms, expected_date, subtotal, tax_amount, total, notes, created_at, updated_at')
       .eq('tenant_id', tenantId)
       .order('created_at', { ascending: false })
       .limit(100);
@@ -203,8 +203,8 @@ export const createPurchaseOrder = async (req: Request, res: Response) => {
     if (!(await validateSupplierOwnership(supabase, tenantId, body.supplierId))) {
       return res.status(404).json({ error: 'Supplier not found' });
     }
-    if (!(await validateBranchOwnership(supabase, tenantId, body.branchId || null))) {
-      return res.status(404).json({ error: 'Branch not found' });
+    if (!(await validateSucursalOwnership(supabase, tenantId, body.sucursalId || null))) {
+      return res.status(404).json({ error: 'Sucursal not found' });
     }
 
     const folio = `OC-${Date.now().toString(36).toUpperCase()}`;
@@ -216,7 +216,7 @@ export const createPurchaseOrder = async (req: Request, res: Response) => {
       .from('purchase_orders')
       .insert([{
         tenant_id: tenantId,
-        branch_id: body.branchId || null,
+        sucursal_id: body.sucursalId || null,
         supplier_id: body.supplierId,
         folio,
         status: 'borrador',
@@ -282,15 +282,15 @@ export const updatePurchaseOrder = async (req: Request, res: Response) => {
     if (existingError) return res.status(502).json({ error: 'Failed to fetch purchase order', details: existingError.message });
     if (!existing) return res.status(404).json({ error: 'Purchase order not found' });
 
-    if (body.branchId && !(await validateBranchOwnership(supabase, tenantId, body.branchId))) {
-      return res.status(404).json({ error: 'Branch not found' });
+    if (body.sucursalId && !(await validateSucursalOwnership(supabase, tenantId, body.sucursalId))) {
+      return res.status(404).json({ error: 'Sucursal not found' });
     }
     if (body.supplierId && !(await validateSupplierOwnership(supabase, tenantId, body.supplierId))) {
       return res.status(404).json({ error: 'Supplier not found' });
     }
 
     const payload: Record<string, unknown> = {};
-    if (body.branchId !== undefined) payload.branch_id = body.branchId || null;
+    if (body.sucursalId !== undefined) payload.sucursal_id = body.sucursalId || null;
     if (body.supplierId !== undefined) payload.supplier_id = body.supplierId;
     if (body.expectedDate !== undefined) payload.expected_date = body.expectedDate || null;
     if (body.notes !== undefined) payload.notes = body.notes || null;
@@ -416,47 +416,46 @@ export const receivePurchaseOrder = async (req: Request, res: Response) => {
       );
 
       const { data: inventoryRow, error: inventoryError } = await supabase
-        .from('inventory')
-        .select('*')
+        .from('sucursal_inventory')
+        .select('id, tenant_id, sucursal_id, product_id, stock_current')
         .eq('tenant_id', tenantId)
-        .eq('sku', sku)
+        .eq('product_id', productCatalog.id)
+        .eq('sucursal_id', order.sucursal_id ?? null)
         .maybeSingle();
       if (inventoryError) return res.status(502).json({ error: 'Failed to fetch inventory row', details: inventoryError.message });
 
       let nextInventory = inventoryRow;
       if (!nextInventory) {
         const { data: createdInventory, error: createInventoryError } = await supabase
-          .from('inventory')
+          .from('sucursal_inventory')
           .insert([{
-            id: productCatalog.id,
             tenant_id: tenantId,
-            branch_id: order.branch_id ?? null,
-            sku,
-            description: String(item.product_name_snapshot ?? sku),
-            stock: 0,
+            sucursal_id: order.sucursal_id ?? null,
+            product_id: productCatalog.id,
+            stock_current: 0,
           }])
-          .select('*')
+          .select('id, tenant_id, sucursal_id, product_id, stock_current')
           .single();
         if (createInventoryError || !createdInventory) return res.status(502).json({ error: 'Failed to create inventory item on receipt', details: createInventoryError?.message ?? 'Unknown error' });
         nextInventory = createdInventory;
       }
 
-      const nextStock = Number(nextInventory.stock ?? 0) + receivedQuantity;
+      const nextStock = Number(nextInventory.stock_current ?? 0) + receivedQuantity;
       const { error: updateInventoryError } = await supabase
-        .from('inventory')
+        .from('sucursal_inventory')
         .update({
-          stock: nextStock,
-          branch_id: order.branch_id ?? nextInventory.branch_id ?? null,
+          stock_current: nextStock,
+          sucursal_id: order.sucursal_id ?? nextInventory.sucursal_id ?? null,
         })
         .eq('tenant_id', tenantId)
         .eq('id', nextInventory.id);
       if (updateInventoryError) return res.status(502).json({ error: 'Failed to update inventory stock', details: updateInventoryError.message });
-      await refreshInventoryAlert(tenantId, productCatalog.id, order.branch_id ?? nextInventory.branch_id ?? null, nextStock);
+      await refreshInventoryAlert(tenantId, productCatalog.id, order.sucursal_id ?? nextInventory.sucursal_id ?? null, nextStock);
 
-      inventorySnapshots.push({ id: nextInventory.id, sku, stock: nextStock });
+      inventorySnapshots.push({ id: nextInventory.id, sku, stock_current: nextStock });
       movementRows.push({
         tenant_id: tenantId,
-        branch_id: order.branch_id ?? null,
+        sucursal_id: order.sucursal_id ?? null,
         product_id: productCatalog.id,
         purchase_order_id: orderId,
         movement_type: 'purchase_received',

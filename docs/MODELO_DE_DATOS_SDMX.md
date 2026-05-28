@@ -101,7 +101,7 @@ Relaciones:
 - un tenant tiene muchos clientes
 - un tenant tiene muchas órdenes
 
-## 4.2 branches
+## 4.2 sucursales
 
 Representa sucursales del negocio.
 
@@ -133,7 +133,7 @@ Campos sugeridos:
 
 - `id`
 - `tenant_id`
-- `branch_id` opcional
+- `sucursal_id` opcional
 - `auth_user_id` si se usa Supabase Auth
 - `full_name`
 - `email`
@@ -188,7 +188,7 @@ Campos sugeridos:
 
 - `id`
 - `tenant_id`
-- `branch_id`
+- `sucursal_id`
 - `customer_id`
 - `folio`
 - `status`
@@ -259,7 +259,7 @@ Campos sugeridos:
 
 - `id`
 - `tenant_id`
-- `branch_id`
+- `sucursal_id`
 - `customer_name`
 - `customer_phone`
 - `customer_email`
@@ -283,7 +283,7 @@ Campos sugeridos:
 
 - `id`
 - `tenant_id`
-- `branch_id`
+- `sucursal_id`
 - `service_order_id` opcional
 - `service_request_id` opcional
 - `title`
@@ -337,7 +337,7 @@ Restricciones:
 
 - `sku` único por tenant
 
-## 8.2 branch_inventory
+## 8.2 sucursal_inventory
 
 Stock por sucursal.
 
@@ -345,14 +345,14 @@ Campos sugeridos:
 
 - `id`
 - `tenant_id`
-- `branch_id`
+- `sucursal_id`
 - `product_id`
 - `stock_current`
 - `updated_at`
 
 Restricciones:
 
-- combinación única `tenant_id + branch_id + product_id`
+- combinación única `tenant_id + sucursal_id + product_id`
 
 ## 8.3 inventory_movements
 
@@ -362,7 +362,7 @@ Campos sugeridos:
 
 - `id`
 - `tenant_id`
-- `branch_id`
+- `sucursal_id`
 - `product_id`
 - `service_order_id` opcional
 - `purchase_order_id` opcional
@@ -391,7 +391,7 @@ Campos sugeridos:
 
 - `id`
 - `tenant_id`
-- `branch_id`
+- `sucursal_id`
 - `product_id`
 - `severity`
 - `acknowledged_by`
@@ -433,7 +433,7 @@ Campos sugeridos:
 
 - `id`
 - `tenant_id`
-- `branch_id`
+- `sucursal_id`
 - `supplier_id`
 - `folio`
 - `status`
@@ -475,7 +475,7 @@ Campos sugeridos:
 
 - `id`
 - `tenant_id`
-- `branch_id`
+- `sucursal_id`
 - `supplier_id` opcional
 - `service_order_id` opcional
 - `purchase_order_id` opcional
@@ -500,7 +500,7 @@ Campos sugeridos:
 
 - `id`
 - `tenant_id`
-- `branch_id`
+- `sucursal_id`
 - `customer_id`
 - `service_order_id` opcional
 - `service_request_id` opcional
@@ -521,7 +521,7 @@ Campos sugeridos:
 
 - `id`
 - `tenant_id`
-- `branch_id` opcional
+- `sucursal_id` opcional
 - `period_type`
 - `period_start`
 - `period_end`
@@ -538,7 +538,7 @@ Campos sugeridos:
 
 - `id`
 - `tenant_id`
-- `branch_id` opcional
+- `sucursal_id` opcional
 - `service_order_id` opcional
 - `service_request_id` opcional
 - `file_type`
@@ -581,7 +581,7 @@ Canales sugeridos:
 
 Relaciones principales:
 
-- `tenants -> branches`
+- `tenants -> sucursales`
 - `tenants -> users`
 - `tenants -> customers`
 - `customers -> service_orders`
@@ -589,7 +589,7 @@ Relaciones principales:
 - `service_orders -> service_order_status_history`
 - `service_orders -> file_assets`
 - `products -> inventory_movements`
-- `products -> branch_inventory`
+- `products -> sucursal_inventory`
 - `suppliers -> purchase_orders`
 - `purchase_orders -> purchase_order_items`
 - `purchase_orders -> inventory_movements`
@@ -612,7 +612,7 @@ Reglas mínimas recomendadas:
 Índices recomendados:
 
 - `tenant_id`
-- `tenant_id, branch_id`
+- `tenant_id, sucursal_id`
 - `tenant_id, folio`
 - `tenant_id, sku`
 - `tenant_id, customer_id`

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { requireEnv } from "@white-label/config";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,15 +20,12 @@ const cormorant = Cormorant_Garamond({
 });
 
 export const metadata: Metadata = {
-  title:
-    process.env.NEXT_PUBLIC_TENANT_META_TITLE ?? "FIXI | Panel del taller",
-  description:
-    process.env.NEXT_PUBLIC_TENANT_META_DESCRIPTION ??
-    "FIXI: panel white-label para talleres con soporte y experiencia personalizada.",
+  title: requireEnv("NEXT_PUBLIC_TENANT_META_TITLE"),
+  description: requireEnv("NEXT_PUBLIC_TENANT_META_DESCRIPTION"),
 };
 
 export const viewport = {
-  themeColor: process.env.NEXT_PUBLIC_TENANT_THEME_COLOR ?? "#111111",
+  themeColor: requireEnv("NEXT_PUBLIC_TENANT_THEME_COLOR"),
 };
 
 export default function RootLayout({
@@ -35,9 +33,9 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const themePrimary = process.env.NEXT_PUBLIC_THEME_PRIMARY ?? '#111111';
-  const themeSecondary = process.env.NEXT_PUBLIC_THEME_SECONDARY ?? '#09090b';
-  const themeAccent = process.env.NEXT_PUBLIC_THEME_ACCENT ?? '#6b7280';
+  const themePrimary = requireEnv('NEXT_PUBLIC_THEME_PRIMARY');
+  const themeSecondary = requireEnv('NEXT_PUBLIC_THEME_SECONDARY');
+  const themeAccent = requireEnv('NEXT_PUBLIC_THEME_ACCENT');
 
   return (
     <html

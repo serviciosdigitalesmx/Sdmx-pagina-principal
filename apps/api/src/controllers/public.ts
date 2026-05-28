@@ -42,6 +42,24 @@ type LandingContent = {
   videoUrl?: string;
 };
 
+type LandingTemplate = {
+  heroTitle?: string;
+  heroSubtitle?: string;
+  heroDescription?: string;
+  primaryCtaLabel?: string;
+  primaryCtaHref?: string;
+  secondaryCtaLabel?: string;
+  secondaryCtaHref?: string;
+  contactLabel?: string;
+  contactHref?: string;
+  services?: LandingService[];
+  socialLinks?: LandingSocialLink[];
+  showMap?: boolean;
+  mapEmbedUrl?: string;
+  showVideo?: boolean;
+  videoUrl?: string;
+};
+
 type ContactInfo = {
   contactPhone: string | null;
   contactEmail: string | null;
@@ -57,6 +75,10 @@ const publicQuoteSchema = z.object({
   deviceBrand: z.string().min(1),
   deviceModel: z.string().min(1),
   issue: z.string().min(1),
+  deviceType: z.string().optional().or(z.literal('')),
+  serialNumber: z.string().optional().or(z.literal('')),
+  priorityLevel: z.string().optional().or(z.literal('')),
+  passwordOrPin: z.string().optional().or(z.literal('')),
   metadata: z.record(z.unknown()).optional(),
 });
 
@@ -144,6 +166,36 @@ function normalizeLandingContent(input: unknown, tenantName: string, tenantSlug:
   };
 }
 
+function mergeLandingContent(
+  rawLandingContent: unknown,
+  landingTemplate: LandingTemplate | null,
+  tenantName: string,
+  tenantSlug: string,
+): Required<LandingContent> {
+  const normalized = normalizeLandingContent(rawLandingContent, tenantName, tenantSlug);
+  const template = landingTemplate ?? {};
+
+  return {
+    heroTitle: template.heroTitle?.trim() || normalized.heroTitle,
+    heroSubtitle: template.heroSubtitle?.trim() || normalized.heroSubtitle,
+    heroDescription: template.heroDescription?.trim() || normalized.heroDescription,
+    primaryCtaLabel: template.primaryCtaLabel?.trim() || normalized.primaryCtaLabel,
+    primaryCtaHref: template.primaryCtaHref?.trim() || normalized.primaryCtaHref,
+    secondaryCtaLabel: template.secondaryCtaLabel?.trim() || normalized.secondaryCtaLabel,
+    secondaryCtaHref: template.secondaryCtaHref?.trim() || normalized.secondaryCtaHref,
+    contactLabel: template.contactLabel?.trim() || normalized.contactLabel,
+    contactHref: template.contactHref?.trim() || normalized.contactHref,
+    seoTitle: normalized.seoTitle,
+    seoDescription: normalized.seoDescription,
+    services: Array.isArray(template.services) && template.services.length > 0 ? template.services : normalized.services,
+    socialLinks: Array.isArray(template.socialLinks) && template.socialLinks.length > 0 ? template.socialLinks : normalized.socialLinks,
+    showMap: typeof template.showMap === 'boolean' ? template.showMap : normalized.showMap,
+    mapEmbedUrl: template.mapEmbedUrl?.trim() || normalized.mapEmbedUrl,
+    showVideo: typeof template.showVideo === 'boolean' ? template.showVideo : normalized.showVideo,
+    videoUrl: template.videoUrl?.trim() || normalized.videoUrl,
+  };
+}
+
 function buildPdfAttachment(receiptUrl?: string | null): PdfAttachment | null {
   if (!receiptUrl) {
     return null;
@@ -168,11 +220,20 @@ export async function createPublicQuote(req: Request, res: Response) {
   }
 
   try {
-    const { tenantSlug, fullName, phone, email, deviceBrand, deviceModel, issue } = parsed.data;
+    const { tenantSlug, fullName, phone, email, deviceBrand, deviceModel, issue, deviceType, serialNumber, priorityLevel, passwordOrPin } = parsed.data;
     const metadata = parsed.data.metadata ?? {};
     const tenant = await resolveTenantIdBySlug(tenantSlug);
     const runtimeConfig = await loadTenantRuntimeConfig(tenant.id);
     const supabase = getTenantClient(tenant.id);
+    const requestMetadata = {
+      ...metadata,
+      device_type: deviceType || deviceBrand,
+      device_brand: deviceBrand,
+      device_model: deviceModel,
+      serial_number: serialNumber || null,
+      priority_level: priorityLevel || null,
+      password_or_pin: passwordOrPin || null,
+    };
 
     const { data, error } = await supabase
       .from('service_requests')
@@ -186,7 +247,7 @@ export async function createPublicQuote(req: Request, res: Response) {
           device_type: deviceBrand,
           device_model: deviceModel,
           issue_description: issue,
-          metadata,
+          metadata: requestMetadata,
           status: 'pendiente',
           quoted_total: 0,
           deposit_amount: 0,
@@ -434,7 +495,7 @@ export async function getPublicTenantLanding(req: Request, res: Response) {
   try {
     const tenant = await resolveTenantIdBySlug(tenantSlug);
     const runtimeConfig = await loadTenantRuntimeConfig(tenant.id);
-    const landingContent = normalizeLandingContent(tenant.landing_content, tenant.name, tenant.slug);
+    const landingContent = mergeLandingContent(tenant.landing_content, (runtimeConfig.templates.landing ?? null) as LandingTemplate | null, tenant.name, tenant.slug);
 
     return res.json({
       success: true,

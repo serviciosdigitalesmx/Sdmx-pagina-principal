@@ -39,7 +39,7 @@ const navGroups: NavGroup[] = [
     items: [
       { href: "/dashboard/clientes", label: "Clientes", allowedRoles: ["owner", "manager", "technician"], moduleKey: "customers" },
       { href: "/dashboard/proveedores", label: "Proveedores", allowedRoles: ["owner", "manager"], moduleKey: "suppliers" },
-      { href: "/dashboard/stock", label: "Stock", allowedRoles: ["owner", "manager", "technician"], moduleKey: "inventory" },
+      { href: "/dashboard/stock", label: "Stock", allowedRoles: ["owner", "manager", "technician"], moduleKey: "stock" },
       { href: "/dashboard/tareas", label: "Tareas", allowedRoles: ["owner", "manager", "technician"], moduleKey: "tasks" },
     ],
   },
@@ -51,7 +51,7 @@ const navGroups: NavGroup[] = [
       { href: "/dashboard/finanzas", label: "Finanzas", allowedRoles: ["owner", "manager"], moduleKey: "finance" },
       { href: "/dashboard/reportes", label: "Reportes", allowedRoles: ["owner", "manager"], moduleKey: "reports" },
       { href: "/dashboard/seguridad", label: "Seguridad", allowedRoles: ["owner", "manager"], moduleKey: "security" },
-      { href: "/dashboard/sucursales", label: "Sucursales", allowedRoles: ["owner", "manager"], moduleKey: "branches" },
+      { href: "/dashboard/sucursales", label: "Sucursales", allowedRoles: ["owner", "manager"], moduleKey: "sucursales" },
     ],
   },
 ];
@@ -68,7 +68,7 @@ function DashboardShellContent({
   const searchParams = useSearchParams();
   const theme = useTenantTheme();
   const auth = useAuth();
-  const [branches, setBranches] = React.useState<Array<{ id?: string; name?: string; city?: string; code?: string }>>([]);
+  const [sucursales, setSucursales] = React.useState<Array<{ id?: string; name?: string; city?: string; code?: string }>>([]);
   const [tenantConfig, setTenantConfig] = React.useState<{
     active_modules?: string[];
     labels?: Record<string, string>;
@@ -91,7 +91,7 @@ function DashboardShellContent({
       userRole: auth.role || tenant.userRole,
     };
   }, [auth.role, auth.tenantSlug, auth.userEmail, tenant]);
-  const branchId = searchParams.get('branchId') ?? auth.sucursalId ?? '';
+  const sucursalId = searchParams.get('sucursalId') ?? auth.sucursalId ?? '';
   const enabledModules = React.useMemo(() => {
     const activeModules = tenantConfig?.capabilities?.active_modules ?? tenantConfig?.active_modules;
     if (Array.isArray(activeModules) && activeModules.length > 0) {
@@ -116,18 +116,18 @@ function DashboardShellContent({
   React.useEffect(() => {
     let cancelled = false;
 
-    async function loadBranches() {
+    async function loadSucursales() {
       try {
-        const data = await fixService.getBranches();
+        const data = await fixService.getSucursales();
         if (!cancelled) {
-          setBranches(data as Array<{ id?: string; name?: string; city?: string; code?: string }>);
+          setSucursales(data as Array<{ id?: string; name?: string; city?: string; code?: string }>);
         }
       } catch {
-        if (!cancelled) setBranches([]);
+        if (!cancelled) setSucursales([]);
       }
     }
 
-    void loadBranches();
+    void loadSucursales();
 
     return () => {
       cancelled = true;
@@ -162,12 +162,12 @@ function DashboardShellContent({
     };
   }, []);
 
-  function updateBranch(nextBranchId: string) {
+  function updateSucursal(nextSucursalId: string) {
     const params = new URLSearchParams(searchParams.toString());
-    if (nextBranchId) {
-      params.set('branchId', nextBranchId);
+    if (nextSucursalId) {
+      params.set('sucursalId', nextSucursalId);
     } else {
-      params.delete('branchId');
+      params.delete('sucursalId');
     }
     const query = params.toString();
     router.push(query ? `${pathname}?${query}` : pathname);
@@ -217,7 +217,7 @@ function DashboardShellContent({
           <div className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-4">
             <div className="text-zinc-50">{activeTenant.userEmail}</div>
             <div className="mt-1 text-xs text-zinc-400">Rol: {activeTenant.userRole}</div>
-            <div className="text-xs text-zinc-400">Sucursal: {activeTenant.branchName}</div>
+            <div className="text-xs text-zinc-400">Sucursal: {activeTenant.sucursalName}</div>
           </div>
         </div>
       </aside>
@@ -227,7 +227,7 @@ function DashboardShellContent({
           <div className="min-w-0">
             <div className="text-sm font-semibold text-zinc-50 [font-family:var(--font-display)]">SR FIX · Integrador Interno</div>
             <div className="text-xs leading-5 text-zinc-400">
-              Tenant: {activeTenant.tenantId} · Rol: {activeTenant.userRole} · Sucursal: {activeTenant.branchName}
+              Tenant: {activeTenant.tenantId} · Rol: {activeTenant.userRole} · Sucursal: {activeTenant.sucursalName}
             </div>
           </div>
           <div className="flex items-center gap-3 sm:gap-4">
@@ -244,14 +244,14 @@ function DashboardShellContent({
           <div className="flex flex-wrap items-center gap-2 normal-case tracking-normal">
             <span className="text-[11px] uppercase tracking-[0.18em] text-zinc-400">Todas las sucursales</span>
             <select
-              value={branchId}
-              onChange={(event) => updateBranch(event.target.value)}
+              value={sucursalId}
+              onChange={(event) => updateSucursal(event.target.value)}
               className="min-w-52 rounded-full border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100"
             >
               <option value="">Todas / contexto actual</option>
-              {branches.map((branch) => (
-                <option key={branch.id ?? branch.code ?? branch.name} value={branch.id ?? ''}>
-                  {branch.name ?? 'Sucursal'}{branch.city ? ` · ${branch.city}` : ''}{branch.code ? ` (${branch.code})` : ''}
+              {sucursales.map((sucursal) => (
+                <option key={sucursal.id ?? sucursal.code ?? sucursal.name} value={sucursal.id ?? ''}>
+                  {sucursal.name ?? 'Sucursal'}{sucursal.city ? ` · ${sucursal.city}` : ''}{sucursal.code ? ` (${sucursal.code})` : ''}
                 </option>
               ))}
             </select>

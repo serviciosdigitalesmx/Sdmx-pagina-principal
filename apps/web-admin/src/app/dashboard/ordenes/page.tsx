@@ -7,6 +7,7 @@ import { OrderDetailDrawer, type OrderDetailData } from "@/components/dashboard/
 import { OrderIntakeModal, type OrderCreationSummary, type OrderIntakeFiles, type OrderIntakeFormState } from "@/components/dashboard/orders/order-intake-modal";
 import { fixService } from "@/services/fixService";
 import { type DynamicFieldDefinition } from "@white-label/ui";
+import { requireEnv } from "@white-label/config";
 
 type OrderRow = {
   id?: string;
@@ -290,10 +291,7 @@ export default function OrdenesKanbanPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sortMode, setSortMode] = useState<"soonest" | "oldest">("soonest");
 
-  const customerPortalBase =
-    process.env.NEXT_PUBLIC_CUSTOMER_TRACKING_URL ||
-    process.env.NEXT_PUBLIC_SAAS_DEMO_URL ||
-    "https://clientes.serviciosdigitalesmx.online";
+  const customerPortalBase = requireEnv("NEXT_PUBLIC_CUSTOMER_TRACKING_URL");
   const customerPortalUrl = useMemo(() => {
     const base = customerPortalBase.replace(/\/$/, "");
     if (!base || !tenantSlug) return null;
@@ -489,7 +487,7 @@ export default function OrdenesKanbanPage() {
     try {
       setSaving(true);
       setError("");
-      const branchId = isUuid(sucursalId) ? sucursalId : undefined;
+      const sucursalId = isUuid(sucursalId) ? sucursalId : undefined;
       for (const definition of dynamicFieldDefinitions) {
         if (!definition.required || definition.visible === false) continue;
         const value = dynamicFieldValues[definition.field_key];
@@ -532,7 +530,7 @@ export default function OrdenesKanbanPage() {
         },
         metadata,
         receiptUrl: "",
-        branchId,
+        sucursalId,
       })) as OrderRow;
 
       if (!created.id) {

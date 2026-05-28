@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { DynamicFields, type DynamicFieldDefinition } from "@white-label/ui";
+import { resolveApiBaseUrl } from "@white-label/config";
 
 const fieldClassName =
   "w-full rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-50 outline-none transition placeholder:text-zinc-500 focus:border-slate-400/60 focus:ring-2 focus:ring-slate-400/20";
@@ -12,8 +13,12 @@ type QuotePayload = {
   fullName: string;
   phone: string;
   email: string;
+  deviceType: string;
   deviceBrand: string;
   deviceModel: string;
+  serialNumber: string;
+  priorityLevel: string;
+  passwordOrPin: string;
   issue: string;
 };
 
@@ -42,14 +47,10 @@ type QuoteResponse = {
   };
 };
 
-function resolveApiUrl() {
-  return (
-    process.env.NEXT_PUBLIC_API_URL ||
-    process.env.NEXT_PUBLIC_API_BASE_URL ||
-    process.env.NEXT_PUBLIC_RENDER_API_URL ||
-    "https://sdmx-backend-api.onrender.com"
-  ).replace(/\/$/, "");
-}
+type PublicTenantConfig = {
+  fieldDefinitions?: DynamicFieldDefinition[];
+  labels?: Record<string, string>;
+};
 
 function buildTrackingHref(tenant: string, folio: string) {
   return `/${encodeURIComponent(tenant)}/tracking?folio=${encodeURIComponent(folio)}`;
@@ -73,8 +74,12 @@ export default function TenantQuotePage() {
     fullName: "",
     phone: "",
     email: "",
+    deviceType: "",
     deviceBrand: "",
     deviceModel: "",
+    serialNumber: "",
+    priorityLevel: "",
+    passwordOrPin: "",
     issue: "",
   });
   const [message, setMessage] = useState<string | null>(null);
@@ -84,7 +89,7 @@ export default function TenantQuotePage() {
   const [dynamicFieldDefinitions, setDynamicFieldDefinitions] = useState<DynamicFieldDefinition[]>([]);
   const [dynamicFieldValues, setDynamicFieldValues] = useState<Record<string, string | boolean>>({});
   const [tenantLabels, setTenantLabels] = useState<Record<string, string>>({});
-  const apiUrl = useMemo(() => resolveApiUrl(), []);
+  const apiUrl = useMemo(() => resolveApiBaseUrl(), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -92,7 +97,7 @@ export default function TenantQuotePage() {
     async function loadSettings() {
       try {
         const response = await fetch(`${apiUrl}/api/public/${encodeURIComponent(tenant)}`);
-        const payload = (await response.json().catch(() => null)) as { success?: boolean; data?: { tenant?: { config?: { fieldDefinitions?: DynamicFieldDefinition[] } } } } | null;
+        const payload = (await response.json().catch(() => null)) as { success?: boolean; data?: { tenant?: { config?: PublicTenantConfig } } } | null;
         if (!response.ok || !payload?.success) {
           throw new Error("No se pudo cargar la configuración del tenant");
         }
@@ -148,10 +153,6 @@ export default function TenantQuotePage() {
     }, {});
 
     try {
-      if (!apiUrl) {
-        throw new Error("Falta configurar NEXT_PUBLIC_API_URL o NEXT_PUBLIC_API_BASE_URL");
-      }
-
       const response = await fetch(`${apiUrl}/api/public/quotes`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -174,8 +175,12 @@ export default function TenantQuotePage() {
         fullName: "",
         phone: "",
         email: "",
+        deviceType: "",
         deviceBrand: "",
         deviceModel: "",
+        serialNumber: "",
+        priorityLevel: "",
+        passwordOrPin: "",
         issue: "",
       });
       setDynamicFieldValues({});
@@ -213,6 +218,7 @@ export default function TenantQuotePage() {
             <ul className="mt-4 space-y-3 text-sm leading-7 text-zinc-300">
               <li>• La solicitud se envía para registrarse.</li>
               <li>• Se asocia al taller actual.</li>
+              <li>• Recepción recibe marca, modelo, serie y urgencia para abrir el caso.</li>
               <li>• Recepción puede convertirla en servicio con un clic.</li>
             </ul>
           </aside>
@@ -223,8 +229,12 @@ export default function TenantQuotePage() {
             ["Nombre", "fullName", "text", "Tu nombre"],
             ["WhatsApp", "phone", "tel", "81 1234 5678"],
             ["Correo", "email", "email", "cliente@email.com"],
-            ["Marca", "deviceBrand", "text", tenantLabels.asset ? `Ej. ${tenantLabels.asset}` : "Laptop / Surface / iPhone"],
+            ["Tipo de equipo", "deviceType", "text", "Celular / laptop / consola"],
+            ["Marca", "deviceBrand", "text", tenantLabels.asset ? `Ej. ${tenantLabels.asset}` : "Apple / Samsung / Dell"],
             ["Modelo", "deviceModel", "text", "Modelo exacto"],
+            ["Serie / IMEI", "serialNumber", "text", "Opcional"],
+            ["Nivel de urgencia", "priorityLevel", "text", "Normal / Alta / Urgente"],
+            ["PIN / contraseña", "passwordOrPin", "password", "Opcional y confidencial"],
           ].map(([label, key, type, placeholder]) => (
             <div key={key as string}>
               <label className="mb-2 block text-sm font-medium text-zinc-300">{label}</label>

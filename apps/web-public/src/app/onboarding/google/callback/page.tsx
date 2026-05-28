@@ -4,6 +4,7 @@ import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { saveAuthToken } from "@/lib/auth-storage";
 import { ShellBadge, srFixTheme } from "@/components/srfix-theme";
+import { resolveApiBaseUrl } from "@white-label/config";
 
 type GoogleSessionState = {
   email: string;
@@ -22,12 +23,7 @@ export default function GoogleCallbackPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const apiUrl = (
-    process.env.NEXT_PUBLIC_API_URL ||
-    process.env.NEXT_PUBLIC_API_BASE_URL ||
-    process.env.NEXT_PUBLIC_RENDER_API_URL ||
-    "https://sdmx-backend-api.onrender.com"
-  ).replace(/\/$/, "");
+  const apiUrl = resolveApiBaseUrl();
 
   useEffect(() => {
     let mounted = true;

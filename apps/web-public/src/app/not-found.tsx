@@ -1,8 +1,9 @@
 import Link from "next/link";
+import { requireEnv } from "@white-label/config";
 
 export default function NotFound() {
-  const brandShort = process.env.NEXT_PUBLIC_SAAS_BRAND_SHORT ?? "FXI";
-  const productName = process.env.NEXT_PUBLIC_SAAS_BRAND_NAME ?? "FIXIE";
+  const brandShort = requireEnv("NEXT_PUBLIC_SAAS_BRAND_SHORT");
+  const productName = requireEnv("NEXT_PUBLIC_SAAS_BRAND_NAME");
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.14),_transparent_35%),linear-gradient(180deg,#09090b_0%,#111113_48%,#18181b_100%)] px-4 py-16 text-zinc-50 flex flex-col items-center justify-center">

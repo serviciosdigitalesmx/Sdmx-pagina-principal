@@ -19,7 +19,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@white-label/config": ["../../packages/config/src/index.ts"]
     }
   },
   "include": [
