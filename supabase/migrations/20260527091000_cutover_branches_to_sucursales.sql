@@ -64,6 +64,10 @@ to authenticated
 using (public._sucursal_tenant_jwt_id() = tenant_id and public._sucursal_jwt_role() in ('owner', 'manager'))
 with check (public._sucursal_tenant_jwt_id() = tenant_id and public._sucursal_jwt_role() in ('owner', 'manager'));
 
+do $$
+begin
+  if to_regclass('public.branches') is not null then
+
 insert into public.sucursales (
   id,
   tenant_id,
@@ -100,6 +104,9 @@ set tenant_id = excluded.tenant_id,
     phone = excluded.phone,
     is_active = excluded.is_active,
     updated_at = excluded.updated_at;
+
+  end if;
+end $$;
 
 create table if not exists public.sucursal_inventory (
   id uuid primary key default gen_random_uuid(),
@@ -146,6 +153,10 @@ to authenticated
 using (public._sucursal_tenant_jwt_id() = tenant_id and public._sucursal_jwt_role() in ('owner', 'manager'))
 with check (public._sucursal_tenant_jwt_id() = tenant_id and public._sucursal_jwt_role() in ('owner', 'manager'));
 
+do $$
+begin
+  if to_regclass('public.inventory') is not null then
+
 insert into public.sucursal_inventory (
   id,
   tenant_id,
@@ -170,6 +181,9 @@ join public.products p
 on conflict (tenant_id, sucursal_id, product_id) do update
 set stock_current = excluded.stock_current,
     updated_at = excluded.updated_at;
+
+  end if;
+end $$;
 
 grant select, insert, update, delete on public.sucursales to authenticated;
 grant select, insert, update, delete on public.sucursal_inventory to authenticated;
