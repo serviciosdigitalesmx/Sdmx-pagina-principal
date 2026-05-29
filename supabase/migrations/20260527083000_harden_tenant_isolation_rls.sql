@@ -676,12 +676,7 @@ end $$;
 do $$
 begin
   if to_regclass('public.expenses') is not null then
-    do $$
-begin
-  if to_regclass('public.expenses') is not null then
     grant select, insert, update, delete on public.expenses to authenticated;
-  end if;
-end $$;
   end if;
 end $$;
 do $$
