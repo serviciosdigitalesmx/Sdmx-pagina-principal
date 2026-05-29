@@ -607,30 +607,130 @@ begin
   end if;
 end $$;
 
-grant select, insert, update, delete on public.tenants to authenticated;
-grant select, insert, update, delete on public.users to authenticated;
-grant select, insert, update, delete on public.customers to authenticated;
-grant select, insert, update, delete on public.service_requests to authenticated;
-grant select, insert, update, delete on public.service_orders to authenticated;
-grant select, insert, update, delete on public.service_order_documents to authenticated;
-grant select, insert, update, delete on public.service_order_events to authenticated;
-grant select, insert, update, delete on public.sucursales to authenticated;
-grant select, insert, update, delete on public.sucursal_inventory to authenticated;
-grant select, insert, update, delete on public.products to authenticated;
-grant select, insert, update, delete on public.suppliers to authenticated;
 do $$
+begin
+  if to_regclass('public.tenants') is not null then
+    grant select, insert, update, delete on public.tenants to authenticated;
+  end if;
+end $$;
+do $$
+begin
+  if to_regclass('public.users') is not null then
+    grant select, insert, update, delete on public.users to authenticated;
+  end if;
+end $$;
+do $$
+begin
+  if to_regclass('public.customers') is not null then
+    grant select, insert, update, delete on public.customers to authenticated;
+  end if;
+end $$;
+do $$
+begin
+  if to_regclass('public.service_requests') is not null then
+    grant select, insert, update, delete on public.service_requests to authenticated;
+  end if;
+end $$;
+do $$
+begin
+  if to_regclass('public.service_orders') is not null then
+    grant select, insert, update, delete on public.service_orders to authenticated;
+  end if;
+end $$;
+do $$
+begin
+  if to_regclass('public.service_order_documents') is not null then
+    grant select, insert, update, delete on public.service_order_documents to authenticated;
+  end if;
+end $$;
+do $$
+begin
+  if to_regclass('public.service_order_events') is not null then
+    grant select, insert, update, delete on public.service_order_events to authenticated;
+  end if;
+end $$;
+do $$
+begin
+  if to_regclass('public.sucursales') is not null then
+    grant select, insert, update, delete on public.sucursales to authenticated;
+  end if;
+end $$;
+do $$
+begin
+  if to_regclass('public.sucursal_inventory') is not null then
+    grant select, insert, update, delete on public.sucursal_inventory to authenticated;
+  end if;
+end $$;
+do $$
+begin
+  if to_regclass('public.products') is not null then
+    grant select, insert, update, delete on public.products to authenticated;
+  end if;
+end $$;
+do $$
+begin
+  if to_regclass('public.suppliers') is not null then
+    grant select, insert, update, delete on public.suppliers to authenticated;
+  end if;
+end $$;
+do $$
+begin
+  if to_regclass('public.expenses') is not null then
+    do $$
 begin
   if to_regclass('public.expenses') is not null then
     grant select, insert, update, delete on public.expenses to authenticated;
   end if;
 end $$;
-grant select, insert, update, delete on public.tasks to authenticated;
-grant select, insert, update, delete on public.purchase_orders to authenticated;
-grant select, insert, update, delete on public.purchase_order_items to authenticated;
-grant select, insert, update, delete on public.inventory_movements to authenticated;
-grant select, insert, update, delete on public.stock_alerts to authenticated;
-grant select, insert, update, delete on public.customer_payments to authenticated;
-grant select, insert, update, delete on public.file_assets to authenticated;
-grant select, insert, update, delete on public.finances to authenticated;
+  end if;
+end $$;
+do $$
+begin
+  if to_regclass('public.tasks') is not null then
+    grant select, insert, update, delete on public.tasks to authenticated;
+  end if;
+end $$;
+do $$
+begin
+  if to_regclass('public.purchase_orders') is not null then
+    grant select, insert, update, delete on public.purchase_orders to authenticated;
+  end if;
+end $$;
+do $$
+begin
+  if to_regclass('public.purchase_order_items') is not null then
+    grant select, insert, update, delete on public.purchase_order_items to authenticated;
+  end if;
+end $$;
+do $$
+begin
+  if to_regclass('public.inventory_movements') is not null then
+    grant select, insert, update, delete on public.inventory_movements to authenticated;
+  end if;
+end $$;
+do $$
+begin
+  if to_regclass('public.stock_alerts') is not null then
+    grant select, insert, update, delete on public.stock_alerts to authenticated;
+  end if;
+end $$;
+do $$
+begin
+  if to_regclass('public.customer_payments') is not null then
+    grant select, insert, update, delete on public.customer_payments to authenticated;
+  end if;
+end $$;
+do $$
+begin
+  if to_regclass('public.file_assets') is not null then
+    grant select, insert, update, delete on public.file_assets to authenticated;
+  end if;
+end $$;
+do $$
+begin
+  if to_regclass('public.finances') is not null then
+    grant select, insert, update, delete on public.finances to authenticated;
+  end if;
+end $$;
 
 commit;
