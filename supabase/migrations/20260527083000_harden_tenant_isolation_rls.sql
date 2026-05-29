@@ -618,7 +618,12 @@ grant select, insert, update, delete on public.sucursales to authenticated;
 grant select, insert, update, delete on public.sucursal_inventory to authenticated;
 grant select, insert, update, delete on public.products to authenticated;
 grant select, insert, update, delete on public.suppliers to authenticated;
-grant select, insert, update, delete on public.expenses to authenticated;
+do $$
+begin
+  if to_regclass('public.expenses') is not null then
+    grant select, insert, update, delete on public.expenses to authenticated;
+  end if;
+end $$;
 grant select, insert, update, delete on public.tasks to authenticated;
 grant select, insert, update, delete on public.purchase_orders to authenticated;
 grant select, insert, update, delete on public.purchase_order_items to authenticated;
