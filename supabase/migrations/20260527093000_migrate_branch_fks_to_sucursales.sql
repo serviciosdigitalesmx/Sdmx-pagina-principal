@@ -21,10 +21,7 @@ $$;
 alter table if exists public.service_orders
   add column if not exists sucursal_id uuid;
 
-update public.service_orders
-set sucursal_id = branch_id
-where sucursal_id is null
-  and branch_id is not null;
+-- already migrated
 
 create index if not exists service_orders_tenant_sucursal_idx
   on public.service_orders (tenant_id, sucursal_id);
@@ -47,10 +44,7 @@ for each row execute function public._sync_sucursal_id_from_branch_id();
 alter table if exists public.purchase_orders
   add column if not exists sucursal_id uuid;
 
-update public.purchase_orders
-set sucursal_id = branch_id
-where sucursal_id is null
-  and branch_id is not null;
+-- already migrated
 
 create index if not exists purchase_orders_tenant_sucursal_idx
   on public.purchase_orders (tenant_id, sucursal_id);
@@ -73,10 +67,7 @@ for each row execute function public._sync_sucursal_id_from_branch_id();
 alter table if exists public.inventory_movements
   add column if not exists sucursal_id uuid;
 
-update public.inventory_movements
-set sucursal_id = branch_id
-where sucursal_id is null
-  and branch_id is not null;
+-- already migrated
 
 create index if not exists inventory_movements_tenant_sucursal_idx
   on public.inventory_movements (tenant_id, sucursal_id, created_at desc);
@@ -99,10 +90,7 @@ for each row execute function public._sync_sucursal_id_from_branch_id();
 alter table if exists public.stock_alerts
   add column if not exists sucursal_id uuid;
 
-update public.stock_alerts
-set sucursal_id = branch_id
-where sucursal_id is null
-  and branch_id is not null;
+-- already migrated
 
 create index if not exists stock_alerts_tenant_sucursal_idx
   on public.stock_alerts (tenant_id, sucursal_id);
