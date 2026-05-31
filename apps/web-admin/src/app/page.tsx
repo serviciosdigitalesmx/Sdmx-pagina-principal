@@ -1,5 +1,5 @@
-import { SessionGate } from "@/components/auth/session-gate";
+import { redirect } from "next/navigation";
 
 export default function Home() {
-  return <SessionGate />;
+  redirect("/login");
 }
