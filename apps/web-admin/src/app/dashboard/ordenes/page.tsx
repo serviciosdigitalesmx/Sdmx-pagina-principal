@@ -7,7 +7,6 @@ import { OrderDetailDrawer, type OrderDetailData } from "@/components/dashboard/
 import { OrderIntakeModal, type OrderCreationSummary, type OrderIntakeFiles, type OrderIntakeFormState } from "@/components/dashboard/orders/order-intake-modal";
 import { fixService } from "@/services/fixService";
 import { type DynamicFieldDefinition } from "@white-label/ui";
-import { requireEnv } from "@white-label/config";
 import { ConfirmDialog } from "@white-label/ui";
 
 type OrderRow = {
@@ -301,9 +300,9 @@ export default function OrdenesKanbanPage() {
   const [sortMode, setSortMode] = useState<"soonest" | "oldest">("soonest");
   const [pendingArchiveId, setPendingArchiveId] = useState<string | null>(null);
 
-  const customerPortalBase = requireEnv("NEXT_PUBLIC_CUSTOMER_TRACKING_URL");
+  const customerPortalBase = process.env.NEXT_PUBLIC_CUSTOMER_TRACKING_URL ?? "";
   const customerPortalUrl = useMemo(() => {
-    const base = customerPortalBase.replace(/\/$/, "");
+    const base = customerPortalBase.trim().replace(/\/$/, "");
     if (!base || !tenantSlug) return null;
     return `${base}/t/${encodeURIComponent(tenantSlug)}/portal`;
   }, [customerPortalBase, tenantSlug]);
