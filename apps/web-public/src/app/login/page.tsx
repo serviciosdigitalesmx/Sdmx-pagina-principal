@@ -197,8 +197,8 @@ export default function LoginPage() {
                 onChange={handleChange}
                 required
                 className="w-full rounded-2xl border border-stone-700 bg-white/5 px-4 py-3 text-zinc-100 outline-none transition placeholder:text-stone-500 focus:border-amber-500/40 focus:ring-2 focus:ring-amber-500/15"
-                placeholder="dueno@taller.com"
               />
+              <p className="mt-1 text-xs text-stone-400">Correo de acceso del administrador o dueño del taller.</p>
             </div>
 
             <div>
@@ -214,8 +214,8 @@ export default function LoginPage() {
                 onChange={handleChange}
                 required
                 className="w-full rounded-2xl border border-stone-700 bg-white/5 px-4 py-3 text-zinc-100 outline-none transition placeholder:text-stone-500 focus:border-amber-500/40 focus:ring-2 focus:ring-amber-500/15"
-                placeholder="Tu contraseña"
               />
+              <p className="mt-1 text-xs text-stone-400">Contraseña de acceso asociada a esa cuenta.</p>
             </div>
 
             <label className="flex items-center gap-3 rounded-2xl border border-stone-700 bg-white/5 px-4 py-3 text-sm text-stone-300">

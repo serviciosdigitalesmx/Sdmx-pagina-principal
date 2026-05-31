@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, type FormEvent } from "react";
+import { useMemo, useState, useEffect, type FormEvent } from "react";
 import { resolveApiBaseUrl } from "@white-label/config";
 import { srFixTheme } from "@/components/srfix-theme";
 
@@ -117,27 +117,28 @@ export function PublicPortalLookup({
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<PublicPortalOrderResponse["data"] | null>(null);
   const [tenant, setTenant] = useState<PublicPortalOrderResponse["tenant"] | null>(null);
+  const [hasSearched, setHasSearched] = useState(false);
 
   const whatsappHref = useMemo(() => resolveWhatsappHref(tenant?.contact_phone ?? tenant?.contactPhone ?? null), [tenant]);
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const executeSearch = async (targetTenant: string, targetFolio: string) => {
     setLoading(true);
     setError(null);
+    setHasSearched(true);
     setResult(null);
     setTenant(null);
 
     try {
-      if (!tenantSlug.trim()) {
+      if (!targetTenant.trim()) {
         throw new Error("Escribe el tenant del taller");
       }
 
-      if (!folio.trim()) {
+      if (!targetFolio.trim()) {
         throw new Error("Escribe el folio");
       }
 
       const response = await fetch(
-        `${apiBaseUrl}/api/public/tenant/${encodeURIComponent(tenantSlug.trim())}/orders/${encodeURIComponent(folio.trim())}`
+        `${apiBaseUrl}/api/public/tenant/${encodeURIComponent(targetTenant.trim())}/orders/${encodeURIComponent(targetFolio.trim())}`
       );
       const payload = (await response.json().catch(() => null)) as PublicPortalOrderResponse | { error?: string } | null;
 
@@ -149,9 +150,21 @@ export function PublicPortalLookup({
       setResult(payload.data);
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Error inesperado");
+      setResult(null);
     } finally {
       setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    if (initialTenantSlug && initialFolio) {
+      executeSearch(initialTenantSlug, initialFolio);
+    }
+  }, [initialTenantSlug, initialFolio]);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    executeSearch(tenantSlug, folio);
   };
 
   const pdfAttachment = result?.pdf_attachment ?? result?.attachments?.[0] ?? null;
@@ -187,9 +200,9 @@ export function PublicPortalLookup({
                   value={tenantSlug}
                   onChange={(event) => setTenantSlug(event.target.value)}
                   className="w-full rounded-2xl border border-sky-500/50 bg-zinc-900 px-4 py-3 text-lg tracking-[0.05em] text-zinc-50 outline-none transition placeholder:text-zinc-500 focus:border-sky-400 focus:ring-2 focus:ring-sky-400/20"
-                  placeholder="slug-del-taller"
                   required
                 />
+                <p className="mt-2 text-xs text-zinc-500">Nombre identificador único de tu taller.</p>
               </div>
             ) : (
               <input type="hidden" value={tenantSlug} />
@@ -201,9 +214,9 @@ export function PublicPortalLookup({
                 value={folio}
                 onChange={(event) => setFolio(event.target.value)}
                 className="w-full rounded-2xl border border-sky-500/50 bg-zinc-900 px-4 py-3 text-lg tracking-[0.12em] text-zinc-50 outline-none transition placeholder:text-zinc-500 focus:border-sky-400 focus:ring-2 focus:ring-sky-400/20"
-                placeholder="ORD-1234"
                 required
               />
+              <p className="mt-2 text-xs text-zinc-500">Ingresa el folio de tu orden de servicio.</p>
               {error ? <p className="mt-4 rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{error}</p> : null}
               <button
                 disabled={loading}
@@ -222,7 +235,7 @@ export function PublicPortalLookup({
           </form>
 
           <div className="space-y-4">
-            {!result ? (
+            {!hasSearched && !result && (
               <div className="rounded-[1.75rem] border border-zinc-800 bg-zinc-900/60 p-6">
                 <div className="flex min-h-[370px] flex-col items-center justify-center rounded-[1.5rem] border border-zinc-800 bg-zinc-950 px-6 py-10 text-center">
                   <div className="mb-5 rounded-full border border-sky-400/40 bg-sky-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-sky-200">
@@ -230,19 +243,29 @@ export function PublicPortalLookup({
                   </div>
                   <h2 className="text-3xl font-black uppercase tracking-tight text-sky-300 sm:text-4xl">Ver estado</h2>
                   <p className="mt-3 max-w-lg text-sm leading-7 text-zinc-400">
-                    Consulta el estatus de tu servicio en tiempo real. Abre el PDF cuando se encuentre disponible.
+                    Consulta el estatus de tu servicio en tiempo real. Ingresa el tenant del taller y tu folio para continuar.
                   </p>
-                  {whatsappHref ? (
-                    <a
-                      href={whatsappHref}
-                      className="mt-6 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-5 py-3 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-500/20"
-                    >
-                      Contactar por WhatsApp
-                    </a>
-                  ) : null}
                 </div>
               </div>
-            ) : (
+            )}
+
+            {hasSearched && !result && (
+              <div className="rounded-[1.75rem] border border-red-500/30 bg-zinc-900/60 p-6">
+                <div className="flex min-h-[370px] flex-col items-center justify-center rounded-[1.5rem] border border-zinc-800 bg-zinc-950 px-6 py-10 text-center">
+                  <div className="mb-5 rounded-full border border-red-500/40 bg-red-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-red-200">
+                    Orden no encontrada
+                  </div>
+                  <h2 className="text-3xl font-black uppercase tracking-tight text-red-400 sm:text-4xl">
+                    No existe el folio
+                  </h2>
+                  <p className="mt-3 max-w-lg text-sm leading-7 text-zinc-400 font-medium">
+                    {error || "No pudimos encontrar la orden con ese folio en el taller seleccionado. Por favor verifica tus datos e intenta de nuevo."}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {result && (
               <article className="rounded-[1.75rem] border border-sky-500/30 bg-[linear-gradient(180deg,rgba(16,18,27,0.98),rgba(9,10,16,0.98))] p-6 shadow-[0_16px_60px_rgba(0,0,0,0.24)]">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
@@ -258,10 +281,10 @@ export function PublicPortalLookup({
                   <section className="rounded-[1.4rem] border border-zinc-800 bg-zinc-950 p-4">
                     <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-200">Información del servicio</p>
                     <div className="mt-3 space-y-3 text-sm">
-                      <p><span className="text-zinc-400">Cliente:</span> {result.order.device_info?.customer_name ?? "N/D"}</p>
+                      <p><span className="text-zinc-400">Cliente:</span> {result.order.device_info?.customer_name ?? "No disponible"}</p>
                       <p><span className="text-zinc-400">Equipo:</span> {(result.order.device_info?.brand ?? result.order.device_info?.type ?? "Equipo") + " / " + (result.order.device_info?.model ?? "Modelo")}</p>
-                      <p><span className="text-zinc-400">Serie:</span> {result.order.serial_number ?? "N/D"}</p>
-                      <p><span className="text-zinc-400">Total:</span> {typeof result.order.total_cost === "number" ? `$${result.order.total_cost.toFixed(2)} MXN` : "N/D"}</p>
+                      <p><span className="text-zinc-400">Serie:</span> {result.order.serial_number ?? "No disponible"}</p>
+                      <p><span className="text-zinc-400">Total:</span> {typeof result.order.total_cost === "number" ? `$${result.order.total_cost.toFixed(2)} MXN` : "No disponible"}</p>
                     </div>
                   </section>
                   <section className="rounded-[1.4rem] border border-zinc-800 bg-zinc-950 p-4">
@@ -270,7 +293,7 @@ export function PublicPortalLookup({
                       <p><span className="text-zinc-400">PDF:</span> {pdfAttachment?.url ? "Disponible" : "Pendiente"}</p>
                       <p><span className="text-zinc-400">Mensajes:</span> {result.messages.length}</p>
                       <p><span className="text-zinc-400">Eventos:</span> {result.events.length}</p>
-                      <p><span className="text-zinc-400">Fecha:</span> {result.order.created_at ? new Date(result.order.created_at).toLocaleString("es-MX") : "N/D"}</p>
+                      <p><span className="text-zinc-400">Fecha:</span> {result.order.created_at ? new Date(result.order.created_at).toLocaleString("es-MX") : "No disponible"}</p>
                     </div>
                   </section>
                 </div>

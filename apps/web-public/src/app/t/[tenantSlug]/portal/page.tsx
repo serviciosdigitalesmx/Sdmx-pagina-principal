@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, type FormEvent } from "react";
+import { useMemo, useState, useEffect, type FormEvent } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { resolveApiBaseUrl } from "@white-label/config";
 
@@ -93,13 +93,18 @@ export default function PortalPage() {
   const params = useParams<{ tenantSlug?: string }>();
   const searchParams = useSearchParams();
   const tenantSlug = typeof params?.tenantSlug === "string" && params.tenantSlug.trim().length > 0 ? params.tenantSlug : "";
-  const [folio, setFolio] = useState(searchParams.get("folio") ?? "");
+  const initialFolio = useMemo(() => searchParams.get("folio")?.trim() ?? "", [searchParams]);
+
+  const [folio, setFolio] = useState(initialFolio);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<PortalOrderResponse["data"] | null>(null);
   const [tenant, setTenant] = useState<PortalOrderResponse["tenant"] | null>(null);
   const [tenantLabel, setTenantLabel] = useState<string>(tenantSlug || "Tenant");
   const [portalTemplate, setPortalTemplate] = useState<Record<string, unknown> | null>(null);
+  const [loadingTenant, setLoadingTenant] = useState(true);
+  const [tenantError, setTenantError] = useState<string | null>(null);
+  const [hasSearched, setHasSearched] = useState(false);
 
   const apiBaseUrl = resolveApiBaseUrl();
 
@@ -130,20 +135,56 @@ export default function PortalPage() {
     };
   }, [result?.order.created_at]);
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  // Fetch tenant info on mount
+  useEffect(() => {
+    if (!tenantSlug) {
+      setLoadingTenant(false);
+      setTenantError("El slug del taller es requerido.");
+      return;
+    }
+
+    setLoadingTenant(true);
+    setTenantError(null);
+    fetch(`${apiBaseUrl}/api/public/tenant/${encodeURIComponent(tenantSlug)}/landing`)
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("No pudimos encontrar la información de este taller.");
+        }
+        return res.json();
+      })
+      .then((payload) => {
+        if (payload && payload.success && payload.data?.tenant) {
+          setTenant(payload.data.tenant);
+          setTenantLabel(payload.data.tenant.name || tenantSlug);
+          setPortalTemplate(payload.data.tenant.config?.templates?.portal ?? null);
+        } else {
+          throw new Error("Respuesta inválida del servidor");
+        }
+      })
+      .catch((e) => {
+        setTenantError(e.message || "Error al cargar la información del taller.");
+      })
+      .finally(() => {
+        setLoadingTenant(false);
+      });
+  }, [tenantSlug, apiBaseUrl]);
+
+  const executeSearch = async (searchValue: string) => {
     setLoading(true);
     setError(null);
-    setResult(null);
-    setTenant(null);
+    setHasSearched(true);
 
     try {
       if (!tenantSlug) {
         throw new Error("Tenant slug ausente en la ruta");
       }
 
+      if (!searchValue.trim()) {
+        throw new Error("Ingresa tu número de folio");
+      }
+
       const response = await fetch(
-        `${apiBaseUrl}/api/public/tenant/${encodeURIComponent(tenantSlug)}/orders/${encodeURIComponent(folio.trim())}`
+        `${apiBaseUrl}/api/public/tenant/${encodeURIComponent(tenantSlug)}/orders/${encodeURIComponent(searchValue.trim())}`
       );
       const payload = (await response.json().catch(() => null)) as PortalOrderResponse | { error?: string } | null;
 
@@ -161,10 +202,53 @@ export default function PortalPage() {
       }
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Error inesperado");
+      setResult(null);
     } finally {
       setLoading(false);
     }
   };
+
+  // Auto-search on mount if folio query parameter exists
+  useEffect(() => {
+    if (initialFolio) {
+      executeSearch(initialFolio);
+    }
+  }, [initialFolio]);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    executeSearch(folio);
+  };
+
+  if (loadingTenant) {
+    return (
+      <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.08),_transparent_30%),linear-gradient(180deg,#09090b_0%,#111113_48%,#18181b_100%)] flex items-center justify-center text-zinc-50 p-6">
+        <div className="text-center space-y-4">
+          <div className="w-12 h-12 border-4 border-zinc-700 border-t-sky-400 rounded-full animate-spin mx-auto"></div>
+          <p className="text-sm font-semibold tracking-wide text-zinc-400 uppercase">Cargando taller...</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (tenantError || !tenant) {
+    return (
+      <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.13),_transparent_30%),linear-gradient(180deg,#09090b_0%,#111113_48%,#18181b_100%)] px-4 py-8 text-zinc-50 flex items-center justify-center">
+        <div className="w-full max-w-xl text-center space-y-6 rounded-[2rem] border border-zinc-800/70 bg-zinc-950/88 p-8 shadow-2xl">
+          <div className="w-16 h-16 rounded-3xl border border-zinc-800 bg-zinc-900 flex items-center justify-center mx-auto text-2xl font-bold text-sky-400">FX</div>
+          <h1 className="text-3xl font-black uppercase tracking-tight text-zinc-50">Taller no encontrado</h1>
+          <p className="text-zinc-400 leading-relaxed text-sm">
+            {tenantError || "No pudimos cargar la información del taller solicitado. Por favor, verifica el enlace."}
+          </p>
+          <div className="pt-4">
+            <Link href="/" className="inline-flex rounded-full bg-sky-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-sky-400">
+              Ir a la página principal
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.13),_transparent_30%),linear-gradient(180deg,#09090b_0%,#111113_48%,#18181b_100%)] px-4 py-8 text-zinc-50">
@@ -200,9 +284,9 @@ export default function PortalPage() {
                 value={folio}
                 onChange={(event) => setFolio(event.target.value)}
                 className="w-full rounded-2xl border border-sky-500/50 bg-zinc-900 px-4 py-3 text-lg tracking-[0.12em] text-zinc-50 outline-none transition placeholder:text-zinc-500 focus:border-sky-400 focus:ring-2 focus:ring-sky-400/20"
-                placeholder="EJ: SRF-1234"
                 required
               />
+              <p className="mt-2 text-xs text-zinc-500">Ingresa el folio de tu orden de servicio.</p>
               {error ? <p className="mt-4 rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{error}</p> : null}
               <button
                 disabled={loading}
@@ -220,7 +304,7 @@ export default function PortalPage() {
           </form>
 
           <div className="space-y-4">
-            {!result ? (
+            {!hasSearched && !result && (
               <div className="rounded-[1.75rem] border border-zinc-800 bg-zinc-900/60 p-6">
                 <div className="flex min-h-[370px] flex-col items-center justify-center rounded-[1.5rem] border border-zinc-800 bg-zinc-950 px-6 py-10 text-center">
                   <div className="mb-5 rounded-full border border-sky-400/40 bg-sky-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-sky-200">
@@ -230,19 +314,34 @@ export default function PortalPage() {
                     {String(portalTemplate?.secondaryCtaLabel ?? "Ver estado")}
                   </h2>
                   <p className="mt-3 max-w-lg text-sm leading-7 text-zinc-400">
-                    Consulta el estatus de tu servicio en tiempo real. Abre el PDF cuando se encuentre disponible.
+                    Consulta el estatus de tu servicio en tiempo real. Ingresa tu número de folio para ver el timeline y descargar tu PDF.
                   </p>
                   <div className="mt-6 flex flex-wrap justify-center gap-3">
-                    <Link href={`/${tenantSlug}/tracking`} className="rounded-full border border-zinc-700 px-5 py-3 text-sm font-semibold text-zinc-100 transition hover:bg-white/5">
-                      Ir al tracking
-                    </Link>
                     <Link href={`/${tenantSlug}/cotizar`} className="rounded-full bg-sky-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-400">
-                      {String(portalTemplate?.primaryCtaLabel ?? "Cotizar")}
+                      {String(portalTemplate?.primaryCtaLabel ?? "Cotizar servicio")}
                     </Link>
                   </div>
                 </div>
               </div>
-            ) : (
+            )}
+
+            {hasSearched && !result && (
+              <div className="rounded-[1.75rem] border border-red-500/30 bg-zinc-900/60 p-6">
+                <div className="flex min-h-[370px] flex-col items-center justify-center rounded-[1.5rem] border border-zinc-800 bg-zinc-950 px-6 py-10 text-center">
+                  <div className="mb-5 rounded-full border border-red-500/40 bg-red-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-red-200">
+                    Orden no encontrada
+                  </div>
+                  <h2 className="text-3xl font-black uppercase tracking-tight text-red-400 sm:text-4xl">
+                    Folio no existe
+                  </h2>
+                  <p className="mt-3 max-w-lg text-sm leading-7 text-zinc-400">
+                    No pudimos encontrar una orden con el folio especificado en {tenantLabel}. Por favor verifica los dígitos de tu comprobante e intenta de nuevo.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {result && (
               <article className="rounded-[1.75rem] border border-sky-500/30 bg-[linear-gradient(180deg,rgba(16,18,27,0.98),rgba(9,10,16,0.98))] p-6 shadow-[0_16px_60px_rgba(0,0,0,0.24)]">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>

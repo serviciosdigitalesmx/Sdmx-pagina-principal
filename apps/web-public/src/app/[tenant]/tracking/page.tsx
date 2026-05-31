@@ -91,9 +91,9 @@ export default function TenantTrackingPage() {
               value={folio}
               onChange={(e) => setFolio(e.target.value)}
               className={fieldClassName}
-              placeholder="ORD-XXXXXXXX"
               required
             />
+            <p className="mt-1 text-xs text-zinc-400">El número de folio de tu orden de servicio.</p>
           </div>
           <div>
             <label className="mb-2 block text-sm font-medium text-zinc-300">Correo opcional</label>
@@ -101,9 +101,9 @@ export default function TenantTrackingPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className={fieldClassName}
-              placeholder="cliente@email.com"
               type="email"
             />
+            <p className="mt-1 text-xs text-zinc-400">El correo electrónico asociado a la orden.</p>
           </div>
 
           {error ? <p className="rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{error}</p> : null}

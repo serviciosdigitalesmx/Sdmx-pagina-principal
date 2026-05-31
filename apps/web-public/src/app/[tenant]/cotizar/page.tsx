@@ -226,16 +226,16 @@ export default function TenantQuotePage() {
 
         <form onSubmit={submit} className="grid gap-4 rounded-[1.5rem] border border-stone-700/70 bg-white/4 p-6">
           {[
-            ["Nombre", "fullName", "text", "Tu nombre"],
-            ["WhatsApp", "phone", "tel", "81 1234 5678"],
-            ["Correo", "email", "email", "cliente@email.com"],
-            ["Tipo de equipo", "deviceType", "text", "Celular / laptop / consola"],
-            ["Marca", "deviceBrand", "text", tenantLabels.asset ? `Ej. ${tenantLabels.asset}` : "Apple / Samsung / Dell"],
-            ["Modelo", "deviceModel", "text", "Modelo exacto"],
-            ["Serie / IMEI", "serialNumber", "text", "Opcional"],
-            ["Nivel de urgencia", "priorityLevel", "text", "Normal / Alta / Urgente"],
-            ["PIN / contraseña", "passwordOrPin", "password", "Opcional y confidencial"],
-          ].map(([label, key, type, placeholder]) => (
+            ["Nombre", "fullName", "text", "Nombre completo del cliente.", true],
+            ["WhatsApp", "phone", "tel", "Número de teléfono de contacto.", true],
+            ["Correo", "email", "email", "Dirección de correo electrónico.", true],
+            ["Tipo de equipo", "deviceType", "text", "Tipo de dispositivo (Celular, Laptop, Consola).", true],
+            ["Marca", "deviceBrand", "text", "Marca del fabricante.", true],
+            ["Modelo", "deviceModel", "text", "Modelo específico.", true],
+            ["Serie / IMEI", "serialNumber", "text", "Número de serie o identificador único (opcional).", false],
+            ["Nivel de urgencia", "priorityLevel", "text", "Prioridad (Normal, Alta o Urgente).", true],
+            ["PIN / contraseña", "passwordOrPin", "password", "Clave o patrón de desbloqueo (opcional y confidencial).", false],
+          ].map(([label, key, type, helperText, isRequired]) => (
             <div key={key as string}>
               <label className="mb-2 block text-sm font-medium text-zinc-300">{label}</label>
               <input
@@ -243,9 +243,9 @@ export default function TenantQuotePage() {
                 value={(form as Record<string, string>)[key as string]}
                 onChange={(e) => setForm((current) => ({ ...current, [key as string]: e.target.value }))}
                 className={fieldClassName}
-                placeholder={placeholder as string}
-                required
+                required={isRequired as boolean}
               />
+              <p className="mt-1 text-xs text-zinc-500">{helperText as string}</p>
             </div>
           ))}
 
@@ -256,9 +256,9 @@ export default function TenantQuotePage() {
               onChange={(e) => setForm((current) => ({ ...current, issue: e.target.value }))}
               className={fieldClassName}
               rows={4}
-              placeholder="Describe la falla"
               required
             />
+            <p className="mt-1 text-xs text-zinc-500">Describe detalladamente la falla o desperfecto del equipo.</p>
           </div>
 
           {dynamicFieldDefinitions.length > 0 ? (

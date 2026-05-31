@@ -1,75 +1,77 @@
-"use client";
-
+import { useMemo, useState, useEffect, type FormEvent } from "react";
+import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { useMemo, useState, type FormEvent } from "react";
-import { useParams, useSearchParams } from "next/navigation";
 import { resolveApiBaseUrl } from "@white-label/config";
 
-type PortalPayload = {
-  success: true;
-  tenant: {
+type PortalPayloadData = {
+  order: {
     id: string;
-    slug: string;
-    name: string;
-    branding?: { logoUrl?: string | null } | null;
-    contact_phone?: string | null;
-    contact_email?: string | null;
-    contactPhone?: string | null;
-    contactEmail?: string | null;
-    config?: {
-      templates?: {
-        portal?: Record<string, unknown>;
-        landing?: Record<string, unknown>;
-      };
+    folio: string;
+    status: string;
+    created_at?: string | null;
+    updated_at?: string | null;
+    promised_date?: string | null;
+    total_cost?: number | null;
+    estimated_cost?: number | null;
+    final_cost?: number | null;
+    device_info?: {
+      customer_name?: string;
+      customer_phone?: string;
+      customer_email?: string;
+      brand?: string;
+      model?: string;
+      type?: string;
+    };
+    problem_description?: string | null;
+    serial_number?: string | null;
+  };
+  orderStatusLabel: string;
+  timeline: Array<{ label: string; status: "completado" | "actual" | "pendiente"; note: string }>;
+  pdf_attachment?: { url: string; label: string; fileName: string | null; mimeType: string; source: string } | null;
+  attachments: Array<{ url?: string; label?: string; fileName?: string | null; mimeType?: string; source?: string }>;
+  documents: Array<{
+    id: string;
+    file_name: string;
+    file_type: string;
+    public_url: string | null;
+    mime_type: string;
+    created_at: string;
+    source: string;
+  }>;
+  messages: Array<{ id: string; note: string; actor_name?: string | null; created_at: string }>;
+  events: Array<{
+    id: string;
+    event_type: string;
+    previous_status?: string | null;
+    new_status?: string | null;
+    note?: string | null;
+    actor_name?: string | null;
+    created_at: string;
+  }>;
+};
+
+type PortalTenant = {
+  id: string;
+  slug: string;
+  name: string;
+  branding?: { logoUrl?: string | null } | null;
+  contact_phone?: string | null;
+  contact_email?: string | null;
+  contactPhone?: string | null;
+  contactEmail?: string | null;
+  config?: {
+    templates?: {
+      portal?: Record<string, unknown>;
+      landing?: Record<string, unknown>;
     };
   };
-  data: {
-    order: {
-      id: string;
-      folio: string;
-      status: string;
-      created_at?: string | null;
-      updated_at?: string | null;
-      promised_date?: string | null;
-      total_cost?: number | null;
-      estimated_cost?: number | null;
-      final_cost?: number | null;
-      device_info?: {
-        customer_name?: string;
-        customer_phone?: string;
-        customer_email?: string;
-        brand?: string;
-        model?: string;
-        type?: string;
-      };
-      problem_description?: string | null;
-      serial_number?: string | null;
-    };
-    orderStatusLabel: string;
-    timeline: Array<{ label: string; status: "completado" | "actual" | "pendiente"; note: string }>;
-    pdf_attachment?: { url: string; label: string; fileName: string | null; mimeType: string; source: string } | null;
-    attachments: Array<{ url?: string; label?: string; fileName?: string | null; mimeType?: string; source?: string }>;
-    documents: Array<{
-      id: string;
-      file_name: string;
-      file_type: string;
-      public_url: string | null;
-      mime_type: string;
-      created_at: string;
-      source: string;
-    }>;
-    events: Array<{
-      id: string;
-      event_type: string;
-      previous_status?: string | null;
-      new_status?: string | null;
-      note?: string | null;
-      actor_name?: string | null;
-      created_at: string;
-    }>;
-    messages: Array<{ id: string; note: string; actor_name?: string | null; created_at: string }>;
-  };
+};
+
+type PortalPayload = {
+  success: boolean;
+  tenant: PortalTenant;
+  data: PortalPayloadData;
 };
 
 type PortalMediaItem = {
@@ -90,15 +92,15 @@ function resolveWhatsappHref(phone?: string | null, folio?: string) {
 }
 
 function formatDate(value?: string | null) {
-  if (!value) return "N/D";
+  if (!value) return "No disponible";
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "N/D" : date.toLocaleString("es-MX");
+  return Number.isNaN(date.getTime()) ? "No disponible" : date.toLocaleString("es-MX");
 }
 
 function formatDateOnly(value?: string | null) {
-  if (!value) return "N/D";
+  if (!value) return "No disponible";
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "N/D" : date.toLocaleDateString("es-MX");
+  return Number.isNaN(date.getTime()) ? "No disponible" : date.toLocaleDateString("es-MX");
 }
 
 function daysRemaining(promisedDate?: string | null) {
@@ -113,13 +115,18 @@ export default function PortalPage() {
   const params = useParams<{ tenantSlug?: string }>();
   const searchParams = useSearchParams();
   const tenantSlug = typeof params?.tenantSlug === "string" && params.tenantSlug.trim().length > 0 ? params.tenantSlug : "";
-  const [folio, setFolio] = useState(() => searchParams.get("folio")?.trim() ?? searchParams.get("token")?.trim() ?? "");
+  const initialFolio = useMemo(() => searchParams.get("folio")?.trim() ?? searchParams.get("token")?.trim() ?? "", [searchParams]);
+  
+  const [folio, setFolio] = useState(initialFolio);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<PortalPayload["data"] | null>(null);
-  const [tenant, setTenant] = useState<PortalPayload["tenant"] | null>(null);
+  const [result, setResult] = useState<PortalPayloadData | null>(null);
+  const [tenant, setTenant] = useState<PortalTenant | null>(null);
   const [galleryImage, setGalleryImage] = useState<string | null>(null);
   const [tenantLabel, setTenantLabel] = useState<string>(tenantSlug || "Tenant");
+  const [loadingTenant, setLoadingTenant] = useState(true);
+  const [tenantError, setTenantError] = useState<string | null>(null);
+  const [hasSearched, setHasSearched] = useState(false);
 
   const apiBaseUrl = resolveApiBaseUrl();
   const portalContent = tenant?.config?.templates?.portal ?? {};
@@ -133,24 +140,54 @@ export default function PortalPage() {
   const liveCamUrl = String((portalContent as Record<string, unknown>).videoUrl ?? (tenant?.config?.templates?.landing as Record<string, unknown> | undefined)?.videoUrl ?? "");
   const mapUrl = String((tenant?.config?.templates?.landing as Record<string, unknown> | undefined)?.mapEmbedUrl ?? "");
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  // Fetch tenant info on mount
+  useEffect(() => {
+    if (!tenantSlug) {
+      setLoadingTenant(false);
+      setTenantError("El slug del taller es requerido.");
+      return;
+    }
+
+    setLoadingTenant(true);
+    setTenantError(null);
+    fetch(`${apiBaseUrl}/api/public/tenant/${encodeURIComponent(tenantSlug)}/landing`)
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("No pudimos encontrar la información de este taller.");
+        }
+        return res.json();
+      })
+      .then((payload) => {
+        if (payload && payload.success && payload.data?.tenant) {
+          setTenant(payload.data.tenant);
+          setTenantLabel(payload.data.tenant.name || tenantSlug);
+        } else {
+          throw new Error("Respuesta inválida del servidor");
+        }
+      })
+      .catch((e) => {
+        setTenantError(e.message || "Error al cargar la información del taller.");
+      })
+      .finally(() => {
+        setLoadingTenant(false);
+      });
+  }, [tenantSlug, apiBaseUrl]);
+
+  const executeSearch = async (searchValue: string) => {
     setLoading(true);
     setError(null);
-    setResult(null);
-    setTenant(null);
+    setHasSearched(true);
 
     try {
       if (!tenantSlug) {
         throw new Error("Tenant slug ausente en la ruta");
       }
 
-      const searchValue = folio.trim();
-      if (!searchValue) {
+      if (!searchValue.trim()) {
         throw new Error("Ingresa tu folio o token");
       }
 
-      const response = await fetch(`${apiBaseUrl}/api/public/tenant/${encodeURIComponent(tenantSlug)}/orders/${encodeURIComponent(searchValue)}`);
+      const response = await fetch(`${apiBaseUrl}/api/public/tenant/${encodeURIComponent(tenantSlug)}/orders/${encodeURIComponent(searchValue.trim())}`);
       const payload = (await response.json().catch(() => null)) as PortalPayload | { error?: string } | null;
 
       if (!response.ok) {
@@ -166,9 +203,22 @@ export default function PortalPage() {
       }
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Error inesperado");
+      setResult(null);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Auto-search on mount if folio query parameter exists
+  useEffect(() => {
+    if (initialFolio) {
+      executeSearch(initialFolio);
+    }
+  }, [initialFolio]);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    executeSearch(folio);
   };
 
   const orderImages = useMemo<PortalMediaItem[]>(
@@ -192,6 +242,63 @@ export default function PortalPage() {
     ].filter((item) => Boolean(item.url)),
     [result?.attachments, result?.documents]
   );
+
+  if (loadingTenant) {
+    return (
+      <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(44,110,159,0.12),_transparent_30%),linear-gradient(180deg,#f4f6f9_0%,#eef2f6_48%,#ffffff_100%)] flex items-center justify-center text-slate-950 p-6">
+        <div className="text-center space-y-4">
+          <div className="w-12 h-12 border-4 border-slate-300 border-t-slate-800 rounded-full animate-spin mx-auto"></div>
+          <p className="text-sm font-semibold tracking-wide text-slate-600 uppercase">Cargando taller...</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (tenantError || !tenant) {
+    return (
+      <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(44,110,159,0.16),_transparent_30%),linear-gradient(180deg,#f4f6f9_0%,#eef2f6_48%,#ffffff_100%)] px-4 py-6 text-slate-950">
+        <div className="mx-auto max-w-6xl space-y-6">
+          <header className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_24px_90px_rgba(15,23,42,0.08)]">
+            <div className="grid gap-6 p-6 lg:grid-cols-[1fr_auto] lg:items-center">
+              <div className="flex items-center gap-4">
+                <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+                  <span className="text-2xl font-bold text-slate-600">FX</span>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.35em] text-[#1f2937]">Seguimiento técnico</p>
+                  <h1 className="mt-2 text-4xl font-bold tracking-tight text-slate-950 [font-family:var(--font-cormorant)]">Portal del cliente</h1>
+                  <p className="mt-2 text-sm text-slate-600">{tenantSlug}</p>
+                </div>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-right">
+                <div className="text-xs uppercase tracking-[0.22em] text-slate-500">Fecha de hoy</div>
+                <div className="mt-1 text-lg font-semibold text-slate-950">{currentDate}</div>
+              </div>
+            </div>
+          </header>
+
+          <section className="rounded-[1.75rem] border border-slate-200 bg-white p-8 text-center text-slate-600 shadow-[0_16px_60px_rgba(15,23,42,0.08)]">
+            <p className="text-lg font-semibold text-slate-950">No se pudo cargar la información del taller.</p>
+            <p className="mt-2 text-sm">{tenantError || "El taller especificado no se encuentra registrado en el sistema."}</p>
+          </section>
+
+          <footer className="rounded-[1.5rem] border border-slate-200 bg-white p-5 text-sm text-slate-600 shadow-[0_12px_50px_rgba(15,23,42,0.06)]">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <div className="font-semibold text-slate-900">SrFix</div>
+                <div>Plataforma de seguimiento y atención para talleres.</div>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <span>Derechos reservados</span>
+                <span>·</span>
+                <Link href="/" className="font-semibold text-slate-900">Privacidad</Link>
+              </div>
+            </div>
+          </footer>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(44,110,159,0.16),_transparent_30%),linear-gradient(180deg,#f4f6f9_0%,#eef2f6_48%,#ffffff_100%)] px-4 py-6 text-slate-950">
@@ -228,9 +335,9 @@ export default function PortalPage() {
                 value={folio}
                 onChange={(event) => setFolio(event.target.value)}
                 className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none transition placeholder:text-slate-400 focus:border-[#334155] focus:ring-2 focus:ring-[#334155]/20"
-                placeholder="ORD-XXXXXXXX o token"
                 required
               />
+              <p className="mt-2 text-xs text-slate-500">Ingresa el folio de tu orden de servicio o el token de acceso.</p>
             </div>
             {error ? <p className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p> : null}
             <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -248,29 +355,41 @@ export default function PortalPage() {
             </div>
           </form>
 
-          <aside className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-[0_16px_60px_rgba(15,23,42,0.08)]">
-            <div className="grid gap-4 sm:grid-cols-2">
-              {[
-                ["Folio consultado", result?.order.folio ?? "N/D"],
-                ["Estado actual", result?.orderStatusLabel ?? "N/D"],
-                ["Tipo de equipo", result?.order.device_info?.type ?? "N/D"],
-                ["Marca y modelo", [result?.order.device_info?.brand, result?.order.device_info?.model].filter(Boolean).join(" ") || "N/D"],
-                ["Falla reportada", result?.order.problem_description ?? "N/D"],
-                ["Fecha de ingreso", formatDate(result?.order.created_at)],
-                ["Fecha promesa", formatDateOnly(result?.order.promised_date)],
-                ["Días restantes", remainingDays === null ? "N/D" : remainingDays > 0 ? `${remainingDays} días` : `${Math.abs(remainingDays)} días vencidos`],
-                ["Última actualización", formatDate(result?.order.updated_at ?? result?.events?.[result.events.length - 1]?.created_at)],
-              ].map(([label, value]) => (
-                <div key={label as string} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <div className="text-xs uppercase tracking-[0.2em] text-slate-500">{label as string}</div>
-                  <div className="mt-1 text-sm font-semibold text-slate-950">{String(value)}</div>
-                </div>
-              ))}
-            </div>
-          </aside>
+          {result ? (
+            <aside className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-[0_16px_60px_rgba(15,23,42,0.08)]">
+              <div className="grid gap-4 sm:grid-cols-2">
+                {[
+                  ["Folio consultado", result.order.folio ?? "No disponible"],
+                  ["Estado actual", result.orderStatusLabel ?? "No disponible"],
+                  ["Tipo de equipo", result.order.device_info?.type ?? "No disponible"],
+                  ["Marca y modelo", [result.order.device_info?.brand, result.order.device_info?.model].filter(Boolean).join(" ") || "No disponible"],
+                  ["Falla reportada", result.order.problem_description ?? "No disponible"],
+                  ["Fecha de ingreso", formatDate(result.order.created_at)],
+                  ["Fecha promesa", formatDateOnly(result.order.promised_date)],
+                  ["Días restantes", remainingDays === null ? "No disponible" : remainingDays > 0 ? `${remainingDays} días` : `${Math.abs(remainingDays)} días vencidos`],
+                  ["Última actualización", formatDate(result.order.updated_at ?? result.events?.[result.events.length - 1]?.created_at)],
+                ].map(([label, value]) => (
+                  <div key={label as string} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <div className="text-xs uppercase tracking-[0.2em] text-slate-500">{label as string}</div>
+                    <div className="mt-1 text-sm font-semibold text-slate-950">{String(value)}</div>
+                  </div>
+                ))}
+              </div>
+            </aside>
+          ) : (
+            <aside className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-[0_16px_60px_rgba(15,23,42,0.08)] flex flex-col items-center justify-center text-center py-12 min-h-[300px]">
+              <div className="rounded-full bg-slate-50 p-4 border border-slate-100 mb-4 text-[#334155] text-2xl font-bold">
+                🔍
+              </div>
+              <h3 className="text-xl font-bold text-slate-950">Consulta tu reparación</h3>
+              <p className="mt-2 text-sm text-slate-600 max-w-sm leading-6">
+                Ingresa el folio o token de tu orden en el formulario para consultar el estatus en tiempo real, ver avances, fotografías y documentos.
+              </p>
+            </aside>
+          )}
         </section>
 
-        {result ? (
+        {result && (
           <section className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
             <article className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-[0_16px_60px_rgba(15,23,42,0.08)]">
               <div className="flex flex-wrap items-center justify-between gap-3">
@@ -388,10 +507,15 @@ export default function PortalPage() {
               <div className="rounded-2xl border border-slate-200 bg-white p-4">
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Últimos movimientos</p>
                 <div className="mt-3 space-y-3">
-                  {(result.messages.length > 0 ? result.messages : result.events.map((event) => ({ id: event.id, note: event.note ?? event.event_type, actor_name: event.actor_name, created_at: event.created_at }))).slice(0, 5).map((message) => (
+                  {(result.messages.length > 0 ? result.messages : result.events.map((event) => ({
+                    id: event.id,
+                    note: event.note ?? event.event_type,
+                    actor_name: event.actor_name,
+                    created_at: event.created_at
+                  }))).slice(0, 5).map((message) => (
                     <div key={message.id} className="rounded-2xl bg-slate-50 px-4 py-3">
                       <div className="text-sm font-semibold text-slate-950">{message.actor_name ?? "Taller"}</div>
-                      <div className="mt-1 text-sm text-slate-600">{message.note}</div>
+                      <div className="mt-1 text-sm text-zinc-600">{message.note}</div>
                       <div className="mt-1 text-xs uppercase tracking-[0.18em] text-slate-500">{formatDate(message.created_at)}</div>
                     </div>
                   ))}
@@ -399,7 +523,9 @@ export default function PortalPage() {
               </div>
             </aside>
           </section>
-        ) : (
+        )}
+
+        {hasSearched && !result && (
           <section className="rounded-[1.75rem] border border-dashed border-slate-200 bg-white p-8 text-center text-slate-600 shadow-[0_16px_60px_rgba(15,23,42,0.08)]">
             <p className="text-lg font-semibold text-slate-950">No encontramos una orden con ese folio</p>
             <p className="mt-2 text-sm">Ingresa un folio válido para ver el estado de tu reparación.</p>

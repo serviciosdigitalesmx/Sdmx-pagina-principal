@@ -187,8 +187,8 @@ export default function GoogleCallbackPage() {
               required
               disabled={loadingSession}
               className="w-full rounded-2xl border border-stone-700 bg-white/5 px-4 py-3 outline-none transition focus:border-amber-500/40 focus:ring-2 focus:ring-amber-500/15 disabled:bg-white/10"
-              placeholder="Taller San Juan"
             />
+            <p className="mt-1 text-xs text-stone-400">Nombre comercial del taller que se va a registrar.</p>
           </div>
 
           <div>
@@ -203,8 +203,8 @@ export default function GoogleCallbackPage() {
               required
               disabled={loadingSession}
               className="w-full rounded-2xl border border-stone-700 bg-white/5 px-4 py-3 outline-none transition focus:border-amber-500/40 focus:ring-2 focus:ring-amber-500/15 disabled:bg-white/10"
-              placeholder="+52 81 1234 5678"
             />
+            <p className="mt-1 text-xs text-stone-400">Número de contacto principal del taller.</p>
           </div>
 
           {error ? (

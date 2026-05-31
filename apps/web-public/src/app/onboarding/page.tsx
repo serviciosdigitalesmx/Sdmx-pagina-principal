@@ -140,8 +140,8 @@ export default function OnboardingPage() {
                 required
                 minLength={2}
                 className="w-full rounded-2xl border border-stone-700 bg-white/5 px-4 py-3 text-zinc-100 outline-none transition placeholder:text-stone-500 focus:border-amber-500/40 focus:ring-2 focus:ring-amber-500/15"
-                placeholder="Ej. Motor Fix & Co."
               />
+              <p className="mt-1 text-xs text-stone-400">El nombre comercial de tu taller.</p>
             </div>
 
             <div>
@@ -158,8 +158,8 @@ export default function OnboardingPage() {
                 required
                 minLength={7}
                 className="w-full rounded-2xl border border-stone-700 bg-white/5 px-4 py-3 text-zinc-100 outline-none transition placeholder:text-stone-500 focus:border-amber-500/40 focus:ring-2 focus:ring-amber-500/15"
-                placeholder="Ej. 555 123 4567"
               />
+              <p className="mt-1 text-xs text-stone-400">Número de contacto principal.</p>
             </div>
 
             <div>
@@ -175,8 +175,8 @@ export default function OnboardingPage() {
                 onChange={handleChange}
                 required
                 className="w-full rounded-2xl border border-stone-700 bg-white/5 px-4 py-3 text-zinc-100 outline-none transition placeholder:text-stone-500 focus:border-amber-500/40 focus:ring-2 focus:ring-amber-500/15"
-                placeholder="dueno@taller.com"
               />
+              <p className="mt-1 text-xs text-stone-400">Correo del administrador de la cuenta.</p>
             </div>
 
             <div>
@@ -193,8 +193,8 @@ export default function OnboardingPage() {
                 required
                 minLength={8}
                 className="w-full rounded-2xl border border-stone-700 bg-white/5 px-4 py-3 text-zinc-100 outline-none transition placeholder:text-stone-500 focus:border-amber-500/40 focus:ring-2 focus:ring-amber-500/15"
-                placeholder="Mínimo 8 caracteres"
               />
+              <p className="mt-1 text-xs text-stone-400">Debe contener al menos 8 caracteres.</p>
             </div>
 
             {error ? (
