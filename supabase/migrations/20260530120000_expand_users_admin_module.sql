@@ -2,6 +2,7 @@ begin;
 
 alter table public.users
   add column if not exists sucursal_id uuid references public.sucursales(id) on delete set null,
+  add column if not exists branch_id uuid,
   add column if not exists name text,
   add column if not exists activo boolean not null default true,
   add column if not exists ultimo_acceso timestamptz;

@@ -13,8 +13,36 @@ create unique index if not exists customers_tenant_email_uidx
 create index if not exists service_orders_tenant_promised_status_idx
   on public.service_orders (tenant_id, promised_date, status);
 
+create table if not exists public.service_order_status_history (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid not null references public.tenants(id) on delete cascade,
+  service_order_id uuid not null references public.service_orders(id) on delete cascade,
+  previous_status text,
+  new_status text not null,
+  comment text,
+  changed_by uuid references public.users(id) on delete set null,
+  created_at timestamptz not null default timezone('utc', now())
+);
+
 create index if not exists service_order_status_history_tenant_order_idx
   on public.service_order_status_history (tenant_id, service_order_id, created_at desc);
+
+create table if not exists public.customer_payments (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid not null references public.tenants(id) on delete cascade,
+  branch_id uuid,
+  customer_id uuid references public.customers(id) on delete set null,
+  service_order_id uuid references public.service_orders(id) on delete set null,
+  service_request_id uuid references public.service_requests(id) on delete set null,
+  payment_type text,
+  amount numeric(12,2) not null default 0,
+  payment_method text,
+  reference text,
+  notes text,
+  paid_at timestamptz not null default timezone('utc', now()),
+  created_by uuid references public.users(id) on delete set null,
+  created_at timestamptz not null default timezone('utc', now())
+);
 
 create index if not exists customer_payments_tenant_order_idx
   on public.customer_payments (tenant_id, service_order_id, paid_at desc);
@@ -60,6 +88,24 @@ alter table public.suppliers
   add constraint suppliers_reliability_score_check check (reliability_score between 1 and 5);
 
 -- Task domain integrity.
+create table if not exists public.tasks (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid not null references public.tenants(id) on delete cascade,
+  branch_id uuid,
+  service_order_id uuid references public.service_orders(id) on delete set null,
+  service_request_id uuid references public.service_requests(id) on delete set null,
+  title text not null,
+  description text,
+  status text not null default 'pendiente',
+  priority text not null default 'media',
+  assigned_user_id uuid references public.users(id) on delete set null,
+  due_date timestamptz,
+  created_by uuid references public.users(id) on delete set null,
+  updated_by uuid references public.users(id) on delete set null,
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now())
+);
+
 alter table public.tasks
   drop constraint if exists tasks_status_check;
 alter table public.tasks
