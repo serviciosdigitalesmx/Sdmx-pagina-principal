@@ -1,11 +1,8 @@
-import { readFile } from "node:fs/promises";
-import { existsSync } from "node:fs";
-import path from "node:path";
 import { NextRequest } from "next/server";
 
 function buildFallbackServiceWorker(tenantSlug: string) {
   return `
-const CACHE_VERSION = 'srfix-web-admin-${tenantSlug}-v1';
+const CACHE_VERSION = 'srfix-web-admin-${tenantSlug}-v2';
 const PRECACHE = [
   '/',
   '/dashboard',
@@ -35,7 +32,7 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.filter((key) => key.startsWith('srfix-web-admin-') && key !== CACHE_VERSION).map((key) => caches.delete(key))))
+    caches.keys().then((keys) => Promise.all(keys.filter((key) => key.startsWith('srfix-web-admin-') || key.startsWith('workbox-')).filter((key) => key !== CACHE_VERSION).map((key) => caches.delete(key))))
   );
   self.clients.claim();
 });
@@ -87,12 +84,7 @@ self.addEventListener('push', (event) => {
 
 export async function GET(request: NextRequest) {
   const tenantSlug = request.nextUrl.searchParams.get("tenant")?.trim() || process.env.NEXT_PUBLIC_DEFAULT_TENANT_SLUG?.trim() || "web-admin";
-  const publicSwPath = path.join(process.cwd(), "public", "sw.js");
-
-  let script = buildFallbackServiceWorker(tenantSlug);
-  if (existsSync(publicSwPath)) {
-    script = `${await readFile(publicSwPath, "utf8")}\nself.addEventListener('push', (event) => {\n  const payload = event.data ? event.data.json() : {};\n  const title = payload.title || 'SrFix';\n  const options = {\n    body: payload.body || 'Tienes una actualización nueva en tu taller.',\n    icon: payload.icon || '/favicon.ico',\n    badge: payload.badge || '/favicon.ico',\n    data: payload.data || {},\n  };\n  event.waitUntil(self.registration.showNotification(title, options));\n});\n`;
-  }
+  const script = buildFallbackServiceWorker(tenantSlug);
 
   return new Response(script, {
     headers: {
