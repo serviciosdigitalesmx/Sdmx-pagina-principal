@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { readAuthToken } from "@/lib/auth-storage";
+import { getCurrentSession } from "@/lib/session";
 import { OperationalHub } from "@/components/dashboard/operational-hub";
 
 function SessionPending() {
@@ -37,10 +38,17 @@ export function SessionGate() {
       }
 
       const finalToken = readAuthToken();
-      setReady(Boolean(finalToken));
+      const currentSession = getCurrentSession();
+      setReady(Boolean(finalToken) && Boolean(currentSession));
 
-      if (!token && !redirected.current) {
+      if ((!token || !currentSession) && !redirected.current) {
         redirected.current = true;
+        if (token && !currentSession) {
+          try {
+            window.localStorage.removeItem(process.env.NEXT_PUBLIC_AUTH_TOKEN_KEY ?? "app_auth_token");
+            window.sessionStorage.removeItem(process.env.NEXT_PUBLIC_AUTH_TOKEN_KEY ?? "app_auth_token");
+          } catch {}
+        }
         router.replace("/login");
       }
     };

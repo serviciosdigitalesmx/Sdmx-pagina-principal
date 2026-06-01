@@ -50,7 +50,7 @@ export function getCurrentSession(): CurrentSession | null {
   const sucursalId = typeof decoded.sucursal_id === "string" ? decoded.sucursal_id.trim() : "";
 
   if (!tenantSlug) {
-    throw new Error("Sesión inválida: tenant_slug ausente");
+    return null;
   }
 
   return {
