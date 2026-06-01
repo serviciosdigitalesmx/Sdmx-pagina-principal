@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback, useState } from 'react';
 
 export type PdfExportInput = string | Blob | BlobPart[] | Record<string, unknown>;

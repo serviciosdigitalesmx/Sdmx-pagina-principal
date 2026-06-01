@@ -1,3 +1,5 @@
+"use client";
+
 import { createElement } from 'react';
 import { usePdfExport, type PdfExportInput } from '../hooks/usePdfExport';
 import { useTenantTheme } from '../hooks/useTenantTheme';
