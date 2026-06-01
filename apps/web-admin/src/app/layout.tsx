@@ -1,18 +1,18 @@
 import type { Metadata } from "next";
-import { Inter, Roboto_Mono } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { PwaBootstrap } from "@/components/pwa/pwa-bootstrap";
 import { ToastProvider } from "@white-label/ui";
 
-const inter = Inter({
+const geistSans = Geist({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-geist-sans",
   display: "swap",
 });
 
-const robotoMono = Roboto_Mono({
+const geistMono = Geist_Mono({
   subsets: ["latin"],
-  variable: "--font-roboto-mono",
+  variable: "--font-geist-mono",
   display: "swap",
 });
 
@@ -37,7 +37,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`h-full antialiased ${inter.variable} ${robotoMono.variable}`}
+      className={`h-full antialiased ${geistSans.variable} ${geistMono.variable}`}
       style={
         {
           '--tenant-primary': themePrimary,
@@ -53,4 +53,3 @@ export default function RootLayout({
     </html>
   );
 }
-
