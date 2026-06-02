@@ -593,8 +593,8 @@ class FixService {
     return result.data;
   }
 
-  public async getCashflow(sucursalId?: string): Promise<JsonRecord[]> {
-    const resolvedSucursalId = sucursalId ?? getActiveScope()?.sucursalId ?? '';
+  public async getCashflow(sucursalId: string): Promise<JsonRecord[]> {
+    const resolvedSucursalId = sucursalId.trim();
     if (!resolvedSucursalId) {
       throw new Error('Sucursal activa requerida para consultar flujo de caja');
     }
