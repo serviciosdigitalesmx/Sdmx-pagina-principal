@@ -4,86 +4,10 @@ import { useMemo, useState, useEffect, type FormEvent } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { resolveApiBaseUrl } from "@white-label/config";
-
-type PortalPayloadData = {
-  order: {
-    id: string;
-    folio: string;
-    status: string;
-    created_at?: string | null;
-    updated_at?: string | null;
-    promised_date?: string | null;
-    total_cost?: number | null;
-    estimated_cost?: number | null;
-    final_cost?: number | null;
-    device_info?: {
-      customer_name?: string;
-      customer_phone?: string;
-      customer_email?: string;
-      brand?: string;
-      model?: string;
-      type?: string;
-    };
-    problem_description?: string | null;
-    serial_number?: string | null;
-  };
-  orderStatusLabel: string;
-  timeline: Array<{ label: string; status: "completado" | "actual" | "pendiente"; note: string }>;
-  pdf_attachment?: { url: string; label: string; fileName: string | null; mimeType: string; source: string } | null;
-  attachments: Array<{ url?: string; label?: string; fileName?: string | null; mimeType?: string; source?: string }>;
-  documents: Array<{
-    id: string;
-    file_name: string;
-    file_type: string;
-    public_url: string | null;
-    mime_type: string;
-    created_at: string;
-    source: string;
-  }>;
-  messages: Array<{ id: string; note: string; actor_name?: string | null; created_at: string }>;
-  events: Array<{
-    id: string;
-    event_type: string;
-    previous_status?: string | null;
-    new_status?: string | null;
-    note?: string | null;
-    actor_name?: string | null;
-    created_at: string;
-  }>;
-};
-
-type PortalTenant = {
-  id: string;
-  slug: string;
-  name: string;
-  branding?: { logoUrl?: string | null } | null;
-  contact_phone?: string | null;
-  contact_email?: string | null;
-  contactPhone?: string | null;
-  contactEmail?: string | null;
-  config?: {
-    templates?: {
-      portal?: Record<string, unknown>;
-      landing?: Record<string, unknown>;
-    };
-  };
-};
-
-type PortalPayload = {
-  success: boolean;
-  tenant: PortalTenant;
-  data: PortalPayloadData;
-};
-
-type PortalMediaItem = {
-  id: string;
-  url: string;
-  label: string;
-  fileName: string | null;
-  fileType: string;
-  source: string;
-};
+import { getTenantLanding } from "@/lib/api/tenant";
+import { getOrderByFolio } from "@/lib/api/orders";
+import { normalizeOrderDetail } from "@/lib/utils/normalizers";
+import type { NormalizedOrderDetail, Tenant } from "@/lib/types";
 
 function resolveWhatsappHref(phone?: string | null, folio?: string) {
   if (!phone) return undefined;
@@ -93,21 +17,21 @@ function resolveWhatsappHref(phone?: string | null, folio?: string) {
   return `https://wa.me/${digits}?text=${text}`;
 }
 
-function formatDate(value?: string | null) {
+function formatDate(value?: string | Date | null) {
   if (!value) return "No disponible";
-  const date = new Date(value);
+  const date = value instanceof Date ? value : new Date(value);
   return Number.isNaN(date.getTime()) ? "No disponible" : date.toLocaleString("es-MX");
 }
 
-function formatDateOnly(value?: string | null) {
+function formatDateOnly(value?: string | Date | null) {
   if (!value) return "No disponible";
-  const date = new Date(value);
+  const date = value instanceof Date ? value : new Date(value);
   return Number.isNaN(date.getTime()) ? "No disponible" : date.toLocaleDateString("es-MX");
 }
 
-function daysRemaining(promisedDate?: string | null) {
+function daysRemaining(promisedDate?: string | Date | null) {
   if (!promisedDate) return null;
-  const end = new Date(promisedDate);
+  const end = promisedDate instanceof Date ? promisedDate : new Date(promisedDate);
   if (Number.isNaN(end.getTime())) return null;
   const diff = end.getTime() - Date.now();
   return Math.ceil(diff / (1000 * 60 * 60 * 24));
@@ -122,22 +46,21 @@ export default function PortalPage() {
   const [folio, setFolio] = useState(initialFolio);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<PortalPayloadData | null>(null);
-  const [tenant, setTenant] = useState<PortalTenant | null>(null);
+  const [result, setResult] = useState<NormalizedOrderDetail | null>(null);
+  const [tenant, setTenant] = useState<Tenant | null>(null);
   const [galleryImage, setGalleryImage] = useState<string | null>(null);
   const [tenantLabel, setTenantLabel] = useState<string>(tenantSlug || "Tenant");
   const [loadingTenant, setLoadingTenant] = useState(true);
   const [tenantError, setTenantError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
 
-  const apiBaseUrl = resolveApiBaseUrl();
   const portalContent = tenant?.config?.templates?.portal ?? {};
   const logoUrl = tenant?.branding?.logoUrl ?? null;
-  const contactPhone = tenant?.contact_phone ?? tenant?.contactPhone ?? null;
-  const contactEmail = tenant?.contact_email ?? tenant?.contactEmail ?? null;
+  const contactPhone = tenant?.contactPhone ?? null;
+  const contactEmail = tenant?.contactEmail ?? null;
   const whatsappHref = useMemo(() => resolveWhatsappHref(contactPhone, result?.order.folio), [contactPhone, result?.order.folio]);
   const currentDate = useMemo(() => new Date().toLocaleDateString("es-MX", { weekday: "long", year: "numeric", month: "long", day: "numeric" }), []);
-  const remainingDays = daysRemaining(result?.order.promised_date ?? null);
+  const remainingDays = daysRemaining(result?.order.promisedDate ?? null);
   const hasLiveCam = Boolean((portalContent as Record<string, unknown>).showVideo || (tenant?.config?.templates?.landing as Record<string, unknown> | undefined)?.showVideo);
   const liveCamUrl = String((portalContent as Record<string, unknown>).videoUrl ?? (tenant?.config?.templates?.landing as Record<string, unknown> | undefined)?.videoUrl ?? "");
   const mapUrl = String((tenant?.config?.templates?.landing as Record<string, unknown> | undefined)?.mapEmbedUrl ?? "");
@@ -152,28 +75,22 @@ export default function PortalPage() {
 
     setLoadingTenant(true);
     setTenantError(null);
-    fetch(`${apiBaseUrl}/api/public/tenant/${encodeURIComponent(tenantSlug)}/landing`)
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error("No pudimos encontrar la información de este taller.");
-        }
-        return res.json();
-      })
+    getTenantLanding(tenantSlug)
       .then((payload) => {
-        if (payload && payload.success && payload.data?.tenant) {
-          setTenant(payload.data.tenant);
-          setTenantLabel(payload.data.tenant.name || tenantSlug);
-        } else {
+        if (!payload.success) {
           throw new Error("Respuesta inválida del servidor");
         }
+
+        setTenant(payload.data.tenant);
+        setTenantLabel(payload.data.tenant.name || tenantSlug);
       })
-      .catch((e) => {
-        setTenantError(e.message || "Error al cargar la información del taller.");
+      .catch((error) => {
+        setTenantError(error instanceof Error ? error.message : "Error al cargar la información del taller.");
       })
       .finally(() => {
         setLoadingTenant(false);
       });
-  }, [tenantSlug, apiBaseUrl]);
+  }, [tenantSlug]);
 
   const executeSearch = async (searchValue: string) => {
     setLoading(true);
@@ -189,20 +106,14 @@ export default function PortalPage() {
         throw new Error("Ingresa tu folio o token");
       }
 
-      const response = await fetch(`${apiBaseUrl}/api/public/tenant/${encodeURIComponent(tenantSlug)}/orders/${encodeURIComponent(searchValue.trim())}`);
-      const payload = (await response.json().catch(() => null)) as PortalPayload | { error?: string } | null;
-
-      if (!response.ok) {
-        throw new Error(payload && "error" in payload && payload.error ? payload.error : "No encontramos una orden con ese folio");
+      const payload = await getOrderByFolio(tenantSlug, searchValue.trim());
+      if (!payload.success) {
+        throw new Error("No encontramos una orden con ese folio");
       }
 
-      if (payload && "success" in payload) {
-        setTenantLabel(payload.tenant.name || tenantSlug);
-        setTenant(payload.tenant);
-        setResult(payload.data);
-      } else {
-        throw new Error("Respuesta inválida del servidor");
-      }
+      setTenantLabel(payload.tenant.name || tenantSlug);
+      setTenant(payload.tenant);
+      setResult(normalizeOrderDetail(payload.data));
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Error inesperado");
       setResult(null);
@@ -223,25 +134,8 @@ export default function PortalPage() {
     executeSearch(folio);
   };
 
-  const orderImages = useMemo<PortalMediaItem[]>(
-    () => [
-      ...(result?.documents ?? []).map((item) => ({
-        id: item.id,
-        url: item.public_url ?? "",
-        label: item.file_name,
-        fileName: item.file_name,
-        fileType: item.file_type,
-        source: item.source,
-      })),
-      ...(result?.attachments ?? []).map((item, index) => ({
-        id: `attachment-${index}`,
-        url: item.url ?? "",
-        label: item.label ?? item.fileName ?? "Adjunto",
-        fileName: item.fileName ?? null,
-        fileType: item.mimeType ?? "application/octet-stream",
-        source: item.source ?? "attachment",
-      })),
-    ].filter((item) => Boolean(item.url)),
+  const orderImages = useMemo(
+    () => [...(result?.attachments ?? []), ...(result?.documents ?? [])].filter((item) => item.url && (item.type === "image" || item.type === "video")),
     [result?.attachments, result?.documents]
   );
 
@@ -362,14 +256,14 @@ export default function PortalPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 {[
                   ["Folio consultado", result.order.folio ?? "No disponible"],
-                  ["Estado actual", result.orderStatusLabel ?? "No disponible"],
-                  ["Tipo de equipo", result.order.device_info?.type ?? "No disponible"],
-                  ["Marca y modelo", [result.order.device_info?.brand, result.order.device_info?.model].filter(Boolean).join(" ") || "No disponible"],
-                  ["Falla reportada", result.order.problem_description ?? "No disponible"],
-                  ["Fecha de ingreso", formatDate(result.order.created_at)],
-                  ["Fecha promesa", formatDateOnly(result.order.promised_date)],
+                  ["Estado actual", result.order.statusLabel ?? result.orderStatusLabel ?? "No disponible"],
+                  ["Tipo de equipo", result.order.deviceType ?? "No disponible"],
+                  ["Marca y modelo", [result.order.deviceBrand, result.order.deviceModel].filter(Boolean).join(" ") || "No disponible"],
+                  ["Falla reportada", result.order.problemDescription ?? "No disponible"],
+                  ["Fecha de ingreso", formatDate(result.order.createdAt)],
+                  ["Fecha promesa", formatDateOnly(result.order.promisedDate ?? null)],
                   ["Días restantes", remainingDays === null ? "No disponible" : remainingDays > 0 ? `${remainingDays} días` : `${Math.abs(remainingDays)} días vencidos`],
-                  ["Última actualización", formatDate(result.order.updated_at ?? result.events?.[result.events.length - 1]?.created_at)],
+                  ["Última actualización", formatDate(result.order.updatedAt)],
                 ].map(([label, value]) => (
                   <div key={label as string} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                     <div className="text-xs uppercase tracking-[0.2em] text-slate-500">{label as string}</div>
@@ -406,11 +300,11 @@ export default function PortalPage() {
 
               <div className="mt-6 space-y-4">
                 {result.timeline.map((step) => (
-                  <div key={step.label} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                  <div key={step.id} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
                     <div className="flex items-center justify-between gap-3">
                       <span className="font-semibold text-slate-950">{step.label}</span>
-                      <span className="rounded-full bg-white px-3 py-1 text-xs uppercase tracking-[0.18em] text-slate-500">{step.status}</span>
-                    </div>
+                    <span className="rounded-full bg-white px-3 py-1 text-xs uppercase tracking-[0.18em] text-slate-500">{step.status}</span>
+                  </div>
                     <p className="mt-2 text-sm leading-6 text-slate-600">{step.note}</p>
                   </div>
                 ))}
@@ -433,11 +327,11 @@ export default function PortalPage() {
                           className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 text-left"
                         >
                           {imageUrl ? (
-                            <Image src={imageUrl} alt={item.label || "Evidencia"} width={800} height={600} className="h-48 w-full object-cover" />
+                            <Image src={imageUrl} alt={item.name || "Evidencia"} width={800} height={600} className="h-48 w-full object-cover" />
                           ) : null}
                           <div className="p-4">
-                            <div className="text-sm font-semibold text-slate-950">{item.label || "Adjunto"}</div>
-                            <div className="mt-1 text-xs uppercase tracking-[0.18em] text-slate-500">{item.fileType ?? item.source ?? "evidencia"}</div>
+                            <div className="text-sm font-semibold text-slate-950">{item.name || "Adjunto"}</div>
+                            <div className="mt-1 text-xs uppercase tracking-[0.18em] text-slate-500">{item.type ?? "evidencia"}</div>
                           </div>
                         </button>
                       );
@@ -460,16 +354,16 @@ export default function PortalPage() {
                       WhatsApp
                     </a>
                   ) : null}
-                  {result.pdf_attachment?.url || result.documents.length > 0 ? (
+                  {result.pdfAttachment?.url || result.documents.length > 0 ? (
                     <div className="space-y-3">
                       {(result.documents.length > 0
                         ? result.documents.map((doc) => ({
                             key: doc.id,
-                            url: doc.public_url ?? "",
-                            label: doc.file_name,
+                            url: doc.url ?? "",
+                            label: doc.name,
                           }))
-                        : result.pdf_attachment
-                          ? [{ key: "pdf", url: result.pdf_attachment.url, label: result.pdf_attachment.label }]
+                        : result.pdfAttachment
+                          ? [{ key: "pdf", url: result.pdfAttachment.url, label: result.pdfAttachment.name }]
                           : []
                       ).map((doc) => {
                         if (!doc.url) return null;
@@ -511,14 +405,15 @@ export default function PortalPage() {
                 <div className="mt-3 space-y-3">
                   {(result.messages.length > 0 ? result.messages : result.events.map((event) => ({
                     id: event.id,
-                    note: event.note ?? event.event_type,
-                    actor_name: event.actor_name,
-                    created_at: event.created_at
+                    content: event.description,
+                    from: event.type,
+                    date: event.date,
+                    read: true
                   }))).slice(0, 5).map((message) => (
                     <div key={message.id} className="rounded-2xl bg-slate-50 px-4 py-3">
-                      <div className="text-sm font-semibold text-slate-950">{message.actor_name ?? "Taller"}</div>
-                      <div className="mt-1 text-sm text-zinc-600">{message.note}</div>
-                      <div className="mt-1 text-xs uppercase tracking-[0.18em] text-slate-500">{formatDate(message.created_at)}</div>
+                      <div className="text-sm font-semibold text-slate-950">{message.from ?? "Taller"}</div>
+                      <div className="mt-1 text-sm text-zinc-600">{message.content}</div>
+                      <div className="mt-1 text-xs uppercase tracking-[0.18em] text-slate-500">{formatDate(message.date)}</div>
                     </div>
                   ))}
                 </div>
