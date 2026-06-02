@@ -158,10 +158,17 @@ export const createTask = async (req: Request, res: Response) => {
     if (!allowedStatuses.has(nextStatus)) {
       return res.status(400).json({ error: 'Invalid status', details: { allowedStatuses: [...allowedStatuses] } });
     }
+    if (scope?.mode === 'branch' && !scope.sucursalId) {
+      return res.status(400).json({ error: 'Sucursal activa requerida' });
+    }
+    const resolvedSucursalId = body.sucursalId || (scope?.mode === 'branch' ? scope.sucursalId ?? null : scope?.sucursalId ?? null);
+    if (scope?.mode === 'branch' && resolvedSucursalId && scope.sucursalId && resolvedSucursalId !== scope.sucursalId) {
+      return res.status(403).json({ error: 'Sucursal mismatch' });
+    }
 
     const { data, error } = await supabase.from('tasks').insert([{
       tenant_id: tenantId,
-      sucursal_id: body.sucursalId || (scope?.sucursalId ?? null),
+      sucursal_id: resolvedSucursalId,
       service_order_id: body.serviceOrderId || null,
       service_request_id: body.serviceRequestId || null,
       title: body.title,
@@ -207,10 +214,19 @@ export const updateTask = async (req: Request, res: Response) => {
     if (!(await ensureTaskOwnership(supabase, tenantId, taskId))) {
       return res.status(404).json({ error: 'Task not found' });
     }
+    if (scope?.mode === 'branch' && !scope.sucursalId) {
+      return res.status(400).json({ error: 'Sucursal activa requerida' });
+    }
     const payload: Record<string, unknown> = {};
     if (body.title !== undefined) payload.title = body.title;
     if (body.description !== undefined) payload.description = body.description || null;
-    if (body.sucursalId !== undefined) payload.sucursal_id = body.sucursalId || (scope?.sucursalId ?? null);
+    if (body.sucursalId !== undefined) {
+      const resolvedSucursalId = body.sucursalId || (scope?.mode === 'branch' ? scope.sucursalId ?? null : scope?.sucursalId ?? null);
+      if (scope?.mode === 'branch' && scope.sucursalId && resolvedSucursalId && resolvedSucursalId !== scope.sucursalId) {
+        return res.status(403).json({ error: 'Sucursal mismatch' });
+      }
+      payload.sucursal_id = resolvedSucursalId;
+    }
     if (body.serviceOrderId !== undefined) payload.service_order_id = body.serviceOrderId || null;
     if (body.serviceRequestId !== undefined) payload.service_request_id = body.serviceRequestId || null;
     if (body.priority !== undefined) payload.priority = body.priority || 'media';

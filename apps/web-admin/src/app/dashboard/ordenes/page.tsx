@@ -275,7 +275,7 @@ async function compressImageFiles(files: File[]) {
 }
 
 export default function OrdenesKanbanPage() {
-  const { tenantSlug, sucursalId } = useAuth();
+  const { tenantSlug } = useAuth();
   const scope = getActiveScope();
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -499,7 +499,10 @@ export default function OrdenesKanbanPage() {
     try {
       setSaving(true);
       setError("");
-      const selectedSucursalId = isUuid(scope?.sucursalId ?? sucursalId) ? (scope?.sucursalId ?? sucursalId) : undefined;
+      const selectedSucursalId = isUuid(scope?.sucursalId ?? "") ? scope?.sucursalId ?? undefined : undefined;
+      if (scope?.mode === "branch" && !selectedSucursalId) {
+        throw new Error("Sucursal activa requerida");
+      }
       for (const definition of dynamicFieldDefinitions) {
         if (!definition.required || definition.visible === false) continue;
         const value = dynamicFieldValues[definition.field_key];
@@ -752,7 +755,7 @@ export default function OrdenesKanbanPage() {
           <div className="mb-4 flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.2em] text-zinc-400">
             <span>Modo: {scopeLabel}</span>
             <span>•</span>
-            <span>Sucursal: {scope?.sucursalId ?? sucursalId ?? "No disponible"}</span>
+            <span>Sucursal: {scope?.mode === "consolidated" ? "Consolidado" : scope?.sucursalId ?? "No disponible"}</span>
           </div>
           <div className="grid gap-4 md:grid-cols-5">
             <div className="rounded-[22px] border border-rose-500/25 bg-[linear-gradient(180deg,rgba(127,29,29,0.92),rgba(69,10,10,0.95))] p-4 shadow-[0_0_0_1px_rgba(248,113,113,0.12)]">
