@@ -32,13 +32,14 @@ export function useAuth(): AuthState {
 
   return useMemo(() => {
     const activeScope = getActiveScope();
+    const resolvedSucursalId = activeScope?.sucursalId ?? '';
 
     if (session) {
       return {
         role: (session.role || tenant.userRole).toLowerCase() as Role,
         tenantId: session.tenantSlug || tenant.tenantId,
         tenantSlug: session.tenantSlug,
-        sucursalId: activeScope?.sucursalId || session.sucursalId || tenant.userSucursalId,
+        sucursalId: resolvedSucursalId,
         userEmail: session.email || tenant.userEmail,
         ready: true,
       } satisfies AuthState;
@@ -48,7 +49,7 @@ export function useAuth(): AuthState {
       role: tenant.userRole.toLowerCase() as Role,
       tenantId: tenant.tenantId,
       tenantSlug: tenant.tenantId,
-      sucursalId: activeScope?.sucursalId || tenant.userSucursalId,
+      sucursalId: resolvedSucursalId,
       userEmail: tenant.userEmail,
       ready: false,
     } satisfies AuthState;
