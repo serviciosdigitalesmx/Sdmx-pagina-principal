@@ -101,10 +101,11 @@ function DashboardShellContent({
   }, [auth.role, auth.tenantSlug, auth.userEmail, tenant]);
   const currentScope = getActiveScope();
   const dashboardScope = React.useMemo(() => {
-    const bootstrapSucursalId =
-      currentScope?.sucursalId
-      ?? searchParams.get('sucursalId')
-      ?? (auth.role === 'owner' ? null : tenant.userSucursalId || null);
+    const bootstrapSucursalId = currentScope?.sucursalId ?? (
+      currentScope
+        ? null
+        : searchParams.get('sucursalId') ?? (auth.role === 'owner' ? null : tenant.userSucursalId || null)
+    );
     return resolveDashboardScope({
       role: auth.role,
       tenantId: auth.tenantId,
