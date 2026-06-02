@@ -278,6 +278,9 @@ export const createInventoryItem = async (req: Request, res: Response) => {
 
     const productRow = await ensureProductCatalogRecord(supabase, tenantId, body.sku, body.description, body.description);
     const resolvedSucursalId = body.sucursalId ?? scope?.sucursalId ?? null;
+    if (scope?.mode === 'branch' && !resolvedSucursalId) {
+      return res.status(400).json({ error: 'Sucursal activa requerida' });
+    }
     const inventoryRow = await ensureSucursalInventoryRow(supabase, tenantId, resolvedSucursalId, productRow.id, Number(body.stock));
     await refreshInventoryAlert(tenantId, productRow.id, resolvedSucursalId, Number(body.stock));
     return res.status(201).json({
@@ -333,6 +336,14 @@ export const updateInventoryItem = async (req: Request, res: Response) => {
       return res.status(403).json({ error: 'Sucursal mismatch' });
     }
 
+    if (scope?.mode === 'branch' && !scope.sucursalId) {
+      return res.status(400).json({ error: 'Sucursal activa requerida' });
+    }
+
+    if (scope?.mode === 'branch' && currentRow.sucursal_id && scope.sucursalId && currentRow.sucursal_id !== scope.sucursalId) {
+      return res.status(403).json({ error: 'Sucursal mismatch' });
+    }
+
     const { data: productRow, error: productError } = await supabase
       .from('products')
       .select('id, tenant_id, sku, name')
@@ -348,7 +359,7 @@ export const updateInventoryItem = async (req: Request, res: Response) => {
       .from('sucursal_inventory')
       .update({
         stock_current: nextStock,
-        sucursal_id: nextSucursalId,
+        sucursal_id: scope?.mode === 'branch' ? (scope.sucursalId ?? currentRow.sucursal_id ?? nextSucursalId) : nextSucursalId,
       })
       .eq('tenant_id', tenantId)
       .eq('id', inventoryId)
@@ -364,7 +375,7 @@ export const updateInventoryItem = async (req: Request, res: Response) => {
       const quantity = Math.abs(body.stock - Number(currentRow.stock_current ?? 0));
       const { error: movementError } = await supabase.from('inventory_movements').insert([{
         tenant_id: tenantId,
-        sucursal_id: nextSucursalId,
+        sucursal_id: scope?.mode === 'branch' ? (scope.sucursalId ?? currentRow.sucursal_id ?? nextSucursalId) : nextSucursalId,
         product_id: productRow.id,
         movement_type: movementType,
         quantity,
@@ -377,7 +388,7 @@ export const updateInventoryItem = async (req: Request, res: Response) => {
       if (movementError) {
         return res.status(502).json({ error: 'Failed to persist inventory movement', details: movementError.message });
       }
-      await refreshInventoryAlert(tenantId, productRow.id, nextSucursalId, nextStock);
+      await refreshInventoryAlert(tenantId, productRow.id, scope?.mode === 'branch' ? (scope.sucursalId ?? currentRow.sucursal_id ?? nextSucursalId) : nextSucursalId, nextStock);
     }
 
     return res.json({ success: true, data: updatedRow });
@@ -414,6 +425,10 @@ export const listInventoryMovements = async (req: Request, res: Response) => {
 
     if (!inventoryRow) {
       return res.status(404).json({ error: 'Inventory item not found' });
+    }
+
+    if (req.scope?.mode === 'branch' && req.scope.sucursalId && inventoryRow.sucursal_id && inventoryRow.sucursal_id !== req.scope.sucursalId) {
+      return res.status(403).json({ error: 'Sucursal mismatch' });
     }
 
     const { data: productRow, error: productError } = await supabase
