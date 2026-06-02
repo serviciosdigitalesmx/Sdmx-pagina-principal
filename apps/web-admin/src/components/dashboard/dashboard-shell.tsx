@@ -8,7 +8,7 @@ import { ProtectedLink } from "@/components/guard/ProtectedLink";
 import { useAuth } from "@/components/guard/use-auth";
 import type { Role } from "@/components/guard/use-auth";
 import { fixService } from "@/services/fixService";
-import { resolveDashboardScope, setActiveScope } from "@/lib/scope";
+import { getActiveScope, resolveDashboardScope, setActiveScope } from "@/lib/scope";
 import { getModuleByRoute, getModuleStatusCounts } from "@/lib/module-catalog";
 import { readAuthToken } from "@/lib/auth-storage";
 import { resolveApiBaseUrl } from "@white-label/config";
@@ -99,15 +99,17 @@ function DashboardShellContent({
       userRole: auth.role || tenant.userRole,
     };
   }, [auth.role, auth.tenantSlug, auth.userEmail, tenant]);
+  const currentScope = getActiveScope();
   const dashboardScope = React.useMemo(() => {
+    const bootstrapSucursalId = currentScope?.sucursalId ?? searchParams.get('sucursalId');
     return resolveDashboardScope({
       role: auth.role,
       tenantId: auth.tenantId,
       tenantSlug: auth.tenantSlug || auth.tenantId,
-      querySucursalId: searchParams.get('sucursalId'),
+      querySucursalId: bootstrapSucursalId,
       sessionSucursalId: auth.sucursalId,
     });
-  }, [auth.role, auth.sucursalId, auth.tenantId, auth.tenantSlug, searchParams]);
+  }, [auth.role, auth.sucursalId, auth.tenantId, auth.tenantSlug, currentScope?.sucursalId, searchParams]);
   const sucursalId = dashboardScope.sucursalId ?? '';
   const enabledModules = React.useMemo(() => {
     const activeModules = tenantConfig?.capabilities?.active_modules ?? tenantConfig?.active_modules;
