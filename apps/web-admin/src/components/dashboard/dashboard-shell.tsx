@@ -110,7 +110,7 @@ function DashboardShellContent({
       tenantId: auth.tenantId,
       tenantSlug: auth.tenantSlug || auth.tenantId,
       querySucursalId: bootstrapSucursalId,
-      sessionSucursalId: auth.role === 'owner' ? null : tenant.userSucursalId || null,
+      defaultSucursalId: auth.role === 'owner' ? null : tenant.userSucursalId || null,
     });
   }, [auth.role, auth.tenantId, auth.tenantSlug, currentScope?.sucursalId, searchParams, tenant.userSucursalId]);
   const sucursalId = dashboardScope.sucursalId ?? '';
@@ -216,7 +216,7 @@ function DashboardShellContent({
       tenantId: auth.tenantId,
       tenantSlug: auth.tenantSlug || auth.tenantId,
       querySucursalId: nextSucursalId || null,
-      sessionSucursalId: auth.role === 'owner' ? null : tenant.userSucursalId || null,
+      defaultSucursalId: auth.role === 'owner' ? null : tenant.userSucursalId || null,
     });
     setActiveScope(nextScope);
     const params = new URLSearchParams(searchParams.toString());

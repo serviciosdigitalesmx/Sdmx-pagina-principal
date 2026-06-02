@@ -9,7 +9,7 @@ export type DashboardScope = {
   sucursalId: string | null;
   canUseConsolidatedView: boolean;
   role: ScopeRole;
-  source: 'query' | 'session' | 'default';
+  source: 'query' | 'tenant' | 'default';
 };
 
 let activeScope: DashboardScope | null = null;
@@ -27,14 +27,14 @@ export function resolveDashboardScope(input: {
   tenantId: string;
   tenantSlug: string;
   querySucursalId?: string | null;
-  sessionSucursalId?: string | null;
+  defaultSucursalId?: string | null;
 }): DashboardScope {
   const role = normalizeRole(input.role);
   const querySucursalId = typeof input.querySucursalId === 'string' && input.querySucursalId.trim().length > 0
     ? input.querySucursalId.trim()
     : null;
-  const sessionSucursalId = typeof input.sessionSucursalId === 'string' && input.sessionSucursalId.trim().length > 0
-    ? input.sessionSucursalId.trim()
+  const defaultSucursalId = typeof input.defaultSucursalId === 'string' && input.defaultSucursalId.trim().length > 0
+    ? input.defaultSucursalId.trim()
     : null;
 
   if (role === 'owner') {
@@ -46,11 +46,11 @@ export function resolveDashboardScope(input: {
       sucursalId,
       canUseConsolidatedView: true,
       role,
-      source: querySucursalId ? 'query' : sessionSucursalId ? 'session' : 'default',
+      source: querySucursalId ? 'query' : defaultSucursalId ? 'tenant' : 'default',
     };
   }
 
-  const sucursalId = querySucursalId ?? sessionSucursalId ?? null;
+  const sucursalId = querySucursalId ?? defaultSucursalId ?? null;
   return {
     mode: 'branch',
     tenantId: input.tenantId,
@@ -58,7 +58,7 @@ export function resolveDashboardScope(input: {
     sucursalId,
     canUseConsolidatedView: false,
     role,
-    source: querySucursalId ? 'query' : sessionSucursalId ? 'session' : 'default',
+    source: querySucursalId ? 'query' : defaultSucursalId ? 'tenant' : 'default',
   };
 }
 
