@@ -37,7 +37,7 @@ export function useAuth(): AuthState {
     if (session) {
       return {
         role: (session.role || tenant.userRole).toLowerCase() as Role,
-        tenantId: session.tenantSlug || tenant.tenantId,
+        tenantId: session.tenantId || tenant.tenantId,
         tenantSlug: session.tenantSlug,
         sucursalId: resolvedSucursalId,
         userEmail: session.email || tenant.userEmail,

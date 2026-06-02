@@ -156,6 +156,12 @@ export default function HubPage() {
         return;
       }
 
+      const bridgeUrl = resolveAdminBridgeUrl(token);
+      if (bridgeUrl) {
+        window.location.replace(bridgeUrl);
+        return;
+      }
+
       const tenantSlugFromToken = readTenantSlugFromToken(token);
 
       if (tenantSlugFromToken) {
@@ -171,14 +177,6 @@ export default function HubPage() {
         window.location.replace(tenantUrl);
         return;
       }
-
-      const bridgeUrl = resolveAdminBridgeUrl(token);
-
-      if (!bridgeUrl) {
-        return;
-      }
-
-      window.location.replace(bridgeUrl);
     };
 
     void run();
