@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { RequireRole } from "@/components/guard/RequireRole";
 import { ModuleShell } from "@/components/dashboard/module-shell";
+import { getActiveScope } from "@/lib/scope";
 import { fixService } from "@/services/fixService";
 
 type TaskRow = {
@@ -40,6 +41,7 @@ const defaultForm = {
 };
 
 export default function TareasPage() {
+  const scope = getActiveScope();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [tasks, setTasks] = useState<TaskRow[]>([]);
@@ -165,7 +167,10 @@ export default function TareasPage() {
         onAction={() => setSelectedId(null)}
         secondaryActionLabel="Actualizar"
         secondaryOnAction={() => void refresh()}
-        stats={[]}
+        stats={[
+          { label: "Modo", value: scope?.mode === "consolidated" ? "Consolidado" : "Sucursal activa", helper: "Contexto operativo." },
+          { label: "Sucursal", value: scope?.sucursalId ?? "No disponible", helper: scope?.mode === "consolidated" ? "Vista consolidada." : "Sucursal activa." },
+        ]}
         columns={[]}
         rows={[]}
         emptyTitle="Sin tareas"

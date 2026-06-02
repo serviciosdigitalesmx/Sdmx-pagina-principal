@@ -5,6 +5,7 @@ import { RequireRole } from "@/components/guard/RequireRole";
 import { useAuth } from "@/components/guard/use-auth";
 import { OrderDetailDrawer, type OrderDetailData } from "@/components/dashboard/orders/order-detail-drawer";
 import { OrderIntakeModal, type OrderCreationSummary, type OrderIntakeFiles, type OrderIntakeFormState } from "@/components/dashboard/orders/order-intake-modal";
+import { getActiveScope } from "@/lib/scope";
 import { fixService } from "@/services/fixService";
 import { type DynamicFieldDefinition } from "@white-label/ui";
 import { ConfirmDialog } from "@white-label/ui";
@@ -275,6 +276,7 @@ async function compressImageFiles(files: File[]) {
 
 export default function OrdenesKanbanPage() {
   const { tenantSlug, sucursalId } = useAuth();
+  const scope = getActiveScope();
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -450,6 +452,7 @@ export default function OrdenesKanbanPage() {
   const activeYellowCount = yellowOrders.length;
   const activeGreenCount = greenOrders.length;
   const archivedCount = grayOrders.length;
+  const scopeLabel = scope?.mode === "consolidated" ? "Consolidado" : "Sucursal activa";
 
   const detailOrder = detail?.order ?? null;
   async function handleEditOrderDetails(payload: {
@@ -496,7 +499,7 @@ export default function OrdenesKanbanPage() {
     try {
       setSaving(true);
       setError("");
-      const selectedSucursalId = isUuid(sucursalId) ? sucursalId : undefined;
+      const selectedSucursalId = isUuid(scope?.sucursalId ?? sucursalId) ? (scope?.sucursalId ?? sucursalId) : undefined;
       for (const definition of dynamicFieldDefinitions) {
         if (!definition.required || definition.visible === false) continue;
         const value = dynamicFieldValues[definition.field_key];
@@ -726,7 +729,7 @@ export default function OrdenesKanbanPage() {
         <header className="flex flex-col justify-between gap-4 rounded-[28px] border border-zinc-800 bg-zinc-950/85 p-6 shadow-[0_16px_70px_rgba(0,0,0,0.24)] sm:flex-row sm:items-center">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-zinc-50 [font-family:var(--font-display)]">Nueva {tenantLabels.order}</h1>
-            <p className="mt-1 text-sm text-zinc-400">Panel técnico · semáforo operativo · detalle real.</p>
+            <p className="mt-1 text-sm text-zinc-400">Panel técnico · semáforo operativo · detalle real · {scopeLabel}.</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <button
@@ -746,6 +749,11 @@ export default function OrdenesKanbanPage() {
         {copiedText ? <p className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200">{copiedText} copiado</p> : null}
 
         <section className="rounded-[28px] border border-amber-700/15 bg-[linear-gradient(180deg,rgba(16,14,12,0.96),rgba(22,18,14,0.98))] p-5 shadow-[0_12px_50px_rgba(0,0,0,0.24)]">
+          <div className="mb-4 flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.2em] text-zinc-400">
+            <span>Modo: {scopeLabel}</span>
+            <span>•</span>
+            <span>Sucursal: {scope?.sucursalId ?? sucursalId ?? "No disponible"}</span>
+          </div>
           <div className="grid gap-4 md:grid-cols-5">
             <div className="rounded-[22px] border border-rose-500/25 bg-[linear-gradient(180deg,rgba(127,29,29,0.92),rgba(69,10,10,0.95))] p-4 shadow-[0_0_0_1px_rgba(248,113,113,0.12)]">
               <div className="text-xs uppercase tracking-[0.24em] text-rose-100/70">Críticos (&lt;2 días)</div>
