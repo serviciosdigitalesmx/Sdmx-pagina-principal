@@ -22,7 +22,20 @@ export function isUuid(value: unknown): value is string {
   return typeof value === 'string' && UUID_PATTERN.test(value.trim());
 }
 
-export function getRequestedSucursalId(req: Pick<Request, 'query' | 'params'>): string | null {
+function readHeaderValue(headers: Request['headers'], key: string) {
+  const value = headers?.[key.toLowerCase()];
+  if (Array.isArray(value)) {
+    return value[0] ?? '';
+  }
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+export function getRequestedSucursalId(req: Pick<Request, 'query' | 'params' | 'headers'>): string | null {
+  const headerValue = readHeaderValue(req.headers, 'x-fixi-sucursal-id') || readHeaderValue(req.headers, 'x-sucursal-id');
+  if (isUuid(headerValue)) {
+    return headerValue;
+  }
+
   const queryValue = typeof req.query?.sucursalId === 'string' ? req.query.sucursalId.trim() : '';
   if (isUuid(queryValue)) {
     return queryValue;

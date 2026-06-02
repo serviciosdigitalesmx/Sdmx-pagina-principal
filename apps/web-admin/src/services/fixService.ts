@@ -328,6 +328,16 @@ class FixService {
     return getActiveScope()?.sucursalId ?? '';
   }
 
+  private getScopeHeaders() {
+    const sucursalId = this.getSucursalId();
+    return sucursalId
+      ? {
+          'x-fixi-sucursal-id': sucursalId,
+          'x-sucursal-id': sucursalId,
+        }
+      : null;
+  }
+
   private withSucursalQuery(path: string) {
     const sucursalId = this.getSucursalId();
     if (!sucursalId) {
@@ -364,14 +374,20 @@ class FixService {
 
     let response: Response;
     try {
+      const headers = new Headers(init.headers);
+      headers.set('Content-Type', 'application/json');
+      headers.set('Authorization', `Bearer ${token}`);
+
+      const scopeHeaders = this.getScopeHeaders();
+      if (scopeHeaders) {
+        headers.set('x-fixi-sucursal-id', scopeHeaders['x-fixi-sucursal-id']);
+        headers.set('x-sucursal-id', scopeHeaders['x-sucursal-id']);
+      }
+
       response = await fetch(`${this.apiUrl}${path}`, {
-      ...init,
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-        ...(init.headers || {}),
-      },
-    });
+        ...init,
+        headers,
+      });
     } catch (err) {
       // network or fetch-level error
       throw new Error(`Network error: ${(err as Error).message}`);
