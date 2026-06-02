@@ -10,8 +10,9 @@ import { fixService } from "@/services/fixService";
 type FinanceRow = Record<string, string>;
 
 export default function Page() {
-  const { role, sucursalId } = useAuth();
+  const { role } = useAuth();
   const scope = getActiveScope();
+  const activeSucursalId = scope?.sucursalId ?? "";
   const [rows, setRows] = useState<FinanceRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -23,7 +24,10 @@ export default function Page() {
       try {
         setLoading(true);
         setError("");
-        const data = role === "owner" ? await fixService.getBalance() : await fixService.getCashflow(scope?.sucursalId ?? sucursalId);
+        if (role !== "owner" && !activeSucursalId) {
+          throw new Error("Sucursal activa requerida");
+        }
+        const data = role === "owner" ? await fixService.getBalance() : await fixService.getCashflow(activeSucursalId);
         if (!cancelled) {
           setRows(
             (data as Record<string, unknown>[]).map((row) =>
@@ -45,15 +49,15 @@ export default function Page() {
     return () => {
       cancelled = true;
     };
-  }, [role, scope?.sucursalId, sucursalId]);
+  }, [activeSucursalId, role]);
 
   const stats = useMemo(
     () => [
       { label: "Registros", value: String(rows.length), helper: "Datos del taller." },
       { label: "Rol", value: role, helper: "Permisos reales por usuario." },
-      { label: "Sucursal", value: scope?.sucursalId ?? sucursalId ?? "No disponible", helper: scope?.mode === "consolidated" ? "Vista consolidada." : "Sucursal activa." },
+      { label: "Sucursal", value: role === "owner" && scope?.mode === "consolidated" ? "Consolidado" : activeSucursalId || "No disponible", helper: scope?.mode === "consolidated" ? "Vista consolidada." : "Sucursal activa." },
     ],
-    [role, rows.length, scope?.mode, scope?.sucursalId, sucursalId]
+    [activeSucursalId, role, rows.length, scope?.mode]
   );
 
   return (
@@ -69,7 +73,10 @@ export default function Page() {
             try {
               setLoading(true);
               setError("");
-              const data = role === "owner" ? await fixService.getBalance() : await fixService.getCashflow(scope?.sucursalId ?? sucursalId);
+              if (role !== "owner" && !activeSucursalId) {
+                throw new Error("Sucursal activa requerida");
+              }
+              const data = role === "owner" ? await fixService.getBalance() : await fixService.getCashflow(activeSucursalId);
               setRows(
                 (data as Record<string, unknown>[]).map((row) =>
                   Object.fromEntries(

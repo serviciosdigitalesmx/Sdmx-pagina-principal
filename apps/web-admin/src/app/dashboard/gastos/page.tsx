@@ -4,10 +4,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { RequireRole } from '@/components/guard/RequireRole';
 import { useAuth } from '@/components/guard/use-auth';
 import { ModuleShell } from '@/components/dashboard/module-shell';
+import { getActiveScope } from '@/lib/scope';
 import { fixService } from '@/services/fixService';
 
 export default function GastosPage() {
-  const { role, sucursalId } = useAuth();
+  const { role } = useAuth();
+  const scope = getActiveScope();
+  const activeSucursalId = scope?.sucursalId ?? "";
   const [rows, setRows] = useState<Array<Record<string, string>>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -16,7 +19,10 @@ export default function GastosPage() {
     try {
       setLoading(true);
       setError('');
-      const data = await fixService.getCashflow(sucursalId);
+      if (!activeSucursalId) {
+        throw new Error('Sucursal activa requerida');
+      }
+      const data = await fixService.getCashflow(activeSucursalId);
       setRows(
         (data as Array<Record<string, unknown>>).map((row) =>
           Object.fromEntries(
@@ -49,15 +55,15 @@ export default function GastosPage() {
     return () => {
       cancelled = true;
     };
-  }, [sucursalId]);
+  }, [activeSucursalId]);
 
   const stats = useMemo(
     () => [
       { label: 'Movimientos', value: String(rows.length), helper: 'Datos reales de cashflow.' },
-      { label: 'Sucursal', value: sucursalId, helper: 'Contexto obligatorio.' },
+      { label: 'Sucursal', value: activeSucursalId || 'No disponible', helper: 'Contexto obligatorio.' },
       { label: 'Rol', value: role, helper: 'Permisos reales por usuario.' },
     ],
-    [role, rows.length, sucursalId]
+    [activeSucursalId, role, rows.length]
   );
 
   return (

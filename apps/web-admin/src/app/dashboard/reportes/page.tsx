@@ -24,7 +24,7 @@ type ReportsSummary = {
 };
 
 export default function Page() {
-  const { role, sucursalId } = useAuth();
+  const { role } = useAuth();
   const scope = getActiveScope();
   const [summary, setSummary] = useState<ReportsSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -51,7 +51,7 @@ export default function Page() {
     return () => {
       cancelled = true;
     };
-  }, [scope?.sucursalId, sucursalId]);
+  }, [scope?.mode, scope?.sucursalId]);
 
   const stats = useMemo(
     () => [
@@ -60,9 +60,9 @@ export default function Page() {
       { label: "Inventario", value: String(summary?.inventoryCount ?? 0), helper: "Stock del taller." },
       { label: "Bajo stock", value: String(summary?.lowStockCount ?? 0), helper: "Alertas activas." },
       { label: "Ingreso", value: String(summary?.totalIncome ?? 0), helper: "Ingreso acumulado." },
-      { label: "Egreso", value: String(summary?.totalExpense ?? 0), helper: scope?.mode === "consolidated" ? "Egreso acumulado." : `Sucursal ${scope?.sucursalId ?? sucursalId ?? "N/D"}` },
+      { label: "Egreso", value: String(summary?.totalExpense ?? 0), helper: scope?.mode === "consolidated" ? "Egreso acumulado." : `Sucursal ${scope?.sucursalId ?? "N/D"}` },
     ],
-    [scope?.mode, scope?.sucursalId, summary, sucursalId]
+    [scope?.mode, scope?.sucursalId, summary]
   );
 
   const rows = [
