@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { RequireRole } from "@/components/guard/RequireRole";
 import { useAuth } from "@/components/guard/use-auth";
 import { ModuleShell } from "@/components/dashboard/module-shell";
+import { getActiveScope } from "@/lib/scope";
 import { fixService } from "@/services/fixService";
 
 type PurchaseOrderRow = {
@@ -44,6 +45,7 @@ const emptyForm = {
 
 export default function ComprasPage() {
   const { role } = useAuth();
+  const scope = getActiveScope();
   const [orders, setOrders] = useState<PurchaseOrderRow[]>([]);
   const [suppliers, setSuppliers] = useState<SupplierRow[]>([]);
   const [selectedId, setSelectedId] = useState("");
@@ -101,6 +103,13 @@ export default function ComprasPage() {
   }, []);
 
   useEffect(() => {
+    if (!scope?.sucursalId) {
+      return;
+    }
+    setForm((current) => (current.sucursalId ? current : { ...current, sucursalId: scope.sucursalId ?? "" }));
+  }, [scope?.sucursalId]);
+
+  useEffect(() => {
     if (!selectedId) return;
     let cancelled = false;
     async function loadDetail() {
@@ -122,8 +131,9 @@ export default function ComprasPage() {
       { label: "Órdenes", value: String(orders.length), helper: "Compras registradas." },
       { label: "Proveedores", value: String(suppliers.length), helper: "Catálogo de abastecimiento." },
       { label: "Rol", value: role, helper: "Permisos por usuario." },
+      { label: "Sucursal", value: scope?.sucursalId ?? "No disponible", helper: scope?.mode === "consolidated" ? "Vista consolidada." : "Sucursal activa." },
     ],
-    [orders.length, role, suppliers.length],
+    [orders.length, role, scope?.mode, scope?.sucursalId, suppliers.length],
   );
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { RequireRole } from "@/components/guard/RequireRole";
 import { useAuth } from "@/components/guard/use-auth";
 import { ModuleShell } from "@/components/dashboard/module-shell";
+import { getActiveScope } from "@/lib/scope";
 import { fixService } from "@/services/fixService";
 
 type ReportsSummary = {
@@ -24,6 +25,7 @@ type ReportsSummary = {
 
 export default function Page() {
   const { role, sucursalId } = useAuth();
+  const scope = getActiveScope();
   const [summary, setSummary] = useState<ReportsSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -49,7 +51,7 @@ export default function Page() {
     return () => {
       cancelled = true;
     };
-  }, [sucursalId]);
+  }, [scope?.sucursalId, sucursalId]);
 
   const stats = useMemo(
     () => [
@@ -58,9 +60,9 @@ export default function Page() {
       { label: "Inventario", value: String(summary?.inventoryCount ?? 0), helper: "Stock del taller." },
       { label: "Bajo stock", value: String(summary?.lowStockCount ?? 0), helper: "Alertas activas." },
       { label: "Ingreso", value: String(summary?.totalIncome ?? 0), helper: "Ingreso acumulado." },
-      { label: "Egreso", value: String(summary?.totalExpense ?? 0), helper: sucursalId ? `Sucursal ${sucursalId}` : "Egreso acumulado." },
+      { label: "Egreso", value: String(summary?.totalExpense ?? 0), helper: scope?.mode === "consolidated" ? "Egreso acumulado." : `Sucursal ${scope?.sucursalId ?? sucursalId ?? "N/D"}` },
     ],
-    [summary, sucursalId]
+    [scope?.mode, scope?.sucursalId, summary, sucursalId]
   );
 
   const rows = [

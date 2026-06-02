@@ -586,9 +586,13 @@ class FixService {
     return result.data;
   }
 
-  public async getCashflow(sucursalId: string): Promise<JsonRecord[]> {
+  public async getCashflow(sucursalId?: string): Promise<JsonRecord[]> {
+    const resolvedSucursalId = sucursalId ?? getActiveScope()?.sucursalId ?? '';
+    if (!resolvedSucursalId) {
+      throw new Error('Sucursal activa requerida para consultar flujo de caja');
+    }
     const result = await this.request<ApiListResponse<JsonRecord[]>>(
-      `/api/${this.tenantId}/finance/cashflow/${encodeURIComponent(sucursalId)}`,
+      `/api/${this.tenantId}/finance/cashflow/${encodeURIComponent(resolvedSucursalId)}`,
       { method: 'GET' }
     );
     return result.data;

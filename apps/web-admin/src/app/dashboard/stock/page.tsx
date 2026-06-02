@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { RequireRole } from "@/components/guard/RequireRole";
 import { useAuth } from "@/components/guard/use-auth";
 import { ModuleShell } from "@/components/dashboard/module-shell";
+import { getActiveScope } from "@/lib/scope";
 import { fixService } from "@/services/fixService";
 
 type InventoryRow = {
@@ -43,6 +44,7 @@ const emptyForm = {
 
 export default function StockPage() {
   const { role } = useAuth();
+  const scope = getActiveScope();
   const [rows, setRows] = useState<InventoryRow[]>([]);
   const [selectedId, setSelectedId] = useState("");
   const [selectedMovements, setSelectedMovements] = useState<MovementRow[]>([]);
@@ -134,10 +136,10 @@ export default function StockPage() {
   const stats = useMemo(
     () => [
       { label: "Productos", value: String(rows.length), helper: "Inventario del taller." },
-      { label: "Sucursal", value: selected?.sucursal_id || "Global", helper: "Filtro por sucursal." },
+      { label: "Sucursal", value: selected?.sucursal_id || scope?.sucursalId || "Global", helper: scope?.mode === "consolidated" ? "Vista consolidada." : "Sucursal activa." },
       { label: "Rol", value: role, helper: "Permisos por usuario." },
     ],
-    [rows.length, role, selected?.sucursal_id],
+    [rows.length, role, scope?.mode, scope?.sucursalId, selected?.sucursal_id],
   );
 
   async function handleSave(event: FormEvent<HTMLFormElement>) {

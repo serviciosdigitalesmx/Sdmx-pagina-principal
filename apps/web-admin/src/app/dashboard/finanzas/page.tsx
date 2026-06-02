@@ -4,12 +4,14 @@ import { useEffect, useMemo, useState } from "react";
 import { RequireRole } from "@/components/guard/RequireRole";
 import { useAuth } from "@/components/guard/use-auth";
 import { ModuleShell } from "@/components/dashboard/module-shell";
+import { getActiveScope } from "@/lib/scope";
 import { fixService } from "@/services/fixService";
 
 type FinanceRow = Record<string, string>;
 
 export default function Page() {
   const { role, sucursalId } = useAuth();
+  const scope = getActiveScope();
   const [rows, setRows] = useState<FinanceRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -21,7 +23,7 @@ export default function Page() {
       try {
         setLoading(true);
         setError("");
-        const data = role === "owner" ? await fixService.getBalance() : await fixService.getCashflow(sucursalId);
+        const data = role === "owner" ? await fixService.getBalance() : await fixService.getCashflow(scope?.sucursalId ?? sucursalId);
         if (!cancelled) {
           setRows(
             (data as Record<string, unknown>[]).map((row) =>
@@ -43,15 +45,15 @@ export default function Page() {
     return () => {
       cancelled = true;
     };
-  }, [role, sucursalId]);
+  }, [role, scope?.sucursalId, sucursalId]);
 
   const stats = useMemo(
     () => [
       { label: "Registros", value: String(rows.length), helper: "Datos del taller." },
       { label: "Rol", value: role, helper: "Permisos reales por usuario." },
-      { label: "Sucursal", value: sucursalId, helper: "Aislamiento por contexto." },
+      { label: "Sucursal", value: scope?.sucursalId ?? sucursalId ?? "No disponible", helper: scope?.mode === "consolidated" ? "Vista consolidada." : "Sucursal activa." },
     ],
-    [role, rows.length, sucursalId]
+    [role, rows.length, scope?.mode, scope?.sucursalId, sucursalId]
   );
 
   return (
@@ -67,7 +69,7 @@ export default function Page() {
             try {
               setLoading(true);
               setError("");
-              const data = role === "owner" ? await fixService.getBalance() : await fixService.getCashflow(sucursalId);
+              const data = role === "owner" ? await fixService.getBalance() : await fixService.getCashflow(scope?.sucursalId ?? sucursalId);
               setRows(
                 (data as Record<string, unknown>[]).map((row) =>
                   Object.fromEntries(
