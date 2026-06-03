@@ -106,6 +106,10 @@ async function buildAuthPayload(user: { id: string; email?: string | null }, ten
 }
 
 export const register = async (req: Request, res: Response) => {
+  console.log('REGISTER_START', {
+    timestamp: new Date().toISOString(),
+  });
+
   const parsed = registerSchema.safeParse(req.body);
 
   if (!parsed.success) {
@@ -126,6 +130,11 @@ export const register = async (req: Request, res: Response) => {
 
   let authUser: any = null;
   try {
+    console.log('REGISTER_CREATEUSER_START', {
+      email,
+      phone,
+      workshopName,
+    });
     const created = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
@@ -137,7 +146,10 @@ export const register = async (req: Request, res: Response) => {
       },
     });
     authUser = created?.data ? created : { data: created?.data, error: created?.error };
-  console.log('STEP_CREATEUSER_DONE');
+    console.log('REGISTER_CREATEUSER_OK', {
+      hasUser: Boolean(created?.data?.user),
+      userId: created?.data?.user?.id ?? null,
+    });
     if (created?.error || !created?.data?.user) {
       console.error('REGISTER_CREATEUSER_FAILED', { error: created?.error });
       return res.status(409).json({ error: created?.error?.message ?? 'Unable to create auth user' });
@@ -148,8 +160,11 @@ export const register = async (req: Request, res: Response) => {
   }
 
   try {
+    console.log('REGISTER_RPC_START', {
+      authUserId: authUser?.data?.user?.id ?? null,
+    });
     const { data: tenantRows, error: tenantError } = await supabaseAdmin.rpc('create_tenant_transaction', {
-      p_user_id: authUser.user.id,
+      p_user_id: authUser.data.user.id,
       p_workshop_name: workshopName,
       p_slug_base: workshopName,
       p_email: email,
@@ -161,20 +176,43 @@ export const register = async (req: Request, res: Response) => {
     }
 
     const tenant = Array.isArray(tenantRows) ? tenantRows[0] : tenantRows;
-  // Map database column `slug` to expected `tenant_slug`
-  const tenantSlug = tenant.slug ?? tenant.tenant_slug;
-  if (!tenant?.tenant_id || !tenantSlug) {
-    throw new Error('Tenant transaction returned no data');
-  }
-  console.log('STEP_TENANT_OBTAINED', { tenantId: tenant.tenant_id, tenantSlug });
-  const token = await signJwt({
-    sub: authUser.user.id,
-    email,
-    role: 'owner',
-    tenant_id: tenant.tenant_id,
-    tenant_slug: tenantSlug,
-  }, tenant.tenant_id);
+    console.log('REGISTER_RPC_OK', {
+      tenantRowsType: Array.isArray(tenantRows) ? 'array' : typeof tenantRows,
+      tenantId: tenant?.tenant_id ?? null,
+      tenantSlug: tenant?.slug ?? tenant?.tenant_slug ?? null,
+    });
 
+    // Map database column `slug` to expected `tenant_slug`
+    const tenantSlug = tenant.slug ?? tenant.tenant_slug;
+    if (!tenant?.tenant_id || !tenantSlug) {
+      throw new Error('Tenant transaction returned no data');
+    }
+
+    console.log('STEP_TENANT_OBTAINED', { tenantId: tenant.tenant_id, tenantSlug });
+
+    const token = await signJwt({
+      sub: authUser.data.user.id,
+      email,
+      role: 'owner',
+      tenant_id: tenant.tenant_id,
+      tenant_slug: tenantSlug,
+    }, tenant.tenant_id);
+
+    console.log('REGISTER_JWT_OK', {
+      tenantId: tenant.tenant_id,
+      userId: authUser.data.user.id,
+    });
+
+    const redirectUrl = `${appUrl}/onboarding/success?tenant=${encodeURIComponent(tenantSlug)}&token=${encodeURIComponent(token)}`;
+
+    console.log('REGISTER_REDIRECT_OK', {
+      redirectUrl,
+    });
+
+    console.log('REGISTER_RESPONSE_OK', {
+      tenantId: tenant.tenant_id,
+      tenantSlug,
+    });
     return res.status(201).json({
       token,
       tenant: {
@@ -186,12 +224,15 @@ export const register = async (req: Request, res: Response) => {
         subscriptionStatus: 'trial',
         billingExempt: false,
       },
-      redirectUrl: `${appUrl}/onboarding/success?tenant=${encodeURIComponent(tenantSlug)}&token=${encodeURIComponent(token)}`,
+      redirectUrl,
     });
   } catch (error) {
-    await supabaseAdmin.auth.admin.deleteUser(authUser.user.id).catch((deleteError) => {
+    await supabaseAdmin.auth.admin.deleteUser(authUser.data.user.id).catch((deleteError) => {
       console.error('Failed to rollback auth user:', deleteError);
     });
+
+    console.error('REGISTER_ROOT_ERROR', error);
+    console.error((error as any)?.stack);
 
     const message = error instanceof Error ? error.message : 'Internal server error';
     return res.status(500).json({ error: message });
