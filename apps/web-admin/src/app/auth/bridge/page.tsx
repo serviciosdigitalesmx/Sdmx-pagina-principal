@@ -11,30 +11,7 @@ function resolveDashboardUrl() {
 export default function AuthBridgePage() {
   const token = typeof window === "undefined" ? null : new URL(window.location.href).searchParams.get("token");
   const dashboardUrl = resolveDashboardUrl();
-  const adminUrl = process.env.NEXT_PUBLIC_WEB_ADMIN_URL;
-  const isCanonicalAdminUrl = (() => {
-    if (typeof window === "undefined") {
-      return false;
-    }
-
-    if (!adminUrl) {
-      return true;
-    }
-
-    try {
-      const normalized = new URL(adminUrl);
-      return normalized.protocol === "https:" && normalized.origin === window.location.origin;
-    } catch {
-      return false;
-    }
-  })();
-  const message = !token
-    ? "No llegó la sesión."
-    : !adminUrl
-      ? "La URL canónica del panel no está configurada; se usará este origen."
-      : !isCanonicalAdminUrl
-        ? "La URL del panel no coincide con la configuración, pero la sesión puede continuar en este origen."
-        : "Sesión sincronizada. Redirigiendo al panel...";
+  const message = token ? "Sesión sincronizada. Redirigiendo al panel..." : "No llegó la sesión.";
 
   useEffect(() => {
     if (!token || !dashboardUrl) {
@@ -52,12 +29,6 @@ export default function AuthBridgePage() {
         <p className="text-xs uppercase tracking-[0.35em] text-[#1f2937]">Sesión autenticada</p>
         <h1 className="mt-4 text-3xl font-semibold tracking-tight">Preparando el panel</h1>
         <p className="mt-4 text-sm leading-7 text-slate-600">{message}</p>
-        {!adminUrl || !isCanonicalAdminUrl ? (
-          <div className="mt-6 text-left text-sm text-rose-700">
-            <p className="font-semibold">Bloqueado por configuración de origen</p>
-            <p className="mt-2 leading-6">La sesión seguirá por este mismo origen mientras terminas de alinear la URL canónica.</p>
-          </div>
-        ) : null}
         {token ? (
           <div className="mt-6 rounded-2xl bg-slate-50 px-4 py-3 text-left text-xs leading-5 text-slate-600">
             <p className="font-semibold text-slate-800">Token recibido</p>
