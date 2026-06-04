@@ -310,6 +310,11 @@ class FixService {
     return resolveApiBaseUrl();
   }
 
+  private apiPath(path: string) {
+    const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+    return `/api${normalizedPath}`;
+  }
+
   private get tenantId() {
     const session = getCurrentSession();
     if (session?.tenantId) {
@@ -410,12 +415,79 @@ class FixService {
     return response.json() as Promise<T>;
   }
 
+  private normalizeCustomerRow(row: JsonRecord): JsonRecord {
+    return {
+      ...row,
+      name: String(row.name ?? row.full_name ?? ''),
+      full_name: String(row.full_name ?? row.name ?? ''),
+      phone: typeof row.phone === 'string' ? row.phone : '',
+      email: typeof row.email === 'string' ? row.email : '',
+    };
+  }
+
+  private normalizeServiceRequestRow(row: JsonRecord): ServiceRequestPayload {
+    const normalizedStatus = String(
+      row.normalized_status ??
+      row.status ??
+      'pendiente'
+    ).trim().toLowerCase();
+
+    return {
+      ...row,
+      normalized_status: normalizedStatus,
+      customer_name: String(row.customer_name ?? ''),
+      customer_phone: typeof row.customer_phone === 'string' ? row.customer_phone : '',
+      customer_email: typeof row.customer_email === 'string' ? row.customer_email : null,
+      device_type: typeof row.device_type === 'string' ? row.device_type : null,
+      device_model: typeof row.device_model === 'string' ? row.device_model : null,
+      issue_description: typeof row.issue_description === 'string' ? row.issue_description : null,
+      metadata: (row.metadata as Record<string, unknown> | undefined) ?? undefined,
+      status: typeof row.status === 'string' ? row.status : normalizedStatus,
+      quoted_total: Number(row.quoted_total ?? 0),
+      deposit_amount: Number(row.deposit_amount ?? 0),
+      balance_amount: Number(row.balance_amount ?? 0),
+    };
+  }
+
+  private normalizeOrderRow(row: JsonRecord): JsonRecord {
+    const deviceInfo = (row.device_info as Record<string, unknown> | undefined) ?? {};
+    const deviceModel = String(
+      row.device_model ??
+      deviceInfo.model ??
+      deviceInfo.brand ??
+      ''
+    );
+    const deviceType = String(
+      row.device_type ??
+      deviceInfo.type ??
+      ''
+    );
+
+    return {
+      ...row,
+      device_model: deviceModel,
+      device_type: deviceType,
+      device_info: {
+        ...(deviceInfo ?? {}),
+        model: String(deviceInfo.model ?? deviceModel ?? ''),
+        brand: String(deviceInfo.brand ?? ''),
+        type: String(deviceInfo.type ?? deviceType ?? ''),
+        customer_name: String(deviceInfo.customer_name ?? row.clientName ?? row.customer_name ?? ''),
+        customer_phone: String(deviceInfo.customer_phone ?? row.clientPhone ?? row.customer_phone ?? ''),
+        customer_email: String(deviceInfo.customer_email ?? row.clientEmail ?? row.customer_email ?? ''),
+      },
+      estimated_cost: Number(row.estimated_cost ?? 0),
+      final_cost: Number(row.final_cost ?? 0),
+      status: String(row.status ?? 'recibido'),
+    };
+  }
+
   public async getCustomers(): Promise<JsonRecord[]> {
     const result = await this.request<ApiListResponse<JsonRecord[]>>(
-      `/api/${this.tenantId}/customers`,
+      this.apiPath('/customers'),
       { method: 'GET' }
     );
-    return result.data;
+    return (result.data ?? []).map((row) => this.normalizeCustomerRow(row));
   }
 
   public async getInventory(): Promise<JsonRecord[]> {
@@ -458,32 +530,32 @@ class FixService {
 
   public async createCustomer(data: JsonRecord): Promise<JsonRecord> {
     const result = await this.request<ApiSingleResponse<JsonRecord>>(
-      `/api/${this.tenantId}/customers`,
+      this.apiPath('/customers'),
       {
         method: 'POST',
         body: JSON.stringify(data),
       }
     );
-    return result.data;
+    return this.normalizeCustomerRow(result.data);
   }
 
   public async createOrder(data: JsonRecord): Promise<JsonRecord> {
     const result = await this.request<ApiListResponse<JsonRecord>>(
-      `/api/${this.tenantId}/orders`,
+      this.apiPath('/orders'),
       {
         method: 'POST',
         body: JSON.stringify(data),
       }
     );
-    return result.data;
+    return this.normalizeOrderRow(result.data as JsonRecord);
   }
 
   public async getOrderById(id: string): Promise<JsonRecord> {
     const result = await this.request<ApiSingleResponse<JsonRecord>>(
-      `/api/${this.tenantId}/orders/${encodeURIComponent(id)}`,
+      this.apiPath(`/orders/${encodeURIComponent(id)}`),
       { method: 'GET' }
     );
-    return result.data;
+    return this.normalizeOrderRow(result.data);
   }
 
   public async uploadOrderAttachment(orderId: string, file: File, fileType: 'intake_photo' | 'attachment_pdf'): Promise<JsonRecord> {
@@ -591,10 +663,10 @@ class FixService {
 
   public async getOrders(): Promise<JsonRecord[]> {
     const result = await this.request<ApiListResponse<JsonRecord[]>>(
-      `/api/${this.tenantId}/orders`,
+      this.apiPath('/orders'),
       { method: 'GET' }
     );
-    return result.data;
+    return (result.data ?? []).map((row) => this.normalizeOrderRow(row));
   }
 
   public async getBalance(): Promise<JsonRecord[]> {
@@ -1024,18 +1096,18 @@ class FixService {
 
   public async getServiceRequests(): Promise<ServiceRequestPayload[]> {
     const result = await this.request<ApiListResponse<ServiceRequestPayload[]>>(
-      `/api/${this.tenantId}/requests`,
+      this.apiPath('/requests'),
       { method: 'GET' }
     );
-    return result.data;
+    return (result.data ?? []).map((row) => this.normalizeServiceRequestRow(row as JsonRecord));
   }
 
   public async getServiceRequestById(id: string): Promise<ServiceRequestPayload> {
     const result = await this.request<ApiSingleResponse<ServiceRequestPayload>>(
-      `/api/${this.tenantId}/requests/${encodeURIComponent(id)}`,
+      this.apiPath(`/requests/${encodeURIComponent(id)}`),
       { method: 'GET' }
     );
-    return result.data;
+    return this.normalizeServiceRequestRow(result.data as JsonRecord);
   }
 
   public async convertServiceRequestToOrder(id: string, payload: {
@@ -1044,14 +1116,20 @@ class FixService {
     deviceModel?: string;
     issue?: string;
     createCustomer?: boolean;
-  }): Promise<ApiSingleResponse<{ request: ServiceRequestPayload; order: JsonRecord }>> {
+    }): Promise<ApiSingleResponse<{ request: ServiceRequestPayload; order: JsonRecord }>> {
     return this.request<ApiSingleResponse<{ request: ServiceRequestPayload; order: JsonRecord }>>(
-      `/api/${this.tenantId}/requests/${encodeURIComponent(id)}/convert`,
+      this.apiPath(`/requests/${encodeURIComponent(id)}/convert`),
       {
         method: 'POST',
         body: JSON.stringify(payload),
       }
-    );
+    ).then((response) => ({
+      ...response,
+      data: {
+        request: this.normalizeServiceRequestRow(response.data.request as JsonRecord),
+        order: this.normalizeOrderRow(response.data.order as JsonRecord),
+      },
+    }));
   }
 
   public async getTenantLandingSettings(): Promise<ApiSingleResponse<TenantLandingSettings>> {
