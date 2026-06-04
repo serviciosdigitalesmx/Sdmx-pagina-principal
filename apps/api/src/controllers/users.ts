@@ -227,6 +227,19 @@ export const inviteUser = async (req: Request, res: Response) => {
       });
     }
 
+    if (body.password) {
+      const { error: confirmError } = await supabaseAdmin.auth.admin.updateUserById(authUser.id, {
+        email_confirm: true,
+      });
+
+      if (confirmError) {
+        await supabaseAdmin.auth.admin.deleteUser(authUser.id).catch((rollbackError) => {
+          console.error('Failed to rollback unconfirmed auth user:', rollbackError);
+        });
+        return res.status(502).json({ error: 'Failed to confirm user credentials', details: confirmError.message });
+      }
+    }
+
     const { data: existingUser, error: existingError } = await supabaseAdmin
       .from('users')
       .select('id')
