@@ -1,42 +1,49 @@
-"use client";
+import { getStoredUser, getStoredTenant } from './auth';
 
-import { resolveApiBaseUrl } from "@white-label/config";
-import { readAuthToken } from "@/lib/auth-storage";
-import { getStoredUser } from "@/lib/auth";
-import { getActiveScope, setActiveScope, type DashboardScope } from "@/lib/scope";
-
-export function getTenantSlug() {
-  return getStoredUser()?.tenantSlug ?? "";
+export function getTenantSlug(): string | null {
+  const tenant = getStoredTenant();
+  return tenant?.slug || null;
 }
 
-export function getActiveSucursalId() {
-  return getActiveScope()?.sucursalId ?? getStoredUser()?.sucursalId ?? null;
+export function getTenantId(): string | null {
+  const tenant = getStoredTenant();
+  return tenant?.id || null;
+}
+
+export function getCurrentUserSucursalId(): string | null {
+  const user = getStoredUser();
+  return user?.sucursalId || null;
+}
+
+export function getActiveSucursalId(): string | null {
+  if (typeof window === 'undefined') return null;
+  // First check localStorage (user selection)
+  const stored = localStorage.getItem('srf_sucursal_activa');
+  if (stored && stored !== 'GLOBAL') return stored;
+
+  // Then fallback to user's assigned sucursal
+  return getCurrentUserSucursalId();
 }
 
 export function setActiveSucursalId(sucursalId: string | null) {
-  const current = getActiveScope();
-  if (!current) return;
-  const nextScope: DashboardScope = {
-    ...current,
-    sucursalId,
-    mode: sucursalId ? "branch" : "consolidated",
-  };
-  setActiveScope(nextScope);
+  if (typeof window === 'undefined') return;
+  if (!sucursalId || sucursalId === 'GLOBAL') {
+    localStorage.removeItem('srf_sucursal_activa');
+  } else {
+    localStorage.setItem('srf_sucursal_activa', sucursalId);
+  }
+  // Reload to refresh all queries with new sucursal context
+  window.location.reload();
 }
 
-export function canUseConsolidatedView() {
-  const scope = getActiveScope();
-  return scope?.role === "owner";
+export function canUseConsolidatedView(): boolean {
+  const user = getStoredUser();
+  return user?.role === 'owner';
 }
 
-export function getApiOptions(): RequestInit {
-  const token = readAuthToken();
+export function getApiOptions() {
   return {
-    headers: {
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(getActiveSucursalId() ? { "x-fixi-sucursal-id": String(getActiveSucursalId()), "x-sucursal-id": String(getActiveSucursalId()) } : {}),
-    },
+    tenantSlug: getTenantSlug() || undefined,
+    sucursalId: getActiveSucursalId(),
   };
 }
-
-export { resolveApiBaseUrl };

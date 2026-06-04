@@ -1,20 +1,20 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { Plus, Search, RefreshCw, Edit2, Eye, Phone, Wrench } from "lucide-react";
-import { apiClient } from "@/lib/api-client";
-import { getApiOptions } from "@/lib/tenant";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { CustomerModal } from "@/components/clientes/customer-modal";
-import { CustomerHistory } from "@/components/clientes/customer-history";
-import type { Customer } from "@/types";
+import { useState, useEffect } from 'react';
+import { Plus, Search, RefreshCw, Edit2, Eye, Trash2, Phone, MessageSquare, Wrench } from 'lucide-react';
+import { apiClient } from '@/lib/api-client';
+import { getApiOptions } from '@/lib/tenant';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { CustomerModal } from '@/components/clientes/customer-modal';
+import { CustomerHistory } from '@/components/clientes/customer-history';
+import type { Customer } from '@/types';
 
 export default function ClientesPage() {
   const [loading, setLoading] = useState(true);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -24,18 +24,25 @@ export default function ClientesPage() {
   const loadCustomers = async () => {
     setLoading(true);
     try {
-      const data = await apiClient.get<{ data: Customer[] }>("/customers", getApiOptions());
+      const data = await apiClient.get<{ data: Customer[] }>('/customers', getApiOptions());
       const customersList = data.data || [];
+
+      // Detectar teléfonos duplicados
       const phoneMap = new Map<string, number>();
       customersList.forEach((c) => {
-        if (c.phone) phoneMap.set(c.phone, (phoneMap.get(c.phone) || 0) + 1);
+        if (c.phone) {
+          phoneMap.set(c.phone, (phoneMap.get(c.phone) || 0) + 1);
+        }
       });
-      const dupPhones = Array.from(phoneMap.entries()).filter(([_, count]) => count > 1).map(([phone]) => phone);
+      const dupPhones = Array.from(phoneMap.entries())
+        .filter(([_, count]) => count > 1)
+        .map(([phone]) => phone);
+
       setCustomers(customersList);
       setFilteredCustomers(customersList);
       setDuplicates(dupPhones);
     } catch (error) {
-      console.error("Failed to load customers:", error);
+      console.error('Failed to load customers:', error);
     } finally {
       setLoading(false);
     }
@@ -49,7 +56,10 @@ export default function ClientesPage() {
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       const filtered = customers.filter(
-        (c) => c.name.toLowerCase().includes(term) || c.phone.includes(term) || (c.email && c.email.toLowerCase().includes(term))
+        (c) =>
+          c.name.toLowerCase().includes(term) ||
+          c.phone.includes(term) ||
+          (c.email && c.email.toLowerCase().includes(term))
       );
       setFilteredCustomers(filtered);
     } else {
@@ -62,113 +72,167 @@ export default function ClientesPage() {
     setModalOpen(true);
   };
 
-  const handleViewHistory = (customer: Customer) => {
+  const handleViewHistory = async (customer: Customer) => {
     setHistoryCustomer(customer);
     setHistoryOpen(true);
   };
 
   const handleNewOrder = (customer: Customer) => {
+    // Guardar en localStorage y redirigir a recepción
     const draft = {
       clienteNombre: customer.name,
       clienteTelefono: customer.phone,
-      clienteEmail: customer.email || "",
-      dispositivo: "",
-      modelo: "",
-      falla: "",
-      fechaPromesa: "",
+      clienteEmail: customer.email || '',
+      equipoTipo: '',
+      equipoModelo: '',
+      equipoFalla: '',
+      fechaPromesa: '',
       costo: 0,
-      notas: "",
+      notasExtra: '',
       checks: { cargador: false, pantalla: false, prende: false, respaldo: false },
-      fotoRecepcion: null,
-      fotoPreview: null,
+      fotoAdjunta: false,
     };
-    localStorage.setItem("srf_borrador_orden", JSON.stringify(draft));
-    window.location.href = "/dashboard/ordenes";
+    localStorage.setItem('srf_borrador_orden', JSON.stringify(draft));
+    window.location.href = '/dashboard/operativo';
   };
 
   const formatPhone = (phone: string) => {
-    const digits = phone.replace(/\D/g, "");
-    if (digits.length === 10) return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+    const digits = phone.replace(/\D/g, '');
+    if (digits.length === 10) {
+      return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+    }
     return phone;
   };
 
-  const getCustomerBadge = (customer: Customer) => (duplicates.includes(customer.phone) ? <span className="badge-recibido text-xs">Posible duplicado</span> : null);
+  const getCustomerBadge = (customer: Customer) => {
+    if (duplicates.includes(customer.phone)) {
+      return <span className="badge-recibido text-xs">Posible duplicado</span>;
+    }
+    return null;
+  };
 
   if (loading) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <div className="spinner h-8 w-8" />
+      <div className="flex items-center justify-center h-full">
+        <div className="spinner w-8 h-8" />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-orbitron font-bold text-srf-primary">Clientes</h1>
-          <p className="mt-1 text-sm text-srf-muted">
+          <p className="text-srf-muted text-sm mt-1">
             {filteredCustomers.length} clientes · {duplicates.length} teléfonos duplicados
           </p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={() => loadCustomers()} variant="outline" className="gap-2">
-            <RefreshCw className="h-4 w-4" /> Actualizar
+          <Button
+            onClick={() => loadCustomers()}
+            variant="outline"
+            className="gap-2"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Actualizar
           </Button>
-          <Button onClick={() => { setSelectedCustomer(null); setModalOpen(true); }} className="btn-primary gap-2">
-            <Plus className="h-4 w-4" /> Nuevo cliente
+          <Button
+            onClick={() => {
+              setSelectedCustomer(null);
+              setModalOpen(true);
+            }}
+            className="btn-primary gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Nuevo cliente
           </Button>
         </div>
       </div>
 
-      {duplicates.length > 0 ? (
-        <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-3 text-sm text-yellow-300">
-          <strong>Atención:</strong> Teléfonos repetidos detectados: {duplicates.map((phone) => formatPhone(phone)).join(", ")}
+      {/* Duplicates alert */}
+      {duplicates.length > 0 && (
+        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 text-sm text-yellow-300">
+          <strong>Atención:</strong> Teléfonos repetidos detectados:{' '}
+          {duplicates.map((phone) => formatPhone(phone)).join(', ')}
         </div>
-      ) : null}
+      )}
 
+      {/* Search */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-srf-muted" />
-        <Input placeholder="Buscar por nombre, teléfono o email..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-srf-muted" />
+        <Input
+          placeholder="Buscar por nombre, teléfono o email..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-9"
+        />
       </div>
 
+      {/* Customers table */}
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="border-b border-srf-primary/30 bg-srf-surface">
+          <thead className="bg-srf-surface border-b border-srf-primary/30">
             <tr>
-              <th className="px-4 py-3 text-left font-semibold text-srf-muted">Cliente</th>
-              <th className="px-4 py-3 text-left font-semibold text-srf-muted">Contacto</th>
-              <th className="px-4 py-3 text-left font-semibold text-srf-muted">Teléfono</th>
-              <th className="px-4 py-3 text-left font-semibold text-srf-muted">Email</th>
-              <th className="px-4 py-3 text-left font-semibold text-srf-muted">Acciones</th>
+              <th className="text-left py-3 px-4 text-srf-muted font-semibold">Cliente</th>
+              <th className="text-left py-3 px-4 text-srf-muted font-semibold">Contacto</th>
+              <th className="text-left py-3 px-4 text-srf-muted font-semibold">Teléfono</th>
+              <th className="text-left py-3 px-4 text-srf-muted font-semibold">Email</th>
+              <th className="text-left py-3 px-4 text-srf-muted font-semibold">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {filteredCustomers.map((customer) => (
-              <tr key={customer.id} className="border-b border-srf-primary/20 transition-colors hover:bg-srf-surface/50">
-                <td className="px-4 py-3">
+              <tr
+                key={customer.id}
+                className="border-b border-srf-primary/20 hover:bg-srf-surface/50 transition-colors"
+              >
+                <td className="py-3 px-4">
                   <div>
                     <span className="font-medium">{customer.name}</span>
                     {getCustomerBadge(customer)}
                   </div>
                 </td>
-                <td className="px-4 py-3 text-srf-muted">{formatPhone(customer.phone)}</td>
-                <td className="px-4 py-3">
-                  <a href={`https://wa.me/52${customer.phone.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-green-500 hover:text-green-400">
-                    <Phone className="h-3 w-3" /> WhatsApp
+                <td className="py-3 px-4 text-srf-muted">
+                  {formatPhone(customer.phone)}
+                </td>
+                <td className="py-3 px-4">
+                  <a
+                    href={`https://wa.me/52${customer.phone.replace(/\D/g, '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-green-500 hover:text-green-400 flex items-center gap-1"
+                  >
+                    <Phone className="w-3 h-3" />
+                    WhatsApp
                   </a>
                 </td>
-                <td className="px-4 py-3 text-srf-muted">{customer.email || "—"}</td>
-                <td className="px-4 py-3">
+                <td className="py-3 px-4 text-srf-muted">
+                  {customer.email || '—'}
+                </td>
+                <td className="py-3 px-4">
                   <div className="flex gap-2">
-                    <button onClick={() => handleEdit(customer)} className="rounded p-1 text-srf-primary hover:bg-srf-primary/20" title="Editar">
-                      <Edit2 className="h-4 w-4" />
+                    <button
+                      onClick={() => handleEdit(customer)}
+                      className="p-1 rounded hover:bg-srf-primary/20 text-srf-primary"
+                      title="Editar"
+                    >
+                      <Edit2 className="w-4 h-4" />
                     </button>
-                    <button onClick={() => handleViewHistory(customer)} className="rounded p-1 text-srf-primary hover:bg-srf-primary/20" title="Historial">
-                      <Eye className="h-4 w-4" />
+                    <button
+                      onClick={() => handleViewHistory(customer)}
+                      className="p-1 rounded hover:bg-srf-primary/20 text-srf-primary"
+                      title="Historial"
+                    >
+                      <Eye className="w-4 h-4" />
                     </button>
-                    <button onClick={() => handleNewOrder(customer)} className="rounded p-1 text-srf-accent hover:bg-srf-accent/20" title="Nueva orden">
-                      <Wrench className="h-4 w-4" />
+                    <button
+                      onClick={() => handleNewOrder(customer)}
+                      className="p-1 rounded hover:bg-srf-accent/20 text-srf-accent"
+                      title="Nueva orden"
+                    >
+                      <Wrench className="w-4 h-4" />
                     </button>
                   </div>
                 </td>
@@ -176,16 +240,27 @@ export default function ClientesPage() {
             ))}
           </tbody>
         </table>
-        {filteredCustomers.length === 0 ? (
-          <div className="py-12 text-center">
+
+        {filteredCustomers.length === 0 && (
+          <div className="text-center py-12">
             <p className="text-srf-muted">No hay clientes con esos filtros</p>
           </div>
-        ) : null}
+        )}
       </div>
 
-      <CustomerModal open={modalOpen} onOpenChange={setModalOpen} customer={selectedCustomer} onCustomerSaved={() => loadCustomers()} />
-      <CustomerHistory open={historyOpen} onOpenChange={setHistoryOpen} customer={historyCustomer} />
+      {/* Modals */}
+      <CustomerModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        customer={selectedCustomer}
+        onCustomerSaved={() => loadCustomers()}
+      />
+
+      <CustomerHistory
+        open={historyOpen}
+        onOpenChange={setHistoryOpen}
+        customer={historyCustomer}
+      />
     </div>
   );
 }
-

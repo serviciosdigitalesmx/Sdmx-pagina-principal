@@ -1,289 +1,113 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
-import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
-import { readAuthToken, saveAuthToken } from "@/lib/auth-storage";
-import { resolveApiBaseUrl } from "@white-label/config";
+import { Suspense, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { getBrowserSupabaseClient } from '@/lib/supabase-browser';
+import { loginWithSupabase } from '@/lib/auth';
+import { setActiveSucursalId } from '@/lib/tenant';
 
-type LoginState = {
-  email: string;
-  password: string;
-  rememberDevice: boolean;
-};
-
-const initialState: LoginState = {
-  email: "",
-  password: "",
-  rememberDevice: true,
-};
-
-function getDashboardRedirectUrl() {
-  return "/dashboard";
-}
-
-function getAdminBridgeUrl(token: string) {
-  const bridgeUrl = new URL("/auth/bridge", window.location.origin);
-  bridgeUrl.searchParams.set("token", token);
-  return bridgeUrl.toString();
-}
-
-async function exchangeSessionForApiToken(accessToken: string) {
-  const apiUrl = resolveApiBaseUrl();
-
-  const response = await fetch(`${apiUrl}/api/auth/exchange`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ accessToken }),
-  });
-
-  const payload = (await response.json().catch(() => ({}))) as { error?: string; token?: string };
-
-  if (!response.ok || !payload.token) {
-    throw new Error(payload.error || `No pudimos convertir la sesión. HTTP ${response.status}`);
-  }
-
-  return payload.token;
-}
-
-export default function LoginPage() {
+function LoginScreen() {
   const router = useRouter();
-  const [form, setForm] = useState<LoginState>(initialState);
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get('redirect') || '/dashboard';
   const [loading, setLoading] = useState(false);
-  const [resetLoading, setResetLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-  const publicOnboardingHref = useMemo(() => process.env.NEXT_PUBLIC_WEB_PUBLIC_URL ? new URL("/onboarding", process.env.NEXT_PUBLIC_WEB_PUBLIC_URL).toString() : null, []);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
-  useEffect(() => {
-    const existing = readAuthToken();
-    if (existing) {
-      router.replace(getDashboardRedirectUrl());
-    }
-  }, [router]);
-
-  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = event.target;
-    setForm((current) => ({
-      ...current,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-  };
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSupabaseLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setLoading(true);
     setError(null);
-    setSuccess(null);
 
     try {
-      // Basic client-side validations to avoid unnecessary network calls
-      const emailValue = form.email.trim();
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)) {
-        throw new Error("Correo inválido. Escribe un correo con formato válido.");
-      }
-      if (!form.password || form.password.length < 6) {
-        throw new Error("Contraseña inválida. Mínimo 6 caracteres.");
-      }
-
-      // extra defensive checks for config
       if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-        // don't attempt network auth if env misconfigured in local dev
-        throw new Error('Entorno de autenticación incompleto. Revisa NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY');
+        throw new Error('Entorno de autenticacion incompleto.');
       }
 
       const supabase = getBrowserSupabaseClient();
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email: emailValue,
-        password: form.password,
+        email: email.trim(),
+        password,
       });
 
       if (signInError) {
-        // Supabase may return rich error objects
-        const msg = (signInError as any)?.message ?? String(signInError);
-        throw new Error(msg || "Error al iniciar sesión con Supabase");
+        throw signInError;
       }
 
       const accessToken = data.session?.access_token;
-
-      if (accessToken) {
-        try {
-          const apiToken = await exchangeSessionForApiToken(accessToken);
-          saveAuthToken(apiToken, form.rememberDevice);
-          window.location.replace(getAdminBridgeUrl(apiToken));
-          return;
-        } catch (exchangeErr) {
-          const em = exchangeErr instanceof Error ? exchangeErr.message : String(exchangeErr);
-          // If exchange fails, still attempt to redirect to dashboard so user can continue if possible
-          setError(`No pudimos completar intercambio de sesión: ${em}`);
-          // fallback: save supabase access token in storage so session gate can detect something (best-effort)
-          try {
-            saveAuthToken(accessToken, form.rememberDevice);
-          } catch {}
-          window.location.replace(getDashboardRedirectUrl());
-          return;
-        }
+      if (!accessToken) {
+        throw new Error('No se obtuvo access token de Supabase.');
       }
 
-      window.location.replace(getDashboardRedirectUrl());
-    } catch (submitError) {
-      const message = submitError instanceof Error ? submitError.message : "Error inesperado";
-      setError(message);
+      const { user } = await loginWithSupabase(accessToken);
+      setActiveSucursalId(user.sucursalId || null);
+      router.push(redirect);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
       setLoading(false);
     }
   };
 
-  const handlePasswordReset = async () => {
-    setResetLoading(true);
-    setError(null);
-    setSuccess(null);
-
-    try {
-      if (!form.email.trim()) {
-        throw new Error("Escribe tu correo primero");
-      }
-
-      const supabase = getBrowserSupabaseClient();
-      const redirectTo = new URL("/login/reset-password", window.location.origin).toString();
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(form.email.trim(), {
-        redirectTo,
-      });
-
-      if (resetError) {
-        throw resetError;
-      }
-
-      setSuccess("Te enviamos un correo para recuperar la contraseña.");
-    } catch (resetErr) {
-      const message = resetErr instanceof Error ? resetErr.message : "Error inesperado";
-      setError(message);
-    } finally {
-      setResetLoading(false);
-    }
-  };
-
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(44,110,159,0.12),_transparent_30%),radial-gradient(circle_at_20%_20%,_rgba(94,157,201,0.08),_transparent_24%),linear-gradient(180deg,#f4f6f9_0%,#eef2f6_54%,#ffffff_100%)] px-6 py-10 text-slate-950">
-      <section className="mx-auto grid w-full max-w-5xl gap-8 lg:grid-cols-[1fr_1.05fr]">
-        <div className="rounded-[2rem] border border-slate-200 bg-white p-8 text-slate-900 shadow-[0_30px_100px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-          <p className="text-xs uppercase tracking-[0.35em] text-[#1f2937]">Acceso al taller</p>
-          <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl [font-family:var(--font-display)]">
-            <span className="sm:hidden">Entra al sistema.</span>
-            <span className="hidden sm:inline">Entra a Servicios Digitales MX.</span>
-          </h1>
-          <p className="mt-4 max-w-xl text-base leading-7 text-slate-600">
-            Tu acceso te lleva directo al área de trabajo del taller y mantiene tu sesión en este dispositivo hasta que cierres sesión.
-          </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Link href="/" className="rounded-full border border-slate-300 px-5 py-3 font-semibold text-slate-800 transition hover:bg-slate-50">
-              Volver al inicio
-            </Link>
-            {publicOnboardingHref ? (
-              <Link href={publicOnboardingHref} className="rounded-full border border-slate-300 px-5 py-3 font-semibold text-slate-800 transition hover:bg-slate-50">
-                Crear cuenta
-              </Link>
-            ) : null}
+    <div className="min-h-screen bg-srf-bg flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <div className="w-20 h-20 bg-srf-primary rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-3xl font-orbitron font-bold text-white">SF</span>
           </div>
-
-          <div className="mt-8 grid gap-3 sm:grid-cols-2">
-            {[
-              ["Sesión persistente", "Si marcas recordar dispositivo, el acceso queda guardado."],
-              ["Inicio seguro", "La sesión se valida con Supabase y tu API real."],
-            ].map(([title, desc]) => (
-              <div key={title} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-sm font-semibold text-slate-900">{title}</p>
-                <p className="mt-1 text-sm text-slate-600">{desc}</p>
-              </div>
-            ))}
-          </div>
+          <h1 className="text-4xl font-orbitron font-bold text-srf-primary">SrFix</h1>
+          <p className="text-srf-muted mt-2">Panel de administracion</p>
         </div>
 
-        <div className="rounded-[2rem] border border-slate-200 bg-white p-8 text-slate-900 shadow-[0_30px_100px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-          <form className="space-y-5" onSubmit={handleSubmit}>
+        <div className="card p-8">
+          <h2 className="text-2xl font-bold text-center mb-6">Iniciar Sesion</h2>
+
+          <form onSubmit={handleSupabaseLogin} className="space-y-4">
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-600" htmlFor="email">
-                Correo electrónico
-              </label>
+              <label className="block text-sm font-medium mb-2">Correo</label>
               <input
-                id="email"
-                name="email"
                 type="email"
-                autoComplete="email"
-                value={form.email}
-                onChange={handleChange}
-                required
-                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#334155] focus:ring-2 focus:ring-[#334155]/20"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                className="input w-full"
                 placeholder="dueno@taller.com"
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-600" htmlFor="password">
-                Contraseña
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                value={form.password}
-                onChange={handleChange}
+                autoComplete="email"
                 required
-                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#334155] focus:ring-2 focus:ring-[#334155]/20"
-                placeholder="Tu contraseña"
               />
             </div>
-
-            <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+            <div>
+              <label className="block text-sm font-medium mb-2">Contrasena</label>
               <input
-                type="checkbox"
-                name="rememberDevice"
-                checked={form.rememberDevice}
-                onChange={handleChange}
-                className="h-4 w-4 rounded border-slate-300 text-[#334155] focus:ring-[#334155]"
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                className="input w-full"
+                placeholder="Tu contrasena"
+                autoComplete="current-password"
+                required
               />
-              Recordarme en este dispositivo
-            </label>
-
+            </div>
             {error ? (
-              <p className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              <div className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300">
                 {error}
-              </p>
+              </div>
             ) : null}
-
-            {success ? (
-              <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                {success}
-              </p>
-            ) : null}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-full bg-[#334155] px-6 py-3 font-semibold text-white transition hover:bg-[#1f2937] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {loading ? "Entrando..." : "Acceder"}
+            <button type="submit" className="btn-primary w-full" disabled={loading}>
+              {loading ? 'Entrando...' : 'Entrar'}
             </button>
-
-            <button
-              type="button"
-              onClick={handlePasswordReset}
-              disabled={resetLoading}
-              className="w-full rounded-full border border-slate-300 px-6 py-3 font-semibold text-slate-800 transition hover:border-[#334155]/30 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {resetLoading ? "Enviando correo..." : "Recuperar contraseña por correo"}
-            </button>
-
-            <p className="text-center text-xs uppercase tracking-[0.24em] text-slate-500">
-              ¿Aún no tienes acceso? Solicítalo por correo.
-            </p>
           </form>
         </div>
-      </section>
-    </main>
+      </div>
+    </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-srf-bg flex items-center justify-center"><div className="spinner w-8 h-8" /></div>}>
+      <LoginScreen />
+    </Suspense>
   );
 }

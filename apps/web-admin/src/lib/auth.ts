@@ -1,57 +1,118 @@
-"use client";
+import { apiClient } from './api-client';
+import { saveAuthToken, clearAuthToken, readAuthToken } from '@/lib/auth-storage';
+import { getCurrentSession } from '@/lib/session';
+import type { User, Tenant } from '@/types';
 
-import { readAuthToken, clearAuthToken } from "@/lib/auth-storage";
+interface LoginResponse {
+  token: string;
+  user: User;
+  tenant: Tenant;
+}
 
-export type StoredUser = {
-  id: string;
-  email: string;
-  name?: string;
-  role?: string;
-  tenantId?: string;
-  tenantSlug?: string;
-  sucursalId?: string | null;
-};
+interface ExchangeResponse {
+  token: string;
+  user: User;
+  tenant: Tenant;
+}
 
-function decodeJwtPayload(token: string) {
+export async function exchangeSupabaseSession(accessToken: string): Promise<ExchangeResponse> {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (!apiUrl) {
+    throw new Error('NEXT_PUBLIC_API_URL no configurada');
+  }
+
+  const response = await fetch(`${apiUrl}/api/auth/exchange`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ accessToken }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Exchange failed' }));
+    throw new Error(error.error || 'Authentication failed');
+  }
+
+  const data = await response.json();
+  return {
+    token: data.token,
+    user: data.user,
+    tenant: data.tenant,
+  };
+}
+
+export async function loginWithSupabase(accessToken: string): Promise<LoginResponse> {
+  const { token, user, tenant } = await exchangeSupabaseSession(accessToken);
+  apiClient.setToken(token);
+
+  saveAuthToken(token, true);
+  localStorage.setItem('srf_token', token);
+  localStorage.setItem('srf_user', JSON.stringify(user));
+  localStorage.setItem('srf_tenant', JSON.stringify(tenant));
+
+  return { token, user, tenant };
+}
+
+export function logout() {
+  apiClient.clearToken();
+  clearAuthToken();
+  localStorage.removeItem('srf_token');
+  localStorage.removeItem('srf_user');
+  localStorage.removeItem('srf_tenant');
+  localStorage.removeItem('srf_sucursal_activa');
+  window.location.href = '/login';
+}
+
+export function getStoredToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('srf_token') || readAuthToken();
+}
+
+export function getStoredUser(): User | null {
+  if (typeof window === 'undefined') return null;
+  const session = getCurrentSession();
+  if (session) {
+    return {
+      id: session.email || session.tenantId,
+      email: session.email,
+      name: session.email || 'Usuario activo',
+      role: (session.role as User['role']) || 'manager',
+      tenantId: session.tenantId,
+      tenantSlug: session.tenantSlug,
+      sucursalId: session.sucursalId ?? null,
+      sessionId: session.token,
+    };
+  }
+  const user = localStorage.getItem('srf_user');
+  if (!user) return null;
   try {
-    const payload = token.split(".")[1];
-    if (!payload) return null;
-    const decoded = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
-    return JSON.parse(decoded) as Record<string, unknown>;
+    return JSON.parse(user);
   } catch {
     return null;
   }
 }
 
-export function isAuthenticated() {
-  return Boolean(readAuthToken());
-}
-
-export function getStoredUser(): StoredUser | null {
-  const token = readAuthToken();
-  if (!token) return null;
-  const payload = decodeJwtPayload(token);
-  if (!payload) return null;
-  return {
-    id: String(payload.sub ?? payload.user_id ?? ""),
-    email: String(payload.email ?? ""),
-    name: typeof payload.name === "string" ? payload.name : undefined,
-    role: typeof payload.role === "string" ? payload.role : undefined,
-    tenantId: typeof payload.tenant_id === "string" ? payload.tenant_id : undefined,
-    tenantSlug: typeof payload.tenant_slug === "string" ? payload.tenant_slug : undefined,
-    sucursalId: typeof payload.sucursal_id === "string" ? payload.sucursal_id : null,
-  };
-}
-
-export function getStoredTenant() {
-  const user = getStoredUser();
-  return user ? { id: user.tenantId ?? "", slug: user.tenantSlug ?? "" } : null;
-}
-
-export function logout() {
-  clearAuthToken();
-  if (typeof window !== "undefined") {
-    window.location.href = "/login";
+export function getStoredTenant(): Tenant | null {
+  if (typeof window === 'undefined') return null;
+  const session = getCurrentSession();
+  if (session) {
+    return {
+      id: session.tenantId,
+      slug: session.tenantSlug,
+      name: session.tenantSlug,
+      branding: {},
+      trial_expires_at: '',
+      billing_exempt: false,
+    };
+  }
+  const tenant = localStorage.getItem('srf_tenant');
+  if (!tenant) return null;
+  try {
+    return JSON.parse(tenant);
+  } catch {
+    return null;
   }
 }
 
+export function isAuthenticated(): boolean {
+  return !!getStoredToken();
+}

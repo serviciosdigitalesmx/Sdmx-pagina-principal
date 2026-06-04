@@ -1,9 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { RequireRole } from "@/components/guard/RequireRole";
-import { useAuth } from "@/components/guard/use-auth";
-import { ModuleShell } from "@/components/dashboard/module-shell";
+import { Plus, RefreshCw, Search, Shield, UserX, History } from "lucide-react";
 import { fixService } from "@/services/fixService";
 
 type UserRow = {
@@ -21,7 +19,6 @@ type UserHistoryRow = {
   folio?: string | null;
   status?: string | null;
   reference?: string | null;
-  payment_terms?: string | null;
   expected_date?: string | null;
   total?: number | null;
   created_at?: string | null;
@@ -57,55 +54,31 @@ function roleLabel(role: string) {
 }
 
 export default function UsuariosPage() {
-  const auth = useAuth();
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<"all" | "active" | "inactive">("all");
   const [roleFilter, setRoleFilter] = useState("");
-  const [page, setPage] = useState(1);
-  const [pageSize] = useState(10);
-  const [total, setTotal] = useState(0);
-  const [hasMore, setHasMore] = useState(false);
   const [showInvite, setShowInvite] = useState(false);
   const [invite, setInvite] = useState<InviteFormState>(INITIAL_INVITE);
   const [saving, setSaving] = useState(false);
   const [historyUser, setHistoryUser] = useState<UserRow | null>(null);
   const [historyRows, setHistoryRows] = useState<UserHistoryRow[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
-  const [historyError, setHistoryError] = useState("");
 
-  const stats = useMemo(() => {
-    const activeUsers = users.filter((user) => user.activo).length;
-    const latestLogin = users
-      .map((user) => user.ultimo_acceso ?? user.last_login_at)
-      .filter(Boolean)
-      .sort()
-      .at(-1) ?? null;
-
-    return [
-      { label: "Usuarios", value: String(total || users.length), helper: "Total en el tenant." },
-      { label: "Activos", value: String(activeUsers), helper: "Usuarios habilitados." },
-      { label: "Último acceso", value: latestLogin ? formatDate(latestLogin) : "No disponible", helper: "Último login detectado." },
-    ];
-  }, [total, users]);
-
-  async function loadUsers(nextPage = page) {
+  async function loadUsers() {
     try {
       setLoading(true);
       setError("");
       const result = await fixService.getUsers({
-        page: nextPage,
-        pageSize,
+        page: 1,
+        pageSize: 50,
         q: query.trim() || undefined,
         role: roleFilter || undefined,
         status,
       });
       setUsers(result.data as UserRow[]);
-      setPage(result.page);
-      setTotal(result.total);
-      setHasMore(result.hasMore);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al cargar usuarios");
       setUsers([]);
@@ -115,31 +88,25 @@ export default function UsuariosPage() {
   }
 
   useEffect(() => {
-    void loadUsers(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    void loadUsers();
   }, [query, roleFilter, status]);
 
   useEffect(() => {
     if (!historyUser) {
       setHistoryRows([]);
-      setHistoryError("");
       return;
     }
 
     const activeHistoryUser = historyUser;
     let cancelled = false;
-
     async function loadHistory() {
       try {
         setHistoryLoading(true);
-        setHistoryError("");
         const data = await fixService.getUserPurchaseOrders(activeHistoryUser.id);
-        if (!cancelled) {
-          setHistoryRows(data as UserHistoryRow[]);
-        }
+        if (!cancelled) setHistoryRows(data as UserHistoryRow[]);
       } catch (err) {
         if (!cancelled) {
-          setHistoryError(err instanceof Error ? err.message : "No se pudo cargar el historial");
+          setError(err instanceof Error ? err.message : "No se pudo cargar el historial");
           setHistoryRows([]);
         }
       } finally {
@@ -148,7 +115,6 @@ export default function UsuariosPage() {
     }
 
     void loadHistory();
-
     return () => {
       cancelled = true;
     };
@@ -167,7 +133,7 @@ export default function UsuariosPage() {
       });
       setShowInvite(false);
       setInvite(INITIAL_INVITE);
-      await loadUsers(1);
+      await loadUsers();
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo invitar al usuario");
     } finally {
@@ -180,8 +146,7 @@ export default function UsuariosPage() {
     try {
       setError("");
       await fixService.updateUserRole(user.id, nextRole);
-      await loadUsers(page);
-      if (historyUser?.id === user.id) setHistoryUser(null);
+      await loadUsers();
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo actualizar el rol");
     }
@@ -192,158 +157,156 @@ export default function UsuariosPage() {
     try {
       setError("");
       await fixService.deactivateUser(user.id);
-      await loadUsers(page);
+      await loadUsers();
       if (historyUser?.id === user.id) setHistoryUser(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo desactivar el usuario");
     }
   }
 
+  const activeUsers = useMemo(() => users.filter((user) => user.activo).length, [users]);
+
+  if (loading && users.length === 0) {
+    return <div className="flex h-full items-center justify-center"><div className="spinner w-8 h-8" /></div>;
+  }
+
   return (
-    <RequireRole allowed={["owner", "manager"]}>
-      <ModuleShell
-        title="Usuarios y roles"
-        subtitle={`Administración real del tenant ${auth.tenantSlug || auth.tenantId}. Invitaciones, roles y actividad.`}
-        icon="fas fa-users"
-        actionLabel="Invitar usuario"
-        onAction={() => setShowInvite(true)}
-        secondaryActionLabel="Refrescar"
-        secondaryOnAction={() => void loadUsers(page)}
-        tertiaryActionLabel={historyUser ? "Cerrar historial" : "Ver historial"}
-        tertiaryOnAction={() => (historyUser ? setHistoryUser(null) : setError("Selecciona un usuario para ver historial"))}
-        stats={stats}
-        loading={loading || historyLoading}
-        columns={[]}
-        rows={[]}
-        emptyTitle=""
-        emptyCopy=""
-        showTable={false}
-      >
-        <div className="space-y-4">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
-            <label className="flex-1">
-              <span className="mb-2 block text-xs uppercase tracking-[0.22em] text-amber-100/60">Buscar</span>
-              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Nombre o correo" className="input" />
-            </label>
-            <label>
-              <span className="mb-2 block text-xs uppercase tracking-[0.22em] text-amber-100/60">Estado</span>
-              <select value={status} onChange={(event) => setStatus(event.target.value as typeof status)} className="input">
-                <option value="all">Todos</option>
-                <option value="active">Activos</option>
-                <option value="inactive">Inactivos</option>
-              </select>
-            </label>
-            <label>
-              <span className="mb-2 block text-xs uppercase tracking-[0.22em] text-amber-100/60">Rol</span>
-              <input value={roleFilter} onChange={(event) => setRoleFilter(event.target.value)} placeholder="owner, manager..." className="input" />
-            </label>
-          </div>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-orbitron font-bold text-srf-primary">Usuarios</h1>
+          <p className="mt-1 text-sm text-srf-muted">{users.length} visibles · {activeUsers} activos</p>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={() => void loadUsers()} className="btn-outline inline-flex items-center gap-2">
+            <RefreshCw className="w-4 h-4" />
+            Actualizar
+          </button>
+          <button onClick={() => setShowInvite((value) => !value)} className="btn-primary inline-flex items-center gap-2">
+            <Plus className="w-4 h-4" />
+            Invitar usuario
+          </button>
+        </div>
+      </div>
 
-          <div className="overflow-hidden rounded-[1.5rem] border border-white/10">
-            <table className="min-w-full text-left text-sm">
-              <thead className="bg-white/[0.04] text-zinc-300">
-                <tr>
-                  <th className="px-4 py-3">Usuario</th>
-                  <th className="px-4 py-3">Rol</th>
-                  <th className="px-4 py-3">Estado</th>
-                  <th className="px-4 py-3">Último acceso</th>
-                  <th className="px-4 py-3">Acciones</th>
+      {error ? <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">{error}</div> : null}
+
+      <div className="grid gap-4 lg:grid-cols-4">
+        <div className="card">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 w-4 h-4 -translate-y-1/2 text-srf-muted" />
+            <input value={query} onChange={(event) => setQuery(event.target.value)} className="input pl-9" placeholder="Buscar nombre o correo..." />
+          </div>
+        </div>
+        <div className="card">
+          <select value={status} onChange={(event) => setStatus(event.target.value as typeof status)} className="input">
+            <option value="all">Todos los estados</option>
+            <option value="active">Activos</option>
+            <option value="inactive">Inactivos</option>
+          </select>
+        </div>
+        <div className="card">
+          <input value={roleFilter} onChange={(event) => setRoleFilter(event.target.value)} className="input" placeholder="Filtrar por rol..." />
+        </div>
+        <div className="card text-center">
+          <Shield className="mx-auto w-5 h-5 text-srf-primary" />
+          <div className="mt-3 text-3xl font-bold text-srf-primary">{activeUsers}</div>
+          <div className="text-xs text-srf-muted">Usuarios activos</div>
+        </div>
+      </div>
+
+      {showInvite ? (
+        <form onSubmit={submitInvite} className="card space-y-4">
+          <div className="text-lg font-semibold text-srf-primary">Invitar usuario</div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <input value={invite.name} onChange={(event) => setInvite((current) => ({ ...current, name: event.target.value }))} className="input" placeholder="Nombre" required />
+            <input value={invite.email} onChange={(event) => setInvite((current) => ({ ...current, email: event.target.value }))} className="input" placeholder="Correo" type="email" required />
+            <select value={invite.role} onChange={(event) => setInvite((current) => ({ ...current, role: event.target.value }))} className="input">
+              <option value="tecnico">Técnico</option>
+              <option value="operador">Operador</option>
+              <option value="compras">Compras</option>
+              <option value="manager">Manager</option>
+              <option value="owner">Owner</option>
+            </select>
+            <input value={invite.sucursalId} onChange={(event) => setInvite((current) => ({ ...current, sucursalId: event.target.value }))} className="input" placeholder="Sucursal ID opcional" />
+          </div>
+          <div className="flex gap-2">
+            <button type="submit" className="btn-primary" disabled={saving}>{saving ? "Enviando..." : "Enviar invitación"}</button>
+            <button type="button" className="btn-outline" onClick={() => setShowInvite(false)}>Cancelar</button>
+          </div>
+        </form>
+      ) : null}
+
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(340px,1fr)]">
+        <div className="overflow-hidden rounded-[1.5rem] border border-srf-primary/20 bg-srf-surface/40">
+          <table className="w-full text-sm">
+            <thead className="border-b border-srf-primary/20 bg-black/20 text-srf-muted">
+              <tr>
+                <th className="px-4 py-3 text-left">Usuario</th>
+                <th className="px-4 py-3 text-left">Rol</th>
+                <th className="px-4 py-3 text-left">Estado</th>
+                <th className="px-4 py-3 text-left">Último acceso</th>
+                <th className="px-4 py-3 text-left">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((user) => (
+                <tr key={user.id} className="border-b border-srf-primary/10 hover:bg-white/[0.03]">
+                  <td className="px-4 py-3">
+                    <div className="font-medium text-srf-text">{user.name}</div>
+                    <div className="text-xs text-srf-muted">{user.email}</div>
+                  </td>
+                  <td className="px-4 py-3"><span className="badge-diagnostico">{roleLabel(user.role)}</span></td>
+                  <td className="px-4 py-3"><span className={user.activo ? "badge-listo" : "badge-cancelado"}>{user.activo ? "Activo" : "Inactivo"}</span></td>
+                  <td className="px-4 py-3 text-srf-muted">{formatDate(user.ultimo_acceso ?? user.last_login_at)}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-wrap gap-2">
+                      <button className="btn-ghost inline-flex items-center gap-2 text-srf-primary" onClick={() => setHistoryUser(user)}>
+                        <History className="w-4 h-4" />
+                        Historial
+                      </button>
+                      <button className="btn-ghost inline-flex items-center gap-2 text-srf-primary" onClick={() => void changeRole(user, user.role === "tecnico" ? "operador" : "tecnico")}>
+                        <Shield className="w-4 h-4" />
+                        Cambiar rol
+                      </button>
+                      <button className="btn-ghost inline-flex items-center gap-2 text-red-400" onClick={() => void deactivateUser(user)}>
+                        <UserX className="w-4 h-4" />
+                        Desactivar
+                      </button>
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-white/10">
-                {users.length > 0 ? users.map((user) => (
-                  <tr key={user.id}>
-                    <td className="px-4 py-3">
-                      <div className="font-medium text-zinc-100">{user.name}</div>
-                      <div className="text-xs text-zinc-500">{user.email}</div>
-                    </td>
-                    <td className="px-4 py-3 text-zinc-300">{roleLabel(user.role)}</td>
-                    <td className="px-4 py-3 text-zinc-300">{user.activo ? "Activo" : "Inactivo"}</td>
-                    <td className="px-4 py-3 text-zinc-300">{formatDate(user.ultimo_acceso ?? user.last_login_at)}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-wrap gap-2">
-                        <button type="button" onClick={() => setHistoryUser(user)} className="rounded-full border border-white/10 px-3 py-1 text-xs text-zinc-200">Historial</button>
-                        <button type="button" onClick={() => void changeRole(user, user.role === "owner" ? "manager" : "owner")} className="rounded-full border border-white/10 px-3 py-1 text-xs text-zinc-200">Cambiar rol</button>
-                        <button type="button" onClick={() => void deactivateUser(user)} className="rounded-full border border-white/10 px-3 py-1 text-xs text-zinc-200">Desactivar</button>
-                      </div>
-                    </td>
-                  </tr>
-                )) : (
-                  <tr>
-                    <td colSpan={5} className="px-4 py-6 text-center text-sm text-zinc-500">
-                      Sin usuarios visibles.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+              ))}
+            </tbody>
+          </table>
+          {users.length === 0 ? <div className="py-12 text-center text-srf-muted">No hay usuarios con esos filtros.</div> : null}
+        </div>
+
+        <div className="card">
+          <div className="mb-4 flex items-center gap-2 text-srf-primary">
+            <History className="w-5 h-5" />
+            <h2 className="text-lg font-semibold">{historyUser ? `Historial de ${historyUser.name}` : "Historial de actividad"}</h2>
           </div>
-
-          {historyUser ? (
-            <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
-              <h2 className="text-base font-semibold text-zinc-50">Historial de {historyUser.name}</h2>
-              {historyError ? <p className="mt-2 text-sm text-red-300">{historyError}</p> : null}
-              <div className="mt-4 overflow-hidden rounded-2xl border border-white/10">
-                <table className="min-w-full text-left text-sm">
-                  <thead className="bg-white/[0.04] text-zinc-300">
-                    <tr>
-                      <th className="px-4 py-3">Folio</th>
-                      <th className="px-4 py-3">Estado</th>
-                      <th className="px-4 py-3">Referencia</th>
-                      <th className="px-4 py-3">Fecha</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/10">
-                    {historyRows.length > 0 ? historyRows.map((row) => (
-                      <tr key={row.id}>
-                        <td className="px-4 py-3 text-zinc-300">{row.folio ?? row.id}</td>
-                        <td className="px-4 py-3 text-zinc-300">{row.status ?? "N/A"}</td>
-                        <td className="px-4 py-3 text-zinc-300">{row.reference ?? "N/A"}</td>
-                        <td className="px-4 py-3 text-zinc-300">{formatDate(row.created_at)}</td>
-                      </tr>
-                    )) : (
-                      <tr>
-                        <td colSpan={4} className="px-4 py-6 text-center text-sm text-zinc-500">
-                          Sin historial disponible.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
+          {historyLoading ? <div className="py-12 text-center"><div className="spinner mx-auto w-8 h-8" /></div> : null}
+          {!historyLoading && !historyUser ? <div className="text-sm text-srf-muted">Selecciona un usuario para ver su historial relacionado.</div> : null}
+          {!historyLoading && historyUser ? (
+            <div className="space-y-3">
+              {historyRows.length > 0 ? historyRows.map((row) => (
+                <div key={row.id} className="rounded-xl border border-srf-primary/20 bg-black/20 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="font-medium text-srf-text">{row.folio ?? row.reference ?? row.id}</div>
+                    <span className="badge-recibido">{row.status ?? "Sin estado"}</span>
+                  </div>
+                  <div className="mt-2 text-xs text-srf-muted">
+                    {row.created_at ? new Date(row.created_at).toLocaleString("es-MX") : "Fecha no disponible"}
+                    {row.expected_date ? ` · Esperada ${new Date(row.expected_date).toLocaleDateString("es-MX")}` : ""}
+                  </div>
+                </div>
+              )) : <div className="text-sm text-srf-muted">No hay historial asociado para este usuario.</div>}
             </div>
-          ) : null}
-
-          <div className="flex items-center justify-between gap-3 text-sm text-zinc-400">
-            <span>Mostrando {users.length} de {total}</span>
-            <div className="flex gap-2">
-              <button type="button" disabled={page <= 1} onClick={() => void loadUsers(Math.max(1, page - 1))} className="rounded-full border border-white/10 px-3 py-2 disabled:opacity-50">Anterior</button>
-              <button type="button" disabled={!hasMore} onClick={() => void loadUsers(page + 1)} className="rounded-full border border-white/10 px-3 py-2 disabled:opacity-50">Siguiente</button>
-            </div>
-          </div>
-
-          {showInvite ? (
-            <form onSubmit={submitInvite} className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="text-base font-semibold text-zinc-50">Invitar usuario real</h2>
-                <button type="button" onClick={() => setShowInvite(false)} className="rounded-full border border-white/10 px-3 py-2 text-sm text-zinc-200">Cerrar</button>
-              </div>
-              <div className="mt-4 grid gap-3 md:grid-cols-2">
-                <input value={invite.name} onChange={(event) => setInvite((current) => ({ ...current, name: event.target.value }))} placeholder="Nombre" className="input" />
-                <input value={invite.email} onChange={(event) => setInvite((current) => ({ ...current, email: event.target.value }))} placeholder="Correo" className="input" />
-                <input value={invite.role} onChange={(event) => setInvite((current) => ({ ...current, role: event.target.value }))} placeholder="Rol" className="input" />
-                <input value={invite.sucursalId} onChange={(event) => setInvite((current) => ({ ...current, sucursalId: event.target.value }))} placeholder="Sucursal" className="input" />
-              </div>
-              <div className="mt-4 flex items-center justify-between gap-3">
-                <button type="submit" disabled={saving} className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-zinc-950 disabled:opacity-60">
-                  {saving ? "Enviando…" : "Enviar invitación"}
-                </button>
-                {error ? <p className="text-sm text-red-300">{error}</p> : null}
-              </div>
-            </form>
           ) : null}
         </div>
-      </ModuleShell>
-    </RequireRole>
+      </div>
+    </div>
   );
 }

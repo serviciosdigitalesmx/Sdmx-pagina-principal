@@ -1,11 +1,9 @@
-"use client";
+'use client';
 
-import { useEffect, useMemo, useState } from "react";
-import { RequireRole } from "@/components/guard/RequireRole";
-import { useAuth } from "@/components/guard/use-auth";
-import { ModuleShell } from "@/components/dashboard/module-shell";
-import { getActiveScope } from "@/lib/scope";
-import { fixService } from "@/services/fixService";
+import { useEffect, useMemo, useState } from 'react';
+import { DollarSign, TrendingDown, TrendingUp, RefreshCw } from 'lucide-react';
+import { fixService } from '@/services/fixService';
+import { getActiveScope } from '@/lib/scope';
 
 type FinanceRow = {
   id?: string;
@@ -14,26 +12,22 @@ type FinanceRow = {
   balance?: number | string;
   income?: number | string;
   expense?: number | string;
-  sucursal_id?: string | null;
 };
 
 function currency(value: number | string | null | undefined) {
-  const amount = Number(value ?? 0);
-  return new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 }).format(Number.isFinite(amount) ? amount : 0);
+  return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(Number(value ?? 0) || 0);
 }
 
 export default function FinanzasPage() {
-  const { role } = useAuth();
   const scope = getActiveScope();
   const [rows, setRows] = useState<FinanceRow[]>([]);
   const [cashflow, setCashflow] = useState<FinanceRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
-  async function refresh() {
+  const refresh = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      setError("");
       const balance = await fixService.getBalance();
       setRows(balance as FinanceRow[]);
       if (scope?.sucursalId) {
@@ -42,14 +36,15 @@ export default function FinanzasPage() {
       } else {
         setCashflow([]);
       }
+      setError('');
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al cargar finanzas");
       setRows([]);
       setCashflow([]);
+      setError(err instanceof Error ? err.message : 'Error al cargar finanzas');
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     void refresh();
@@ -58,80 +53,93 @@ export default function FinanzasPage() {
   const summary = useMemo(() => {
     const income = rows.reduce((sum, row) => sum + Number(row.income ?? 0), 0);
     const expense = rows.reduce((sum, row) => sum + Number(row.expense ?? 0), 0);
-    const balance = rows.length > 0 ? Number(rows[0]?.balance ?? income - expense) : income - expense;
-    return { income, expense, balance };
+    return { income, expense, balance: income - expense };
   }, [rows]);
 
-  const stats = useMemo(
-    () => [
-      { label: "Ingresos", value: currency(summary.income), helper: "Órdenes reales del tenant." },
-      { label: "Egresos", value: currency(summary.expense), helper: "Gastos reales del tenant." },
-      { label: "Balance", value: currency(summary.balance), helper: "Balance operativo real." },
-      { label: "Rol", value: role, helper: "Permiso actual." },
-    ],
-    [role, summary.balance, summary.expense, summary.income],
-  );
+  if (loading) {
+    return <div className="flex h-full items-center justify-center"><div className="spinner w-8 h-8" /></div>;
+  }
 
   return (
-    <RequireRole allowed={["owner"]}>
-      <ModuleShell
-        title="Finanzas"
-        subtitle="Vista financiera real del tenant con balance y flujo por sucursal."
-        icon="fas fa-coins"
-        actionLabel="Actualizar"
-        onAction={() => void refresh()}
-        stats={stats}
-        loading={loading}
-        columns={[
-          { label: "Fecha", key: "created_at" },
-          { label: "Tipo", key: "type" },
-          { label: "Balance", key: "balance" },
-          { label: "Ingreso", key: "income" },
-          { label: "Egreso", key: "expense" },
-        ]}
-        rows={rows.slice(0, 20).map((row) => ({
-          created_at: row.created_at ? new Date(row.created_at).toLocaleString("es-MX") : "No disponible",
-          type: row.type ?? "summary",
-          balance: currency(row.balance ?? 0),
-          income: currency(row.income ?? 0),
-          expense: currency(row.expense ?? 0),
-        }))}
-        emptyTitle={loading ? "Cargando finanzas…" : error ? "No pudimos cargar finanzas" : "Sin movimientos"}
-        emptyCopy={error || "Los datos salen de service_orders y finances reales."}
-      >
-        <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
-          <h2 className="text-base font-semibold text-zinc-50">Flujo por sucursal</h2>
-          <p className="mt-1 text-sm text-zinc-400">{scope?.sucursalId ? `Sucursal ${scope.sucursalId}` : "No hay sucursal activa para flujo detallado."}</p>
-          <div className="mt-4 overflow-hidden rounded-2xl border border-white/10">
-            <table className="min-w-full text-left text-sm">
-              <thead className="bg-white/[0.04] text-zinc-300">
-                <tr>
-                  <th className="px-4 py-3">Fecha</th>
-                  <th className="px-4 py-3">Balance</th>
-                  <th className="px-4 py-3">Ingreso</th>
-                  <th className="px-4 py-3">Egreso</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/10">
-                {cashflow.length > 0 ? cashflow.map((row) => (
-                  <tr key={row.id ?? `${row.created_at ?? ""}-${row.type ?? ""}`}>
-                    <td className="px-4 py-3 text-zinc-300">{row.created_at ? new Date(row.created_at).toLocaleDateString("es-MX") : "No disponible"}</td>
-                    <td className="px-4 py-3 text-zinc-300">{currency(row.balance ?? 0)}</td>
-                    <td className="px-4 py-3 text-zinc-300">{currency(row.income ?? 0)}</td>
-                    <td className="px-4 py-3 text-zinc-300">{currency(row.expense ?? 0)}</td>
-                  </tr>
-                )) : (
-                  <tr>
-                    <td colSpan={4} className="px-4 py-6 text-center text-sm text-zinc-500">
-                      {scope?.sucursalId ? "Sin flujo disponible para esta sucursal." : "Selecciona una sucursal para ver flujo detallado."}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-orbitron font-bold text-srf-primary">Finanzas</h1>
+          <p className="mt-1 text-sm text-srf-muted">Balance real del tenant y flujo por sucursal</p>
         </div>
-      </ModuleShell>
-    </RequireRole>
+        <button onClick={() => void refresh()} className="btn-outline gap-2 inline-flex items-center"><RefreshCw className="w-4 h-4" />Actualizar</button>
+      </div>
+
+      {error ? <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">{error}</div> : null}
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        <div className="card">
+          <div className="flex items-center gap-3"><TrendingUp className="w-5 h-5 text-green-400" /><span className="text-srf-muted">Ingresos</span></div>
+          <div className="mt-3 text-3xl font-bold text-green-400">{currency(summary.income)}</div>
+        </div>
+        <div className="card">
+          <div className="flex items-center gap-3"><TrendingDown className="w-5 h-5 text-red-400" /><span className="text-srf-muted">Egresos</span></div>
+          <div className="mt-3 text-3xl font-bold text-red-400">{currency(summary.expense)}</div>
+        </div>
+        <div className="card">
+          <div className="flex items-center gap-3"><DollarSign className="w-5 h-5 text-srf-accent" /><span className="text-srf-muted">Balance</span></div>
+          <div className="mt-3 text-3xl font-bold text-srf-accent">{currency(summary.balance)}</div>
+        </div>
+      </div>
+
+      <div className="card">
+        <h2 className="text-lg font-semibold text-srf-primary">Movimientos recientes</h2>
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="border-b border-srf-primary/20 text-srf-muted">
+              <tr>
+                <th className="px-4 py-3 text-left">Fecha</th>
+                <th className="px-4 py-3 text-left">Tipo</th>
+                <th className="px-4 py-3 text-right">Ingreso</th>
+                <th className="px-4 py-3 text-right">Egreso</th>
+                <th className="px-4 py-3 text-right">Balance</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.slice(0, 20).map((row) => (
+                <tr key={row.id ?? `${row.type}-${row.created_at}`} className="border-b border-srf-primary/10">
+                  <td className="px-4 py-3">{row.created_at ? new Date(row.created_at).toLocaleString('es-MX') : 'Sin fecha'}</td>
+                  <td className="px-4 py-3">{row.type || 'summary'}</td>
+                  <td className="px-4 py-3 text-right text-green-400">{currency(row.income)}</td>
+                  <td className="px-4 py-3 text-right text-red-400">{currency(row.expense)}</td>
+                  <td className="px-4 py-3 text-right text-srf-primary">{currency(row.balance)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="card">
+        <h2 className="text-lg font-semibold text-srf-primary">Flujo por sucursal</h2>
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="border-b border-srf-primary/20 text-srf-muted">
+              <tr>
+                <th className="px-4 py-3 text-left">Fecha</th>
+                <th className="px-4 py-3 text-right">Ingreso</th>
+                <th className="px-4 py-3 text-right">Egreso</th>
+                <th className="px-4 py-3 text-right">Balance</th>
+              </tr>
+            </thead>
+            <tbody>
+              {cashflow.map((row) => (
+                <tr key={row.id ?? `${row.created_at}-flow`} className="border-b border-srf-primary/10">
+                  <td className="px-4 py-3">{row.created_at ? new Date(row.created_at).toLocaleDateString('es-MX') : 'Sin fecha'}</td>
+                  <td className="px-4 py-3 text-right text-green-400">{currency(row.income)}</td>
+                  <td className="px-4 py-3 text-right text-red-400">{currency(row.expense)}</td>
+                  <td className="px-4 py-3 text-right text-srf-primary">{currency(row.balance)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   );
 }

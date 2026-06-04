@@ -1,8 +1,9 @@
+// Tipos base
 export interface User {
   id: string;
   email: string;
   name: string;
-  role: "owner" | "manager" | "technician" | "client";
+  role: 'owner' | 'manager' | 'technician' | 'client';
   tenantId: string;
   tenantSlug: string;
   sucursalId: string | null;
@@ -31,9 +32,11 @@ export interface Sucursal {
   city: string | null;
   state: string | null;
   phone: string | null;
+  email?: string | null;
   is_active: boolean;
 }
 
+// Módulos del dashboard
 export interface DashboardModule {
   key: string;
   label: string;
@@ -43,24 +46,23 @@ export interface DashboardModule {
 }
 
 export const DASHBOARD_MODULES: DashboardModule[] = [
-  { key: "summary", label: "Resumen", icon: "LayoutDashboard", href: "/dashboard", enabled: true },
-  { key: "operativo", label: "Recepción", icon: "ClipboardList", href: "/dashboard/ordenes", enabled: true },
-  { key: "tecnico", label: "Técnico", icon: "Wrench", href: "/dashboard/tecnico", enabled: true },
-  { key: "solicitudes", label: "Solicitudes", icon: "FileText", href: "/dashboard/solicitudes", enabled: true },
-  { key: "archivo", label: "Archivo", icon: "Archive", href: "/dashboard/archivo", enabled: true },
-  { key: "clientes", label: "Clientes", icon: "Users", href: "/dashboard/clientes", enabled: true },
-  { key: "tareas", label: "Tareas", icon: "CheckSquare", href: "/dashboard/tareas", enabled: true },
-  { key: "stock", label: "Stock", icon: "Package", href: "/dashboard/stock", enabled: true },
-  { key: "proveedores", label: "Proveedores", icon: "Truck", href: "/dashboard/proveedores", enabled: true },
-  { key: "compras", label: "Compras", icon: "ShoppingCart", href: "/dashboard/compras", enabled: true },
-  { key: "gastos", label: "Gastos", icon: "Wallet", href: "/dashboard/gastos", enabled: true },
-  { key: "finanzas", label: "Finanzas", icon: "LineChart", href: "/dashboard/finanzas", enabled: true },
-  { key: "reportes", label: "Reportes", icon: "BarChart3", href: "/dashboard/reportes", enabled: true },
-  { key: "usuarios", label: "Usuarios", icon: "Users", href: "/dashboard/usuarios", enabled: true },
-  { key: "security", label: "Seguridad", icon: "Shield", href: "/dashboard/seguridad", enabled: true },
-  { key: "sucursales", label: "Sucursales", icon: "Building2", href: "/dashboard/sucursales", enabled: true },
+  { key: 'operativo', label: 'Recepción', icon: 'ClipboardList', href: '/dashboard/operativo', enabled: true },
+  { key: 'tecnico', label: 'Técnico', icon: 'Wrench', href: '/dashboard/tecnico', enabled: true },
+  { key: 'solicitudes', label: 'Solicitudes', icon: 'FileText', href: '/dashboard/solicitudes', enabled: true },
+  { key: 'archivo', label: 'Archivo', icon: 'Archive', href: '/dashboard/archivo', enabled: true },
+  { key: 'clientes', label: 'Clientes', icon: 'Users', href: '/dashboard/clientes', enabled: true },
+  { key: 'tareas', label: 'Tareas', icon: 'CheckSquare', href: '/dashboard/tareas', enabled: true },
+  { key: 'stock', label: 'Stock', icon: 'Package', href: '/dashboard/stock', enabled: true },
+  { key: 'proveedores', label: 'Proveedores', icon: 'Truck', href: '/dashboard/proveedores', enabled: true },
+  { key: 'compras', label: 'Compras', icon: 'ShoppingCart', href: '/dashboard/compras', enabled: true },
+  { key: 'gastos', label: 'Gastos', icon: 'Wallet', href: '/dashboard/gastos', enabled: true },
+  { key: 'finanzas', label: 'Finanzas', icon: 'LineChart', href: '/dashboard/finanzas', enabled: true },
+  { key: 'reportes', label: 'Reportes', icon: 'BarChart3', href: '/dashboard/reportes', enabled: true },
+  { key: 'sucursales', label: 'Sucursales', icon: 'Building2', href: '/dashboard/sucursales', enabled: true },
+  { key: 'seguridad', label: 'Seguridad', icon: 'Shield', href: '/dashboard/seguridad', enabled: true },
 ];
 
+// Tipos de órdenes
 export interface Order {
   id: string;
   tenant_id: string;
@@ -88,8 +90,15 @@ export interface Order {
   assigned_user_id: string | null;
   created_at: string;
   updated_at: string;
+  // Campos calculados
   diasRestantes?: number;
-  color?: "rojo" | "amarillo" | "verde" | "gris";
+  color?: 'rojo' | 'amarillo' | 'verde' | 'gris';
+  operational_risk?: {
+    color: string;
+    reason: string;
+    suggested_action: string;
+    elapsed_minutes: number | null;
+  };
 }
 
 export interface OrderChecklist {
@@ -122,6 +131,7 @@ export interface OrderEvent {
   created_at: string;
 }
 
+// Tipos de solicitudes
 export interface ServiceRequest {
   id: string;
   tenant_id: string;
@@ -141,6 +151,7 @@ export interface ServiceRequest {
   created_at: string;
 }
 
+// Tipos de clientes
 export interface Customer {
   id: string;
   tenant_id: string;
@@ -179,6 +190,7 @@ export interface CustomerHistory {
   }>;
 }
 
+// Tipos de tareas
 export interface Task {
   id: string;
   tenant_id: string;
@@ -187,14 +199,15 @@ export interface Task {
   service_request_id: string | null;
   title: string;
   description: string | null;
-  status: "pendiente" | "en_proceso" | "bloqueada" | "hecha";
-  priority: "baja" | "media" | "alta";
+  status: 'pendiente' | 'en_proceso' | 'bloqueada' | 'hecha';
+  priority: 'baja' | 'media' | 'alta';
   assigned_user_id: string | null;
   due_date: string | null;
   created_at: string;
   updated_at: string;
 }
 
+// Tipos de stock
 export interface Product {
   id: string;
   tenant_id: string;
@@ -202,83 +215,236 @@ export interface Product {
   name: string;
   category: string | null;
   brand: string | null;
+  proveedor?: string | null;
   compatible_model: string | null;
   primary_supplier_id: string | null;
   cost: number;
   sale_price: number;
   minimum_stock: number;
-  stock_current: number;
+  unit: string | null;
+  location: string | null;
+  notes: string | null;
+  is_active: boolean;
+  stock_current?: number;
+  alerta_nivel?: 'bajo' | 'critico' | 'agotado';
+  alerta_stock?: boolean;
+}
+
+export interface InventoryItem {
+  id: string;
+  tenant_id: string;
   sucursal_id: string | null;
+  product_id: string;
+  stock_current: number;
+  sku?: string;
+  description?: string;
+}
+
+export interface InventoryMovement {
+  id: string;
+  tenant_id: string;
+  sucursal_id: string | null;
+  product_id: string;
+  service_order_id: string | null;
+  purchase_order_id: string | null;
+  movement_type: string;
+  quantity: number;
+  unit_cost: number;
+  reference: string | null;
+  notes: string | null;
   created_at: string;
-  updated_at: string;
-  proveedor?: string | null;
 }
 
 export interface StockAlert {
   id: string;
+  tenant_id: string;
+  sucursal_id: string | null;
   product_id: string;
-  product_name: string;
-  stock_current: number;
-  minimum_stock: number;
-  severity: "bajo" | "critico" | "agotado";
+  severity: string;
+  acknowledged_by: string | null;
+  acknowledged_at: string | null;
   created_at: string;
 }
 
+// Tipos de proveedores
+export interface Supplier {
+  id: string;
+  tenant_id: string;
+  business_name: string;
+  rfc: string | null;
+  legal_name: string | null;
+  contact_name: string | null;
+  phone: string | null;
+  whatsapp: string | null;
+  email: string | null;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  categories: string | null;
+  lead_time_days: number | null;
+  payment_terms: string | null;
+  price_score: number;
+  speed_score: number;
+  quality_score: number;
+  reliability_score: number;
+  notes: string | null;
+  is_active: boolean;
+}
+
+// Tipos de compras
+export interface PurchaseOrder {
+  id: string;
+  tenant_id: string;
+  sucursal_id: string | null;
+  supplier_id: string | null;
+  folio: string;
+  status: 'borrador' | 'enviada' | 'parcial' | 'recibida' | 'cancelada';
+  reference: string | null;
+  payment_terms: string | null;
+  expected_date: string | null;
+  subtotal: number;
+  tax_amount: number;
+  total: number;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface PurchaseOrderItem {
+  id: string;
+  purchase_order_id: string;
+  product_id: string | null;
+  sku_snapshot: string | null;
+  product_name_snapshot: string | null;
+  qty_ordered: number;
+  qty_received: number;
+  unit_cost: number;
+  subtotal: number;
+}
+
+// Tipos de finanzas
+export interface FinanceBalance {
+  id: string;
+  tenant_id: string;
+  balance: number;
+  income: number;
+  expense: number;
+  created_at: string;
+  type?: 'summary' | 'order' | 'expense';
+}
+
+export interface FinanceSummary {
+  ingresos: number;
+  egresos: number;
+  utilidadBruta: number;
+  ticketPromedio: number;
+  ordenesEntregadas: number;
+  cotizacionesConvertidas: number;
+  cuentasPorCobrar: number;
+  anticiposPendientes: number;
+  comparativoMensual: Array<{
+    mes: string;
+    ingresos: number;
+    egresos: number;
+    utilidad: number;
+  }>;
+  resumenCategorias: Array<{
+    categoria: string;
+    total: number;
+  }>;
+}
+
+// Tipos de reportes
+export interface ReportsSummary {
+  ordersCount: number;
+  customersCount: number;
+  inventoryCount: number;
+  lowStockCount: number;
+  totalIncome: number;
+  totalExpense: number;
+  totalBalance: number;
+  productivity: number;
+  inventoryValuation: number;
+  accountsReceivable: number;
+  ordersByTechnician: Record<string, number>;
+  ordersBySucursal: Record<string, number>;
+  statusCounts: Record<string, number>;
+  statusCountsToday: Record<string, number>;
+  statusCountsWeek: Record<string, number>;
+  topProductsUsed: Array<{ productId: string; name: string; quantity: number }>;
+  overduePromisedOrders: Array<{
+    id: string;
+    folio: string | null;
+    status: string | null;
+    promisedDate: string | null;
+    createdAt: string | null;
+  }>;
+}
+
+// Tipos de gastos
 export interface Expense {
   id: string;
-  expense_date: string;
+  tenant_id: string;
+  sucursal_id: string | null;
+  supplier_id: string | null;
   expense_type: string;
   category: string;
-  concepto: string;
+  concept: string;
   description: string | null;
   amount: number;
   payment_method: string | null;
-  proveedor: string | null;
+  receipt_url: string | null;
   notes: string | null;
+  expense_date: string;
+  created_at: string;
 }
 
+// Tipos de seguridad
 export interface SecurityUser {
   id: string;
+  tenantId: string;
+  authUserId: string | null;
   name: string;
   email: string;
-  role: "owner" | "manager" | "technician" | "client";
+  phone: string | null;
+  role: string;
   activo: boolean;
-  sucursal_id: string | null;
+  ultimo_acceso: string | null;
+  sucursalId: string | null;
+  createdAt: string;
 }
 
 export interface SecurityConfig {
-  mfa_enabled: boolean;
-  mfa_required_for_admins: boolean;
-  password_rotation_enabled: boolean;
+  adminPasswordConfigured: boolean;
+  mensajeAutorizacion: string;
+  bitacoraActiva: boolean;
+  acciones: Array<{
+    clave: string;
+    titulo: string;
+    descripcion: string;
+    accion: string;
+    requiereAdmin: boolean;
+  }>;
 }
 
 export interface AuditLog {
   id: string;
+  tenant_id: string;
+  user_id: string | null;
   action: string;
-  user_email: string | null;
+  ip_address: string | null;
+  user_agent: string | null;
+  data_before: Record<string, unknown> | null;
+  data_after: Record<string, unknown> | null;
   created_at: string;
 }
 
 export interface SecuritySession {
   id: string;
-  user_email: string;
-  created_at: string;
-  last_seen_at: string | null;
+  userId: string;
+  sessionKey: string;
+  ipAddress: string | null;
+  userAgent: string | null;
+  lastActivityAt: string;
+  createdAt: string;
+  user: SecurityUser | null;
 }
-
-export interface ReportsSummary {
-  totalIncome: number;
-  totalExpense: number;
-  totalBalance: number;
-  productivity: number;
-  ordersCount: number;
-  customersCount: number;
-  lowStockCount: number;
-  accountsReceivable: number;
-  statusCounts?: Record<string, number>;
-  overduePromisedOrders?: Array<{ id: string; folio: string; promisedDate: string }>;
-  topProductsUsed?: Array<{ name: string; count: number }>;
-  ordersByTechnician?: Record<string, number>;
-  ordersBySucursal?: Record<string, number>;
-}
-

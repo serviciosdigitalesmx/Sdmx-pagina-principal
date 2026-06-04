@@ -46,10 +46,9 @@ export function DashboardShell({ children }: { children: React.ReactNode; tenant
     <div className="flex h-screen bg-srf-bg text-srf-text">
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
-        <Header />
+        <Header user={user} />
         <main className="flex-1 overflow-y-auto p-6">{children}</main>
       </div>
     </div>
   );
 }
-

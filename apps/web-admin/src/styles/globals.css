@@ -1,0 +1,274 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Rajdhani:wght@500;600;700&display=swap');
+@import "tailwindcss";
+
+:root {
+  --srf-bg: #1E1E1E;
+  --srf-surface: #2B2B2B;
+  --srf-primary: #1F7EDC;
+  --srf-accent: #FF6A2A;
+  --srf-text: #F2F2F2;
+  --srf-muted: #8A8F95;
+  --srf-wa: #25D366;
+  --srf-green: #22c55e;
+  --srf-red: #ef4444;
+  --srf-yellow: #eab308;
+}
+
+@theme inline {
+  --font-sans: "Inter", sans-serif;
+  --font-display: "Orbitron", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--srf-bg);
+  color: var(--srf-text);
+  font-family: "Inter", sans-serif;
+}
+
+h1, h2, h3, .font-orbitron {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.font-rajdhani {
+  font-family: "Rajdhani", sans-serif;
+  font-weight: 600;
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-wa,
+.btn-outline,
+.btn-ghost,
+.card,
+.input,
+.badge-recibido,
+.badge-diagnostico,
+.badge-reparacion,
+.badge-esperando,
+.badge-listo,
+.badge-entregado,
+.badge-cancelado,
+.card-rojo,
+.card-amarillo,
+.card-verde,
+.card-gris {
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.5rem;
+  background: var(--srf-accent);
+  color: white;
+  font-weight: 700;
+  padding: 0.5rem 1rem;
+}
+
+.btn-primary:hover {
+  background: #E85A1F;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.5rem;
+  background: var(--srf-primary);
+  color: white;
+  font-weight: 700;
+  padding: 0.5rem 1rem;
+}
+
+.btn-secondary:hover {
+  background: #1a6ab8;
+}
+
+.btn-wa {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.5rem;
+  background: var(--srf-wa);
+  color: white;
+  font-weight: 700;
+  padding: 0.5rem 1rem;
+}
+
+.btn-outline {
+  border: 1px solid rgba(31, 126, 220, 0.5);
+  background: transparent;
+  color: var(--srf-text);
+  font-weight: 500;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+}
+
+.btn-outline:hover {
+  background: rgba(31, 126, 220, 0.1);
+}
+
+.btn-ghost {
+  color: var(--srf-muted);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.btn-ghost:hover {
+  background: rgba(43, 43, 43, 0.5);
+  color: var(--srf-text);
+}
+
+.card {
+  background: var(--srf-surface);
+  border: 1px solid rgba(31, 126, 220, 0.3);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+}
+
+.card-hover:hover {
+  border-color: rgba(31, 126, 220, 0.6);
+  transform: scale(1.01);
+}
+
+.input {
+  width: 100%;
+  border: 1px solid rgba(31, 126, 220, 0.5);
+  border-radius: 0.5rem;
+  background: var(--srf-bg);
+  color: var(--srf-text);
+  padding: 0.5rem 0.75rem;
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--srf-muted);
+}
+
+.input:focus {
+  border-color: var(--srf-accent);
+  box-shadow: 0 0 0 1px var(--srf-accent);
+}
+
+.badge-recibido,
+.badge-diagnostico,
+.badge-reparacion,
+.badge-esperando,
+.badge-listo,
+.badge-entregado,
+.badge-cancelado {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge-recibido {
+  background: rgba(31, 126, 220, 0.2);
+  color: var(--srf-primary);
+  border: 1px solid rgba(31, 126, 220, 0.4);
+}
+
+.badge-diagnostico {
+  background: rgba(234, 179, 8, 0.2);
+  color: #facc15;
+  border: 1px solid rgba(234, 179, 8, 0.4);
+}
+
+.badge-reparacion {
+  background: rgba(249, 115, 22, 0.2);
+  color: #fb923c;
+  border: 1px solid rgba(249, 115, 22, 0.4);
+}
+
+.badge-esperando {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.badge-listo {
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.4);
+}
+
+.badge-entregado {
+  background: rgba(138, 143, 149, 0.2);
+  color: var(--srf-muted);
+  border: 1px solid rgba(138, 143, 149, 0.4);
+}
+
+.badge-cancelado {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.card-rojo {
+  border-left: 4px solid var(--srf-red);
+  background: linear-gradient(135deg, var(--srf-surface), rgba(127, 29, 29, 0.18));
+}
+
+.card-amarillo {
+  border-left: 4px solid var(--srf-yellow);
+  background: linear-gradient(135deg, var(--srf-surface), rgba(113, 63, 18, 0.18));
+}
+
+.card-verde {
+  border-left: 4px solid var(--srf-green);
+  background: linear-gradient(135deg, var(--srf-surface), rgba(20, 83, 45, 0.18));
+}
+
+.card-gris {
+  border-left: 4px solid var(--srf-muted);
+  background: linear-gradient(135deg, var(--srf-surface), rgba(31, 41, 55, 0.18));
+  opacity: 0.72;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid rgba(31, 126, 220, 0.3);
+  border-top-color: var(--srf-accent);
+  border-radius: 9999px;
+  animation: spin 1s linear infinite;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--srf-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--srf-primary);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--srf-accent);
+}

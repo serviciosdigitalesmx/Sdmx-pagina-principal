@@ -1,44 +1,31 @@
-import type { Metadata } from "next";
-import "./globals.css";
-import { PwaBootstrap } from "@/components/pwa/pwa-bootstrap";
-import { ToastProvider } from "@white-label/ui";
+import type { Metadata } from 'next';
+import '@/styles/globals.css';
 
 export const metadata: Metadata = {
-  title: process.env.NEXT_PUBLIC_TENANT_META_TITLE ?? "Servicios Digitales MX Admin",
-  description:
-    process.env.NEXT_PUBLIC_TENANT_META_DESCRIPTION ??
-    "Panel operativo de Servicios Digitales MX",
+  title: 'SrFix - Panel de Administración',
+  description: 'Plataforma de gestión para talleres de reparación',
+  manifest: '/manifest.json',
 };
 
 export const viewport = {
-  themeColor: process.env.NEXT_PUBLIC_THEME_PRIMARY ?? "#334155",
+  themeColor: '#1F7EDC',
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover' as const,
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
-  const themePrimary = process.env.NEXT_PUBLIC_THEME_PRIMARY ?? "#334155";
-  const themeSecondary = process.env.NEXT_PUBLIC_THEME_SECONDARY ?? "#0f172a";
-  const themeAccent = process.env.NEXT_PUBLIC_THEME_ACCENT ?? "#38bdf8";
-
+}) {
   return (
-    <html
-      lang="es"
-      className="h-full antialiased"
-      style={
-        {
-          '--tenant-primary': themePrimary,
-          '--tenant-secondary': themeSecondary,
-          '--tenant-accent': themeAccent,
-        } as React.CSSProperties
-      }
-    >
-      <body className="min-h-full flex flex-col font-sans">
-        <PwaBootstrap />
-        <ToastProvider>{children}</ToastProvider>
-      </body>
+    <html lang="es">
+      <head>
+        <link rel="icon" href="/favicon.png" />
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+      </head>
+      <body>{children}</body>
     </html>
   );
 }

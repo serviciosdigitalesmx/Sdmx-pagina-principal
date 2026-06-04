@@ -1,206 +1,258 @@
-"use client";
+'use client';
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
-import { RequireRole } from "@/components/guard/RequireRole";
-import { useAuth } from "@/components/guard/use-auth";
-import { ModuleShell } from "@/components/dashboard/module-shell";
-import { getActiveScope } from "@/lib/scope";
-import { fixService } from "@/services/fixService";
+import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { Plus, Search, RefreshCw, Trash2, Calendar, DollarSign, X } from 'lucide-react';
+import { fixService } from '@/services/fixService';
+import { getActiveSucursalId } from '@/lib/tenant';
 
 type ExpenseRow = {
   id?: string;
-  sucursal_id?: string | null;
+  amount?: number;
+  expense?: number;
+  category?: string;
   description?: string | null;
-  category?: string | null;
-  expense?: number | string | null;
-  created_at?: string | null;
-  type?: string | null;
+  concept?: string | null;
+  created_at?: string;
+  expense_date?: string;
 };
 
-const INITIAL_FORM = {
-  sucursalId: "",
-  amount: "",
-  description: "",
-  category: "operativo",
-  date: "",
+type ExpenseForm = {
+  amount: string;
+  description: string;
+  category: string;
+  date: string;
 };
 
-function currency(value: number | string | null | undefined) {
-  const amount = Number(value ?? 0);
-  return new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 }).format(Number.isFinite(amount) ? amount : 0);
-}
+const INITIAL_FORM: ExpenseForm = {
+  amount: '',
+  description: '',
+  category: 'operativo',
+  date: new Date().toISOString().slice(0, 10),
+};
 
 export default function GastosPage() {
-  const { role } = useAuth();
-  const scope = getActiveScope();
-  const [rows, setRows] = useState<ExpenseRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expenses, setExpenses] = useState<ExpenseRow[]>([]);
+  const [filteredExpenses, setFilteredExpenses] = useState<ExpenseRow[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [totalAmount, setTotalAmount] = useState(0);
+  const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [form, setForm] = useState(INITIAL_FORM);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState<ExpenseForm>(INITIAL_FORM);
 
-  async function refresh() {
+  const loadExpenses = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      setError("");
       const data = await fixService.getExpenses();
-      setRows((data as ExpenseRow[]).sort((a, b) => String(b.created_at ?? "").localeCompare(String(a.created_at ?? ""))));
+      const expensesList = data as ExpenseRow[];
+      setExpenses(expensesList);
+      setError('');
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al cargar gastos");
-      setRows([]);
+      setExpenses([]);
+      setError(err instanceof Error ? err.message : 'No se pudieron cargar los gastos');
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    void refresh();
+    void loadExpenses();
   }, []);
 
   useEffect(() => {
-    if (!scope?.sucursalId) return;
-    setForm((current) => (current.sucursalId ? current : { ...current, sucursalId: scope.sucursalId ?? "" }));
-  }, [scope?.sucursalId]);
+    let filtered = [...expenses];
 
-  const stats = useMemo(
-    () => [
-      { label: "Gastos", value: String(rows.length), helper: "Movimientos reales del tenant." },
-      { label: "Total", value: currency(rows.reduce((sum, row) => sum + Number(row.expense ?? 0), 0)), helper: "Suma de egresos." },
-      { label: "Sucursal", value: scope?.sucursalId ?? "No disponible", helper: scope?.mode === "consolidated" ? "Vista consolidada." : "Sucursal activa." },
-    ],
-    [rows, scope?.mode, scope?.sucursalId],
-  );
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter((e) =>
+        [e.description ?? '', e.concept ?? '', e.category ?? ''].join(' ').toLowerCase().includes(term)
+      );
+    }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    if (dateFrom) {
+      filtered = filtered.filter((e) => String(e.expense_date ?? e.created_at ?? '') >= dateFrom);
+    }
+
+    if (dateTo) {
+      filtered = filtered.filter((e) => String(e.expense_date ?? e.created_at ?? '') <= dateTo);
+    }
+
+    filtered.sort((a, b) => new Date(String(b.expense_date ?? b.created_at ?? '')).getTime() - new Date(String(a.expense_date ?? a.created_at ?? '')).getTime());
+    setFilteredExpenses(filtered);
+    setTotalAmount(filtered.reduce((sum, e) => sum + Number(e.expense ?? e.amount ?? 0), 0));
+  }, [searchTerm, dateFrom, dateTo, expenses]);
+
+  async function submitExpense(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const activeSucursalId = getActiveSucursalId();
+    if (!activeSucursalId || activeSucursalId === 'GLOBAL') {
+      setError('Selecciona una sucursal activa para registrar gastos.');
+      return;
+    }
+
     try {
       setSaving(true);
-      setError("");
+      setError('');
       await fixService.createExpense({
-        sucursalId: form.sucursalId.trim(),
-        amount: Number(form.amount || 0),
+        sucursalId: activeSucursalId,
+        amount: Number(form.amount),
         description: form.description.trim(),
         category: form.category.trim(),
-        date: form.date.trim() || undefined,
+        date: form.date,
       });
-      setForm({ ...INITIAL_FORM, sucursalId: scope?.sucursalId ?? "" });
-      await refresh();
+      setShowForm(false);
+      setForm(INITIAL_FORM);
+      await loadExpenses();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo crear el gasto");
+      setError(err instanceof Error ? err.message : 'No se pudo guardar el gasto');
     } finally {
       setSaving(false);
     }
   }
 
-  async function handleDelete(id?: string) {
-    if (!id) return;
-    if (!window.confirm("¿Eliminar este gasto real?")) return;
+  async function handleDelete(expense: ExpenseRow) {
+    if (!expense.id) return;
+    if (!window.confirm(`¿Eliminar el gasto "${expense.description ?? expense.concept ?? expense.id}"?`)) return;
     try {
-      setSaving(true);
-      setError("");
-      await fixService.deleteExpense(id);
-      await refresh();
+      setError('');
+      await fixService.deleteExpense(expense.id);
+      await loadExpenses();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo eliminar el gasto");
-    } finally {
-      setSaving(false);
+      setError(err instanceof Error ? err.message : 'No se pudo eliminar el gasto');
     }
+  }
+
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return '—';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('es-MX');
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="spinner w-8 h-8" />
+      </div>
+    );
   }
 
   return (
-    <RequireRole allowed={["owner", "manager"]}>
-      <ModuleShell
-        title="Gastos"
-        subtitle="Control real de egresos y movimientos financieros del tenant."
-        icon="fas fa-receipt"
-        actionLabel="Actualizar"
-        onAction={() => void refresh()}
-        secondaryActionLabel="Nuevo gasto"
-        secondaryOnAction={() => setForm({ ...INITIAL_FORM, sucursalId: scope?.sucursalId ?? "" })}
-        stats={stats}
-        loading={loading}
-        columns={[
-          { label: "Descripción", key: "description" },
-          { label: "Categoría", key: "category" },
-          { label: "Monto", key: "expense" },
-          { label: "Fecha", key: "created_at" },
-        ]}
-        rows={rows.map((row) => ({
-          description: row.description ?? "Sin descripción",
-          category: row.category ?? "operativo",
-          expense: currency(row.expense ?? 0),
-          created_at: row.created_at ? new Date(row.created_at).toLocaleString("es-MX") : "No disponible",
-        }))}
-        emptyTitle={loading ? "Cargando gastos…" : error ? "No pudimos cargar gastos" : "Sin gastos registrados"}
-        emptyCopy={error || "Los gastos salen de la tabla real `finances`."}
-      >
-        <form onSubmit={handleSubmit} className="space-y-4 rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-base font-semibold text-zinc-50">Capturar gasto real</h2>
-            <button type="submit" disabled={saving} className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-zinc-950 disabled:opacity-60">
-              {saving ? "Guardando…" : "Guardar"}
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-orbitron font-bold text-srf-primary">Gastos</h1>
+          <p className="text-srf-muted text-sm mt-1">
+            Total: <span className="font-bold text-srf-accent">${totalAmount.toFixed(2)}</span>
+          </p>
+        </div>
+        <button
+          onClick={() => setShowForm((value) => !value)}
+          className="btn-primary gap-2 inline-flex items-center"
+        >
+          <Plus className="w-4 h-4" />
+          Nuevo gasto
+        </button>
+      </div>
+
+      {error ? <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">{error}</div> : null}
+
+      {showForm ? (
+        <form onSubmit={submitExpense} className="card space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-srf-primary">Registrar gasto</h2>
+            <button type="button" onClick={() => setShowForm(false)} className="btn-ghost inline-flex items-center gap-2 text-srf-muted">
+              <X className="w-4 h-4" />
+              Cerrar
             </button>
           </div>
-          <div className="grid gap-3 md:grid-cols-2">
-            <label className="space-y-1 text-sm text-zinc-300">
-              <span>Sucursal</span>
-              <input value={form.sucursalId} onChange={(event) => setForm((current) => ({ ...current, sucursalId: event.target.value }))} className="input" />
-            </label>
-            <label className="space-y-1 text-sm text-zinc-300">
-              <span>Monto</span>
-              <input type="number" value={form.amount} onChange={(event) => setForm((current) => ({ ...current, amount: event.target.value }))} className="input" />
-            </label>
-            <label className="space-y-1 text-sm text-zinc-300 md:col-span-2">
-              <span>Descripción</span>
-              <input value={form.description} onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))} className="input" />
-            </label>
-            <label className="space-y-1 text-sm text-zinc-300">
-              <span>Categoría</span>
-              <input value={form.category} onChange={(event) => setForm((current) => ({ ...current, category: event.target.value }))} className="input" />
-            </label>
-            <label className="space-y-1 text-sm text-zinc-300">
-              <span>Fecha</span>
-              <input type="date" value={form.date} onChange={(event) => setForm((current) => ({ ...current, date: event.target.value }))} className="input" />
-            </label>
+          <div className="grid gap-4 md:grid-cols-2">
+            <input value={form.date} onChange={(e) => setForm((current) => ({ ...current, date: e.target.value }))} className="input" type="date" required />
+            <input value={form.category} onChange={(e) => setForm((current) => ({ ...current, category: e.target.value }))} className="input" placeholder="Categoría" required />
+            <input value={form.description} onChange={(e) => setForm((current) => ({ ...current, description: e.target.value }))} className="input md:col-span-2" placeholder="Descripción" required />
+            <input value={form.amount} onChange={(e) => setForm((current) => ({ ...current, amount: e.target.value }))} className="input" type="number" step="0.01" min="0" placeholder="Monto" required />
           </div>
-          {error ? <p className="text-sm text-red-300">{error}</p> : null}
+          <div className="flex gap-2">
+            <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Guardando...' : 'Guardar gasto'}</button>
+            <button type="button" className="btn-outline" onClick={() => setShowForm(false)}>Cancelar</button>
+          </div>
         </form>
+      ) : null}
 
-        <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-white/10">
-          <table className="min-w-full text-left text-sm">
-            <thead className="bg-white/[0.04] text-zinc-300">
-              <tr>
-                <th className="px-4 py-3">Descripción</th>
-                <th className="px-4 py-3">Categoría</th>
-                <th className="px-4 py-3">Monto</th>
-                <th className="px-4 py-3">Fecha</th>
-                <th className="px-4 py-3">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/10">
-              {rows.length > 0 ? rows.map((row) => (
-                <tr key={row.id ?? `${row.created_at ?? ""}-${row.description ?? ""}`}>
-                  <td className="px-4 py-3 text-zinc-300">{row.description ?? "Sin descripción"}</td>
-                  <td className="px-4 py-3 text-zinc-300">{row.category ?? "operativo"}</td>
-                  <td className="px-4 py-3 text-zinc-300">{currency(row.expense ?? 0)}</td>
-                  <td className="px-4 py-3 text-zinc-300">{row.created_at ? new Date(row.created_at).toLocaleString("es-MX") : "No disponible"}</td>
-                  <td className="px-4 py-3">
-                    <button type="button" onClick={() => void handleDelete(row.id)} className="rounded-full border border-white/10 px-3 py-1 text-xs text-zinc-200">
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
-              )) : (
-                <tr>
-                  <td colSpan={5} className="px-4 py-6 text-center text-sm text-zinc-500">
-                    Sin gastos reales cargados.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+      <div className="flex flex-wrap gap-3">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-srf-muted" />
+          <input
+            placeholder="Buscar por concepto o categoría..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="input pl-9"
+          />
         </div>
-      </ModuleShell>
-    </RequireRole>
+        <input
+          type="date"
+          value={dateFrom}
+          onChange={(e) => setDateFrom(e.target.value)}
+          className="input w-40"
+        />
+        <input
+          type="date"
+          value={dateTo}
+          onChange={(e) => setDateTo(e.target.value)}
+          className="input w-40"
+        />
+        <button
+          onClick={() => void loadExpenses()}
+          className="btn-outline gap-2 inline-flex items-center"
+        >
+          <RefreshCw className="w-4 h-4" />
+          Actualizar
+        </button>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-srf-surface border-b border-srf-primary/30">
+            <tr>
+              <th className="text-left py-3 px-4">Fecha</th>
+              <th className="text-left py-3 px-4">Categoría</th>
+              <th className="text-left py-3 px-4">Concepto</th>
+              <th className="text-right py-3 px-4">Monto</th>
+              <th className="text-left py-3 px-4">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredExpenses.map((expense) => (
+              <tr key={expense.id} className="border-b border-srf-primary/20 hover:bg-srf-surface/50">
+                <td className="py-3 px-4">{formatDate(expense.expense_date ?? expense.created_at)}</td>
+                <td className="py-3 px-4">{expense.category ?? 'operativo'}</td>
+                <td className="py-3 px-4">
+                  <div className="font-medium">{expense.description ?? expense.concept ?? 'Gasto'}</div>
+                </td>
+                <td className="py-3 px-4 text-right font-semibold text-srf-accent">
+                  ${Number(expense.expense ?? expense.amount ?? 0).toFixed(2)}
+                </td>
+                <td className="py-3 px-4">
+                  <button
+                    onClick={() => void handleDelete(expense)}
+                    className="p-1 rounded hover:bg-red-500/20 text-red-500"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {filteredExpenses.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-srf-muted">No hay gastos con esos filtros</p>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

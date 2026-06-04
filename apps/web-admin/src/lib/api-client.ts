@@ -1,71 +1,158 @@
-"use client";
+import { readAuthToken } from '@/lib/auth-storage';
 
-import { resolveApiBaseUrl } from "@white-label/config";
-import { readAuthToken } from "@/lib/auth-storage";
-import { getActiveSucursalId } from "@/lib/tenant";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
-type ApiOptions = RequestInit & { fileType?: string };
-
-function buildHeaders(options?: ApiOptions) {
-  const headers = new Headers(options?.headers ?? {});
-  headers.set("Accept", "application/json");
-  if (options?.body && !(options.body instanceof FormData)) {
-    headers.set("Content-Type", "application/json");
-  }
-
-  const token = readAuthToken();
-  if (token) {
-    headers.set("Authorization", `Bearer ${token}`);
-  }
-
-  const sucursalId = getActiveSucursalId();
-  if (sucursalId) {
-    headers.set("x-fixi-sucursal-id", sucursalId);
-    headers.set("x-sucursal-id", sucursalId);
-  }
-
-  return headers;
+interface ApiOptions {
+  tenantSlug?: string;
+  sucursalId?: string | null;
 }
 
-async function request<T>(endpoint: string, options: ApiOptions = {}): Promise<T> {
-  const apiBaseUrl = resolveApiBaseUrl();
-  const response = await fetch(`${apiBaseUrl}${endpoint}`, {
-    ...options,
-    headers: buildHeaders(options),
-  });
+class ApiClient {
+  private token: string | null = null;
 
-  const contentType = response.headers.get("content-type") || "";
-  const payload = contentType.includes("application/json")
-    ? await response.json().catch(() => ({}))
-    : await response.text().catch(() => "");
-
-  if (!response.ok) {
-    const message = typeof payload === "object" && payload && "error" in payload ? String((payload as { error?: string }).error) : `HTTP ${response.status}`;
-    throw new Error(message);
+  setToken(token: string) {
+    this.token = token;
   }
 
-  return payload as T;
-}
+  clearToken() {
+    this.token = null;
+  }
 
-export const apiClient = {
-  get: <T>(endpoint: string, options?: ApiOptions) => request<T>(endpoint, { ...options, method: "GET" }),
-  post: <T>(endpoint: string, body?: unknown, options?: ApiOptions) =>
-    request<T>(endpoint, { ...options, method: "POST", body: body instanceof FormData ? body : body === undefined ? undefined : JSON.stringify(body) }),
-  put: <T>(endpoint: string, body?: unknown, options?: ApiOptions) =>
-    request<T>(endpoint, { ...options, method: "PUT", body: body instanceof FormData ? body : body === undefined ? undefined : JSON.stringify(body) }),
-  patch: <T>(endpoint: string, body?: unknown, options?: ApiOptions) =>
-    request<T>(endpoint, { ...options, method: "PATCH", body: body instanceof FormData ? body : body === undefined ? undefined : JSON.stringify(body) }),
-  delete: <T>(endpoint: string, options?: ApiOptions) => request<T>(endpoint, { ...options, method: "DELETE" }),
-  upload: async <T>(endpoint: string, file: File, extra?: Record<string, unknown>, options?: ApiOptions) => {
-    const form = new FormData();
-    form.append("file", file);
-    if (extra) {
-      for (const [key, value] of Object.entries(extra)) {
-        if (value === undefined || value === null) continue;
-        form.append(key, typeof value === "string" ? value : JSON.stringify(value));
-      }
+  private async request<T>(
+    endpoint: string,
+    options: RequestInit = {},
+    apiOptions: ApiOptions = {}
+  ): Promise<T> {
+    const { tenantSlug, sucursalId } = apiOptions;
+    if (!API_URL) {
+      throw new Error('NEXT_PUBLIC_API_URL no configurada');
     }
-    return request<T>(endpoint, { ...options, method: "POST", body: form });
-  },
-};
+    let url = endpoint.startsWith('http') ? endpoint : `${API_URL}${endpoint}`;
 
+    // Inject tenantSlug in path if needed
+    if (tenantSlug && !url.includes('/:tenantSlug')) {
+      url = url.replace('/api/', `/api/${tenantSlug}/`);
+    }
+
+    // Add sucursalId as query param if provided
+    if (sucursalId) {
+      const separator = url.includes('?') ? '&' : '?';
+      url = `${url}${separator}sucursalId=${sucursalId}`;
+    }
+
+    const headers = new Headers(options.headers ?? {});
+
+    if (!(options.body instanceof FormData)) {
+      headers.set('Content-Type', 'application/json');
+    }
+
+    const token = this.token || readAuthToken();
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+
+    const response = await fetch(url, {
+      ...options,
+      headers,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Request failed' }));
+      throw new Error(error.error || `HTTP ${response.status}`);
+    }
+
+    const data = await response.json().catch(() => ({}));
+    return data as T;
+  }
+
+  // GET
+  async get<T>(endpoint: string, options?: ApiOptions): Promise<T> {
+    return this.request<T>(endpoint, { method: 'GET' }, options);
+  }
+
+  // POST
+  async post<T>(endpoint: string, body?: unknown, options?: ApiOptions): Promise<T> {
+    return this.request<T>(
+      endpoint,
+      {
+        method: 'POST',
+        body: body ? JSON.stringify(body) : undefined,
+      },
+      options
+    );
+  }
+
+  // PUT
+  async put<T>(endpoint: string, body?: unknown, options?: ApiOptions): Promise<T> {
+    return this.request<T>(
+      endpoint,
+      {
+        method: 'PUT',
+        body: body ? JSON.stringify(body) : undefined,
+      },
+      options
+    );
+  }
+
+  // PATCH
+  async patch<T>(endpoint: string, body?: unknown, options?: ApiOptions): Promise<T> {
+    return this.request<T>(
+      endpoint,
+      {
+        method: 'PATCH',
+        body: body ? JSON.stringify(body) : undefined,
+      },
+      options
+    );
+  }
+
+  // DELETE
+  async delete<T>(endpoint: string, options?: ApiOptions): Promise<T> {
+    return this.request<T>(endpoint, { method: 'DELETE' }, options);
+  }
+
+  // File upload (multipart)
+  async upload<T>(
+    endpoint: string,
+    file: File,
+    metadata?: Record<string, unknown>,
+    options?: ApiOptions
+  ): Promise<T> {
+    let url = endpoint;
+    if (options?.tenantSlug) {
+      url = url.replace('/api/', `/api/${options.tenantSlug}/`);
+    }
+
+    if (options?.sucursalId) {
+      const separator = url.includes('?') ? '&' : '?';
+      url = `${url}${separator}sucursalId=${options.sucursalId}`;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+    if (metadata) {
+      formData.append('metadata', JSON.stringify(metadata));
+    }
+
+    const headers: HeadersInit = {};
+    if (this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`;
+    }
+
+    const response = await fetch(`${API_URL}${url}`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Upload failed' }));
+      throw new Error(error.error || `HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data as T;
+  }
+}
+
+export const apiClient = new ApiClient();

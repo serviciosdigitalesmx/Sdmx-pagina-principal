@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { RequireRole } from "@/components/guard/RequireRole";
-import { useAuth } from "@/components/guard/use-auth";
-import { ModuleShell } from "@/components/dashboard/module-shell";
+import { Globe, RefreshCw, Save, Eye } from "lucide-react";
 import { fixService } from "@/services/fixService";
 
 type LandingService = {
@@ -48,13 +46,7 @@ type TenantLandingSettings = {
     id: string;
     slug: string;
     name: string;
-    contact_phone?: string | null;
-    contact_email?: string | null;
-    branding?: {
-      primaryColor?: string;
-      secondaryColor?: string;
-      logoUrl?: string;
-    } | null;
+    branding?: Record<string, unknown> | null;
     landing_content?: Partial<LandingContent> | null;
     industry_profile?: {
       industry_key?: string | null;
@@ -132,7 +124,6 @@ function toPublicHref(tenantSlug: string, href: string) {
 }
 
 export default function LandingSettingsPage() {
-  const { role, tenantSlug } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -141,36 +132,26 @@ export default function LandingSettingsPage() {
   const [landingContent, setLandingContent] = useState<LandingContent>(defaultLandingContent);
   const [industryKey, setIndustryKey] = useState<string>(DEFAULT_INDUSTRY_KEY);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      try {
-        setLoading(true);
-        setError("");
-        const result = await fixService.getTenantLandingSettings();
-        if (cancelled) return;
-        setSettings(result.data);
-        setLandingContent(normalizeLandingContent(result.data.tenant.landing_content ?? null));
-        setIndustryKey(typeof result.data.tenant.industry_profile?.industry_key === "string" ? result.data.tenant.industry_profile.industry_key : DEFAULT_INDUSTRY_KEY);
-      } catch (err) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Error al cargar la landing");
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
+  async function load() {
+    try {
+      setLoading(true);
+      setError("");
+      const result = await fixService.getTenantLandingSettings();
+      setSettings(result.data);
+      setLandingContent(normalizeLandingContent(result.data.tenant.landing_content ?? null));
+      setIndustryKey(typeof result.data.tenant.industry_profile?.industry_key === "string" ? result.data.tenant.industry_profile.industry_key : DEFAULT_INDUSTRY_KEY);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al cargar la landing");
+    } finally {
+      setLoading(false);
     }
+  }
 
+  useEffect(() => {
     void load();
-
-    return () => {
-      cancelled = true;
-    };
   }, []);
 
+  const tenantSlug = settings?.tenant.slug ?? "";
   const preview = useMemo(() => ({
     primaryHref: toPublicHref(tenantSlug, landingContent.primaryCtaHref),
     secondaryHref: toPublicHref(tenantSlug, landingContent.secondaryCtaHref),
@@ -195,18 +176,16 @@ export default function LandingSettingsPage() {
     }));
   };
 
-  const addService = () => setLandingContent((current) => ({ ...current, services: [...current.services, emptyService] }));
-  const addSocial = () => setLandingContent((current) => ({ ...current, socialLinks: [...current.socialLinks, emptySocial] }));
+  const addService = () => setLandingContent((current) => ({ ...current, services: [...current.services, { ...emptyService }] }));
+  const addSocial = () => setLandingContent((current) => ({ ...current, socialLinks: [...current.socialLinks, { ...emptySocial }] }));
 
-  const availableIndustries = settings?.availableIndustries ?? [];
-  const selectedIndustry = availableIndustries.find((item) => item.key === industryKey) ?? availableIndustries[0] ?? null;
-
-  const handleSave = async () => {
+  async function handleSave() {
     setSaving(true);
     setError("");
     setSuccess("");
 
     try {
+      const selectedIndustry = settings?.availableIndustries?.find((item) => item.key === industryKey) ?? null;
       const result = await fixService.updateTenantLandingSettings({
         branding: settings?.tenant.branding ?? undefined,
         landingContent,
@@ -221,202 +200,133 @@ export default function LandingSettingsPage() {
           quote_label: settings?.tenant.industry_profile?.quote_label ?? null,
           default_workflow_key: selectedIndustry?.defaultWorkflowKey ?? settings?.tenant.industry_profile?.default_workflow_key ?? "service_orders",
           is_active: true,
-          metadata: {
-            source: "dashboard_landing_editor",
-          },
+          metadata: { source: "dashboard_landing_editor" },
         },
       });
 
       setSettings(result.data);
       setLandingContent(normalizeLandingContent(result.data.tenant.landing_content ?? null));
-      setIndustryKey(typeof result.data.tenant.industry_profile?.industry_key === "string" ? result.data.tenant.industry_profile.industry_key : DEFAULT_INDUSTRY_KEY);
       setSuccess("Landing guardada correctamente.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al guardar landing");
     } finally {
       setSaving(false);
     }
-  };
+  }
 
-  const tenantName = settings?.tenant.name ?? tenantSlug;
-  const tenantPhone = settings?.tenant.contact_phone ?? null;
-  const tenantEmail = settings?.tenant.contact_email ?? null;
+  if (loading) {
+    return <div className="flex h-full items-center justify-center"><div className="spinner w-8 h-8" /></div>;
+  }
 
   return (
-    <RequireRole allowed={["owner", "manager"]}>
-      <ModuleShell
-        title="Integrador del sitio del tenant"
-        subtitle="Editor por tenant usando `tenants.branding` y `tenants.landing_content` como fuente de verdad."
-        icon="fas fa-globe"
-        actionLabel={saving ? "Guardando..." : "Guardar landing"}
-        onAction={handleSave}
-        stats={[
-          { label: "Taller", value: tenantSlug, helper: "Contenido aislado por taller." },
-          { label: "Servicios", value: String(landingContent.services.length), helper: "Bloques visibles en público." },
-          { label: "Redes", value: String(landingContent.socialLinks.length), helper: "Contactos públicos del taller." },
-        ]}
-        loading={loading}
-        columns={[]}
-        rows={[]}
-        emptyTitle={loading ? "Cargando sitio…" : "Editor listo"}
-        emptyCopy="El sitio público del tenant refleja su branding, sus colores y su contenido."
-      >
-        <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-          <section className="space-y-6 rounded-[28px] border border-zinc-800 bg-zinc-950/85 p-6 shadow-[0_16px_70px_rgba(0,0,0,0.24)]">
-            <div className="grid gap-4 rounded-2xl border border-sky-500/20 bg-sky-500/5 p-4 md:grid-cols-[1.1fr_0.9fr]">
-              <div>
-                <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-zinc-400">Giro del tenant</label>
-                <select
-                  value={industryKey}
-                  onChange={(e) => setIndustryKey(e.target.value)}
-                  className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none focus:border-slate-400/60 focus:ring-2 focus:ring-slate-400/20"
-                >
-                  {availableIndustries.length > 0 ? (
-                    availableIndustries.map((industry) => (
-                      <option key={industry.key} value={industry.key}>
-                        {industry.label}
-                      </option>
-                    ))
-                  ) : (
-                    <option value={DEFAULT_INDUSTRY_KEY}>Reparación de electrónicos</option>
-                  )}
-                </select>
-              </div>
-              <div className="rounded-xl border border-zinc-800 bg-zinc-950/80 p-4 text-sm text-zinc-300">
-                <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">Plantilla activa</p>
-                <p className="mt-2 font-semibold text-zinc-50">{selectedIndustry?.label ?? settings?.tenant.industry_profile?.industry_label ?? "Reparación de electrónicos"}</p>
-                <p className="mt-1 leading-6 text-zinc-400">{selectedIndustry?.description ?? "Se regeneran módulos, campos, flujos y semáforos desde el backend."}</p>
-              </div>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-zinc-400">Hero título</label>
-                <input value={landingContent.heroTitle} onChange={(e) => updateField("heroTitle", e.target.value)} className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none focus:border-slate-400/60 focus:ring-2 focus:ring-slate-400/20" />
-              </div>
-              <div>
-                <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-zinc-400">Hero subtítulo</label>
-                <input value={landingContent.heroSubtitle} onChange={(e) => updateField("heroSubtitle", e.target.value)} className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none focus:border-slate-400/60 focus:ring-2 focus:ring-slate-400/20" />
-              </div>
-              <div className="md:col-span-2">
-                <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-zinc-400">Hero descripción</label>
-                <textarea value={landingContent.heroDescription} onChange={(e) => updateField("heroDescription", e.target.value)} className="min-h-28 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none focus:border-slate-400/60 focus:ring-2 focus:ring-slate-400/20" />
-              </div>
-              <div>
-                <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-zinc-400">CTA principal</label>
-                <input value={landingContent.primaryCtaLabel} onChange={(e) => updateField("primaryCtaLabel", e.target.value)} className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none focus:border-slate-400/60 focus:ring-2 focus:ring-slate-400/20" />
-              </div>
-              <div>
-                <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-zinc-400">Href principal</label>
-                <input value={landingContent.primaryCtaHref} onChange={(e) => updateField("primaryCtaHref", e.target.value)} className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none focus:border-slate-400/60 focus:ring-2 focus:ring-slate-400/20" />
-              </div>
-              <div>
-                <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-zinc-400">CTA secundario</label>
-                <input value={landingContent.secondaryCtaLabel} onChange={(e) => updateField("secondaryCtaLabel", e.target.value)} className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none focus:border-slate-400/60 focus:ring-2 focus:ring-slate-400/20" />
-              </div>
-              <div>
-                <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-zinc-400">Href secundario</label>
-                <input value={landingContent.secondaryCtaHref} onChange={(e) => updateField("secondaryCtaHref", e.target.value)} className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none focus:border-slate-400/60 focus:ring-2 focus:ring-slate-400/20" />
-              </div>
-              <div>
-                <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-zinc-400">Contacto</label>
-                <input value={landingContent.contactLabel} onChange={(e) => updateField("contactLabel", e.target.value)} className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none focus:border-slate-400/60 focus:ring-2 focus:ring-slate-400/20" />
-              </div>
-              <div>
-                <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-zinc-400">Href contacto</label>
-                <input value={landingContent.contactHref} onChange={(e) => updateField("contactHref", e.target.value)} className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none focus:border-slate-400/60 focus:ring-2 focus:ring-slate-400/20" placeholder={tenantPhone ?? "https://wa.me/..."} />
-              </div>
-              <div>
-                <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-zinc-400">SEO título</label>
-                <input value={landingContent.seoTitle} onChange={(e) => updateField("seoTitle", e.target.value)} className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none focus:border-slate-400/60 focus:ring-2 focus:ring-slate-400/20" />
-              </div>
-              <div>
-                <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-zinc-400">SEO descripción</label>
-                <input value={landingContent.seoDescription} onChange={(e) => updateField("seoDescription", e.target.value)} className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none focus:border-slate-400/60 focus:ring-2 focus:ring-slate-400/20" />
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between gap-3">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[#1f2937]">Servicios</h3>
-                <button type="button" onClick={addService} className="rounded-full border border-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-100">Agregar servicio</button>
-              </div>
-              {landingContent.services.map((service, index) => (
-                <div key={`${index}-${service.title}`} className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:grid-cols-2">
-                  <input value={service.title} onChange={(e) => updateService(index, "title", e.target.value)} className="rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100" placeholder="Título" />
-                  <input value={service.description} onChange={(e) => updateService(index, "description", e.target.value)} className="rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100" placeholder="Descripción" />
-                </div>
-              ))}
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between gap-3">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[#1f2937]">Redes y contacto</h3>
-                <button type="button" onClick={addSocial} className="rounded-full border border-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-100">Agregar red</button>
-              </div>
-              {landingContent.socialLinks.map((link, index) => (
-                <div key={`${index}-${link.label}`} className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:grid-cols-2">
-                  <input value={link.label} onChange={(e) => updateSocial(index, "label", e.target.value)} className="rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100" placeholder="Etiqueta" />
-                  <input value={link.href} onChange={(e) => updateSocial(index, "href", e.target.value)} className="rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100" placeholder="https://..." />
-                </div>
-              ))}
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <label className="flex items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/70 px-4 py-3 text-sm font-medium text-zinc-100">
-                <input type="checkbox" checked={landingContent.showMap} onChange={(e) => updateField("showMap", e.target.checked)} />
-                Mostrar mapa
-              </label>
-              <label className="flex items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/70 px-4 py-3 text-sm font-medium text-zinc-100">
-                <input type="checkbox" checked={landingContent.showVideo} onChange={(e) => updateField("showVideo", e.target.checked)} />
-                Mostrar video
-              </label>
-              <div>
-                <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-zinc-400">Mapa embed URL</label>
-                <input value={landingContent.mapEmbedUrl} onChange={(e) => updateField("mapEmbedUrl", e.target.value)} className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100" />
-              </div>
-              <div>
-                <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-zinc-400">Video URL</label>
-                <input value={landingContent.videoUrl} onChange={(e) => updateField("videoUrl", e.target.value)} className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-100" />
-              </div>
-            </div>
-
-            {error ? <p className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p> : null}
-            {success ? <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{success}</p> : null}
-          </section>
-
-          <aside className="space-y-6 rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_16px_70px_rgba(15,23,42,0.08)]">
-            <div>
-              <p className="text-xs uppercase tracking-[0.24em] text-[#1f2937]">Preview público</p>
-              <h2 className="mt-2 text-2xl font-semibold text-slate-950">{landingContent.heroTitle || tenantName}</h2>
-              <p className="mt-2 text-sm text-slate-600">{tenantEmail ?? "Sin correo"}</p>
-            </div>
-            <div className="rounded-[24px] border border-slate-200 bg-[radial-gradient(circle_at_top,_rgba(44,110,159,0.14),_transparent_30%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-5">
-              <p className="text-xs uppercase tracking-[0.24em] text-slate-500">{landingContent.heroSubtitle}</p>
-              <h3 className="mt-3 text-3xl font-bold text-slate-950">{landingContent.heroTitle || tenantName}</h3>
-              <p className="mt-3 text-sm leading-7 text-slate-600">{landingContent.heroDescription}</p>
-              <div className="mt-5 flex flex-wrap gap-3">
-                <a href={preview.primaryHref} className="rounded-full bg-[#334155] px-4 py-2 text-sm font-semibold text-white">{landingContent.primaryCtaLabel}</a>
-                <a href={preview.secondaryHref} className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-800">{landingContent.secondaryCtaLabel}</a>
-                <a href={preview.contactHref} className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-800">{landingContent.contactLabel}</a>
-              </div>
-            </div>
-
-            <div className="grid gap-3">
-              {landingContent.services.map((service, index) => (
-                <div key={`${index}-${service.title}-preview`} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                  <div className="font-semibold text-slate-950">{service.title || "Servicio"}</div>
-                  <div className="text-sm text-slate-600">{service.description || "Descripción"}</div>
-                </div>
-              ))}
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-              <div><span className="font-semibold text-slate-950">SEO título:</span> {landingContent.seoTitle || tenantName}</div>
-              <div className="mt-1"><span className="font-semibold text-slate-950">SEO descripción:</span> {landingContent.seoDescription || "Sin descripción"}</div>
-            </div>
-          </aside>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-orbitron font-bold text-srf-primary">Landing</h1>
+          <p className="mt-1 text-sm text-srf-muted">Configura la landing pública del tenant {settings?.tenant.name ?? tenantSlug}.</p>
         </div>
-      </ModuleShell>
-    </RequireRole>
+        <div className="flex gap-2">
+          <button onClick={() => void load()} className="btn-outline inline-flex items-center gap-2">
+            <RefreshCw className="w-4 h-4" />
+            Recargar
+          </button>
+          <button onClick={() => void handleSave()} className="btn-primary inline-flex items-center gap-2" disabled={saving}>
+            <Save className="w-4 h-4" />
+            {saving ? "Guardando..." : "Guardar"}
+          </button>
+        </div>
+      </div>
+
+      {error ? <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">{error}</div> : null}
+      {success ? <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-300">{success}</div> : null}
+
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(360px,1fr)]">
+        <div className="space-y-6">
+          <div className="card space-y-4">
+            <div className="flex items-center gap-2 text-srf-primary"><Globe className="w-5 h-5" /><h2 className="text-lg font-semibold">Hero</h2></div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <input value={landingContent.heroTitle} onChange={(e) => updateField("heroTitle", e.target.value)} className="input" placeholder="Título principal" />
+              <input value={landingContent.heroSubtitle} onChange={(e) => updateField("heroSubtitle", e.target.value)} className="input" placeholder="Subtítulo" />
+              <textarea value={landingContent.heroDescription} onChange={(e) => updateField("heroDescription", e.target.value)} className="input min-h-28 md:col-span-2" placeholder="Descripción principal" />
+            </div>
+          </div>
+
+          <div className="card space-y-4">
+            <h2 className="text-lg font-semibold text-srf-primary">CTAs y SEO</h2>
+            <div className="grid gap-4 md:grid-cols-2">
+              <input value={landingContent.primaryCtaLabel} onChange={(e) => updateField("primaryCtaLabel", e.target.value)} className="input" placeholder="CTA primario" />
+              <input value={landingContent.primaryCtaHref} onChange={(e) => updateField("primaryCtaHref", e.target.value)} className="input" placeholder="/cotizar" />
+              <input value={landingContent.secondaryCtaLabel} onChange={(e) => updateField("secondaryCtaLabel", e.target.value)} className="input" placeholder="CTA secundario" />
+              <input value={landingContent.secondaryCtaHref} onChange={(e) => updateField("secondaryCtaHref", e.target.value)} className="input" placeholder="/tracking" />
+              <input value={landingContent.contactLabel} onChange={(e) => updateField("contactLabel", e.target.value)} className="input" placeholder="Etiqueta de contacto" />
+              <input value={landingContent.contactHref} onChange={(e) => updateField("contactHref", e.target.value)} className="input" placeholder="https://wa.me/..." />
+              <input value={landingContent.seoTitle} onChange={(e) => updateField("seoTitle", e.target.value)} className="input md:col-span-2" placeholder="SEO title" />
+              <textarea value={landingContent.seoDescription} onChange={(e) => updateField("seoDescription", e.target.value)} className="input min-h-24 md:col-span-2" placeholder="SEO description" />
+            </div>
+          </div>
+
+          <div className="card space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-srf-primary">Servicios</h2>
+              <button onClick={addService} className="btn-outline">Agregar servicio</button>
+            </div>
+            <div className="space-y-4">
+              {landingContent.services.map((service, index) => (
+                <div key={`${service.title}-${index}`} className="grid gap-3 rounded-xl border border-srf-primary/20 bg-black/20 p-4">
+                  <input value={service.title} onChange={(e) => updateService(index, "title", e.target.value)} className="input" placeholder="Título del servicio" />
+                  <textarea value={service.description} onChange={(e) => updateService(index, "description", e.target.value)} className="input min-h-20" placeholder="Descripción" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="card space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-srf-primary">Redes y perfil</h2>
+              <button onClick={addSocial} className="btn-outline">Agregar enlace</button>
+            </div>
+            <select value={industryKey} onChange={(e) => setIndustryKey(e.target.value)} className="input">
+              {(settings?.availableIndustries ?? []).map((industry) => <option key={industry.key} value={industry.key}>{industry.label}</option>)}
+            </select>
+            <div className="space-y-4">
+              {landingContent.socialLinks.map((link, index) => (
+                <div key={`${link.label}-${index}`} className="grid gap-3 rounded-xl border border-srf-primary/20 bg-black/20 p-4 md:grid-cols-2">
+                  <input value={link.label} onChange={(e) => updateSocial(index, "label", e.target.value)} className="input" placeholder="Instagram, WhatsApp..." />
+                  <input value={link.href} onChange={(e) => updateSocial(index, "href", e.target.value)} className="input" placeholder="https://..." />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="card space-y-5">
+          <div className="flex items-center gap-2 text-srf-primary">
+            <Eye className="w-5 h-5" />
+            <h2 className="text-lg font-semibold">Preview</h2>
+          </div>
+          <div className="rounded-[1.5rem] border border-srf-primary/20 bg-black/30 p-6">
+            <div className="text-xs uppercase tracking-[0.25em] text-srf-accent">{tenantSlug || "tenant"}</div>
+            <h3 className="mt-3 text-2xl font-orbitron font-bold text-srf-primary">{landingContent.heroTitle}</h3>
+            <p className="mt-2 text-sm text-srf-text">{landingContent.heroSubtitle}</p>
+            <p className="mt-4 text-sm text-srf-muted">{landingContent.heroDescription}</p>
+            <div className="mt-5 flex flex-wrap gap-2">
+              <a href={preview.primaryHref} className="btn-primary">{landingContent.primaryCtaLabel}</a>
+              <a href={preview.secondaryHref} className="btn-outline">{landingContent.secondaryCtaLabel}</a>
+            </div>
+            <div className="mt-4 text-xs text-srf-muted">
+              Contacto: <a href={preview.contactHref} className="text-srf-accent">{landingContent.contactLabel}</a>
+            </div>
+            <div className="mt-6 space-y-3">
+              {landingContent.services.map((service, index) => (
+                <div key={`${service.title}-${index}`} className="rounded-xl border border-srf-primary/20 bg-srf-surface/40 p-4">
+                  <div className="font-semibold text-srf-text">{service.title || "Servicio"}</div>
+                  <div className="mt-1 text-sm text-srf-muted">{service.description || "Descripción pendiente."}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

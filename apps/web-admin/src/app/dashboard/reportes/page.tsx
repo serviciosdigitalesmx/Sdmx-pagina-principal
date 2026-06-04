@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { RequireRole } from "@/components/guard/RequireRole";
-import { useAuth } from "@/components/guard/use-auth";
-import { ModuleShell } from "@/components/dashboard/module-shell";
+import { BarChart3, LineChart, RefreshCw, Users, Package, Wallet } from "lucide-react";
 import { getActiveScope } from "@/lib/scope";
 import { fixService } from "@/services/fixService";
 
@@ -28,139 +26,131 @@ function currency(value: number) {
 }
 
 export default function ReportesPage() {
-  const { role } = useAuth();
   const scope = getActiveScope();
   const [summary, setSummary] = useState<ReportsSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      try {
-        setLoading(true);
-        setError("");
-        const data = (await fixService.getReportsSummary()) as ReportsSummary;
-        if (!cancelled) setSummary(data);
-      } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : "Error al cargar reportes");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
+  async function load() {
+    try {
+      setLoading(true);
+      setError("");
+      const data = (await fixService.getReportsSummary()) as ReportsSummary;
+      setSummary(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al cargar reportes");
+      setSummary(null);
+    } finally {
+      setLoading(false);
     }
+  }
 
+  useEffect(() => {
     void load();
-    return () => {
-      cancelled = true;
-    };
   }, [scope?.mode, scope?.sucursalId]);
 
   const statusRows = useMemo(() => {
     const counts = summary?.statusCounts ?? {};
-    return Object.entries(counts)
-      .sort((a, b) => b[1] - a[1])
-      .map(([status, count]) => ({
-        status,
-        count: String(count),
-      }));
+    return Object.entries(counts).sort((a, b) => b[1] - a[1]);
   }, [summary?.statusCounts]);
 
   const technicianRows = useMemo(() => {
     const byTech = summary?.ordersByTechnician ?? {};
-    return Object.entries(byTech)
-      .sort((a, b) => b[1] - a[1])
-      .map(([name, count]) => ({
-        technician: name,
-        orders: String(count),
-      }));
+    return Object.entries(byTech).sort((a, b) => b[1] - a[1]);
   }, [summary?.ordersByTechnician]);
 
-  const stats = useMemo(
-    () => [
-      { label: "Órdenes", value: String(summary?.ordersCount ?? 0), helper: "Registros reales del tenant." },
-      { label: "Clientes", value: String(summary?.customersCount ?? 0), helper: "Clientes activos y visibles." },
-      { label: "Inventario", value: String(summary?.inventoryCount ?? 0), helper: "Productos en catálogo." },
-      { label: "Balance", value: currency(summary?.totalBalance ?? 0), helper: "Ingresos menos egresos." },
-    ],
-    [summary?.customersCount, summary?.inventoryCount, summary?.ordersCount, summary?.totalBalance],
-  );
+  if (loading) {
+    return <div className="flex h-full items-center justify-center"><div className="spinner w-8 h-8" /></div>;
+  }
 
   return (
-    <RequireRole allowed={["owner", "manager"]}>
-      <ModuleShell
-        title="Reportes"
-        subtitle="Resumen operativo, productividad y estado real del tenant."
-        icon="fas fa-chart-line"
-        actionLabel="Actualizar"
-        onAction={() => {
-          setLoading(true);
-          void fixService.getReportsSummary().then((data) => setSummary(data as ReportsSummary)).finally(() => setLoading(false));
-        }}
-        secondaryActionLabel={role === "owner" ? "Vista global" : "Vista del módulo"}
-        stats={stats}
-        loading={loading}
-        columns={[
-          { label: "Estado", key: "status" },
-          { label: "Cantidad", key: "count" },
-        ]}
-        rows={statusRows}
-        emptyTitle={loading ? "Cargando reportes…" : error ? "No pudimos cargar reportes" : "Sin datos suficientes"}
-        emptyCopy={error || "El resumen se arma con datos reales de service_orders, customers e inventory."}
-      >
-        <div className="grid gap-6 lg:grid-cols-2">
-          <section className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
-            <h2 className="text-base font-semibold text-zinc-50">Órdenes por técnico</h2>
-            <div className="mt-4 overflow-hidden rounded-2xl border border-white/10">
-              <table className="min-w-full text-left text-sm">
-                <thead className="bg-white/[0.04] text-zinc-300">
-                  <tr>
-                    <th className="px-4 py-3">Técnico</th>
-                    <th className="px-4 py-3">Órdenes</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/10">
-                  {technicianRows.length > 0 ? (
-                    technicianRows.map((row) => (
-                      <tr key={row.technician}>
-                        <td className="px-4 py-3 text-zinc-300">{row.technician}</td>
-                        <td className="px-4 py-3 text-zinc-200">{row.orders}</td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={2} className="px-4 py-6 text-center text-sm text-zinc-500">
-                        No hay asignaciones de técnicos aún.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </section>
-          <section className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
-            <h2 className="text-base font-semibold text-zinc-50">Indicadores clave</h2>
-            <dl className="mt-4 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <dt className="text-xs uppercase tracking-[0.18em] text-zinc-500">Productividad</dt>
-                <dd className="mt-2 text-xl font-semibold text-zinc-50">{Math.round(Number(summary?.productivity ?? 0))}%</dd>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <dt className="text-xs uppercase tracking-[0.18em] text-zinc-500">Valuación</dt>
-                <dd className="mt-2 text-xl font-semibold text-zinc-50">{currency(summary?.inventoryValuation ?? 0)}</dd>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <dt className="text-xs uppercase tracking-[0.18em] text-zinc-500">Cuentas por cobrar</dt>
-                <dd className="mt-2 text-xl font-semibold text-zinc-50">{currency(summary?.accountsReceivable ?? 0)}</dd>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <dt className="text-xs uppercase tracking-[0.18em] text-zinc-500">Última actualización</dt>
-                <dd className="mt-2 text-xl font-semibold text-zinc-50">{summary?.lastUpdatedAt ? new Date(summary.lastUpdatedAt).toLocaleString("es-MX") : "No disponible"}</dd>
-              </div>
-            </dl>
-          </section>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-orbitron font-bold text-srf-primary">Reportes</h1>
+          <p className="mt-1 text-sm text-srf-muted">Resumen operativo real del tenant y de la sucursal activa.</p>
         </div>
-      </ModuleShell>
-    </RequireRole>
+        <button onClick={() => void load()} className="btn-outline inline-flex items-center gap-2">
+          <RefreshCw className="w-4 h-4" />
+          Actualizar
+        </button>
+      </div>
+
+      {error ? <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">{error}</div> : null}
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="card text-center">
+          <BarChart3 className="mx-auto w-5 h-5 text-srf-primary" />
+          <div className="mt-3 text-3xl font-bold text-srf-primary">{summary?.ordersCount ?? 0}</div>
+          <div className="text-xs text-srf-muted">Órdenes</div>
+        </div>
+        <div className="card text-center">
+          <Users className="mx-auto w-5 h-5 text-srf-primary" />
+          <div className="mt-3 text-3xl font-bold text-srf-primary">{summary?.customersCount ?? 0}</div>
+          <div className="text-xs text-srf-muted">Clientes</div>
+        </div>
+        <div className="card text-center">
+          <Package className="mx-auto w-5 h-5 text-srf-accent" />
+          <div className="mt-3 text-3xl font-bold text-srf-accent">{summary?.inventoryCount ?? 0}</div>
+          <div className="text-xs text-srf-muted">Items de inventario</div>
+        </div>
+        <div className="card text-center">
+          <Wallet className="mx-auto w-5 h-5 text-srf-accent" />
+          <div className="mt-3 text-3xl font-bold text-srf-accent">{currency(summary?.totalBalance ?? 0)}</div>
+          <div className="text-xs text-srf-muted">Balance visible</div>
+        </div>
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-2">
+        <div className="card">
+          <div className="mb-4 flex items-center gap-2 text-srf-primary">
+            <LineChart className="w-5 h-5" />
+            <h2 className="text-lg font-semibold">Estados de órdenes</h2>
+          </div>
+          <div className="space-y-3">
+            {statusRows.length > 0 ? statusRows.map(([status, count]) => (
+              <div key={status} className="flex items-center justify-between rounded-xl border border-srf-primary/20 bg-black/20 px-4 py-3">
+                <span className="text-sm text-srf-text">{status}</span>
+                <span className="badge-recibido">{count}</span>
+              </div>
+            )) : <div className="text-sm text-srf-muted">Sin datos de estados todavía.</div>}
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="mb-4 flex items-center gap-2 text-srf-primary">
+            <Users className="w-5 h-5" />
+            <h2 className="text-lg font-semibold">Órdenes por técnico</h2>
+          </div>
+          <div className="space-y-3">
+            {technicianRows.length > 0 ? technicianRows.map(([name, count]) => (
+              <div key={name} className="flex items-center justify-between rounded-xl border border-srf-primary/20 bg-black/20 px-4 py-3">
+                <span className="text-sm text-srf-text">{name}</span>
+                <span className="badge-diagnostico">{count}</span>
+              </div>
+            )) : <div className="text-sm text-srf-muted">No hay técnicos asignados todavía.</div>}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-4">
+        <div className="card">
+          <div className="text-xs uppercase tracking-[0.2em] text-srf-muted">Productividad</div>
+          <div className="mt-3 text-2xl font-bold text-srf-primary">{Math.round(Number(summary?.productivity ?? 0))}%</div>
+        </div>
+        <div className="card">
+          <div className="text-xs uppercase tracking-[0.2em] text-srf-muted">Valuación</div>
+          <div className="mt-3 text-2xl font-bold text-srf-primary">{currency(summary?.inventoryValuation ?? 0)}</div>
+        </div>
+        <div className="card">
+          <div className="text-xs uppercase tracking-[0.2em] text-srf-muted">Cuentas por cobrar</div>
+          <div className="mt-3 text-2xl font-bold text-srf-primary">{currency(summary?.accountsReceivable ?? 0)}</div>
+        </div>
+        <div className="card">
+          <div className="text-xs uppercase tracking-[0.2em] text-srf-muted">Última actualización</div>
+          <div className="mt-3 text-sm font-semibold text-srf-text">{summary?.lastUpdatedAt ? new Date(summary.lastUpdatedAt).toLocaleString("es-MX") : "No disponible"}</div>
+        </div>
+      </div>
+    </div>
   );
 }
