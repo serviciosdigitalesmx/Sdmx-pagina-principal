@@ -1,367 +1,188 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
-import { RequireRole } from "@/components/guard/RequireRole";
-import { useAuth } from "@/components/guard/use-auth";
-import { ModuleShell } from "@/components/dashboard/module-shell";
-import { getActiveScope } from "@/lib/scope";
-import { fixService } from "@/services/fixService";
-
-type InventoryRow = {
-  id?: string;
-  sku?: string;
-  description?: string;
-  stock_current?: number | string;
-  minimum_stock?: number | string;
-  sucursal_id?: string | null;
-  created_at?: string;
-};
-
-type MovementRow = {
-  id?: string;
-  movement_type?: string;
-  quantity?: number | string;
-  reference?: string | null;
-  notes?: string | null;
-  created_at?: string;
-};
-
-function resolveStockSeverity(row: InventoryRow) {
-  const current = Number(row.stock_current ?? 0);
-  const minimum = Number(row.minimum_stock ?? 0);
-  if (current <= 0) return "critical";
-  if (current <= minimum) return "critical";
-  if (minimum > 0 && current <= minimum * 1.5) return "warning";
-  return "ok";
-}
-
-const emptyForm = {
-  sku: "",
-  description: "",
-  stock: "0",
-  sucursalId: "",
-};
+import { useEffect, useState } from "react";
+import { Plus, Search, RefreshCw, Edit2, Package, AlertTriangle, TrendingUp } from "lucide-react";
+import { apiClient } from "@/lib/api-client";
+import { getApiOptions } from "@/lib/tenant";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ProductModal } from "@/components/stock/product-modal";
+import { MovementModal } from "@/components/stock/movement-modal";
+import type { Product, StockAlert } from "@/types";
 
 export default function StockPage() {
-  const { role } = useAuth();
-  const scope = getActiveScope();
-  const [rows, setRows] = useState<InventoryRow[]>([]);
-  const [selectedId, setSelectedId] = useState("");
-  const [selectedMovements, setSelectedMovements] = useState<MovementRow[]>([]);
-  const [alerts, setAlerts] = useState<Array<{ id?: string; description?: string; sku?: string; severity?: string }>>([]);
-  const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
+  const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [alerts, setAlerts] = useState<StockAlert[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [showAlertsOnly, setShowAlertsOnly] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [productModalOpen, setProductModalOpen] = useState(false);
+  const [movementModalOpen, setMovementModalOpen] = useState(false);
+  const [movementProduct, setMovementProduct] = useState<Product | null>(null);
+  const [categories, setCategories] = useState<string[]>([]);
 
-  async function loadInventory() {
+  const loadProducts = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      setError("");
-      const data = await fixService.getInventory();
-      const typed = data as InventoryRow[];
-      setRows(typed);
-      setSelectedId((current) => current || typed[0]?.id || "");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al cargar inventario");
+      const data = await apiClient.get<{ data: Product[] }>("/inventory", getApiOptions());
+      const productsList = data.data || [];
+      const enrichedProducts = productsList.map((p) => {
+        const stock = p.stock_current || 0;
+        const minStock = p.minimum_stock || 5;
+        let alerta_nivel: "bajo" | "critico" | "agotado" | undefined;
+        let alerta_stock = false;
+        if (stock <= 0) {
+          alerta_nivel = "agotado";
+          alerta_stock = true;
+        } else if (stock <= minStock / 2) {
+          alerta_nivel = "critico";
+          alerta_stock = true;
+        } else if (stock <= minStock) {
+          alerta_nivel = "bajo";
+          alerta_stock = true;
+        }
+        return { ...p, alerta_nivel, alerta_stock };
+      });
+      setProducts(enrichedProducts as Product[]);
+      setCategories(Array.from(new Set(productsList.map((p) => p.category).filter(Boolean))) as string[]);
+    } catch (error) {
+      console.error("Failed to load products:", error);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
-  async function loadAlerts() {
+  const loadAlerts = async () => {
     try {
-      const data = await fixService.getStockAlerts();
-      setAlerts(data as Array<{ id?: string; description?: string; sku?: string; severity?: string }>);
-    } catch {
-      setAlerts([]);
+      const data = await apiClient.get<{ data: StockAlert[] }>("/stock-alerts", getApiOptions());
+      setAlerts(data.data || []);
+    } catch (error) {
+      console.error("Failed to load alerts:", error);
     }
-  }
+  };
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void loadInventory();
-      void loadAlerts();
-    }, 0);
-
-    return () => {
-      window.clearTimeout(timer);
-    };
+    loadProducts();
+    loadAlerts();
   }, []);
 
-  const selected = useMemo(() => rows.find((item) => item.id === selectedId) ?? null, [rows, selectedId]);
-
   useEffect(() => {
-    if (!selected) return;
-    const timer = window.setTimeout(() => {
-      setForm({
-        sku: selected.sku ?? "",
-        description: selected.description ?? "",
-        stock: String(selected.stock_current ?? 0),
-        sucursalId: selected.sucursal_id ?? "",
-      });
-    }, 0);
-
-    return () => {
-      window.clearTimeout(timer);
-    };
-  }, [selected]);
-
-  useEffect(() => {
-    const selectedInventoryId = selected?.id ?? "";
-    if (!selectedInventoryId) {
-      const timer = window.setTimeout(() => {
-        setSelectedMovements([]);
-      }, 0);
-
-      return () => {
-        window.clearTimeout(timer);
-      };
+    let filtered = [...products];
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter((p) => p.sku.toLowerCase().includes(term) || p.name.toLowerCase().includes(term) || (p.brand && p.brand.toLowerCase().includes(term)));
     }
-    let cancelled = false;
-    async function loadMovements() {
-      try {
-        const data = await fixService.getInventoryMovements(selectedInventoryId);
-        if (!cancelled) setSelectedMovements(data as MovementRow[]);
-      } catch {
-        if (!cancelled) setSelectedMovements([]);
-      }
-    }
-    void loadMovements();
-    return () => {
-      cancelled = true;
-    };
-  }, [selected?.id]);
+    if (categoryFilter) filtered = filtered.filter((p) => p.category === categoryFilter);
+    if (showAlertsOnly) filtered = filtered.filter((p) => (p as any).alerta_stock);
+    setFilteredProducts(filtered);
+  }, [searchTerm, categoryFilter, showAlertsOnly, products]);
 
-  const stats = useMemo(
-    () => [
-      { label: "Productos", value: String(rows.length), helper: "Inventario del taller." },
-      { label: "Sucursal", value: selected?.sucursal_id || scope?.sucursalId || "Global", helper: scope?.mode === "consolidated" ? "Vista consolidada." : "Sucursal activa." },
-      { label: "Rol", value: role, helper: "Permisos por usuario." },
-    ],
-    [rows.length, role, scope?.mode, scope?.sucursalId, selected?.sucursal_id],
-  );
+  const getAlertBadge = (product: Product) => {
+    if ((product as any).alerta_nivel === "agotado") return <span className="badge-cancelado text-xs">Agotado</span>;
+    if ((product as any).alerta_nivel === "critico") return <span className="badge-reparacion text-xs">Crítico</span>;
+    if ((product as any).alerta_nivel === "bajo") return <span className="badge-diagnostico text-xs">Stock bajo</span>;
+    return <span className="badge-listo text-xs">Activo</span>;
+  };
 
-  async function handleSave(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    try {
-      setSaving(true);
-      setError("");
-      const payload = {
-        sku: form.sku.trim(),
-        description: form.description.trim(),
-        stock: Number(form.stock || 0),
-        sucursalId: form.sucursalId.trim() || undefined,
-      };
+  const lowStockCount = products.filter((p) => (p as any).alerta_stock).length;
 
-      if (selected?.id) {
-        await fixService.updateInventoryItem(selected.id, {
-          description: payload.description,
-          stock: payload.stock,
-          sucursalId: payload.sucursalId ?? null,
-        });
-      } else {
-        await fixService.createInventoryItem(payload);
-      }
-      setSelectedId("");
-      setForm(emptyForm);
-      await loadInventory();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo guardar el inventario");
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function handleAdjustStock() {
-    if (!selected?.id) return;
-    try {
-      setSaving(true);
-      setError("");
-      await fixService.updateInventoryItem(selected.id, {
-        stock: Number(form.stock || 0),
-        description: form.description.trim(),
-        sucursalId: form.sucursalId.trim() || null,
-      });
-      await loadInventory();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo ajustar el stock");
-    } finally {
-      setSaving(false);
-    }
+  if (loading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="spinner h-8 w-8" />
+      </div>
+    );
   }
 
   return (
-    <RequireRole allowed={["owner", "manager", "technician"]}>
-      <ModuleShell
-        title="Inventarios"
-        subtitle="Productos, existencias y movimientos del módulo Stock."
-        icon="fas fa-boxes-stacked"
-        actionLabel="Nuevo producto"
-        secondaryActionLabel="Actualizar"
-        secondaryOnAction={() => void loadInventory()}
-        tertiaryActionLabel="Alertas"
-        tertiaryOnAction={() => void loadAlerts()}
-        onAction={() => {
-          setSelectedId("");
-          setForm(emptyForm);
-        }}
-        stats={stats}
-        columns={[
-          { label: "SKU", key: "sku" },
-          { label: "Descripción", key: "description" },
-          { label: "Stock", key: "stock_current" },
-          { label: "Sucursal", key: "sucursal_id" },
-        ]}
-        rows={rows.map((row) => ({
-          sku: row.sku ?? "",
-          description: row.description ?? "",
-          stock_current: String(row.stock_current ?? 0),
-          sucursal_id: row.sucursal_id ?? "Global",
-        }))}
-        loading={loading}
-        emptyTitle={loading ? "Cargando inventario…" : error ? "No pudimos cargar inventario" : "No hay productos todavía"}
-        emptyCopy={error || "La lista sale del inventario del taller y cruza con compras y alertas."}
-      >
-        <section className="grid gap-4 md:grid-cols-3">
-          {rows.slice(0, 3).map((row) => {
-            const severity = resolveStockSeverity(row);
-            const current = Number(row.stock_current ?? 0);
-            const minimum = Number(row.minimum_stock ?? 0);
-            return (
-              <article
-                key={row.id ?? row.sku}
-                className={[
-                  "rounded-2xl border p-4",
-                  severity === "critical"
-                    ? "border-rose-400/20 bg-rose-400/10 text-rose-100"
-                    : severity === "warning"
-                      ? "border-amber-400/20 bg-amber-400/10 text-amber-100"
-                      : "border-emerald-400/20 bg-emerald-400/10 text-emerald-100",
-                ].join(" ")}
-              >
-                <div className="text-xs uppercase tracking-[0.2em] opacity-70">{severity === "critical" ? "Crítico" : severity === "warning" ? "Reorden" : "OK"}</div>
-                <div className="mt-2 text-sm font-semibold">{row.sku ?? "SKU"}</div>
-                <div className="mt-1 text-sm opacity-80">{row.description ?? "Sin descripción"}</div>
-                <div className="mt-3 text-xs opacity-70">
-                  Stock {current} · mínimo {minimum}
-                </div>
-              </article>
-            );
-          })}
-        </section>
-        <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <form onSubmit={handleSave} className="space-y-4 rounded-[1.75rem] border border-amber-700/15 bg-[linear-gradient(180deg,rgba(16,14,12,0.96),rgba(22,18,14,0.98))] p-5">
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="text-lg font-semibold text-zinc-50">{selected?.id ? "Editar producto" : "Crear producto"}</h2>
-              <button
-                type="submit"
-                disabled={saving}
-                className="rounded-full bg-amber-50 px-4 py-2 text-sm font-semibold text-zinc-950 disabled:opacity-60"
-              >
-                {saving ? "Guardando…" : "Guardar"}
-              </button>
-            </div>
-            <label className="space-y-1 text-sm text-zinc-300">
-              <span>Producto activo</span>
-              <select
-                value={selectedId}
-                onChange={(event) => setSelectedId(event.target.value)}
-                className="w-full rounded-xl border border-stone-700 bg-zinc-950 px-3 py-2 text-zinc-100 outline-none"
-              >
-                <option value="">Nuevo producto</option>
-                {rows.map((row) => (
-                  <option key={row.id} value={row.id}>
-                    {row.sku} · {row.description}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <div className="grid gap-3 md:grid-cols-2">
-              {[
-                ["sku", "SKU"],
-                ["description", "Descripción"],
-                ["stock", "Stock"],
-                ["sucursalId", "Sucursal (sucursalId)"],
-              ].map(([key, label]) => (
-                <label key={key} className="space-y-1 text-sm text-zinc-300">
-                  <span>{label}</span>
-                  <input
-                    value={form[key as keyof typeof form]}
-                    onChange={(event) => setForm((current) => ({ ...current, [key]: event.target.value }))}
-                    className="w-full rounded-xl border border-stone-700 bg-zinc-950 px-3 py-2 text-zinc-100 outline-none"
-                  />
-                </label>
-              ))}
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => void handleAdjustStock()}
-                className="rounded-full border border-stone-700 px-4 py-2 text-sm font-medium text-zinc-100"
-              >
-                Ajustar stock
-              </button>
-              <button
-                type="button"
-                onClick={() => void loadAlerts()}
-                className="rounded-full border border-stone-700 px-4 py-2 text-sm font-medium text-zinc-100"
-              >
-                Ver alertas
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedId("");
-                  setForm(emptyForm);
-                }}
-                className="rounded-full border border-stone-700 px-4 py-2 text-sm font-medium text-zinc-100"
-              >
-                Limpiar
-              </button>
-            </div>
-            {error ? <p className="text-sm text-red-300">{error}</p> : null}
-          </form>
-
-          <div className="space-y-4 rounded-[1.75rem] border border-amber-700/15 bg-[linear-gradient(180deg,rgba(16,14,12,0.96),rgba(22,18,14,0.98))] p-5">
-            <h2 className="text-lg font-semibold text-zinc-50">Movimientos del producto</h2>
-            <div className="space-y-2">
-              {selectedMovements.length > 0 ? selectedMovements.map((movement) => (
-                <div key={movement.id ?? `${movement.created_at}-${movement.quantity}`} className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-3">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-zinc-200">{movement.movement_type}</span>
-                    <span className="text-zinc-400">{String(movement.quantity ?? 0)}</span>
-                  </div>
-                  <div className="mt-1 text-xs text-zinc-500">{movement.notes || movement.reference || "Movimiento real"}</div>
-                </div>
-              )) : (
-                <p className="text-sm text-zinc-400">Selecciona un producto para ver sus movimientos reales.</p>
-              )}
-            </div>
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-4">
-              <div className="flex items-center justify-between gap-3">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-100/70">Alertas</h3>
-                <button type="button" onClick={() => void loadAlerts()} className="rounded-full border border-zinc-700 px-3 py-1 text-xs font-semibold text-zinc-200">
-                  Recargar alertas
-                </button>
-              </div>
-              <div className="mt-3 space-y-2">
-                {alerts.length > 0 ? alerts.map((alert) => (
-                  <div key={alert.id ?? `${alert.sku}-${alert.description}`} className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3 text-sm text-zinc-200">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-semibold text-zinc-50">{alert.sku ?? "SKU"}</span>
-                      <span className="rounded-full border border-amber-400/20 px-2 py-0.5 text-[11px] uppercase tracking-[0.18em] text-amber-100/70">{alert.severity ?? "alerta"}</span>
-                    </div>
-                    <p className="mt-1 text-zinc-400">{alert.description ?? "Stock por revisar"}</p>
-                  </div>
-                )) : (
-                  <p className="text-sm text-zinc-400">Sin alertas de stock.</p>
-                )}
-              </div>
-            </div>
-          </div>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-orbitron font-bold text-srf-primary">Stock</h1>
+          <p className="mt-1 text-sm text-srf-muted">
+            {products.length} productos · {lowStockCount} con stock bajo
+          </p>
         </div>
-      </ModuleShell>
-    </RequireRole>
+        <Button onClick={() => { setSelectedProduct(null); setProductModalOpen(true); }} className="btn-primary gap-2">
+          <Plus className="h-4 w-4" />
+          Nuevo producto
+        </Button>
+      </div>
+
+      {lowStockCount > 0 ? (
+        <div className="flex items-center gap-2 rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-3 text-sm text-yellow-300">
+          <AlertTriangle className="h-5 w-5" /> Hay {lowStockCount} producto(s) con stock bajo o agotado.
+        </div>
+      ) : null}
+
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-srf-muted" />
+          <Input placeholder="Buscar por SKU, nombre, marca..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9" />
+        </div>
+        <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="input w-40">
+          <option value="">Todas las categorías</option>
+          {categories.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
+        </select>
+        <label className="flex items-center gap-2 rounded-lg border border-srf-primary/30 px-3 py-2">
+          <input type="checkbox" checked={showAlertsOnly} onChange={(e) => setShowAlertsOnly(e.target.checked)} className="accent-srf-accent" />
+          <span className="text-sm">Solo alertas</span>
+        </label>
+        <Button onClick={() => { loadProducts(); loadAlerts(); }} variant="outline" className="gap-2">
+          <RefreshCw className="h-4 w-4" /> Actualizar
+        </Button>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="border-b border-srf-primary/30 bg-srf-surface">
+            <tr>
+              <th className="px-4 py-3 text-left">SKU</th>
+              <th className="px-4 py-3 text-left">Producto</th>
+              <th className="px-4 py-3 text-left">Categoría</th>
+              <th className="px-4 py-3 text-left">Marca</th>
+              <th className="px-4 py-3 text-right">Stock</th>
+              <th className="px-4 py-3 text-right">Mínimo</th>
+              <th className="px-4 py-3 text-right">Costo</th>
+              <th className="px-4 py-3 text-right">Precio</th>
+              <th className="px-4 py-3 text-left">Estado</th>
+              <th className="px-4 py-3 text-left">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredProducts.map((product) => (
+              <tr key={product.id} className={`border-b border-srf-primary/20 transition-colors hover:bg-srf-surface/50 ${(product as any).alerta_stock ? "bg-red-500/5" : ""}`}>
+                <td className="px-4 py-3 font-mono text-srf-primary">{product.sku}</td>
+                <td className="px-4 py-3">
+                  <div className="font-medium">{product.name}</div>
+                  {product.proveedor ? <div className="text-xs text-srf-muted">{product.proveedor}</div> : null}
+                </td>
+                <td className="px-4 py-3">{product.category || "—"}</td>
+                <td className="px-4 py-3">{product.brand || "—"}</td>
+                <td className={`px-4 py-3 text-right font-semibold ${(product as any).alerta_stock ? "text-yellow-500" : ""}`}>{product.stock_current || 0}</td>
+                <td className="px-4 py-3 text-right text-srf-muted">{product.minimum_stock || 0}</td>
+                <td className="px-4 py-3 text-right">${(product.cost || 0).toFixed(2)}</td>
+                <td className="px-4 py-3 text-right">${(product.sale_price || 0).toFixed(2)}</td>
+                <td className="px-4 py-3">{getAlertBadge(product)}</td>
+                <td className="px-4 py-3">
+                  <div className="flex gap-2">
+                    <button onClick={() => { setSelectedProduct(product); setProductModalOpen(true); }} className="rounded p-1 text-srf-primary hover:bg-srf-primary/20" title="Editar"><Edit2 className="h-4 w-4" /></button>
+                    <button onClick={() => { setMovementProduct(product); setMovementModalOpen(true); }} className="rounded p-1 text-srf-accent hover:bg-srf-accent/20" title="Registrar movimiento"><TrendingUp className="h-4 w-4" /></button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {filteredProducts.length === 0 ? <div className="py-12 text-center"><p className="text-srf-muted">No hay productos con esos filtros</p></div> : null}
+      </div>
+
+      <ProductModal open={productModalOpen} onOpenChange={setProductModalOpen} product={selectedProduct} onSaved={() => { loadProducts(); loadAlerts(); }} />
+      <MovementModal open={movementModalOpen} onOpenChange={setMovementModalOpen} product={movementProduct} onSaved={() => { loadProducts(); loadAlerts(); }} />
+    </div>
   );
 }
+

@@ -1,258 +1,191 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from 'react';
-import { RequireRole } from '@/components/guard/RequireRole';
-import { useAuth } from '@/components/guard/use-auth';
-import { ModuleShell } from '@/components/dashboard/module-shell';
-import { fixService } from '@/services/fixService';
-import { Table } from '@white-label/ui';
+import { useState, useEffect } from "react";
+import { Plus, Search, RefreshCw, Edit2, Eye, Phone, Wrench } from "lucide-react";
+import { apiClient } from "@/lib/api-client";
+import { getApiOptions } from "@/lib/tenant";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { CustomerModal } from "@/components/clientes/customer-modal";
+import { CustomerHistory } from "@/components/clientes/customer-history";
+import type { Customer } from "@/types";
 
-type CustomerRow = {
-  id?: string;
-  name?: string;
-  full_name?: string;
-  phone?: string;
-  email?: string;
-  tag?: string;
-};
-
-type CustomerFormState = {
-  name: string;
-  phone: string;
-  email: string;
-};
-
-const initialFormState: CustomerFormState = {
-  name: '',
-  phone: '',
-  email: '',
-};
-
-export default function Page() {
-  const { role } = useAuth();
-  const [rows, setRows] = useState<CustomerRow[]>([]);
+export default function ClientesPage() {
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [form, setForm] = useState<CustomerFormState>(initialFormState);
-  const [copied, setCopied] = useState('');
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyCustomer, setHistoryCustomer] = useState<Customer | null>(null);
+  const [duplicates, setDuplicates] = useState<string[]>([]);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      try {
-        setLoading(true);
-        setError('');
-        const data = await fixService.getCustomers();
-        if (!cancelled) setRows(data as CustomerRow[]);
-      } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Error al cargar clientes');
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    void load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = event.target;
-    setForm((current) => ({ ...current, [name]: value }));
-  };
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setSaving(true);
-    setError('');
-    setSuccess('');
-
+  const loadCustomers = async () => {
+    setLoading(true);
     try {
-      const created = await fixService.createCustomer({
-        name: form.name.trim(),
-        phone: form.phone.trim(),
-        email: form.email.trim(),
+      const data = await apiClient.get<{ data: Customer[] }>("/customers", getApiOptions());
+      const customersList = data.data || [];
+      const phoneMap = new Map<string, number>();
+      customersList.forEach((c) => {
+        if (c.phone) phoneMap.set(c.phone, (phoneMap.get(c.phone) || 0) + 1);
       });
-
-      setRows((current) => [created as CustomerRow, ...current]);
-      setForm(initialFormState);
-      setSuccess('Cliente creado correctamente.');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al crear cliente');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  async function refreshCustomers() {
-    try {
-      setLoading(true);
-      setError('');
-      const data = await fixService.getCustomers();
-      setRows(data as CustomerRow[]);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al cargar clientes');
+      const dupPhones = Array.from(phoneMap.entries()).filter(([_, count]) => count > 1).map(([phone]) => phone);
+      setCustomers(customersList);
+      setFilteredCustomers(customersList);
+      setDuplicates(dupPhones);
+    } catch (error) {
+      console.error("Failed to load customers:", error);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
-  async function copyText(text: string, label: string) {
-    if (!text) return;
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(label);
-      window.setTimeout(() => setCopied(''), 1600);
-    } catch {
-      setError('No se pudo copiar al portapapeles');
+  useEffect(() => {
+    loadCustomers();
+  }, []);
+
+  useEffect(() => {
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      const filtered = customers.filter(
+        (c) => c.name.toLowerCase().includes(term) || c.phone.includes(term) || (c.email && c.email.toLowerCase().includes(term))
+      );
+      setFilteredCustomers(filtered);
+    } else {
+      setFilteredCustomers(customers);
     }
+  }, [searchTerm, customers]);
+
+  const handleEdit = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setModalOpen(true);
+  };
+
+  const handleViewHistory = (customer: Customer) => {
+    setHistoryCustomer(customer);
+    setHistoryOpen(true);
+  };
+
+  const handleNewOrder = (customer: Customer) => {
+    const draft = {
+      clienteNombre: customer.name,
+      clienteTelefono: customer.phone,
+      clienteEmail: customer.email || "",
+      dispositivo: "",
+      modelo: "",
+      falla: "",
+      fechaPromesa: "",
+      costo: 0,
+      notas: "",
+      checks: { cargador: false, pantalla: false, prende: false, respaldo: false },
+      fotoRecepcion: null,
+      fotoPreview: null,
+    };
+    localStorage.setItem("srf_borrador_orden", JSON.stringify(draft));
+    window.location.href = "/dashboard/ordenes";
+  };
+
+  const formatPhone = (phone: string) => {
+    const digits = phone.replace(/\D/g, "");
+    if (digits.length === 10) return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+    return phone;
+  };
+
+  const getCustomerBadge = (customer: Customer) => (duplicates.includes(customer.phone) ? <span className="badge-recibido text-xs">Posible duplicado</span> : null);
+
+  if (loading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="spinner h-8 w-8" />
+      </div>
+    );
   }
 
   return (
-    <RequireRole allowed={['owner', 'manager', 'technician']}>
-      <ModuleShell
-        title="Clientes"
-        subtitle="Clientes, duplicados y acceso rápido a órdenes."
-        icon="fas fa-users"
-        actionLabel={role === 'technician' ? 'Solo lectura' : 'Nuevo cliente'}
-        secondaryActionLabel="Actualizar"
-        secondaryOnAction={() => void refreshCustomers()}
-        stats={[
-          { label: 'Activos', value: String(rows.length), helper: 'Cargados desde la API real.' },
-          { label: 'Duplicados', value: '0', helper: 'Lista para detectar teléfonos repetidos.' },
-          { label: 'Acciones', value: loading ? '...' : '0', helper: 'Listo para abrir orden o consulta.' },
-        ]}
-        columns={[
-          { label: 'Nombre', key: 'name' },
-          { label: 'Teléfono', key: 'phone' },
-          { label: 'Correo', key: 'email' },
-          { label: 'Etiqueta', key: 'tag' },
-        ]}
-        rows={rows.map((row) => ({
-          ...row,
-          name: row.name ?? row.full_name ?? '',
-        }))}
-        loading={loading}
-        emptyTitle={loading ? 'Cargando clientes…' : error ? 'Error al cargar clientes' : 'Clientes listos'}
-        emptyCopy={error || 'El catálogo alimenta órdenes, solicitudes y seguimiento del tenant actual.'}
-      >
-        {role !== 'technician' ? (
-          <form className="grid gap-4 rounded-[1.75rem] border border-amber-700/15 bg-[linear-gradient(180deg,rgba(16,14,12,0.96),rgba(22,18,14,0.98))] p-5 md:grid-cols-3" onSubmit={handleSubmit}>
-            <div className="md:col-span-1">
-              <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-zinc-400" htmlFor="name">
-                Nombre
-              </label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                required
-                minLength={2}
-                value={form.name}
-                onChange={handleChange}
-                className="w-full rounded-xl border border-stone-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none transition placeholder:text-zinc-500 focus:border-amber-400/60 focus:ring-2 focus:ring-amber-400/20"
-                placeholder="Nombre del cliente"
-              />
-            </div>
-            <div className="md:col-span-1">
-              <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-zinc-400" htmlFor="phone">
-                Teléfono
-              </label>
-              <input
-                id="phone"
-                name="phone"
-                type="tel"
-                required
-                minLength={10}
-                value={form.phone}
-                onChange={handleChange}
-                className="w-full rounded-xl border border-stone-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none transition placeholder:text-zinc-500 focus:border-amber-400/60 focus:ring-2 focus:ring-amber-400/20"
-                placeholder="5551234567"
-              />
-            </div>
-            <div className="md:col-span-1">
-              <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-zinc-400" htmlFor="email">
-                Correo
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                value={form.email}
-                onChange={handleChange}
-                className="w-full rounded-xl border border-stone-700 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none transition placeholder:text-zinc-500 focus:border-amber-400/60 focus:ring-2 focus:ring-amber-400/20"
-                placeholder="cliente@correo.com"
-              />
-            </div>
-            <div className="md:col-span-3 flex flex-wrap items-center gap-3">
-              <button
-                type="submit"
-                disabled={saving}
-                className="rounded-full bg-amber-50 px-5 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {saving ? 'Guardando...' : 'Guardar cliente'}
-              </button>
-              <p className="text-sm text-zinc-400">Se crea en el tenant actual y queda aislado por diseño.</p>
-            </div>
-          </form>
-        ) : null}
-
-        {success ? (
-          <p className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200">
-            {success}
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-orbitron font-bold text-srf-primary">Clientes</h1>
+          <p className="mt-1 text-sm text-srf-muted">
+            {filteredCustomers.length} clientes · {duplicates.length} teléfonos duplicados
           </p>
-        ) : null}
-        {copied ? <p className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200">{copied} copiado.</p> : null}
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={() => loadCustomers()} variant="outline" className="gap-2">
+            <RefreshCw className="h-4 w-4" /> Actualizar
+          </Button>
+          <Button onClick={() => { setSelectedCustomer(null); setModalOpen(true); }} className="btn-primary gap-2">
+            <Plus className="h-4 w-4" /> Nuevo cliente
+          </Button>
+        </div>
+      </div>
 
-        {error ? (
-          <p className="rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
-            {error}
-          </p>
-        ) : null}
+      {duplicates.length > 0 ? (
+        <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-3 text-sm text-yellow-300">
+          <strong>Atención:</strong> Teléfonos repetidos detectados: {duplicates.map((phone) => formatPhone(phone)).join(", ")}
+        </div>
+      ) : null}
 
-        <Table<CustomerRow>
-          columns={[
-            { label: 'Nombre', key: 'name' },
-            { label: 'Teléfono', key: 'phone' },
-            { label: 'Correo', key: 'email' },
-            { label: 'Etiqueta', key: 'tag' },
-            {
-              label: 'Acciones',
-              key: 'actions',
-              render: (row) => (
-                <div className="flex flex-wrap gap-2">
-                  <a
-                    href={row.phone ? `https://wa.me/${row.phone.replace(/\D/g, '')}` : '#'}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="rounded-full border border-green-400/30 px-3 py-1 text-[11px] font-semibold text-green-200"
-                    aria-disabled={!row.phone}
-                  >
-                    WhatsApp
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-srf-muted" />
+        <Input placeholder="Buscar por nombre, teléfono o email..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9" />
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="border-b border-srf-primary/30 bg-srf-surface">
+            <tr>
+              <th className="px-4 py-3 text-left font-semibold text-srf-muted">Cliente</th>
+              <th className="px-4 py-3 text-left font-semibold text-srf-muted">Contacto</th>
+              <th className="px-4 py-3 text-left font-semibold text-srf-muted">Teléfono</th>
+              <th className="px-4 py-3 text-left font-semibold text-srf-muted">Email</th>
+              <th className="px-4 py-3 text-left font-semibold text-srf-muted">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredCustomers.map((customer) => (
+              <tr key={customer.id} className="border-b border-srf-primary/20 transition-colors hover:bg-srf-surface/50">
+                <td className="px-4 py-3">
+                  <div>
+                    <span className="font-medium">{customer.name}</span>
+                    {getCustomerBadge(customer)}
+                  </div>
+                </td>
+                <td className="px-4 py-3 text-srf-muted">{formatPhone(customer.phone)}</td>
+                <td className="px-4 py-3">
+                  <a href={`https://wa.me/52${customer.phone.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-green-500 hover:text-green-400">
+                    <Phone className="h-3 w-3" /> WhatsApp
                   </a>
-                  <button
-                    type="button"
-                    onClick={() => void copyText(row.phone ?? '', `Teléfono ${row.name ?? ''}`)}
-                    className="rounded-full border border-zinc-700 px-3 py-1 text-[11px] font-semibold text-zinc-200"
-                  >
-                    Copiar teléfono
-                  </button>
-                </div>
-              ),
-            },
-          ]}
-          rows={rows.map((row) => ({
-            ...row,
-            name: row.name ?? row.full_name ?? '',
-          }))}
-          emptyMessage={loading ? 'Cargando clientes…' : 'No hay clientes para mostrar'}
-        />
-      </ModuleShell>
-    </RequireRole>
+                </td>
+                <td className="px-4 py-3 text-srf-muted">{customer.email || "—"}</td>
+                <td className="px-4 py-3">
+                  <div className="flex gap-2">
+                    <button onClick={() => handleEdit(customer)} className="rounded p-1 text-srf-primary hover:bg-srf-primary/20" title="Editar">
+                      <Edit2 className="h-4 w-4" />
+                    </button>
+                    <button onClick={() => handleViewHistory(customer)} className="rounded p-1 text-srf-primary hover:bg-srf-primary/20" title="Historial">
+                      <Eye className="h-4 w-4" />
+                    </button>
+                    <button onClick={() => handleNewOrder(customer)} className="rounded p-1 text-srf-accent hover:bg-srf-accent/20" title="Nueva orden">
+                      <Wrench className="h-4 w-4" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {filteredCustomers.length === 0 ? (
+          <div className="py-12 text-center">
+            <p className="text-srf-muted">No hay clientes con esos filtros</p>
+          </div>
+        ) : null}
+      </div>
+
+      <CustomerModal open={modalOpen} onOpenChange={setModalOpen} customer={selectedCustomer} onCustomerSaved={() => loadCustomers()} />
+      <CustomerHistory open={historyOpen} onOpenChange={setHistoryOpen} customer={historyCustomer} />
+    </div>
   );
 }
+

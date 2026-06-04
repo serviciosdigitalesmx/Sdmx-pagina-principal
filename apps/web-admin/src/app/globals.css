@@ -70,6 +70,15 @@
   box-sizing: border-box;
 }
 
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -89,4 +98,100 @@ a {
 ::selection {
   background: var(--color-active);
   color: #ffffff;
+}
+
+.card {
+  border: 1px solid rgba(31, 126, 220, 0.3);
+  background: color-mix(in srgb, var(--color-bg-dark) 85%, white 15%);
+  border-radius: 0.75rem;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: #fff;
+  border: 1px solid transparent;
+}
+
+.btn-secondary {
+  background: color-mix(in srgb, var(--color-bg-dark) 70%, white 30%);
+  color: var(--color-text-primary-dark);
+  border: 1px solid rgba(31, 126, 220, 0.3);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--color-text-primary-dark);
+  border: 1px solid rgba(31, 126, 220, 0.4);
+}
+
+.spinner {
+  border-radius: 9999px;
+  border: 4px solid rgba(31, 126, 220, 0.3);
+  border-top-color: var(--color-cta);
+  animation: spin 1s linear infinite;
+}
+
+.input {
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(31, 126, 220, 0.3);
+  background: var(--color-bg-dark);
+  padding: 0.5rem 0.75rem;
+  color: var(--color-text-primary-dark);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input::placeholder {
+  color: var(--color-text-secondary-dark);
+}
+
+.input:focus {
+  border-color: var(--color-cta);
+  box-shadow: 0 0 0 1px var(--color-cta);
+}
+
+.badge-recibido,
+.badge-listo,
+.badge-cancelado,
+.badge-diagnostico,
+.badge-reparacion {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  padding: 0.25rem 0.5rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.badge-recibido {
+  background: rgba(31, 126, 220, 0.2);
+  color: var(--color-primary);
+  border: 1px solid rgba(31, 126, 220, 0.4);
+}
+
+.badge-listo {
+  background: rgba(34, 197, 94, 0.2);
+  color: rgb(74, 222, 128);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+}
+
+.badge-cancelado {
+  background: rgba(100, 116, 139, 0.2);
+  color: rgb(203, 213, 225);
+  border: 1px solid rgba(100, 116, 139, 0.4);
+}
+
+.badge-diagnostico {
+  background: rgba(234, 179, 8, 0.2);
+  color: rgb(250, 204, 21);
+  border: 1px solid rgba(234, 179, 8, 0.4);
+}
+
+.badge-reparacion {
+  background: rgba(249, 115, 22, 0.2);
+  color: rgb(251, 146, 60);
+  border: 1px solid rgba(249, 115, 22, 0.4);
 }

@@ -7,102 +7,131 @@ import { ModuleShell } from "@/components/dashboard/module-shell";
 import { getActiveScope } from "@/lib/scope";
 import { fixService } from "@/services/fixService";
 
-type FinanceRow = Record<string, string>;
+type FinanceRow = {
+  id?: string;
+  created_at?: string;
+  type?: string;
+  balance?: number | string;
+  income?: number | string;
+  expense?: number | string;
+  sucursal_id?: string | null;
+};
 
-export default function Page() {
+function currency(value: number | string | null | undefined) {
+  const amount = Number(value ?? 0);
+  return new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 }).format(Number.isFinite(amount) ? amount : 0);
+}
+
+export default function FinanzasPage() {
   const { role } = useAuth();
   const scope = getActiveScope();
-  const activeSucursalId = scope?.sucursalId ?? "";
   const [rows, setRows] = useState<FinanceRow[]>([]);
+  const [cashflow, setCashflow] = useState<FinanceRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      try {
-        setLoading(true);
-        setError("");
-        if (role !== "owner" && !activeSucursalId) {
-          throw new Error("Sucursal activa requerida");
-        }
-        const data = role === "owner" ? await fixService.getBalance() : await fixService.getCashflow(activeSucursalId);
-        if (!cancelled) {
-          setRows(
-            (data as Record<string, unknown>[]).map((row) =>
-              Object.fromEntries(
-                Object.entries(row).map(([key, value]) => [key, value == null ? "" : String(value)])
-              ) as FinanceRow
-            )
-          );
-        }
-      } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : "Error al cargar finanzas");
-      } finally {
-        if (!cancelled) setLoading(false);
+  async function refresh() {
+    try {
+      setLoading(true);
+      setError("");
+      const balance = await fixService.getBalance();
+      setRows(balance as FinanceRow[]);
+      if (scope?.sucursalId) {
+        const flow = await fixService.getCashflow(scope.sucursalId);
+        setCashflow(flow as FinanceRow[]);
+      } else {
+        setCashflow([]);
       }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al cargar finanzas");
+      setRows([]);
+      setCashflow([]);
+    } finally {
+      setLoading(false);
     }
+  }
 
-    void load();
+  useEffect(() => {
+    void refresh();
+  }, [scope?.sucursalId]);
 
-    return () => {
-      cancelled = true;
-    };
-  }, [activeSucursalId, role]);
+  const summary = useMemo(() => {
+    const income = rows.reduce((sum, row) => sum + Number(row.income ?? 0), 0);
+    const expense = rows.reduce((sum, row) => sum + Number(row.expense ?? 0), 0);
+    const balance = rows.length > 0 ? Number(rows[0]?.balance ?? income - expense) : income - expense;
+    return { income, expense, balance };
+  }, [rows]);
 
   const stats = useMemo(
     () => [
-      { label: "Registros", value: String(rows.length), helper: "Datos del taller." },
-      { label: "Rol", value: role, helper: "Permisos reales por usuario." },
-      { label: "Sucursal", value: role === "owner" && scope?.mode === "consolidated" ? "Consolidado" : activeSucursalId || "No disponible", helper: scope?.mode === "consolidated" ? "Vista consolidada." : "Sucursal activa." },
+      { label: "Ingresos", value: currency(summary.income), helper: "Órdenes reales del tenant." },
+      { label: "Egresos", value: currency(summary.expense), helper: "Gastos reales del tenant." },
+      { label: "Balance", value: currency(summary.balance), helper: "Balance operativo real." },
+      { label: "Rol", value: role, helper: "Permiso actual." },
     ],
-    [activeSucursalId, role, rows.length, scope?.mode]
+    [role, summary.balance, summary.expense, summary.income],
   );
 
   return (
-    <RequireRole allowed={["owner", "manager"]}>
+    <RequireRole allowed={["owner"]}>
       <ModuleShell
         title="Finanzas"
-        subtitle="Balances y flujo financiero del taller."
-        icon="fas fa-chart-line"
-        actionLabel={role === "owner" ? "Balance global" : "Ver flujo por sucursal"}
-        secondaryActionLabel="Actualizar"
-        secondaryOnAction={() => {
-          void (async () => {
-            try {
-              setLoading(true);
-              setError("");
-              if (role !== "owner" && !activeSucursalId) {
-                throw new Error("Sucursal activa requerida");
-              }
-              const data = role === "owner" ? await fixService.getBalance() : await fixService.getCashflow(activeSucursalId);
-              setRows(
-                (data as Record<string, unknown>[]).map((row) =>
-                  Object.fromEntries(
-                    Object.entries(row).map(([key, value]) => [key, value == null ? "" : String(value)])
-                  ) as FinanceRow
-                )
-              );
-            } catch (err) {
-              setError(err instanceof Error ? err.message : "Error al cargar finanzas");
-            } finally {
-              setLoading(false);
-            }
-          })();
-        }}
+        subtitle="Vista financiera real del tenant con balance y flujo por sucursal."
+        icon="fas fa-coins"
+        actionLabel="Actualizar"
+        onAction={() => void refresh()}
         stats={stats}
         loading={loading}
         columns={[
-          { label: "ID", key: "id" },
+          { label: "Fecha", key: "created_at" },
+          { label: "Tipo", key: "type" },
           { label: "Balance", key: "balance" },
           { label: "Ingreso", key: "income" },
           { label: "Egreso", key: "expense" },
         ]}
-        rows={rows}
-        emptyTitle={loading ? "Cargando finanzas…" : error ? "No pudimos cargar las finanzas" : "Sin movimientos financieros todavía"}
-        emptyCopy={error || "Aquí verás balances, ingresos y egresos cuando el taller registre movimientos reales."}
-      />
+        rows={rows.slice(0, 20).map((row) => ({
+          created_at: row.created_at ? new Date(row.created_at).toLocaleString("es-MX") : "No disponible",
+          type: row.type ?? "summary",
+          balance: currency(row.balance ?? 0),
+          income: currency(row.income ?? 0),
+          expense: currency(row.expense ?? 0),
+        }))}
+        emptyTitle={loading ? "Cargando finanzas…" : error ? "No pudimos cargar finanzas" : "Sin movimientos"}
+        emptyCopy={error || "Los datos salen de service_orders y finances reales."}
+      >
+        <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
+          <h2 className="text-base font-semibold text-zinc-50">Flujo por sucursal</h2>
+          <p className="mt-1 text-sm text-zinc-400">{scope?.sucursalId ? `Sucursal ${scope.sucursalId}` : "No hay sucursal activa para flujo detallado."}</p>
+          <div className="mt-4 overflow-hidden rounded-2xl border border-white/10">
+            <table className="min-w-full text-left text-sm">
+              <thead className="bg-white/[0.04] text-zinc-300">
+                <tr>
+                  <th className="px-4 py-3">Fecha</th>
+                  <th className="px-4 py-3">Balance</th>
+                  <th className="px-4 py-3">Ingreso</th>
+                  <th className="px-4 py-3">Egreso</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/10">
+                {cashflow.length > 0 ? cashflow.map((row) => (
+                  <tr key={row.id ?? `${row.created_at ?? ""}-${row.type ?? ""}`}>
+                    <td className="px-4 py-3 text-zinc-300">{row.created_at ? new Date(row.created_at).toLocaleDateString("es-MX") : "No disponible"}</td>
+                    <td className="px-4 py-3 text-zinc-300">{currency(row.balance ?? 0)}</td>
+                    <td className="px-4 py-3 text-zinc-300">{currency(row.income ?? 0)}</td>
+                    <td className="px-4 py-3 text-zinc-300">{currency(row.expense ?? 0)}</td>
+                  </tr>
+                )) : (
+                  <tr>
+                    <td colSpan={4} className="px-4 py-6 text-center text-sm text-zinc-500">
+                      {scope?.sucursalId ? "Sin flujo disponible para esta sucursal." : "Selecciona una sucursal para ver flujo detallado."}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </ModuleShell>
     </RequireRole>
   );
 }

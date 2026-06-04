@@ -784,6 +784,55 @@ class FixService {
     return result.data ?? [];
   }
 
+  public async getExpenses(): Promise<JsonRecord[]> {
+    const result = await this.request<ApiListResponse<JsonRecord[]>>(
+      this.apiPath('/finance/balance'),
+      { method: 'GET' }
+    );
+    return (result.data ?? [])
+      .filter((row) => String(row.type ?? '').toLowerCase() === 'expense')
+      .map((row) => ({
+        ...row,
+        description: String(row.description ?? row.reference ?? 'Gasto'),
+        category: String(row.category ?? 'operativo'),
+        expense: Number(row.expense ?? 0),
+        created_at: String(row.created_at ?? new Date().toISOString()),
+      }));
+  }
+
+  public async createExpense(payload: {
+    sucursalId: string;
+    amount: number;
+    description: string;
+    category: string;
+    date?: string;
+  }): Promise<JsonRecord> {
+    const result = await this.request<ApiSingleResponse<JsonRecord>>(
+      this.apiPath('/finance/expense'),
+      {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }
+    );
+    return result.data;
+  }
+
+  public async getExpense(id: string): Promise<JsonRecord> {
+    const result = await this.request<ApiSingleResponse<JsonRecord>>(
+      this.apiPath(`/finance/expense/${encodeURIComponent(id)}`),
+      { method: 'GET' }
+    );
+    return result.data;
+  }
+
+  public async deleteExpense(id: string): Promise<JsonRecord> {
+    const result = await this.request<ApiSingleResponse<JsonRecord>>(
+      this.apiPath(`/finance/expense/${encodeURIComponent(id)}`),
+      { method: 'DELETE' }
+    );
+    return result.data;
+  }
+
   public async getSucursales(): Promise<JsonRecord[]> {
     const result = await this.request<ApiListResponse<JsonRecord[]>>(
       this.apiPath('/sucursales'),

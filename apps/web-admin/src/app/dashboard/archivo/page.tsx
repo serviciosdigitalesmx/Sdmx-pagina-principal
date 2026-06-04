@@ -6,7 +6,7 @@ import { useAuth } from "@/components/guard/use-auth";
 import { ModuleShell } from "@/components/dashboard/module-shell";
 import { fixService } from "@/services/fixService";
 
-type ArchivedOrder = {
+type ArchiveRow = {
   folio: string;
   client: string;
   cierre: string;
@@ -14,133 +14,61 @@ type ArchivedOrder = {
 };
 
 function normalizeStatus(value: string) {
-  const status = value.toLowerCase();
-
-  if (status.includes("recib")) return "Recibido";
-  if (status.includes("pend")) return "Pendiente";
-  if (status.includes("diag")) return "Diagnóstico";
-  if (status.includes("repar")) return "En reparación";
-  if (status.includes("list")) return "Listo";
-  if (status.includes("entreg")) return "Entregado";
-  if (status.includes("cerr")) return "Cerrado";
-  if (status.includes("complete")) return "Completado";
-  if (status.includes("ready")) return "Listo";
-  if (status.includes("delivered")) return "Entregado";
-  if (status.includes("waiting")) return "En espera";
-
-  return value || "Sin estado";
+  if (!value) return "cerrada";
+  const lower = value.toLowerCase();
+  if (lower.includes("cancel")) return "cancelada";
+  if (lower.includes("entreg")) return "entregada";
+  if (lower.includes("list")) return "lista";
+  return value;
 }
 
 function resolveCloseDate(order: Record<string, unknown>) {
-  const candidate =
-    order.delivered_at ??
-    order.completed_at ??
-    order.archived_at ??
-    order.updated_at ??
-    order.created_at;
-
-  if (!candidate) {
-    return "Sin fecha";
-  }
-
-  const date = new Date(String(candidate));
-  if (Number.isNaN(date.getTime())) {
-    return String(candidate);
-  }
-
-  return new Intl.DateTimeFormat("es-MX", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(date);
+  const date = String(order.updated_at ?? order.created_at ?? "");
+  return date ? new Date(date).toLocaleDateString("es-MX") : "No disponible";
 }
 
 export default function ArchivoPage() {
   const { role } = useAuth();
-  const [rows, setRows] = useState<ArchivedOrder[]>([]);
+  const [rows, setRows] = useState<ArchiveRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      try {
-        setLoading(true);
-        setError("");
-        const data = await fixService.getOrders();
-        const archived = (data as Array<Record<string, unknown>>)
-          .filter((order) => {
-            const status = String(order.status ?? "").toLowerCase();
-            return [
-              "list",
-              "entreg",
-              "cerr",
-              "complete",
-              "ready",
-              "delivered",
-              "waiting",
-            ].some((value) => status.includes(value));
-          })
-          .map((order) => ({
-            folio: String(order.folio ?? ""),
-            client: String((order.device_info as { customer_name?: string } | undefined)?.customer_name ?? ""),
-            cierre: resolveCloseDate(order),
-            estado: normalizeStatus(String(order.status ?? "")),
-          }));
-
-        if (!cancelled) setRows(archived);
-      } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : "Error al cargar archivo");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    void load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   async function refresh() {
     try {
       setLoading(true);
+      setError("");
       const data = await fixService.getOrders();
       const archived = (data as Array<Record<string, unknown>>)
         .filter((order) => {
           const status = String(order.status ?? "").toLowerCase();
-          return [
-            "list",
-            "entreg",
-            "cerr",
-            "complete",
-            "ready",
-            "delivered",
-            "waiting",
-          ].some((value) => status.includes(value));
+          return ["list", "entreg", "cerr", "complete", "ready", "delivered", "waiting"].some((value) => status.includes(value));
         })
         .map((order) => ({
           folio: String(order.folio ?? ""),
-          client: String((order.device_info as { customer_name?: string } | undefined)?.customer_name ?? ""),
+          client: String((order.device_info as { customer_name?: string } | undefined)?.customer_name ?? (order.customer_name ?? "")),
           cierre: resolveCloseDate(order),
           estado: normalizeStatus(String(order.status ?? "")),
         }));
       setRows(archived);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al cargar archivo");
+      setRows([]);
     } finally {
       setLoading(false);
     }
   }
 
+  useEffect(() => {
+    void refresh();
+  }, []);
+
   const stats = useMemo(
     () => [
       { label: "Órdenes cerradas", value: String(rows.length), helper: "Derivado de órdenes reales." },
-      { label: "Rango", value: "Auto", helper: "Se calcula desde created_at." },
+      { label: "Rol", value: role, helper: "Permiso actual." },
       { label: "Exportaciones", value: "0", helper: "Pendiente de endpoint de exportación." },
     ],
-    [rows.length]
+    [role, rows.length],
   );
 
   return (
