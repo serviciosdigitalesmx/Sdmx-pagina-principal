@@ -134,7 +134,6 @@ async function persistInventoryStock(
   const movementPayload = {
     tenant_id: tenantId,
     branch_id: sucursalId,
-    sucursal_id: sucursalId,
     product_id: productId,
     movement_type: 'adjustment',
     quantity: stock,
