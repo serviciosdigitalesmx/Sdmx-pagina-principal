@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ShellBadge, StatCard, srFixTheme } from "@/components/srfix-theme";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { readAuthToken, saveAuthToken } from "@/lib/auth-storage";
-import { resolveApiBaseUrl } from "@white-label/config";
+import { getPublicApiPath } from "@/lib/public-api";
 
 type LoginState = {
   email: string;
@@ -42,25 +42,13 @@ function getAdminBridgeUrl(token: string) {
 }
 
 function getGoogleOnboardingUrl() {
-  const apiUrl = resolveApiBaseUrl();
-
-  if (!apiUrl) {
-    return null;
-  }
-
-  try {
-    const url = new URL(`${apiUrl}/api/auth/google`);
-    url.searchParams.set("origin", window.location.origin);
-    return url.toString();
-  } catch {
-    return null;
-  }
+  const url = new URL(getPublicApiPath("/api/auth/google"), window.location.origin);
+  url.searchParams.set("origin", window.location.origin);
+  return url.toString();
 }
 
 async function exchangeSessionForApiToken(accessToken: string) {
-  const apiUrl = resolveApiBaseUrl();
-
-  const response = await fetch(`${apiUrl}/api/auth/exchange`, {
+  const response = await fetch(getPublicApiPath("/api/auth/exchange"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

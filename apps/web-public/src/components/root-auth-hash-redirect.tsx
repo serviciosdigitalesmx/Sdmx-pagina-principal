@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import { resolveApiBaseUrl } from "@white-label/config";
 import { saveAuthToken } from "@/lib/auth-storage";
+import { getPublicApiPath } from "@/lib/public-api";
 
 function getDashboardRedirectUrl() {
   return "/dashboard";
@@ -27,13 +27,7 @@ function getAdminBridgeUrl(token: string) {
 }
 
 async function exchangeSessionForApiToken(accessToken: string) {
-  const apiUrl = resolveApiBaseUrl();
-
-  if (!apiUrl) {
-    throw new Error("Falta configurar la URL del API");
-  }
-
-  const response = await fetch(`${apiUrl}/api/auth/exchange`, {
+  const response = await fetch(getPublicApiPath("/api/auth/exchange"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

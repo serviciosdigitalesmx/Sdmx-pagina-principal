@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { resolveApiBaseUrl } from "@white-label/config";
+import { getPublicApiPath } from "@/lib/public-api";
 
 const fieldClassName =
   "w-full rounded-2xl border border-stone-700 bg-zinc-950 px-4 py-3 text-zinc-50 outline-none transition placeholder:text-zinc-500 focus:border-amber-400/60 focus:ring-2 focus:ring-amber-400/20";
@@ -18,8 +18,6 @@ export default function TenantTrackingPage() {
   const [loading, setLoading] = useState(false);
   const [portalTemplate, setPortalTemplate] = useState<Record<string, unknown> | null>(null);
 
-  const apiUrl = resolveApiBaseUrl();
-
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setLoading(true);
@@ -27,7 +25,7 @@ export default function TenantTrackingPage() {
     setStatus(null);
 
     try {
-      const url = new URL(`${apiUrl}/api/public/tracking`);
+      const url = new URL(getPublicApiPath("/api/public/tracking"), window.location.origin);
       url.searchParams.set("tenantSlug", tenant);
       url.searchParams.set("folio", folio.trim());
       if (email.trim()) {

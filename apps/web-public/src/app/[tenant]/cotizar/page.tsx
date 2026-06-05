@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { DynamicFields, type DynamicFieldDefinition } from "@white-label/ui";
-import { resolveApiBaseUrl } from "@white-label/config";
+import { getPublicApiPath } from "@/lib/public-api";
 
 const fieldClassName =
   "w-full rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-50 outline-none transition placeholder:text-zinc-500 focus:border-slate-400/60 focus:ring-2 focus:ring-slate-400/20";
@@ -89,14 +89,12 @@ export default function TenantQuotePage() {
   const [dynamicFieldDefinitions, setDynamicFieldDefinitions] = useState<DynamicFieldDefinition[]>([]);
   const [dynamicFieldValues, setDynamicFieldValues] = useState<Record<string, string | boolean>>({});
   const [tenantLabels, setTenantLabels] = useState<Record<string, string>>({});
-  const apiUrl = useMemo(() => resolveApiBaseUrl(), []);
-
   useEffect(() => {
     let cancelled = false;
 
     async function loadSettings() {
       try {
-        const response = await fetch(`${apiUrl}/api/public/${encodeURIComponent(tenant)}`);
+        const response = await fetch(getPublicApiPath(`/api/public/${encodeURIComponent(tenant)}`));
         const payload = (await response.json().catch(() => null)) as { success?: boolean; data?: { tenant?: { config?: PublicTenantConfig } } } | null;
         if (!response.ok || !payload?.success) {
           throw new Error("No se pudo cargar la configuración del tenant");
@@ -119,7 +117,7 @@ export default function TenantQuotePage() {
     return () => {
       cancelled = true;
     };
-  }, [apiUrl, tenant]);
+  }, [tenant]);
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -153,7 +151,7 @@ export default function TenantQuotePage() {
     }, {});
 
     try {
-      const response = await fetch(`${apiUrl}/api/public/quotes`, {
+      const response = await fetch(getPublicApiPath("/api/public/quotes"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ tenantSlug: tenant, ...form, metadata: dynamicMetadata }),

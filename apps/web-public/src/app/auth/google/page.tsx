@@ -1,15 +1,11 @@
 import { redirect } from "next/navigation";
-import { optionalEnv, resolveApiBaseUrl } from "@white-label/config";
+import { optionalEnv } from "@white-label/config";
+import { getPublicApiPath } from "@/lib/public-api";
 
 export default function AuthGooglePage() {
-  const apiUrl = resolveApiBaseUrl();
   const publicUrl = optionalEnv("NEXT_PUBLIC_WEB_PUBLIC_URL") ?? "https://serviciosdigitalesmx.online";
 
-  if (!apiUrl) {
-    redirect("/onboarding");
-  }
-
-  const url = new URL(`${apiUrl}/api/auth/google`);
+  const url = new URL(getPublicApiPath("/api/auth/google"), publicUrl);
   url.searchParams.set("origin", publicUrl);
 
   redirect(url.toString());

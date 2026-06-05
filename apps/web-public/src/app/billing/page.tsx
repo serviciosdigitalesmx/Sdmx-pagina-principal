@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { readAuthToken } from "@/lib/auth-storage";
-import { resolveApiBaseUrl } from "@white-label/config";
 import { HeroButton, ShellBadge, StatCard, srFixTheme } from "@/components/srfix-theme";
+import { getPublicApiPath } from "@/lib/public-api";
 
 type BillingPlanCode = "basic" | "pro" | "enterprise";
 
@@ -42,7 +42,6 @@ export default function BillingPage() {
   const [error, setError] = useState<string | null>(null);
   const [loadingPlan, setLoadingPlan] = useState<BillingPlanCode | null>(null);
   const [token, setToken] = useState<string | null>(null);
-  const apiUrl = useMemo(() => resolveApiBaseUrl(), []);
 
   useEffect(() => {
     setToken(readAuthToken());
@@ -57,7 +56,7 @@ export default function BillingPage() {
         throw new Error("Necesitas iniciar sesión antes de activar un plan.");
       }
 
-      const response = await fetch(`${apiUrl}/api/billing/checkout`, {
+      const response = await fetch(getPublicApiPath("/api/billing/checkout"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

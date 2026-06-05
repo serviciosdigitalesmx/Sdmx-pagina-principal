@@ -4,7 +4,8 @@ import { useState, type ChangeEvent, type FormEvent } from "react";
 import { saveAuthToken } from "@/lib/auth-storage";
 import Link from "next/link";
 import { ShellBadge, StatCard, srFixTheme } from "@/components/srfix-theme";
-import { resolveApiBaseUrl, optionalEnv } from "@white-label/config";
+import { optionalEnv } from "@white-label/config";
+import { getPublicApiPath } from "@/lib/public-api";
 
 type RegisterState = {
   workshopName: string;
@@ -27,8 +28,6 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const getApiUrl = () => resolveApiBaseUrl();
-
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     setForm((current) => ({ ...current, [name]: value }));
@@ -40,12 +39,7 @@ export default function OnboardingPage() {
     setError(null);
 
     try {
-      const apiUrl = getApiUrl();
-      if (!apiUrl) {
-        throw new Error("La URL del API no está configurada.");
-      }
-
-      const response = await fetch(`${apiUrl}/api/auth/register`, {
+      const response = await fetch(getPublicApiPath("/api/auth/register"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -83,13 +77,7 @@ export default function OnboardingPage() {
   };
 
   const handleGoogleRegister = () => {
-    const apiUrl = getApiUrl();
-    if (!apiUrl) {
-      setError("Falta configurar la URL del API.");
-      return;
-    }
-
-    const url = new URL(`${apiUrl}/api/auth/google`);
+    const url = new URL(getPublicApiPath("/api/auth/google"), window.location.origin);
     url.searchParams.set("origin", window.location.origin);
     window.location.assign(url.toString());
   };

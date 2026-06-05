@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState, useEffect, type FormEvent } from "react";
 import { useParams, useSearchParams } from "next/navigation";
-import { resolveApiBaseUrl } from "@white-label/config";
+import { getPublicApiPath } from "@/lib/public-api";
 
 type PortalOrderResponse = {
   success: true;
@@ -106,8 +106,6 @@ export default function PortalPage() {
   const [tenantError, setTenantError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
 
-  const apiBaseUrl = resolveApiBaseUrl();
-
   const whatsappHref = useMemo(() => {
     const contactPhone = tenant?.contact_phone;
     return resolveWhatsappHref(contactPhone || undefined);
@@ -145,7 +143,7 @@ export default function PortalPage() {
 
     setLoadingTenant(true);
     setTenantError(null);
-    fetch(`${apiBaseUrl}/api/public/tenant/${encodeURIComponent(tenantSlug)}/landing`)
+    fetch(getPublicApiPath(`/api/public/tenant/${encodeURIComponent(tenantSlug)}/landing`))
       .then((res) => {
         if (!res.ok) {
           throw new Error("No pudimos encontrar la información de este taller.");
@@ -167,7 +165,7 @@ export default function PortalPage() {
       .finally(() => {
         setLoadingTenant(false);
       });
-  }, [tenantSlug, apiBaseUrl]);
+  }, [tenantSlug]);
 
   const executeSearch = async (searchValue: string) => {
     setLoading(true);
@@ -184,7 +182,7 @@ export default function PortalPage() {
       }
 
       const response = await fetch(
-        `${apiBaseUrl}/api/public/tenant/${encodeURIComponent(tenantSlug)}/orders/${encodeURIComponent(searchValue.trim())}`
+        getPublicApiPath(`/api/public/tenant/${encodeURIComponent(tenantSlug)}/orders/${encodeURIComponent(searchValue.trim())}`)
       );
       const payload = (await response.json().catch(() => null)) as PortalOrderResponse | { error?: string } | null;
 

@@ -4,7 +4,7 @@ import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { saveAuthToken } from "@/lib/auth-storage";
 import { ShellBadge, srFixTheme } from "@/components/srfix-theme";
-import { resolveApiBaseUrl } from "@white-label/config";
+import { getPublicApiPath } from "@/lib/public-api";
 
 type GoogleSessionState = {
   email: string;
@@ -22,8 +22,6 @@ export default function GoogleCallbackPage() {
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-
-  const apiUrl = resolveApiBaseUrl();
 
   useEffect(() => {
     let mounted = true;
@@ -96,10 +94,6 @@ export default function GoogleCallbackPage() {
     setSuccess(null);
 
     try {
-      if (!apiUrl) {
-        throw new Error("Falta configurar la URL del API");
-      }
-
       const supabase = getBrowserSupabaseClient();
       const { data, error: sessionError } = await supabase.auth.getSession();
 
@@ -113,7 +107,7 @@ export default function GoogleCallbackPage() {
         throw new Error("La sesión no está disponible");
       }
 
-      const response = await fetch(`${apiUrl}/api/auth/google/complete`, {
+      const response = await fetch(getPublicApiPath("/api/auth/google/complete"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
