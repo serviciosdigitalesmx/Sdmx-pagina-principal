@@ -9,7 +9,18 @@ const apiBaseUrlCandidates = [
 ] as const;
 
 function normalizeBaseUrl(value: string): string {
-  return new URL(value).toString().replace(/\/$/, "");
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    throw new Error("Empty API base URL");
+  }
+
+  const withScheme = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  const url = new URL(withScheme);
+  url.hash = "";
+  url.search = "";
+  url.pathname = url.pathname === "/" ? "" : url.pathname.replace(/\/$/, "");
+  return url.toString().replace(/\/$/, "");
 }
 
 function resolveFirstConfiguredEnv(names: readonly string[]): string | null {
@@ -67,7 +78,16 @@ export function resolveApiBaseUrl(): string {
   try {
     return normalizeBaseUrl(value);
   } catch {
-    throw new Error("Invalid API base URL in environment");
+    const fallback = value.trim();
+    if (fallback && !/^https?:\/\//i.test(fallback)) {
+      try {
+        return normalizeBaseUrl(`https://${fallback}`);
+      } catch {
+        // fall through to the explicit error below
+      }
+    }
+
+    throw new Error("Invalid API base URL in environment. Use a full https:// URL or a bare domain.");
   }
 }
 
