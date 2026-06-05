@@ -47,7 +47,9 @@ const defaultProductionOrigins = [
   process.env.NEXT_PUBLIC_WEB_PUBLIC_URL?.trim(),
   process.env.NEXT_PUBLIC_WEB_ADMIN_URL?.trim(),
   'https://serviciosdigitalesmx.online',
+  'https://serviciosdigitales.online',
   'https://app.serviciosdigitalesmx.online',
+  'https://api.serviciosdigitales.online',
 ].filter((origin): origin is string => Boolean(origin));
 
 app.use(cors({

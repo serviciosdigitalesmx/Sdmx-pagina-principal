@@ -11,7 +11,7 @@ services:
       - key: PORT
         value: 10000
       - key: CORS_ALLOWED_ORIGINS
-        value: https://serviciosdigitalesmx.online,https://app.serviciosdigitalesmx.online,https://clientes.serviciosdigitalesmx.online,http://localhost:3000,http://localhost:3001
+        value: https://serviciosdigitalesmx.online,https://serviciosdigitales.online,https://app.serviciosdigitalesmx.online,https://clientes.serviciosdigitalesmx.online,https://api.serviciosdigitales.online,http://localhost:3000,http://localhost:3001
       - key: APP_URL
         value: https://serviciosdigitalesmx.online
       - key: WEBHOOK_BASE_URL
