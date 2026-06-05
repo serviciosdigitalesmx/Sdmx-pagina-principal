@@ -22,9 +22,14 @@ function getBackendBaseUrl() {
   return configuredUrl;
 }
 
-async function proxyRequest(request: NextRequest, params: { path?: string[] }) {
+type RouteParams = {
+  path: string | string[] | undefined;
+};
+
+async function proxyRequest(request: NextRequest, params: RouteParams) {
   const backendBaseUrl = getBackendBaseUrl();
-  const path = `/${params.path?.join("/") ?? ""}`;
+  const pathSegment = Array.isArray(params.path) ? params.path.join("/") : params.path ?? "";
+  const path = `/${pathSegment}`;
   const targetUrl = new URL(path, backendBaseUrl);
   targetUrl.search = request.nextUrl.search;
 
@@ -54,26 +59,26 @@ async function proxyRequest(request: NextRequest, params: { path?: string[] }) {
   });
 }
 
-export async function GET(request: NextRequest, context: { params: Promise<{ path?: string[] }> }) {
+export async function GET(request: NextRequest, context: { params: Promise<RouteParams> }) {
   return proxyRequest(request, await context.params);
 }
 
-export async function POST(request: NextRequest, context: { params: Promise<{ path?: string[] }> }) {
+export async function POST(request: NextRequest, context: { params: Promise<RouteParams> }) {
   return proxyRequest(request, await context.params);
 }
 
-export async function PUT(request: NextRequest, context: { params: Promise<{ path?: string[] }> }) {
+export async function PUT(request: NextRequest, context: { params: Promise<RouteParams> }) {
   return proxyRequest(request, await context.params);
 }
 
-export async function PATCH(request: NextRequest, context: { params: Promise<{ path?: string[] }> }) {
+export async function PATCH(request: NextRequest, context: { params: Promise<RouteParams> }) {
   return proxyRequest(request, await context.params);
 }
 
-export async function DELETE(request: NextRequest, context: { params: Promise<{ path?: string[] }> }) {
+export async function DELETE(request: NextRequest, context: { params: Promise<RouteParams> }) {
   return proxyRequest(request, await context.params);
 }
 
-export async function HEAD(request: NextRequest, context: { params: Promise<{ path?: string[] }> }) {
+export async function HEAD(request: NextRequest, context: { params: Promise<RouteParams> }) {
   return proxyRequest(request, await context.params);
 }
