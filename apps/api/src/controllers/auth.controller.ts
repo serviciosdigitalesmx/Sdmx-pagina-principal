@@ -50,6 +50,31 @@ function resolveAppUrl(requestOrigin: string | undefined) {
     return requestOrigin;
   }
 
+  const allowedPublicOrigin = Array.from(getAllowedAppOrigins()).find((origin) => {
+    try {
+      const parsed = new URL(origin);
+      return (
+        parsed.hostname === 'serviciosdigitalesmx.online' ||
+        parsed.hostname === 'www.serviciosdigitalesmx.online' ||
+        (parsed.hostname.endsWith('serviciosdigitalesmx.online') && !parsed.hostname.startsWith('api.') && !parsed.hostname.startsWith('app.'))
+      );
+    } catch {
+      return false;
+    }
+  });
+
+  if (allowedPublicOrigin) {
+    return allowedPublicOrigin;
+  }
+
+  const baseDomain = process.env.BASE_DOMAIN?.trim();
+  if (baseDomain) {
+    const publicAppUrl = `https://${baseDomain.replace(/^https?:\/\//, '').replace(/^app\./, '')}`;
+    if (isAllowedRedirectUrl(publicAppUrl)) {
+      return publicAppUrl;
+    }
+  }
+
   const configuredAppUrl = process.env.APP_URL?.trim();
 
   if (configuredAppUrl && isAllowedRedirectUrl(configuredAppUrl)) {
