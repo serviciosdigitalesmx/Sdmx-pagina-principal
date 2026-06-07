@@ -1,7 +1,7 @@
 import { apiClient } from './api-client';
 import { saveAuthToken, clearAuthToken, readAuthToken } from '@/lib/auth-storage';
 import { getCurrentSession } from '@/lib/session';
-import { resolveApiBaseUrl } from '@white-label/config';
+import { resolveAdminApiBaseUrl } from '@/lib/api-base-url';
 import type { User, Tenant } from '@/types';
 
 interface LoginResponse {
@@ -17,7 +17,7 @@ interface ExchangeResponse {
 }
 
 export async function exchangeSupabaseSession(accessToken: string): Promise<ExchangeResponse> {
-  const apiUrl = resolveApiBaseUrl();
+  const apiUrl = resolveAdminApiBaseUrl();
 
   const response = await fetch(`${apiUrl}/api/auth/exchange`, {
     method: 'POST',

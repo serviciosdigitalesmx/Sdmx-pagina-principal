@@ -303,11 +303,11 @@ import { clearAuthToken } from "@/lib/auth-storage";
 import { getCurrentSession } from "@/lib/session";
 import { getActiveScope } from "@/lib/scope";
 import { enqueueOfflineRequest } from "@/lib/pwa/offline-queue";
-import { resolveApiBaseUrl } from "@white-label/config";
+import { resolveAdminApiBaseUrl } from "@/lib/api-base-url";
 
 class FixService {
   private get apiUrl() {
-    return resolveApiBaseUrl();
+    return resolveAdminApiBaseUrl();
   }
 
   private apiPath(path: string) {

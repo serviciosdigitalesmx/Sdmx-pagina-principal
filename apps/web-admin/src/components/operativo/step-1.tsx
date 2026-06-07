@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { User, Phone, Mail, Search, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,13 +16,19 @@ interface Step1Props {
 export function Step1({ data, onSubmit, onLoadQuote }: Step1Props) {
   const [loadingQuote, setLoadingQuote] = useState(false);
   const [folioCotizacion, setFolioCotizacion] = useState(data.folioCotizacion);
+  const [localData, setLocalData] = useState<OrderFormData>(data);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    setLocalData(data);
+    setFolioCotizacion(data.folioCotizacion);
+  }, [data]);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
-    if (!data.clienteNombre.trim()) newErrors.clienteNombre = 'El nombre es requerido';
-    if (!data.clienteTelefono.trim()) newErrors.clienteTelefono = 'El teléfono es requerido';
-    else if (!/^\d{10}$/.test(data.clienteTelefono.replace(/\D/g, ''))) {
+    if (!localData.clienteNombre.trim()) newErrors.clienteNombre = 'El nombre es requerido';
+    if (!localData.clienteTelefono.trim()) newErrors.clienteTelefono = 'El teléfono es requerido';
+    else if (!/^\d{10}$/.test(localData.clienteTelefono.replace(/\D/g, ''))) {
       newErrors.clienteTelefono = 'Teléfono debe tener 10 dígitos';
     }
     setErrors(newErrors);
@@ -32,7 +38,7 @@ export function Step1({ data, onSubmit, onLoadQuote }: Step1Props) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (validate()) {
-      onSubmit({});
+      onSubmit(localData);
     }
   };
 
@@ -85,8 +91,8 @@ export function Step1({ data, onSubmit, onLoadQuote }: Step1Props) {
         <div>
           <Label>Nombre completo <span className="text-red-500">*</span></Label>
           <Input
-            value={data.clienteNombre}
-            onChange={(e) => onSubmit({ clienteNombre: e.target.value })}
+            value={localData.clienteNombre}
+            onChange={(e) => setLocalData((current) => ({ ...current, clienteNombre: e.target.value }))}
             placeholder="Ej: Juan Pérez"
             className={errors.clienteNombre ? 'border-red-500' : ''}
           />
@@ -96,8 +102,13 @@ export function Step1({ data, onSubmit, onLoadQuote }: Step1Props) {
         <div>
           <Label>WhatsApp <span className="text-red-500">*</span> <span className="text-xs text-srf-muted">(10 dígitos)</span></Label>
           <Input
-            value={data.clienteTelefono}
-            onChange={(e) => onSubmit({ clienteTelefono: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+            value={localData.clienteTelefono}
+            onChange={(e) =>
+              setLocalData((current) => ({
+                ...current,
+                clienteTelefono: e.target.value.replace(/\D/g, '').slice(0, 10),
+              }))
+            }
             placeholder="5512345678"
             maxLength={10}
             className={errors.clienteTelefono ? 'border-red-500' : ''}
@@ -108,8 +119,8 @@ export function Step1({ data, onSubmit, onLoadQuote }: Step1Props) {
         <div>
           <Label>Email <span className="text-srf-muted">(opcional)</span></Label>
           <Input
-            value={data.clienteEmail}
-            onChange={(e) => onSubmit({ clienteEmail: e.target.value })}
+            value={localData.clienteEmail}
+            onChange={(e) => setLocalData((current) => ({ ...current, clienteEmail: e.target.value }))}
             placeholder="cliente@email.com"
             type="email"
           />
