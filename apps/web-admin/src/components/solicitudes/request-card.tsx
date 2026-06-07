@@ -1,16 +1,16 @@
 'use client';
 
-import { Calendar, User, Phone, Package, AlertCircle, MessageSquare, FileText, Archive } from 'lucide-react';
+import { Calendar, User, Phone, Package, AlertCircle, MessageSquare, FileText, ArrowRightCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { ServiceRequest } from '@/types';
 
 interface RequestCardProps {
   request: ServiceRequest;
   onQuote: () => void;
-  onArchive: () => void;
+  onConvert: () => void;
 }
 
-export function RequestCard({ request, onQuote, onArchive }: RequestCardProps) {
+export function RequestCard({ request, onQuote, onConvert }: RequestCardProps) {
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -75,12 +75,12 @@ export function RequestCard({ request, onQuote, onArchive }: RequestCardProps) {
           Cotizar
         </Button>
         <Button
-          onClick={onArchive}
+          onClick={onConvert}
           variant="outline"
           className="flex-1 text-sm"
         >
-          <Archive className="w-4 h-4 mr-1" />
-          Archivar
+          <ArrowRightCircle className="w-4 h-4 mr-1" />
+          Convertir
         </Button>
       </div>
     </div>

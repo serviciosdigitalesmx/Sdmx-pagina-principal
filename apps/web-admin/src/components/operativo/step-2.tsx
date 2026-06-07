@@ -17,28 +17,61 @@ interface Step2Props {
 
 export function Step2({ data, onSubmit, onBack, onUpdate }: Step2Props) {
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [localData, setLocalData] = useState<OrderFormData>(data);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const getDefaultFecha = () => {
+    const date = new Date();
+    date.setDate(date.getDate() + 3);
+    return date.toISOString().split('T')[0];
+  };
+
+  const [fechaPromesa, setFechaPromesa] = useState(() => data.fechaPromesa || getDefaultFecha());
+
+  const dateValue = fechaPromesa || getDefaultFecha();
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
-    if (!data.dispositivo) newErrors.dispositivo = 'Selecciona tipo de dispositivo';
-    if (!data.modelo) newErrors.modelo = 'Completa marca y modelo';
-    if (!data.falla) newErrors.falla = 'Describe la falla';
-    if (!data.fechaPromesa) newErrors.fechaPromesa = 'Selecciona fecha de entrega';
+    console.log('STEP2_VALIDATE_INPUT', JSON.stringify({
+      dispositivo: localData.dispositivo,
+      modelo: localData.modelo,
+      falla: localData.falla,
+      fechaPromesaState: fechaPromesa,
+      fechaPromesa: localData.fechaPromesa,
+      costo: localData.costo,
+      notas: localData.notas,
+      checks: localData.checks,
+    }));
+    if (!localData.dispositivo) newErrors.dispositivo = 'Selecciona tipo de dispositivo';
+    if (!localData.modelo) newErrors.modelo = 'Completa marca y modelo';
+    if (!localData.falla) newErrors.falla = 'Describe la falla';
+    if (!fechaPromesa) newErrors.fechaPromesa = 'Selecciona fecha de entrega';
     else {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const promise = new Date(data.fechaPromesa);
+      const promise = new Date(fechaPromesa);
       if (promise < today) newErrors.fechaPromesa = 'La fecha no puede ser anterior a hoy';
     }
     setErrors(newErrors);
+    console.log('STEP2_VALIDATE_ERRORS', JSON.stringify(newErrors));
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('STEP2_HANDLE_SUBMIT', JSON.stringify({
+      dispositivo: localData.dispositivo,
+      modelo: localData.modelo,
+      falla: localData.falla,
+      fechaPromesaState: fechaPromesa,
+      fechaPromesa: localData.fechaPromesa,
+      fechaPromesaVisible: fechaPromesa,
+      costo: localData.costo,
+      notas: localData.notas,
+      checks: localData.checks,
+    }));
     if (validate()) {
-      onSubmit({});
+      onSubmit({ ...localData, fechaPromesa });
     }
   };
 
@@ -56,14 +89,6 @@ export function Step2({ data, onSubmit, onBack, onUpdate }: Step2Props) {
     onUpdate({ fotoRecepcion: null, fotoPreview: null });
   };
 
-  // Set default fecha promesa (3 días desde hoy) si no está definida
-  const getDefaultFecha = () => {
-    if (data.fechaPromesa) return data.fechaPromesa;
-    const date = new Date();
-    date.setDate(date.getDate() + 3);
-    return date.toISOString().split('T')[0];
-  };
-
   return (
     <form onSubmit={handleSubmit} className="card p-6 space-y-6">
       <h3 className="text-lg font-bold text-srf-primary flex items-center gap-2">
@@ -74,9 +99,13 @@ export function Step2({ data, onSubmit, onBack, onUpdate }: Step2Props) {
       {/* Device type */}
       <div>
         <Label>Tipo de dispositivo <span className="text-red-500">*</span></Label>
-        <select
-          value={data.dispositivo}
-          onChange={(e) => onUpdate({ dispositivo: e.target.value })}
+          <select
+          value={localData.dispositivo}
+          onChange={(e) => {
+            const next = { ...localData, dispositivo: e.target.value };
+            setLocalData(next);
+            onUpdate({ dispositivo: e.target.value });
+          }}
           className={`input w-full ${errors.dispositivo ? 'border-red-500' : ''}`}
         >
           <option value="">Selecciona...</option>
@@ -95,8 +124,12 @@ export function Step2({ data, onSubmit, onBack, onUpdate }: Step2Props) {
       <div>
         <Label>Marca y modelo <span className="text-red-500">*</span></Label>
         <Input
-          value={data.modelo}
-          onChange={(e) => onUpdate({ modelo: e.target.value })}
+          value={localData.modelo}
+          onChange={(e) => {
+            const next = { ...localData, modelo: e.target.value };
+            setLocalData(next);
+            onUpdate({ modelo: e.target.value });
+          }}
           placeholder="Ej: iPhone 13 Pro, Dell XPS 15"
           className={errors.modelo ? 'border-red-500' : ''}
         />
@@ -107,8 +140,12 @@ export function Step2({ data, onSubmit, onBack, onUpdate }: Step2Props) {
       <div>
         <Label>Falla reportada <span className="text-red-500">*</span></Label>
         <Textarea
-          value={data.falla}
-          onChange={(e) => onUpdate({ falla: e.target.value })}
+          value={localData.falla}
+          onChange={(e) => {
+            const next = { ...localData, falla: e.target.value };
+            setLocalData(next);
+            onUpdate({ falla: e.target.value });
+          }}
           placeholder="Describe el problema que comenta el cliente"
           rows={3}
           className={errors.falla ? 'border-red-500' : ''}
@@ -123,8 +160,12 @@ export function Step2({ data, onSubmit, onBack, onUpdate }: Step2Props) {
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
-              checked={data.checks.cargador}
-              onChange={(e) => onUpdate({ checks: { ...data.checks, cargador: e.target.checked } })}
+              checked={localData.checks.cargador}
+              onChange={(e) => {
+                const next = { ...localData, checks: { ...localData.checks, cargador: e.target.checked } };
+                setLocalData(next);
+                onUpdate({ checks: next.checks });
+              }}
               className="w-4 h-4 accent-srf-accent"
             />
             <span className="text-sm">Trae cargador</span>
@@ -132,8 +173,12 @@ export function Step2({ data, onSubmit, onBack, onUpdate }: Step2Props) {
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
-              checked={data.checks.pantalla}
-              onChange={(e) => onUpdate({ checks: { ...data.checks, pantalla: e.target.checked } })}
+              checked={localData.checks.pantalla}
+              onChange={(e) => {
+                const next = { ...localData, checks: { ...localData.checks, pantalla: e.target.checked } };
+                setLocalData(next);
+                onUpdate({ checks: next.checks });
+              }}
               className="w-4 h-4 accent-srf-accent"
             />
             <span className="text-sm">Pantalla OK</span>
@@ -141,8 +186,12 @@ export function Step2({ data, onSubmit, onBack, onUpdate }: Step2Props) {
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
-              checked={data.checks.prende}
-              onChange={(e) => onUpdate({ checks: { ...data.checks, prende: e.target.checked } })}
+              checked={localData.checks.prende}
+              onChange={(e) => {
+                const next = { ...localData, checks: { ...localData.checks, prende: e.target.checked } };
+                setLocalData(next);
+                onUpdate({ checks: next.checks });
+              }}
               className="w-4 h-4 accent-srf-accent"
             />
             <span className="text-sm">Equipo prende</span>
@@ -150,8 +199,12 @@ export function Step2({ data, onSubmit, onBack, onUpdate }: Step2Props) {
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
-              checked={data.checks.respaldo}
-              onChange={(e) => onUpdate({ checks: { ...data.checks, respaldo: e.target.checked } })}
+              checked={localData.checks.respaldo}
+              onChange={(e) => {
+                const next = { ...localData, checks: { ...localData.checks, respaldo: e.target.checked } };
+                setLocalData(next);
+                onUpdate({ checks: next.checks });
+              }}
               className="w-4 h-4 accent-srf-accent"
             />
             <span className="text-sm">Datos respaldados</span>
@@ -169,7 +222,7 @@ export function Step2({ data, onSubmit, onBack, onUpdate }: Step2Props) {
           ref={fileInputRef}
           type="file"
           accept="image/*"
-          onChange={handleFotoChange}
+            onChange={handleFotoChange}
           className="mt-2 text-sm text-srf-text file:mr-2 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-srf-accent file:text-white hover:file:bg-srf-accent/80"
         />
         {data.fotoPreview && (
@@ -192,8 +245,13 @@ export function Step2({ data, onSubmit, onBack, onUpdate }: Step2Props) {
           <Label>Fecha promesa <span className="text-red-500">*</span></Label>
           <Input
             type="date"
-            value={getDefaultFecha()}
-            onChange={(e) => onUpdate({ fechaPromesa: e.target.value })}
+            value={dateValue}
+            onChange={(e) => {
+              setFechaPromesa(e.target.value);
+              const next = { ...localData, fechaPromesa: e.target.value };
+              setLocalData(next);
+              onUpdate({ fechaPromesa: e.target.value });
+            }}
             className={errors.fechaPromesa ? 'border-red-500' : ''}
           />
           {errors.fechaPromesa && <p className="text-red-500 text-xs mt-1">{errors.fechaPromesa}</p>}
@@ -204,8 +262,12 @@ export function Step2({ data, onSubmit, onBack, onUpdate }: Step2Props) {
             type="number"
             step="0.01"
             min="0"
-            value={data.costo || ''}
-            onChange={(e) => onUpdate({ costo: parseFloat(e.target.value) || 0 })}
+            value={localData.costo || ''}
+            onChange={(e) => {
+              const next = { ...localData, costo: parseFloat(e.target.value) || 0 };
+              setLocalData(next);
+              onUpdate({ costo: next.costo });
+            }}
             placeholder="0.00"
           />
         </div>
@@ -215,8 +277,12 @@ export function Step2({ data, onSubmit, onBack, onUpdate }: Step2Props) {
       <div>
         <Label>Notas adicionales (opcional)</Label>
         <Input
-          value={data.notas}
-          onChange={(e) => onUpdate({ notas: e.target.value })}
+        value={localData.notas}
+        onChange={(e) => {
+          const next = { ...localData, notas: e.target.value };
+          setLocalData(next);
+          onUpdate({ notas: e.target.value });
+        }}
           placeholder="Ej: Cliente dejó funda, teléfono con contraseña..."
         />
       </div>

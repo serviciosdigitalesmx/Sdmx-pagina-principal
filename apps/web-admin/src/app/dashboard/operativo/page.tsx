@@ -140,7 +140,7 @@ export default function OperativoPage() {
           backupRequired: formData.checks.respaldo,
           notes: formData.notas,
         },
-        receiptUrl: fotoUrl,
+        receiptUrl: fotoUrl || '',
         metadata: {
           internal_notes: formData.notas,
         },

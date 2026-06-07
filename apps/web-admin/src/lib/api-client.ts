@@ -1,5 +1,5 @@
 import { readAuthToken } from '@/lib/auth-storage';
-import { resolveApiBaseUrl } from '@white-label/config';
+import { resolveAdminApiBaseUrl } from '@/lib/api-base-url';
 
 interface ApiOptions {
   tenantSlug?: string;
@@ -23,8 +23,9 @@ class ApiClient {
     apiOptions: ApiOptions = {}
   ): Promise<T> {
     const { tenantSlug, sucursalId } = apiOptions;
-    const apiUrl = resolveApiBaseUrl();
-    let url = endpoint.startsWith('http') ? endpoint : `${apiUrl}${endpoint}`;
+    const apiUrl = resolveAdminApiBaseUrl();
+    const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    let url = endpoint.startsWith('http') ? endpoint : `${apiUrl}/api${normalizedEndpoint}`;
 
     // Inject tenantSlug in path if needed
     if (tenantSlug && !url.includes('/:tenantSlug')) {
@@ -115,8 +116,8 @@ class ApiClient {
     metadata?: Record<string, unknown>,
     options?: ApiOptions
   ): Promise<T> {
-    const apiUrl = resolveApiBaseUrl();
-    let url = endpoint;
+    const apiUrl = resolveAdminApiBaseUrl();
+    let url = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
     if (options?.tenantSlug) {
       url = url.replace('/api/', `/api/${options.tenantSlug}/`);
     }
@@ -137,7 +138,7 @@ class ApiClient {
       headers['Authorization'] = `Bearer ${this.token}`;
     }
 
-    const response = await fetch(`${apiUrl}${url}`, {
+    const response = await fetch(`${apiUrl}/api${url}`, {
       method: 'POST',
       headers,
       body: formData,

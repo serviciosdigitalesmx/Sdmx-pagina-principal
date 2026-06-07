@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Plus, Trash2, FileText, Send, Archive, Printer } from 'lucide-react';
+import { Plus, Trash2, FileText, Send, ArrowRightCircle, Printer } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { getApiOptions } from '@/lib/tenant';
 import type { ServiceRequest } from '@/types';
@@ -26,10 +26,10 @@ interface QuoteModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   request: ServiceRequest | null;
-  onQuoteArchived: () => void;
+  onQuoteConverted: () => void;
 }
 
-export function QuoteModal({ open, onOpenChange, request, onQuoteArchived }: QuoteModalProps) {
+export function QuoteModal({ open, onOpenChange, request, onQuoteConverted }: QuoteModalProps) {
   const [items, setItems] = useState<QuoteItem[]>([{ concepto: '', cantidad: 1, precio: 0 }]);
   const [notas, setNotas] = useState('');
   const [aplicaIva, setAplicaIva] = useState(false);
@@ -72,7 +72,7 @@ export function QuoteModal({ open, onOpenChange, request, onQuoteArchived }: Quo
     setItems(newItems);
   };
 
-  const handleArchive = async () => {
+  const handleConvert = async () => {
     if (items.filter(i => i.concepto.trim()).length === 0) {
       alert('Agrega al menos un concepto');
       return;
@@ -98,14 +98,13 @@ export function QuoteModal({ open, onOpenChange, request, onQuoteArchived }: Quo
         },
       };
 
-      // Endpoint NO CONFIRMADO - usar con precaución
-      await apiClient.post(`/requests/${request.folio}/archive`, payload, getApiOptions());
-      onQuoteArchived();
+      await apiClient.post(`/requests/${request.id}/convert`, payload, getApiOptions());
+      onQuoteConverted();
       onOpenChange(false);
-      alert('Cotización archivada correctamente');
+      alert('Cotización convertida a orden correctamente');
     } catch (error) {
-      console.error('Failed to archive quote:', error);
-      alert('No se pudo archivar la cotización');
+      console.error('Failed to convert quote to order:', error);
+      alert('No se pudo convertir la cotización');
     } finally {
       setSaving(false);
     }
@@ -278,9 +277,9 @@ export function QuoteModal({ open, onOpenChange, request, onQuoteArchived }: Quo
               <Send className="w-4 h-4" />
               Enviar por WhatsApp
             </Button>
-            <Button onClick={handleArchive} disabled={saving} className="bg-srf-primary hover:bg-srf-primary/80 gap-2">
-              <Archive className="w-4 h-4" />
-              {saving ? 'Archivando...' : 'Archivar cotización'}
+            <Button onClick={handleConvert} disabled={saving} className="bg-srf-primary hover:bg-srf-primary/80 gap-2">
+              <ArrowRightCircle className="w-4 h-4" />
+              {saving ? 'Convirtiendo...' : 'Convertir a orden'}
             </Button>
           </div>
         </div>

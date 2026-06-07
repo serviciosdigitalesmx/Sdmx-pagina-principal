@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { RefreshCw, FileText, MessageSquare, Archive } from 'lucide-react';
+import { RefreshCw, FileText, MessageSquare } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { getApiOptions } from '@/lib/tenant';
 import { RequestCard } from '@/components/solicitudes/request-card';
@@ -42,15 +42,14 @@ export default function SolicitudesPage() {
     setModalOpen(true);
   };
 
-  const handleArchive = async (folio: string) => {
-    if (!confirm('¿Archivar esta solicitud?')) return;
+  const handleConvert = async (requestId: string) => {
+    if (!confirm('¿Convertir esta solicitud en orden?')) return;
     try {
-      // Endpoint NO CONFIRMADO - usar con precaución
-      await apiClient.post(`/requests/${folio}/archive`, {}, getApiOptions());
+      await apiClient.post(`/requests/${requestId}/convert`, {}, getApiOptions());
       loadRequests();
     } catch (error) {
-      console.error('Failed to archive request:', error);
-      alert('No se pudo archivar la solicitud');
+      console.error('Failed to convert request:', error);
+      alert('No se pudo convertir la solicitud');
     }
   };
 
@@ -94,7 +93,7 @@ export default function SolicitudesPage() {
               key={request.id}
               request={request}
               onQuote={() => handleQuoteClick(request)}
-              onArchive={() => handleArchive(request.folio)}
+              onConvert={() => handleConvert(request.id)}
             />
           ))}
         </div>
@@ -105,7 +104,7 @@ export default function SolicitudesPage() {
         open={modalOpen}
         onOpenChange={setModalOpen}
         request={selectedRequest}
-        onQuoteArchived={() => loadRequests()}
+        onQuoteConverted={() => loadRequests()}
       />
     </div>
   );
