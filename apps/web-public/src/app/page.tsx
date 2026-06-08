@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { optionalEnv } from "@white-label/config";
-import { PublicPortalLookup } from "@/components/public-portal-lookup";
 import { RootAuthHashRedirect } from "@/components/root-auth-hash-redirect";
 
 const productName = optionalEnv("NEXT_PUBLIC_SAAS_BRAND_NAME") ?? "FIXI";
@@ -462,11 +461,25 @@ export default function Home() {
       </section>
 
       <section className="mx-auto w-full max-w-7xl px-4 pb-12 pt-2 sm:px-6 lg:px-8">
-        <PublicPortalLookup
-          title="Portal del cliente"
-          subtitle="Consulta el folio real de una reparación para ver el estado actualizado, documentos y timeline."
-          showTenantInput={true}
-        />
+        <div className="rounded-[2.2rem] border border-slate-200 bg-white p-6 shadow-[0_20px_70px_rgba(15,23,42,0.08)] sm:p-8">
+          <SectionLabel>Portal del cliente</SectionLabel>
+          <div className="mt-4 grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
+            <div>
+              <h3 className="text-4xl font-black tracking-tight text-slate-950 sm:text-5xl">Consulta tu reparación sin exponer datos del taller.</h3>
+              <p className="mt-4 max-w-2xl text-base leading-8 text-slate-600">
+                El portal real se abre desde el enlace del taller o desde la ruta específica del tenant. No necesitas escribir el nombre del taller en esta página.
+              </p>
+            </div>
+            <div className="flex flex-col gap-3">
+              <Link href="/portal" className="rounded-full bg-violet-600 px-5 py-3 text-center text-sm font-semibold text-white transition hover:bg-violet-500">
+                Ir al portal
+              </Link>
+              <Link href="/login" className="rounded-full border border-slate-300 bg-white px-5 py-3 text-center text-sm font-semibold text-slate-900 transition hover:bg-slate-50">
+                Iniciar sesión
+              </Link>
+            </div>
+          </div>
+        </div>
       </section>
     </main>
   );

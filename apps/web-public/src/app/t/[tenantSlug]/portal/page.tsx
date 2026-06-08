@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, useEffect, type FormEvent } from "react";
+import { useMemo, useState, useEffect, useCallback, type FormEvent } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { optionalEnv } from "@white-label/config";
 import { getPublicApiPath } from "@/lib/public-api";
@@ -154,9 +154,6 @@ export default function PortalPage() {
     if (!tenantSlug) {
       return;
     }
-
-    setLoadingTenant(true);
-    setTenantError(null);
     void (async () => {
       try {
         const res = await fetch(getPublicApiPath(`/api/public/tenant/${encodeURIComponent(tenantSlug)}/landing`));
@@ -180,7 +177,7 @@ export default function PortalPage() {
     })();
   }, [tenantSlug]);
 
-  const executeSearch = async (searchValue: string) => {
+  const executeSearch = useCallback(async (searchValue: string) => {
     setLoading(true);
     setError(null);
     setHasSearched(true);
@@ -217,14 +214,17 @@ export default function PortalPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [tenantSlug]);
 
   // Auto-search on mount if folio query parameter exists
   useEffect(() => {
     if (initialFolio) {
-      void executeSearch(initialFolio);
+      const timeout = window.setTimeout(() => {
+        void executeSearch(initialFolio);
+      }, 0);
+      return () => window.clearTimeout(timeout);
     }
-  }, [initialFolio]);
+  }, [initialFolio, executeSearch]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
