@@ -48,10 +48,15 @@ const getIcon = (iconName: string) => {
   return icons[iconName] || LayoutDashboard;
 };
 
-export function Sidebar() {
+export function Sidebar({
+  mobileOpen,
+  onMobileOpenChange,
+}: {
+  mobileOpen?: boolean;
+  onMobileOpenChange?: (open: boolean) => void;
+}) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -62,23 +67,22 @@ export function Sidebar() {
   const showConsolidated = mounted ? canUseConsolidatedView() : false;
 
   const sidebarContent = (
-    <div className="flex flex-col h-full">
-      {/* Logo */}
-      <div className="flex items-center justify-between p-4 border-b border-srf-primary/30">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-srf-primary rounded-lg flex items-center justify-center">
-            <span className="text-white text-xs font-bold">SF</span>
+    <div className="flex h-full flex-col">
+      <div className="flex items-center justify-between border-b border-white/10 p-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,rgba(31,126,220,0.95),rgba(255,106,42,0.85))]">
+            <span className="text-xs font-black text-white">FX</span>
           </div>
           {!collapsed && (
-            <span className="font-orbitron font-bold text-srf-primary">
-              SR<span className="text-srf-accent">FIX</span>
+            <span className="font-orbitron font-bold tracking-[0.16em] text-srf-primary">
+              FI<span className="text-srf-accent">XI</span>
             </span>
           )}
         </div>
         {!collapsed && (
           <button
             onClick={() => setCollapsed(true)}
-            className="p-1 rounded-lg hover:bg-srf-surface/50 text-srf-muted"
+            className="rounded-xl p-1 text-srf-muted hover:bg-white/5"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -86,7 +90,7 @@ export function Sidebar() {
         {collapsed && (
           <button
             onClick={() => setCollapsed(false)}
-            className="p-1 rounded-lg hover:bg-srf-surface/50 text-srf-muted"
+            className="rounded-xl p-1 text-srf-muted hover:bg-white/5"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
@@ -95,7 +99,7 @@ export function Sidebar() {
 
       {/* Sucursal indicator */}
       {!collapsed && activeSucursalId && (
-        <div className="mx-4 mt-4 p-2 rounded-lg bg-srf-primary/10 border border-srf-primary/30 text-center">
+        <div className="mx-4 mt-4 rounded-2xl border border-white/10 bg-white/5 p-3 text-center">
           <p className="text-xs text-srf-muted">Sucursal activa</p>
           <p className="text-sm font-semibold text-srf-primary truncate">
             {activeSucursalId === 'GLOBAL' ? 'Todas las sucursales' : activeSucursalId.slice(0, 8)}
@@ -107,7 +111,7 @@ export function Sidebar() {
       )}
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto p-4 space-y-1">
+      <nav className="flex-1 space-y-1 overflow-y-auto p-3">
         {DASHBOARD_MODULES.map((module) => {
           const Icon = getIcon(module.icon);
           const isActive = pathname === module.href || pathname.startsWith(`${module.href}/`);
@@ -117,10 +121,10 @@ export function Sidebar() {
               key={module.key}
               href={module.href}
               className={`
-                flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200
+                flex items-center gap-3 rounded-2xl border px-3 py-2.5 transition-all duration-200
                 ${isActive
-                  ? 'bg-srf-accent/20 text-srf-accent border border-srf-accent/40'
-                  : 'text-srf-muted hover:bg-srf-surface/50 hover:text-srf-text'
+                  ? 'border-srf-accent/40 bg-srf-accent/15 text-srf-text shadow-[0_12px_30px_rgba(255,106,42,0.12)]'
+                  : 'border-transparent text-srf-muted hover:border-white/10 hover:bg-white/5 hover:text-srf-text'
                 }
                 ${collapsed ? 'justify-center' : ''}
               `}
@@ -139,8 +143,8 @@ export function Sidebar() {
     <>
       {/* Mobile menu button */}
       <button
-        onClick={() => setMobileOpen(true)}
-        className="fixed top-4 left-4 z-50 p-2 rounded-lg bg-srf-surface border border-srf-primary/30 lg:hidden"
+        onClick={() => onMobileOpenChange?.(true)}
+        className="fixed left-4 top-4 z-50 rounded-xl border border-white/10 bg-[rgba(20,20,20,0.92)] p-2 shadow-[0_12px_36px_rgba(0,0,0,0.28)] lg:hidden"
       >
         <Menu className="w-5 h-5" />
       </button>
@@ -152,11 +156,11 @@ export function Sidebar() {
           ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
         `}
       >
-        <div className="absolute inset-0 bg-black/70" onClick={() => setMobileOpen(false)} />
-        <div className="relative w-64 h-full bg-srf-bg border-r border-srf-primary/30">
+        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => onMobileOpenChange?.(false)} />
+        <div className="relative h-full w-72 border-r border-white/10 bg-[rgba(18,18,18,0.98)]">
           <button
-            onClick={() => setMobileOpen(false)}
-            className="absolute top-4 right-4 p-1 rounded-lg hover:bg-srf-surface/50"
+            onClick={() => onMobileOpenChange?.(false)}
+            className="absolute right-4 top-4 rounded-xl p-1 hover:bg-white/5"
           >
             <X className="w-5 h-5" />
           </button>
@@ -167,8 +171,8 @@ export function Sidebar() {
       {/* Desktop sidebar */}
       <aside
         className={`
-          hidden lg:block border-r border-srf-primary/30 transition-all duration-300
-          ${collapsed ? 'w-16' : 'w-64'}
+          hidden lg:block border-r border-white/10 transition-all duration-300
+          ${collapsed ? 'w-[4.5rem]' : 'w-72'}
         `}
       >
         {sidebarContent}

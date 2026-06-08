@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState, useEffect, type FormEvent } from "react";
 import { useParams, useSearchParams } from "next/navigation";
+import { optionalEnv } from "@white-label/config";
 import { getPublicApiPath } from "@/lib/public-api";
 
 type PortalOrderResponse = {
@@ -89,6 +90,25 @@ function resolveWhatsappHref(phone?: string) {
   return digits.length > 0 ? `https://wa.me/${digits}` : undefined;
 }
 
+function resolveContactWhatsapp(tenant?: PortalOrderResponse["tenant"] | null, portalTemplate?: Record<string, unknown> | null) {
+  const templateContactHref = portalTemplate && typeof (portalTemplate as { contactHref?: unknown }).contactHref === "string"
+    ? String((portalTemplate as { contactHref?: unknown }).contactHref)
+    : "";
+  const contactPhone = tenant?.contact_phone ?? "";
+  const envPhone = optionalEnv("NEXT_PUBLIC_SAAS_CONTACT_PHONE") ?? "";
+
+  const candidates = [templateContactHref, contactPhone, envPhone];
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+    const resolved = candidate.startsWith("https://wa.me/")
+      ? candidate
+      : resolveWhatsappHref(candidate);
+    if (resolved) return resolved;
+  }
+
+  return undefined;
+}
+
 export default function PortalPage() {
   const params = useParams<{ tenantSlug?: string }>();
   const searchParams = useSearchParams();
@@ -106,51 +126,45 @@ export default function PortalPage() {
   const [tenantError, setTenantError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
 
-  const whatsappHref = useMemo(() => {
-    const contactPhone = tenant?.contact_phone;
-    return resolveWhatsappHref(contactPhone || undefined);
-  }, [tenant]);
-
   const pdfAttachment = useMemo(() => {
     return result?.pdf_attachment ?? result?.attachments?.[0] ?? null;
   }, [result]);
 
-  const dateSummary = useMemo(() => {
-    if (!result?.order.created_at) {
-      return null;
-    }
-    const createdAt = new Date(result.order.created_at);
-    const promiseAt = new Date(createdAt);
-    promiseAt.setDate(promiseAt.getDate() + 3);
-    const now = new Date();
-    const remainingMs = promiseAt.getTime() - now.getTime();
-    const remainingDays = Math.max(0, Math.ceil(remainingMs / (1000 * 60 * 60 * 24)));
+  const publicWhatsappHref = useMemo(() => resolveContactWhatsapp(tenant, portalTemplate), [tenant, portalTemplate]);
 
-    return {
-      promiseDate: promiseAt.toLocaleDateString(),
-      remainingDays,
-      lastUpdate: createdAt.toLocaleDateString(),
-    };
-  }, [result?.order.created_at]);
+  const dateSummary = result?.order.created_at
+    ? (() => {
+        const createdAt = new Date(result.order.created_at);
+        const promiseAt = new Date(createdAt);
+        promiseAt.setDate(promiseAt.getDate() + 3);
+        const now = new Date();
+        const remainingMs = promiseAt.getTime() - now.getTime();
+        const remainingDays = Math.max(0, Math.ceil(remainingMs / (1000 * 60 * 60 * 24)));
+
+        return {
+          promiseDate: promiseAt.toLocaleDateString(),
+          remainingDays,
+          lastUpdate: createdAt.toLocaleDateString(),
+        };
+      })()
+    : null;
 
   // Fetch tenant info on mount
   useEffect(() => {
     if (!tenantSlug) {
-      setLoadingTenant(false);
-      setTenantError("El slug del taller es requerido.");
       return;
     }
 
     setLoadingTenant(true);
     setTenantError(null);
-    fetch(getPublicApiPath(`/api/public/tenant/${encodeURIComponent(tenantSlug)}/landing`))
-      .then((res) => {
+    void (async () => {
+      try {
+        const res = await fetch(getPublicApiPath(`/api/public/tenant/${encodeURIComponent(tenantSlug)}/landing`));
         if (!res.ok) {
-          throw new Error("No pudimos encontrar la información de este taller.");
+          throw new Error("No pudimos cargar este portal.");
         }
-        return res.json();
-      })
-      .then((payload) => {
+
+        const payload = await res.json();
         if (payload && payload.success && payload.data?.tenant) {
           setTenant(payload.data.tenant);
           setTenantLabel(payload.data.tenant.name || tenantSlug);
@@ -158,13 +172,12 @@ export default function PortalPage() {
         } else {
           throw new Error("Respuesta inválida del servidor");
         }
-      })
-      .catch((e) => {
-        setTenantError(e.message || "Error al cargar la información del taller.");
-      })
-      .finally(() => {
+      } catch (e) {
+        setTenantError(e instanceof Error ? e.message : "No pudimos cargar este portal.");
+      } finally {
         setLoadingTenant(false);
-      });
+      }
+    })();
   }, [tenantSlug]);
 
   const executeSearch = async (searchValue: string) => {
@@ -174,7 +187,7 @@ export default function PortalPage() {
 
     try {
       if (!tenantSlug) {
-        throw new Error("Tenant slug ausente en la ruta");
+        throw new Error("No pudimos consultar el portal.");
       }
 
       if (!searchValue.trim()) {
@@ -187,7 +200,7 @@ export default function PortalPage() {
       const payload = (await response.json().catch(() => null)) as PortalOrderResponse | { error?: string } | null;
 
       if (!response.ok) {
-        throw new Error(payload && "error" in payload && payload.error ? payload.error : "No encontramos la orden");
+        throw new Error(payload && "error" in payload && payload.error ? "No encontramos un folio válido." : "No encontramos un folio válido.");
       }
 
       if (payload && "success" in payload) {
@@ -199,7 +212,7 @@ export default function PortalPage() {
         throw new Error("Respuesta inválida del servidor");
       }
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "Error inesperado");
+      setError(submitError instanceof Error ? submitError.message : "No pudimos consultar el folio.");
       setResult(null);
     } finally {
       setLoading(false);
@@ -209,7 +222,7 @@ export default function PortalPage() {
   // Auto-search on mount if folio query parameter exists
   useEffect(() => {
     if (initialFolio) {
-      executeSearch(initialFolio);
+      void executeSearch(initialFolio);
     }
   }, [initialFolio]);
 
@@ -224,6 +237,25 @@ export default function PortalPage() {
         <div className="text-center space-y-4">
           <div className="w-12 h-12 border-4 border-zinc-700 border-t-sky-400 rounded-full animate-spin mx-auto"></div>
           <p className="text-sm font-semibold tracking-wide text-zinc-400 uppercase">Cargando taller...</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (!tenantSlug) {
+    return (
+      <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.13),_transparent_30%),linear-gradient(180deg,#09090b_0%,#111113_48%,#18181b_100%)] px-4 py-8 text-zinc-50 flex items-center justify-center">
+        <div className="w-full max-w-xl text-center space-y-6 rounded-[2rem] border border-zinc-800/70 bg-zinc-950/88 p-8 shadow-2xl">
+          <div className="w-16 h-16 rounded-3xl border border-zinc-800 bg-zinc-900 flex items-center justify-center mx-auto text-2xl font-bold text-sky-400">FX</div>
+          <h1 className="text-3xl font-black uppercase tracking-tight text-zinc-50">Portal no disponible</h1>
+          <p className="text-zinc-400 leading-relaxed text-sm">
+            No pudimos identificar el taller para este enlace.
+          </p>
+          <div className="pt-4">
+            <Link href="/" className="inline-flex rounded-full bg-sky-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-sky-400">
+              Ir a la página principal
+            </Link>
+          </div>
         </div>
       </main>
     );
@@ -398,7 +430,7 @@ export default function PortalPage() {
                 </div>
 
                 <section className="mt-4 rounded-[1.4rem] border border-zinc-800 bg-zinc-950 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-200">Seguimiento</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-200">Seguimiento</p>
                   <div className="mt-3 space-y-3">
                     {result.timeline.map((step) => (
                       <div key={step.label} className="rounded-2xl border border-zinc-800 bg-zinc-900/70 px-4 py-3">
@@ -406,7 +438,7 @@ export default function PortalPage() {
                           <span className="font-semibold text-zinc-50">{step.label}</span>
                           <span className="text-xs uppercase tracking-[0.18em] text-zinc-400">{step.status}</span>
                         </div>
-                        <p className="mt-1 text-sm text-zinc-300">{step.note}</p>
+                        <p className="mt-1 text-sm text-zinc-300">Actualización pública disponible.</p>
                       </div>
                     ))}
                   </div>
@@ -414,9 +446,9 @@ export default function PortalPage() {
 
                 <div className="mt-4 grid gap-4 sm:grid-cols-2">
                   <a
-                    href={whatsappHref ?? "#"}
-                    target={whatsappHref ? "_blank" : undefined}
-                    rel={whatsappHref ? "noreferrer" : undefined}
+                    href={publicWhatsappHref ?? "#"}
+                    target={publicWhatsappHref ? "_blank" : undefined}
+                    rel={publicWhatsappHref ? "noreferrer" : undefined}
                     className="inline-flex items-center justify-center rounded-2xl bg-emerald-500 px-5 py-4 text-sm font-black uppercase tracking-[0.18em] text-white shadow-[0_18px_45px_rgba(16,185,129,0.3)] transition hover:-translate-y-0.5 hover:bg-emerald-400"
                   >
                     Contactar por WhatsApp

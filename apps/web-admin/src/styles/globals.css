@@ -25,7 +25,11 @@
 
 body {
   margin: 0;
-  background: var(--srf-bg);
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top, rgba(31, 126, 220, 0.12), transparent 30%),
+    radial-gradient(circle at 80% 0%, rgba(255, 106, 42, 0.08), transparent 22%),
+    linear-gradient(180deg, #161616 0%, #1b1b1b 48%, #141414 100%);
   color: var(--srf-text);
   font-family: "Inter", sans-serif;
 }
@@ -68,11 +72,12 @@ h1, h2, h3, .font-orbitron {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  border-radius: 0.5rem;
-  background: var(--srf-accent);
+  border-radius: 0.875rem;
+  background: linear-gradient(135deg, var(--srf-accent) 0%, #ff7f4a 100%);
   color: white;
   font-weight: 700;
   padding: 0.5rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .btn-primary:hover {
@@ -84,11 +89,12 @@ h1, h2, h3, .font-orbitron {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  border-radius: 0.5rem;
-  background: var(--srf-primary);
+  border-radius: 0.875rem;
+  background: linear-gradient(135deg, var(--srf-primary) 0%, #2563eb 100%);
   color: white;
   font-weight: 700;
   padding: 0.5rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .btn-secondary:hover {
@@ -100,7 +106,7 @@ h1, h2, h3, .font-orbitron {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  border-radius: 0.5rem;
+  border-radius: 0.875rem;
   background: var(--srf-wa);
   color: white;
   font-weight: 700;
@@ -108,11 +114,11 @@ h1, h2, h3, .font-orbitron {
 }
 
 .btn-outline {
-  border: 1px solid rgba(31, 126, 220, 0.5);
-  background: transparent;
+  border: 1px solid rgba(31, 126, 220, 0.35);
+  background: rgba(255, 255, 255, 0.02);
   color: var(--srf-text);
   font-weight: 500;
-  border-radius: 0.5rem;
+  border-radius: 0.875rem;
   padding: 0.5rem 1rem;
 }
 
@@ -122,7 +128,7 @@ h1, h2, h3, .font-orbitron {
 
 .btn-ghost {
   color: var(--srf-muted);
-  border-radius: 0.5rem;
+  border-radius: 0.875rem;
   padding: 0.5rem 0.75rem;
 }
 
@@ -132,11 +138,26 @@ h1, h2, h3, .font-orbitron {
 }
 
 .card {
-  background: var(--srf-surface);
-  border: 1px solid rgba(31, 126, 220, 0.3);
-  border-radius: 0.75rem;
+  background:
+    linear-gradient(180deg, rgba(43, 43, 43, 0.96), rgba(34, 34, 34, 0.96)),
+    var(--srf-surface);
+  border: 1px solid rgba(31, 126, 220, 0.18);
+  border-radius: 1rem;
   padding: 1rem;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.card-base {
+  background:
+    linear-gradient(180deg, rgba(43, 43, 43, 0.96), rgba(34, 34, 34, 0.96)),
+    var(--srf-surface);
+  border: 1px solid rgba(31, 126, 220, 0.16);
+  border-radius: 1.25rem;
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
 .card-hover:hover {
@@ -146,9 +167,9 @@ h1, h2, h3, .font-orbitron {
 
 .input {
   width: 100%;
-  border: 1px solid rgba(31, 126, 220, 0.5);
-  border-radius: 0.5rem;
-  background: var(--srf-bg);
+  border: 1px solid rgba(31, 126, 220, 0.28);
+  border-radius: 0.875rem;
+  background: rgba(10, 10, 10, 0.32);
   color: var(--srf-text);
   padding: 0.5rem 0.75rem;
   outline: none;
@@ -220,6 +241,18 @@ h1, h2, h3, .font-orbitron {
   border: 1px solid rgba(239, 68, 68, 0.4);
 }
 
+.badge-neutral {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--srf-text);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
 .card-rojo {
   border-left: 4px solid var(--srf-red);
   background: linear-gradient(135deg, var(--srf-surface), rgba(127, 29, 29, 0.18));
@@ -239,6 +272,26 @@ h1, h2, h3, .font-orbitron {
   border-left: 4px solid var(--srf-muted);
   background: linear-gradient(135deg, var(--srf-surface), rgba(31, 41, 55, 0.18));
   opacity: 0.72;
+}
+
+.shell-surface {
+  background:
+    linear-gradient(180deg, rgba(18, 18, 18, 0.96), rgba(16, 16, 16, 0.94)),
+    var(--srf-bg);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow:
+    0 24px 90px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.shell-panel {
+  background:
+    linear-gradient(180deg, rgba(43, 43, 43, 0.92), rgba(35, 35, 35, 0.94)),
+    var(--srf-surface);
+  border: 1px solid rgba(31, 126, 220, 0.16);
+  box-shadow:
+    0 16px 60px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
 @keyframes spin {
