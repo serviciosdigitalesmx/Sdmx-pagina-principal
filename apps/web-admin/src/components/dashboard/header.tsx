@@ -62,7 +62,6 @@ export function Header({ user, onMenuClick }: HeaderProps) {
           <Building2 className="h-4 w-4 text-srf-primary" />
           <span className="truncate">{tenantName || 'Mi taller'}</span>
         </div>
-
         <div className="relative">
           <button
             onClick={() => setShowUserMenu(!showUserMenu)}
