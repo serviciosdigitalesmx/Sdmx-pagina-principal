@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Sidebar } from '@/components/dashboard/sidebar';
 import { Header } from '@/components/dashboard/header';
+import { AppShell, ShellContent } from '@/components/base/app-shell';
+import { LoadingState, ErrorState } from '@/components/base/states';
 import { isAuthenticated, getStoredUser } from '@/lib/auth';
 
 export default function DashboardLayout({
@@ -14,32 +16,48 @@ export default function DashboardLayout({
   const router = useRouter();
   const pathname = usePathname();
   const [user, setUser] = useState(getStoredUser());
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated()) {
       router.push('/login');
+      setAuthError('Necesitas iniciar sesión para acceder al panel.');
     } else {
       setUser(getStoredUser());
+      setAuthError(null);
     }
   }, [router, pathname]);
 
   if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="spinner w-8 h-8" />
-      </div>
+    return authError ? (
+      <AppShell>
+        <ShellContent className="flex min-h-screen items-center justify-center">
+          <ErrorState message={authError} />
+        </ShellContent>
+      </AppShell>
+    ) : (
+      <AppShell>
+        <ShellContent className="flex min-h-screen items-center justify-center">
+          <LoadingState label="Cargando sesión..." />
+        </ShellContent>
+      </AppShell>
     );
   }
 
   return (
-    <div className="flex h-screen bg-srf-bg text-srf-text">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header user={user} />
-        <main className="flex-1 overflow-y-auto p-6">
-          {children}
-        </main>
+    <AppShell>
+      <div className="flex min-h-screen">
+        <Sidebar mobileOpen={menuOpen} onMobileOpenChange={setMenuOpen} />
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+          <Header user={user} onMenuClick={() => setMenuOpen(true)} />
+          <main className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 lg:px-8">
+            <div className="mx-auto w-full max-w-[1800px]">
+              {children}
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
+    </AppShell>
   );
 }

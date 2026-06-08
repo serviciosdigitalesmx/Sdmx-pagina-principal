@@ -1,0 +1,1448 @@
+
+============================================================
+AUTH DEBUG REPORT
+============================================================
+Fecha: lunes,  8 de junio de 2026, 03:43:12 CST
+Root: /Users/jesusvilla/Desktop/Sdmx-pagina-principal
+ADMIN_URL: http://localhost:3003
+API_URL: http://localhost:3001
+TENANT_SLUG: otriz-valle
+
+============================================================
+1) Git / rama / último commit
+============================================================
+?? auth-debug-report-20260608-034312.txt
+?? detectar-error-auth-exchange.sh
+main
+ab8cda82 fix(api): allow preflight for auth exchange
+
+============================================================
+2) Versiones
+============================================================
+v24.13.1
+11.3.0
+11.8.0
+
+============================================================
+3) Variables detectadas sin exponer valores
+============================================================
+No existe: .env
+
+Archivo: .env.local
+2:VERCEL_OIDC_TOKEN=[SET]
+No existe: apps/api/.env
+No existe: apps/api/.env.local
+No existe: apps/web-admin/.env
+
+Archivo: apps/web-admin/.env.local
+2:NEXT_PUBLIC_API_URL=[SET]
+3:NEXT_PUBLIC_AUTH_TOKEN_KEY=[SET]
+4:NEXT_PUBLIC_CUSTOMER_TRACKING_URL=[SET]
+5:NEXT_PUBLIC_DEFAULT_BRANCH_NAME=[SET]
+6:NEXT_PUBLIC_DEFAULT_SUCURSAL_NAME=[SET]
+7:NEXT_PUBLIC_DEFAULT_TENANT_ID=[SET]
+8:NEXT_PUBLIC_DEFAULT_TENANT_NAME=[SET]
+9:NEXT_PUBLIC_DEFAULT_USER_EMAIL=[SET]
+10:NEXT_PUBLIC_DEFAULT_USER_ROLE=[SET]
+11:NEXT_PUBLIC_DEFAULT_USER_SUCURSAL_ID=[SET]
+12:NEXT_PUBLIC_SUPABASE_ANON_KEY=[SET]
+13:NEXT_PUBLIC_SUPABASE_URL=[SET]
+14:NEXT_PUBLIC_TENANT_BRAND_NAME=[SET]
+15:NEXT_PUBLIC_TENANT_DASHBOARD_MESSAGE=[SET]
+16:NEXT_PUBLIC_TENANT_DASHBOARD_TITLE=[SET]
+17:NEXT_PUBLIC_TENANT_META_DESCRIPTION=[SET]
+18:NEXT_PUBLIC_TENANT_META_TITLE=[SET]
+19:NEXT_PUBLIC_TENANT_SUPPORT_EMAIL=[SET]
+20:NEXT_PUBLIC_TENANT_SUPPORT_PHONE=[SET]
+21:NEXT_PUBLIC_THEME_ACCENT=[SET]
+22:NEXT_PUBLIC_THEME_PRIMARY=[SET]
+23:NEXT_PUBLIC_THEME_SECONDARY=[SET]
+24:NEXT_PUBLIC_WEB_ADMIN_URL=[SET]
+25:NEXT_PUBLIC_WEB_PUBLIC_URL=[SET]
+26:NX_DAEMON=[SET]
+27:TURBO_CACHE=[SET]
+28:TURBO_DOWNLOAD_LOCAL_ENABLED=[SET]
+29:TURBO_REMOTE_ONLY=[SET]
+30:TURBO_RUN_SUMMARY=[SET]
+31:VERCEL=[SET]
+32:VERCEL_ENV=[SET]
+33:VERCEL_GIT_COMMIT_AUTHOR_LOGIN=[SET]
+34:VERCEL_GIT_COMMIT_AUTHOR_NAME=[SET]
+35:VERCEL_GIT_COMMIT_MESSAGE=[SET]
+36:VERCEL_GIT_COMMIT_REF=[SET]
+37:VERCEL_GIT_COMMIT_SHA=[SET]
+38:VERCEL_GIT_PREVIOUS_SHA=[SET]
+39:VERCEL_GIT_PROVIDER=[SET]
+40:VERCEL_GIT_PULL_REQUEST_ID=[SET]
+41:VERCEL_GIT_REPO_ID=[SET]
+42:VERCEL_GIT_REPO_OWNER=[SET]
+43:VERCEL_GIT_REPO_SLUG=[SET]
+44:VERCEL_OIDC_TOKEN=[SET]
+45:VERCEL_TARGET_ENV=[SET]
+46:VERCEL_URL=[SET]
+
+============================================================
+4) Buscar mensaje exacto del frontend
+============================================================
+apps/web-admin/src/app/login/page.tsx:6:import { loginWithSupabase } from '@/lib/auth';
+apps/web-admin/src/app/login/page.tsx:43:      const { user } = await loginWithSupabase(accessToken);
+apps/web-admin/src/lib/auth.ts:19:export async function exchangeSupabaseSession(accessToken: string): Promise<ExchangeResponse> {
+apps/web-admin/src/lib/auth.ts:22:  const response = await fetch(`${apiUrl}/api/auth/exchange`, {
+apps/web-admin/src/lib/auth.ts:41:export async function loginWithSupabase(accessToken: string): Promise<LoginResponse> {
+apps/web-admin/src/lib/auth.ts:42:  const { token, user, tenant } = await exchangeSupabaseSession(accessToken);
+apps/api/src/controllers/auth.controller.ts:422:export const exchangeSupabaseSession = async (req: Request, res: Response) => {
+apps/api/src/routes/auth.ts:2:import { register, redirectGoogleAuth, completeGoogleRegistration, exchangeSupabaseSession } from '../controllers/auth.controller';
+apps/api/src/routes/auth.ts:12:router.post('/exchange', exchangeSupabaseSession);
+
+============================================================
+5) Controlador exchange completo
+============================================================
+   400	  );
+   401	
+   402	    return res.status(201).json({
+   403	      token: authPayload.token,
+   404	      user: authPayload.user,
+   405	      tenant: {
+   406	        id: tenant.tenant_id,
+   407	        slug: tenantSlug,
+   408	        trialExpiresAt: tenant.trial_expires_at,
+   409	      },
+   410	      billing: {
+   411	        subscriptionStatus: 'trial',
+   412	        billingExempt: false,
+   413	      },
+   414	      redirectUrl: `${appUrl}/onboarding/success?tenant=${encodeURIComponent(tenantSlug)}&token=${encodeURIComponent(authPayload.token)}`,
+   415	    });
+   416	  } catch (error) {
+   417	    const message = error instanceof Error ? error.message : 'Internal server error';
+   418	    return res.status(500).json({ error: message });
+   419	  }
+   420	};
+   421	
+   422	export const exchangeSupabaseSession = async (req: Request, res: Response) => {
+   423	  const payloadSchema = z.object({
+   424	    accessToken: z.string().min(1),
+   425	  });
+   426	
+   427	  const parsed = payloadSchema.safeParse(req.body);
+   428	
+   429	  if (!parsed.success) {
+   430	    return res.status(400).json({
+   431	      error: 'Invalid payload',
+   432	      details: parsed.error.flatten(),
+   433	    });
+   434	  }
+   435	
+   436	  const { accessToken } = parsed.data;
+   437	
+   438	  try {
+   439	    const { data, error } = await supabaseAdmin.auth.getUser(accessToken);
+   440	
+   441	    console.log("EXCHANGE_DEBUG", {
+   442	      hasError: !!error,
+   443	      errorMessage: error?.message,
+   444	      userId: data?.user?.id,
+   445	      email: data?.user?.email,
+   446	    });
+   447	
+   448	    console.log("EXCHANGE_AFTER_GET_USER", {
+   449	      hasData: !!data,
+   450	      hasUser: !!data?.user,
+   451	      hasError: !!error,
+   452	    });
+   453	
+   454	
+   455	    if (error || !data.user) {
+   456	      console.error("EXCHANGE_401", {
+   457	        error,
+   458	        data,
+   459	      });
+   460	
+   461	      return res.status(401).json({ error: error?.message ?? 'Unable to validate session' });
+   462	    }
+   463	
+   464	    const { data: userRow, error: userRowError } = await supabaseAdmin
+   465	      .from('users')
+   466	      .select('id, tenant_id, role, sucursal_id, activo, is_active')
+   467	      .eq('auth_user_id', data.user.id)
+   468	      .maybeSingle();
+   469	
+   470	    console.log("EXCHANGE_AFTER_USERS_QUERY", {
+   471	      hasUserRow: !!userRow,
+   472	      userRowError: userRowError?.message ?? null,
+   473	      userRowTenantId: userRow?.tenant_id ?? null,
+   474	      userRowRole: userRow?.role ?? null,
+   475	    });
+   476	
+   477	    if (userRowError) {
+   478	      return res.status(502).json({ error: userRowError.message });
+   479	    }
+   480	
+   481	    if (!userRow?.tenant_id) {
+   482	      return res.status(404).json({ error: 'Tenant not found for authenticated user' });
+   483	    }
+   484	
+   485	    if (!(userRow.activo ?? userRow.is_active ?? true)) {
+   486	      return res.status(403).json({ error: 'User is inactive' });
+   487	    }
+   488	
+   489	    const { data: tenantSecurity, error: tenantSecurityError } = await supabaseAdmin
+   490	      .from('tenants')
+   491	      .select('id, slug, name, require_admin_mfa')
+   492	      .eq('id', userRow.tenant_id)
+   493	      .maybeSingle();
+   494	
+   495	    console.log("EXCHANGE_AFTER_TENANTS_QUERY", {
+   496	      hasTenantSecurity: !!tenantSecurity,
+   497	      tenantSecurityError: tenantSecurityError?.message ?? null,
+   498	      tenantSecurityId: tenantSecurity?.id ?? null,
+   499	      tenantSecuritySlug: tenantSecurity?.slug ?? null,
+   500	    });
+   501	
+   502	    if (tenantSecurityError) {
+   503	      return res.status(502).json({ error: tenantSecurityError.message });
+   504	    }
+   505	
+   506	    if (!tenantSecurity) {
+   507	      return res.status(404).json({ error: 'Tenant not found' });
+   508	    }
+   509	
+   510	    const isAdminRole = resolveEffectiveUserRole(userRow.role) === 'owner';
+   511	    if (tenantSecurity.require_admin_mfa && isAdminRole) {
+   512	      const { data: mfaRow, error: mfaError } = await supabaseAdmin
+   513	        .from('users')
+   514	        .select('mfa_enabled')
+   515	        .eq('auth_user_id', data.user.id)
+   516	        .eq('tenant_id', tenantSecurity.id)
+   517	        .maybeSingle();
+   518	
+   519	      if (mfaError) {
+   520	        return res.status(502).json({ error: mfaError.message });
+   521	      }
+   522	
+   523	      if (!mfaRow?.mfa_enabled) {
+   524	        return res.status(403).json({ error: 'MFA required for admin access' });
+   525	      }
+   526	    }
+   527	
+   528	    const sessionId = randomUUID();
+   529	    const authPayload = await buildAuthPayload(
+   530	      { id: data.user.id, email: data.user.email },
+   531	      { id: tenantSecurity.id, slug: tenantSecurity.slug },
+   532	      resolveEffectiveUserRole(userRow.role) ?? userRow.role,
+   533	      userRow.sucursal_id,
+   534	      sessionId
+   535	    );
+   536	
+   537	    console.log("EXCHANGE_AFTER_BUILD_AUTH", {
+   538	      sessionId,
+   539	      tokenPresent: !!authPayload?.token,
+   540	      userSub: authPayload?.user?.sub ?? null,
+   541	      tenantId: tenantSecurity.id,
+   542	      tenantSlug: tenantSecurity.slug,
+   543	    });
+   544	
+   545	    await supabaseAdmin
+   546	      .from('users')
+   547	      .update({
+   548	        ultimo_acceso: new Date().toISOString(),
+   549	        last_login_at: new Date().toISOString(),
+   550	      })
+   551	      .eq('auth_user_id', data.user.id)
+   552	      .eq('tenant_id', tenantSecurity.id);
+   553	
+   554	    console.log("EXCHANGE_BEFORE_SECURITY_SESSION_INSERT", {
+   555	      tenantId: tenantSecurity.id,
+   556	      userRowId: userRow.id,
+   557	      sessionId,
+   558	    });
+   559	    const { error: sessionInsertError } = await supabaseAdmin.from('security_sessions').insert([{
+   560	      tenant_id: tenantSecurity.id,
+   561	      user_id: userRow.id,
+   562	      session_key: sessionId,
+   563	      ip_address: typeof req.ip === 'string' ? req.ip : null,
+   564	      user_agent: typeof req.headers['user-agent'] === 'string' ? req.headers['user-agent'] : null,
+   565	      last_activity_at: new Date().toISOString(),
+   566	    }]);
+   567	
+   568	    console.log("EXCHANGE_AFTER_SECURITY_SESSION_INSERT", {
+   569	      sessionInsertError: sessionInsertError?.message ?? null,
+   570	      sessionId,
+   571	    });
+   572	
+   573	    if (sessionInsertError) {
+   574	      return res.status(502).json({ error: sessionInsertError.message });
+   575	    }
+   576	
+   577	    console.log("EXCHANGE_BEFORE_ATTACH_COOKIE", {
+   578	      tokenPresent: !!authPayload.token,
+   579	      sessionId,
+   580	      tenantId: tenantSecurity.id,
+   581	    });
+   582	    attachAuthCookie(res, authPayload.token);
+   583	
+   584	    return res.status(200).json({
+   585	      ...authPayload,
+   586	      tenant: {
+   587	        id: tenantSecurity.id,
+   588	        slug: tenantSecurity.slug,
+   589	        name: tenantSecurity.name,
+   590	      },
+   591	    });
+   592	  } catch (error) {
+   593	    console.error("EXCHANGE_500_FULL", error);
+   594	    const message = error instanceof Error ? error.message : 'Internal server error';
+   595	    return res.status(500).json({ error: message });
+   596	  }
+   597	};
+
+============================================================
+6) Ruta auth backend
+============================================================
+     1	import { Router } from 'express';
+     2	import { register, redirectGoogleAuth, completeGoogleRegistration, exchangeSupabaseSession } from '../controllers/auth.controller';
+     3	import { requireAuth } from '../middleware/auth';
+     4	import { validateTenant } from '../middleware/validateTenant';
+     5	import { getCurrentUser, resolveTenantForSupabaseUser, getTenantSettings, updateTenantSettings } from '../controllers/meta';
+     6	
+     7	const router = Router({ mergeParams: true });
+     8	
+     9	router.post('/register', register);
+    10	router.get('/google', redirectGoogleAuth);
+    11	router.post('/google/complete', completeGoogleRegistration);
+    12	router.post('/exchange', exchangeSupabaseSession);
+    13	router.get('/me', requireAuth, getCurrentUser);
+    14	router.get('/session', resolveTenantForSupabaseUser);
+    15	router.get('/tenant/:tenantSlug/settings', requireAuth, validateTenant, getTenantSettings);
+    16	router.put('/tenant/:tenantSlug/settings', requireAuth, validateTenant, updateTenantSettings);
+    17	
+    18	export default router;
+
+============================================================
+7) Buscar middleware auth / tenant / cookies
+============================================================
+apps/api/src/middleware/validateTenant.ts:3:export const validateTenant = (req: Request, res: Response, next: NextFunction) => {
+apps/api/src/middleware/auth.ts:79:export const requireAuth = (req: Request, res: Response, next: NextFunction) => {
+apps/api/src/middleware/auth.ts:109:          .from('security_sessions')
+apps/api/src/middleware/auth.ts:124:          .from('security_sessions')
+apps/api/src/types/env.d.ts:3:    // API CORS configuration
+apps/api/src/types/env.d.ts:4:    CORS_ALLOWED_ORIGINS?: string; // comma‑separated list of allowed origins
+apps/api/src/types/env.d.ts:5:    BASE_DOMAIN?: string; // comma‑separated list of base domains for wildcard subdomains
+apps/api/src/index.ts:2:import cors from 'cors';
+apps/api/src/index.ts:24:import { requireAuth } from './middleware/auth';
+apps/api/src/index.ts:35:const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS ?? 'http://localhost:3000')
+apps/api/src/index.ts:37:  .map((origin) => origin.trim())
+apps/api/src/index.ts:40:const localhostOrigins = new Set([
+apps/api/src/index.ts:46:const defaultProductionOrigins = [
+apps/api/src/index.ts:53:].filter((origin): origin is string => Boolean(origin));
+apps/api/src/index.ts:55:function isAllowedCorsOrigin(origin: string | undefined) {
+apps/api/src/index.ts:56:  if (!origin) return false;
+apps/api/src/index.ts:60:    hostname = new URL(origin).hostname;
+apps/api/src/index.ts:62:    hostname = origin || '';
+apps/api/src/index.ts:65:  const allowedHostnames = allowedOrigins.map((o) => {
+apps/api/src/index.ts:73:  const productionHostnames = defaultProductionOrigins.map((o) => {
+apps/api/src/index.ts:86:    localhostOrigins.has(hostname) ||
+apps/api/src/index.ts:91:app.use(cors({
+apps/api/src/index.ts:92:  origin: (origin, callback) => {
+apps/api/src/index.ts:93:    if (!origin || isAllowedCorsOrigin(origin)) {
+apps/api/src/index.ts:97:    return callback(new Error(`Origin not allowed by CORS: ${origin}`));
+apps/api/src/index.ts:99:  credentials: true,
+apps/api/src/index.ts:106:app.options('*', cors({
+apps/api/src/index.ts:107:  origin: (origin, callback) => {
+apps/api/src/index.ts:108:    if (!origin || isAllowedCorsOrigin(origin)) {
+apps/api/src/index.ts:112:    return callback(new Error(`Origin not allowed by CORS: ${origin}`));
+apps/api/src/index.ts:114:  credentials: true,
+apps/api/src/index.ts:149:app.get('/api/audit', requireAuth, requireTenantBillingActive, attachTenantCapabilities, requireTenantModule('security'), requireRole('owner'), listAuditLogs);
+apps/api/src/controllers/auth.controller.ts:13:  origin: z.string().url().optional(),
+apps/api/src/controllers/auth.controller.ts:20:function getAllowedAppOrigins() {
+apps/api/src/controllers/auth.controller.ts:21:  const configuredOrigins = (process.env.CORS_ALLOWED_ORIGINS ?? '')
+apps/api/src/controllers/auth.controller.ts:23:    .map((origin) => origin.trim())
+apps/api/src/controllers/auth.controller.ts:29:    ...configuredOrigins,
+apps/api/src/controllers/auth.controller.ts:43:      getAllowedAppOrigins().has(parsed.origin)
+apps/api/src/controllers/auth.controller.ts:50:function resolveAppUrl(requestOrigin: string | undefined) {
+apps/api/src/controllers/auth.controller.ts:51:  if (requestOrigin && isAllowedRedirectUrl(requestOrigin)) {
+apps/api/src/controllers/auth.controller.ts:52:    return requestOrigin;
+apps/api/src/controllers/auth.controller.ts:55:  const allowedPublicOrigin = Array.from(getAllowedAppOrigins()).find((origin) => {
+apps/api/src/controllers/auth.controller.ts:57:      const parsed = new URL(origin);
+apps/api/src/controllers/auth.controller.ts:70:  if (allowedPublicOrigin) {
+apps/api/src/controllers/auth.controller.ts:71:    return allowedPublicOrigin;
+apps/api/src/controllers/auth.controller.ts:74:  const baseDomain = process.env.BASE_DOMAIN?.trim();
+apps/api/src/controllers/auth.controller.ts:75:  if (baseDomain) {
+apps/api/src/controllers/auth.controller.ts:76:    const publicAppUrl = `https://${baseDomain.replace(/^https?:\/\//, '').replace(/^app\./, '')}`;
+apps/api/src/controllers/auth.controller.ts:88:  const fallbackOrigin = Array.from(getAllowedAppOrigins()).find((origin) => isAllowedRedirectUrl(origin));
+apps/api/src/controllers/auth.controller.ts:90:  return fallbackOrigin ?? null;
+apps/api/src/controllers/auth.controller.ts:93:function resolveSharedCookieDomain() {
+apps/api/src/controllers/auth.controller.ts:94:  const baseDomain = process.env.BASE_DOMAIN?.trim() || process.env.NEXT_PUBLIC_BASE_DOMAIN?.trim();
+apps/api/src/controllers/auth.controller.ts:96:  if (baseDomain) {
+apps/api/src/controllers/auth.controller.ts:97:    const normalized = baseDomain.replace(/^https?:\/\//, '').replace(/^app\./, '');
+apps/api/src/controllers/auth.controller.ts:104:function buildSharedCookieHeader(token: string) {
+apps/api/src/controllers/auth.controller.ts:105:  const domain = resolveSharedCookieDomain();
+apps/api/src/controllers/auth.controller.ts:109:    `Secure`,
+apps/api/src/controllers/auth.controller.ts:110:    `SameSite=None`,
+apps/api/src/controllers/auth.controller.ts:112:    domain ? `Domain=${domain}` : undefined,
+apps/api/src/controllers/auth.controller.ts:118:function attachAuthCookie(res: Response, token: string) {
+apps/api/src/controllers/auth.controller.ts:119:  const existing = res.getHeader('Set-Cookie');
+apps/api/src/controllers/auth.controller.ts:120:  const cookieHeader = buildSharedCookieHeader(token);
+apps/api/src/controllers/auth.controller.ts:123:    res.setHeader('Set-Cookie', cookieHeader);
+apps/api/src/controllers/auth.controller.ts:127:  const cookies = Array.isArray(existing) ? existing : [String(existing)];
+apps/api/src/controllers/auth.controller.ts:128:  res.setHeader('Set-Cookie', [...cookies, cookieHeader]);
+apps/api/src/controllers/auth.controller.ts:189:  const { workshopName, email, password, phone, origin } = parsed.data;
+apps/api/src/controllers/auth.controller.ts:190:  const requestOrigin = origin ?? (typeof req.headers.origin === 'string' ? req.headers.origin : undefined);
+apps/api/src/controllers/auth.controller.ts:191:  const appUrl = resolveAppUrl(requestOrigin);
+apps/api/src/controllers/auth.controller.ts:194:    console.error('REGISTER_MISSING_APP_URL', { requestOrigin: requestOrigin, configured: process.env.APP_URL });
+apps/api/src/controllers/auth.controller.ts:195:    return res.status(400).json({ error: 'APP_URL is required or request origin must be allowed' });
+apps/api/src/controllers/auth.controller.ts:283:    attachAuthCookie(res, token);
+apps/api/src/controllers/auth.controller.ts:313:  const requestOrigin = typeof _req.query.origin === 'string' ? _req.query.origin : null;
+apps/api/src/controllers/auth.controller.ts:323:  const resolvedPublicUrl = requestOrigin ?? publicAppUrl;
+apps/api/src/controllers/auth.controller.ts:326:    return res.status(400).json({ error: 'Invalid redirect origin' });
+apps/api/src/controllers/auth.controller.ts:341:  origin: z.string().url().optional(),
+apps/api/src/controllers/auth.controller.ts:354:  const { workshopName, phone, accessToken, origin } = parsed.data;
+apps/api/src/controllers/auth.controller.ts:355:  const requestOrigin = origin ?? (typeof req.headers.origin === 'string' ? req.headers.origin : undefined);
+apps/api/src/controllers/auth.controller.ts:356:  const appUrl = resolveAppUrl(requestOrigin);
+apps/api/src/controllers/auth.controller.ts:441:    console.log("EXCHANGE_DEBUG", {
+apps/api/src/controllers/auth.controller.ts:448:    console.log("EXCHANGE_AFTER_GET_USER", {
+apps/api/src/controllers/auth.controller.ts:456:      console.error("EXCHANGE_401", {
+apps/api/src/controllers/auth.controller.ts:470:    console.log("EXCHANGE_AFTER_USERS_QUERY", {
+apps/api/src/controllers/auth.controller.ts:495:    console.log("EXCHANGE_AFTER_TENANTS_QUERY", {
+apps/api/src/controllers/auth.controller.ts:537:    console.log("EXCHANGE_AFTER_BUILD_AUTH", {
+apps/api/src/controllers/auth.controller.ts:554:    console.log("EXCHANGE_BEFORE_SECURITY_SESSION_INSERT", {
+apps/api/src/controllers/auth.controller.ts:559:    const { error: sessionInsertError } = await supabaseAdmin.from('security_sessions').insert([{
+apps/api/src/controllers/auth.controller.ts:568:    console.log("EXCHANGE_AFTER_SECURITY_SESSION_INSERT", {
+apps/api/src/controllers/auth.controller.ts:577:    console.log("EXCHANGE_BEFORE_ATTACH_COOKIE", {
+apps/api/src/controllers/auth.controller.ts:582:    attachAuthCookie(res, authPayload.token);
+apps/api/src/controllers/auth.controller.ts:593:    console.error("EXCHANGE_500_FULL", error);
+apps/api/src/controllers/security.ts:275:      .from('security_sessions')
+apps/api/src/controllers/security.ts:318:      .from('security_sessions')
+apps/api/src/controllers/security.ts:386:      .from('security_sessions')
+apps/api/src/controllers/users.ts:225:        error: body.password ? 'Failed to create user credentials' : 'Failed to invite user',
+apps/api/src/controllers/users.ts:239:        return res.status(502).json({ error: 'Failed to confirm user credentials', details: confirmError.message });
+apps/api/src/routes/inventory.ts:2:import { requireAuth } from '../middleware/auth';
+apps/api/src/routes/inventory.ts:3:import { validateTenant } from '../middleware/validateTenant';
+apps/api/src/routes/inventory.ts:12:router.use(requireAuth);
+apps/api/src/routes/inventory.ts:13:router.use(validateTenant);
+apps/api/src/routes/customers.ts:2:import { requireAuth } from '../middleware/auth';
+apps/api/src/routes/customers.ts:3:import { validateTenant } from '../middleware/validateTenant';
+apps/api/src/routes/customers.ts:12:router.use(requireAuth);
+apps/api/src/routes/customers.ts:13:router.use(validateTenant);
+apps/api/src/routes/requests.ts:2:import { requireAuth } from '../middleware/auth';
+apps/api/src/routes/requests.ts:3:import { validateTenant } from '../middleware/validateTenant';
+apps/api/src/routes/requests.ts:12:router.use(requireAuth);
+apps/api/src/routes/requests.ts:13:router.use(validateTenant);
+apps/api/src/routes/suppliers.ts:2:import { requireAuth } from '../middleware/auth';
+apps/api/src/routes/suppliers.ts:3:import { validateTenant } from '../middleware/validateTenant';
+apps/api/src/routes/suppliers.ts:20:router.use(requireAuth);
+apps/api/src/routes/suppliers.ts:21:router.use(validateTenant);
+apps/api/src/routes/reports.ts:2:import { requireAuth } from '../middleware/auth';
+apps/api/src/routes/reports.ts:3:import { validateTenant } from '../middleware/validateTenant';
+apps/api/src/routes/reports.ts:12:router.use(requireAuth);
+apps/api/src/routes/reports.ts:13:router.use(validateTenant);
+apps/api/src/routes/purchase-orders.ts:2:import { requireAuth } from '../middleware/auth';
+apps/api/src/routes/purchase-orders.ts:3:import { validateTenant } from '../middleware/validateTenant';
+apps/api/src/routes/purchase-orders.ts:20:router.use(requireAuth);
+apps/api/src/routes/purchase-orders.ts:21:router.use(validateTenant);
+apps/api/src/routes/pwa.ts:2:import { requireAuth } from '../middleware/auth';
+apps/api/src/routes/pwa.ts:3:import { validateTenant } from '../middleware/validateTenant';
+apps/api/src/routes/pwa.ts:11:router.use(requireAuth);
+apps/api/src/routes/pwa.ts:12:router.use(validateTenant);
+apps/api/src/routes/orders.ts:2:import { requireAuth } from '../middleware/auth';
+apps/api/src/routes/orders.ts:3:import { validateTenant } from '../middleware/validateTenant';
+apps/api/src/routes/orders.ts:12:router.use(requireAuth);
+apps/api/src/routes/orders.ts:13:router.use(validateTenant);
+apps/api/src/routes/security.ts:2:import { requireAuth } from '../middleware/auth';
+apps/api/src/routes/security.ts:3:import { validateTenant } from '../middleware/validateTenant';
+apps/api/src/routes/security.ts:13:router.use(requireAuth);
+apps/api/src/routes/security.ts:14:router.use(validateTenant);
+apps/api/src/routes/users.ts:2:import { requireAuth } from '../middleware/auth';
+apps/api/src/routes/users.ts:11:router.use(requireAuth);
+apps/api/src/routes/billing.ts:3:import { requireAuth } from '../middleware/auth';
+apps/api/src/routes/billing.ts:4:import { validateTenant } from '../middleware/validateTenant';
+apps/api/src/routes/billing.ts:14:router.post('/checkout/protected', requireAuth, validateTenant, attachScope, requireRole('owner', 'manager'), createCheckout);
+apps/api/src/routes/finance.ts:2:import { requireAuth } from '../middleware/auth';
+apps/api/src/routes/finance.ts:3:import { validateTenant } from '../middleware/validateTenant';
+apps/api/src/routes/finance.ts:13:router.use(requireAuth);
+apps/api/src/routes/finance.ts:14:router.use(validateTenant);
+apps/api/src/routes/tasks.ts:2:import { requireAuth } from '../middleware/auth';
+apps/api/src/routes/tasks.ts:3:import { validateTenant } from '../middleware/validateTenant';
+apps/api/src/routes/tasks.ts:11:router.use(requireAuth);
+apps/api/src/routes/tasks.ts:12:router.use(validateTenant);
+apps/api/src/routes/procurement.ts:2:import { requireAuth } from '../middleware/auth';
+apps/api/src/routes/procurement.ts:3:import { validateTenant } from '../middleware/validateTenant';
+apps/api/src/routes/procurement.ts:11:router.use(requireAuth);
+apps/api/src/routes/procurement.ts:12:router.use(validateTenant);
+apps/api/src/routes/stock-alerts.ts:2:import { requireAuth } from '../middleware/auth';
+apps/api/src/routes/stock-alerts.ts:3:import { validateTenant } from '../middleware/validateTenant';
+apps/api/src/routes/stock-alerts.ts:10:router.use(requireAuth);
+apps/api/src/routes/stock-alerts.ts:11:router.use(validateTenant);
+apps/api/src/routes/auth.ts:3:import { requireAuth } from '../middleware/auth';
+apps/api/src/routes/auth.ts:4:import { validateTenant } from '../middleware/validateTenant';
+apps/api/src/routes/auth.ts:13:router.get('/me', requireAuth, getCurrentUser);
+apps/api/src/routes/auth.ts:15:router.get('/tenant/:tenantSlug/settings', requireAuth, validateTenant, getTenantSettings);
+apps/api/src/routes/auth.ts:16:router.put('/tenant/:tenantSlug/settings', requireAuth, validateTenant, updateTenantSettings);
+apps/api/src/routes/sucursales.ts:2:import { requireAuth } from '../middleware/auth';
+apps/api/src/routes/sucursales.ts:3:import { validateTenant } from '../middleware/validateTenant';
+apps/api/src/routes/sucursales.ts:11:router.use(requireAuth);
+apps/api/src/routes/sucursales.ts:12:router.use(validateTenant);
+apps/api/src/services/tenant-billing.ts:56:  const upgradeBaseUrl = process.env.APP_URL?.trim() || process.env.CORS_ALLOWED_ORIGINS?.split(',').map((origin) => origin.trim()).find(Boolean) || null;
+apps/api/src/services/billing.ts:44:    process.env.CORS_ALLOWED_ORIGINS?.split(',').map((origin) => origin.trim()).find(Boolean),
+apps/web-admin/src/lib/auth-storage.ts:3:import { resolveSharedCookieDomain } from "@white-label/config";
+apps/web-admin/src/lib/auth-storage.ts:7:const AUTH_COOKIE_NAME = AUTH_TOKEN_KEY;
+apps/web-admin/src/lib/auth-storage.ts:8:const AUTH_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
+apps/web-admin/src/lib/auth-storage.ts:10:function getCookieHost() {
+apps/web-admin/src/lib/auth-storage.ts:14:function getCookieDomain() {
+apps/web-admin/src/lib/auth-storage.ts:15:  return resolveSharedCookieDomain(getCookieHost());
+apps/web-admin/src/lib/auth-storage.ts:18:function getCookieAttributes(persistent: boolean) {
+apps/web-admin/src/lib/auth-storage.ts:21:    `SameSite=None`,
+apps/web-admin/src/lib/auth-storage.ts:22:    `Secure`,
+apps/web-admin/src/lib/auth-storage.ts:23:    persistent ? `Max-Age=${AUTH_COOKIE_MAX_AGE}` : undefined,
+apps/web-admin/src/lib/auth-storage.ts:24:    getCookieDomain() ? `Domain=${getCookieDomain()}` : undefined,
+apps/web-admin/src/lib/auth-storage.ts:30:function writeCookie(token: string, persistent: boolean) {
+apps/web-admin/src/lib/auth-storage.ts:35:  document.cookie = `${AUTH_COOKIE_NAME}=${encodeURIComponent(token)}; ${getCookieAttributes(persistent)}`;
+apps/web-admin/src/lib/auth-storage.ts:38:function clearCookie() {
+apps/web-admin/src/lib/auth-storage.ts:43:  document.cookie = `${AUTH_COOKIE_NAME}=; Path=/; Max-Age=0; SameSite=None; Secure${getCookieDomain() ? `; Domain=${getCookieDomain()}` : ""}`;
+apps/web-admin/src/lib/auth-storage.ts:59:  writeCookie(token, persistent);
+apps/web-admin/src/lib/auth-storage.ts:83:  const cookieValue = document.cookie
+apps/web-admin/src/lib/auth-storage.ts:86:    .find((part) => part.startsWith(`${AUTH_COOKIE_NAME}=`))
+apps/web-admin/src/lib/auth-storage.ts:91:  if (cookieValue) {
+apps/web-admin/src/lib/auth-storage.ts:92:    return decodeURIComponent(cookieValue);
+apps/web-admin/src/lib/auth-storage.ts:108:  clearCookie();
+
+============================================================
+8) Archivos críticos frontend auth
+============================================================
+
+----- apps/web-admin/src/lib/auth.ts -----
+     1	import { apiClient } from './api-client';
+     2	import { saveAuthToken, clearAuthToken, readAuthToken } from '@/lib/auth-storage';
+     3	import { getCurrentSession } from '@/lib/session';
+     4	import { resolveAdminApiBaseUrl } from '@/lib/api-base-url';
+     5	import type { User, Tenant } from '@/types';
+     6	
+     7	interface LoginResponse {
+     8	  token: string;
+     9	  user: User;
+    10	  tenant: Tenant;
+    11	}
+    12	
+    13	interface ExchangeResponse {
+    14	  token: string;
+    15	  user: User;
+    16	  tenant: Tenant;
+    17	}
+    18	
+    19	export async function exchangeSupabaseSession(accessToken: string): Promise<ExchangeResponse> {
+    20	  const apiUrl = resolveAdminApiBaseUrl();
+    21	
+    22	  const response = await fetch(`${apiUrl}/api/auth/exchange`, {
+    23	    method: 'POST',
+    24	    headers: { 'Content-Type': 'application/json' },
+    25	    body: JSON.stringify({ accessToken }),
+    26	  });
+    27	
+    28	  if (!response.ok) {
+    29	    const error = await response.json().catch(() => ({ error: 'Exchange failed' }));
+    30	    throw new Error(error.error || 'Authentication failed');
+    31	  }
+    32	
+    33	  const data = await response.json();
+    34	  return {
+    35	    token: data.token,
+    36	    user: data.user,
+    37	    tenant: data.tenant,
+    38	  };
+    39	}
+    40	
+    41	export async function loginWithSupabase(accessToken: string): Promise<LoginResponse> {
+    42	  const { token, user, tenant } = await exchangeSupabaseSession(accessToken);
+    43	  apiClient.setToken(token);
+    44	
+    45	  saveAuthToken(token, true);
+    46	  localStorage.setItem('srf_token', token);
+    47	  localStorage.setItem('srf_user', JSON.stringify(user));
+    48	  localStorage.setItem('srf_tenant', JSON.stringify(tenant));
+    49	
+    50	  return { token, user, tenant };
+    51	}
+    52	
+    53	export function logout() {
+    54	  apiClient.clearToken();
+    55	  clearAuthToken();
+    56	  localStorage.removeItem('srf_token');
+    57	  localStorage.removeItem('srf_user');
+    58	  localStorage.removeItem('srf_tenant');
+    59	  localStorage.removeItem('srf_sucursal_activa');
+    60	  window.location.href = '/login';
+    61	}
+    62	
+    63	export function getStoredToken(): string | null {
+    64	  if (typeof window === 'undefined') return null;
+    65	  return localStorage.getItem('srf_token') || readAuthToken();
+    66	}
+    67	
+    68	export function getStoredUser(): User | null {
+    69	  if (typeof window === 'undefined') return null;
+    70	  const session = getCurrentSession();
+    71	  if (session) {
+    72	    return {
+    73	      id: session.email || session.tenantId,
+    74	      email: session.email,
+    75	      name: session.email || 'Usuario activo',
+    76	      role: (session.role as User['role']) || 'manager',
+    77	      tenantId: session.tenantId,
+    78	      tenantSlug: session.tenantSlug,
+    79	      sucursalId: session.sucursalId ?? null,
+    80	      sessionId: session.token,
+    81	    };
+    82	  }
+    83	  const user = localStorage.getItem('srf_user');
+    84	  if (!user) return null;
+    85	  try {
+    86	    return JSON.parse(user);
+    87	  } catch {
+    88	    return null;
+    89	  }
+    90	}
+    91	
+    92	export function getStoredTenant(): Tenant | null {
+    93	  if (typeof window === 'undefined') return null;
+    94	  const session = getCurrentSession();
+    95	  if (session) {
+    96	    return {
+    97	      id: session.tenantId,
+    98	      slug: session.tenantSlug,
+    99	      name: session.tenantSlug,
+   100	      branding: {},
+   101	      trial_expires_at: '',
+   102	      billing_exempt: false,
+   103	    };
+   104	  }
+   105	  const tenant = localStorage.getItem('srf_tenant');
+   106	  if (!tenant) return null;
+   107	  try {
+   108	    return JSON.parse(tenant);
+   109	  } catch {
+   110	    return null;
+   111	  }
+   112	}
+   113	
+   114	export function isAuthenticated(): boolean {
+   115	  return !!getStoredToken();
+   116	}
+
+----- apps/web-admin/src/lib/session.ts -----
+     1	"use client";
+     2	
+     3	import { readAuthToken } from "@/lib/auth-storage";
+     4	
+     5	export type CurrentSession = {
+     6	  token: string;
+     7	  email: string;
+     8	  role: string;
+     9	  tenantId: string;
+    10	  tenantSlug: string;
+    11	  sucursalId?: string;
+    12	};
+    13	
+    14	function decodeJwtPayload(token: string) {
+    15	  try {
+    16	    const parts = token.split(".");
+    17	    if (parts.length !== 3) {
+    18	      return null;
+    19	    }
+    20	
+    21	    const payload = parts[1];
+    22	    const decoded = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
+    23	    return JSON.parse(decoded) as Record<string, unknown>;
+    24	  } catch {
+    25	    return null;
+    26	  }
+    27	}
+    28	
+    29	export function getCurrentSession(): CurrentSession | null {
+    30	  if (typeof window === "undefined") {
+    31	    return null;
+    32	  }
+    33	
+    34	  const token = readAuthToken();
+    35	
+    36	  if (!token) {
+    37	    return null;
+    38	  }
+    39	
+    40	  const decoded = decodeJwtPayload(token);
+    41	
+    42	  if (!decoded) {
+    43	    return null;
+    44	  }
+    45	
+    46	  const tenantSlug = typeof decoded.tenant_slug === "string" ? decoded.tenant_slug.trim() : "";
+    47	  const tenantId = typeof decoded.tenant_id === "string" ? decoded.tenant_id.trim() : "";
+    48	  const email = typeof decoded.email === "string" ? decoded.email.trim() : "";
+    49	  const role = typeof decoded.role === "string" ? decoded.role.trim() : "";
+    50	  const sucursalId = typeof decoded.sucursal_id === "string" ? decoded.sucursal_id.trim() : "";
+    51	
+    52	  if (!tenantSlug) {
+    53	    return null;
+    54	  }
+    55	
+    56	  return {
+    57	    token,
+    58	    email,
+    59	    role,
+    60	    tenantId,
+    61	    tenantSlug,
+    62	    sucursalId: sucursalId || undefined,
+    63	  };
+    64	}
+
+----- apps/web-admin/src/app/login/page.tsx -----
+     1	"use client";
+     2	
+     3	import { Suspense, useState } from 'react';
+     4	import { useRouter, useSearchParams } from 'next/navigation';
+     5	import { getBrowserSupabaseClient } from '@/lib/supabase-browser';
+     6	import { loginWithSupabase } from '@/lib/auth';
+     7	import { setActiveSucursalId } from '@/lib/tenant';
+     8	
+     9	function LoginScreen() {
+    10	  const router = useRouter();
+    11	  const searchParams = useSearchParams();
+    12	  const redirect = searchParams.get('redirect') || '/dashboard';
+    13	  const [loading, setLoading] = useState(false);
+    14	  const [error, setError] = useState<string | null>(null);
+    15	  const [email, setEmail] = useState('');
+    16	  const [password, setPassword] = useState('');
+    17	
+    18	  const handleSupabaseLogin = async (event: React.FormEvent<HTMLFormElement>) => {
+    19	    event.preventDefault();
+    20	    setLoading(true);
+    21	    setError(null);
+    22	
+    23	    try {
+    24	      if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    25	        throw new Error('Entorno de autenticacion incompleto.');
+    26	      }
+    27	
+    28	      const supabase = getBrowserSupabaseClient();
+    29	      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+    30	        email: email.trim(),
+    31	        password,
+    32	      });
+    33	
+    34	      if (signInError) {
+    35	        throw signInError;
+    36	      }
+    37	
+    38	      const accessToken = data.session?.access_token;
+    39	      if (!accessToken) {
+    40	        throw new Error('No se obtuvo access token de Supabase.');
+    41	      }
+    42	
+    43	      const { user } = await loginWithSupabase(accessToken);
+    44	      setActiveSucursalId(user.sucursalId || null, { skipReload: true });
+    45	      router.push(redirect);
+    46	    } catch (err) {
+    47	      setError(err instanceof Error ? err.message : 'Login failed');
+    48	    } finally {
+    49	      setLoading(false);
+    50	    }
+    51	  };
+    52	
+    53	  return (
+    54	    <div className="min-h-screen bg-srf-bg flex items-center justify-center p-4">
+    55	      <div className="w-full max-w-md">
+    56	        <div className="text-center mb-8">
+    57	          <div className="w-20 h-20 bg-srf-primary rounded-full flex items-center justify-center mx-auto mb-4">
+    58	            <span className="text-3xl font-orbitron font-bold text-white">SF</span>
+    59	          </div>
+    60	          <h1 className="text-4xl font-orbitron font-bold text-srf-primary">SrFix</h1>
+    61	          <p className="text-srf-muted mt-2">Panel de administracion</p>
+    62	        </div>
+    63	
+    64	        <div className="card p-8">
+    65	          <h2 className="text-2xl font-bold text-center mb-6">Iniciar Sesion</h2>
+    66	
+    67	          <form onSubmit={handleSupabaseLogin} className="space-y-4">
+    68	            <div>
+    69	              <label className="block text-sm font-medium mb-2">Correo</label>
+    70	              <input
+    71	                type="email"
+    72	                value={email}
+    73	                onChange={(event) => setEmail(event.target.value)}
+    74	                className="input w-full"
+    75	                placeholder="dueno@taller.com"
+    76	                autoComplete="email"
+    77	                required
+    78	              />
+    79	            </div>
+    80	            <div>
+    81	              <label className="block text-sm font-medium mb-2">Contrasena</label>
+    82	              <input
+    83	                type="password"
+    84	                value={password}
+    85	                onChange={(event) => setPassword(event.target.value)}
+    86	                className="input w-full"
+    87	                placeholder="Tu contrasena"
+    88	                autoComplete="current-password"
+    89	                required
+    90	              />
+    91	            </div>
+    92	            {error ? (
+    93	              <div className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+    94	                {error}
+    95	              </div>
+    96	            ) : null}
+    97	            <button type="submit" className="btn-primary w-full" disabled={loading}>
+    98	              {loading ? 'Entrando...' : 'Entrar'}
+    99	            </button>
+   100	          </form>
+   101	        </div>
+   102	      </div>
+   103	    </div>
+   104	  );
+   105	}
+   106	
+   107	export default function LoginPage() {
+   108	  return (
+   109	    <Suspense fallback={<div className="min-h-screen bg-srf-bg flex items-center justify-center"><div className="spinner w-8 h-8" /></div>}>
+   110	      <LoginScreen />
+   111	    </Suspense>
+   112	  );
+   113	}
+
+============================================================
+9) Health checks
+============================================================
+API health:
+curl: (7) Failed to connect to localhost port 3001 after 0 ms: Couldn't connect to server
+
+Admin:
+curl: (7) Failed to connect to localhost port 3003 after 0 ms: Couldn't connect to server
+
+============================================================
+10) Preflight CORS real hacia exchange
+============================================================
+curl: (7) Failed to connect to localhost port 3001 after 0 ms: Couldn't connect to server
+
+============================================================
+11) POST exchange con token inválido controlado
+============================================================
+curl: (7) Failed to connect to localhost port 3001 after 0 ms: Couldn't connect to server
+
+============================================================
+12) Probar rutas probables post-login SIN cookie
+============================================================
+
+### GET http://localhost:3001/api/auth/me
+curl: (7) Failed to connect to localhost port 3001 after 0 ms: Couldn't connect to server
+
+### GET http://localhost:3001/api/me
+curl: (7) Failed to connect to localhost port 3001 after 0 ms: Couldn't connect to server
+
+### GET http://localhost:3001/api/session
+curl: (7) Failed to connect to localhost port 3001 after 0 ms: Couldn't connect to server
+
+### GET http://localhost:3001/api/otriz-valle/me
+curl: (7) Failed to connect to localhost port 3001 after 0 ms: Couldn't connect to server
+
+### GET http://localhost:3001/api/otriz-valle/dashboard
+curl: (7) Failed to connect to localhost port 3001 after 0 ms: Couldn't connect to server
+
+### GET http://localhost:3001/api/otriz-valle/orders
+curl: (7) Failed to connect to localhost port 3001 after 0 ms: Couldn't connect to server
+
+### GET http://localhost:3001/api/otriz-valle/solicitudes
+curl: (7) Failed to connect to localhost port 3001 after 0 ms: Couldn't connect to server
+
+### GET http://localhost:3001/api/otriz-valle/sucursales
+curl: (7) Failed to connect to localhost port 3001 after 0 ms: Couldn't connect to server
+
+============================================================
+13) Buscar endpoints existentes en backend
+============================================================
+apps/api/src/index.ts:91:app.use(cors({
+apps/api/src/index.ts:104:app.use(express.json());
+apps/api/src/index.ts:121:app.use('/api/auth', authRouter);
+apps/api/src/index.ts:122:app.use('/api/:tenantSlug/auth', authRouter); // Support for tenant-prefixed auth
+apps/api/src/index.ts:124:app.use('/api/:tenantSlug/orders', ordersRouter);
+apps/api/src/index.ts:125:app.use('/api/orders', ordersRouter);
+apps/api/src/index.ts:126:app.use('/api/:tenantSlug/requests', requestsRouter);
+apps/api/src/index.ts:127:app.use('/api/requests', requestsRouter);
+apps/api/src/index.ts:129:app.use('/api/:tenantSlug/finance', financeRouter);
+apps/api/src/index.ts:130:app.use('/api/finance', financeRouter);
+apps/api/src/index.ts:132:app.use('/api/:tenantSlug/customers', customersRouter);
+apps/api/src/index.ts:133:app.use('/api/customers', customersRouter);
+apps/api/src/index.ts:135:app.use('/api/:tenantSlug/inventory', inventoryRouter);
+apps/api/src/index.ts:136:app.use('/api/inventory', inventoryRouter);
+apps/api/src/index.ts:137:app.use('/api/:tenantSlug/sucursales', sucursalesRouter);
+apps/api/src/index.ts:138:app.use('/api/sucursales', sucursalesRouter);
+apps/api/src/index.ts:139:app.use('/api/:tenantSlug/suppliers', suppliersRouter);
+apps/api/src/index.ts:140:app.use('/api/suppliers', suppliersRouter);
+apps/api/src/index.ts:141:app.use('/api/:tenantSlug/purchase-orders', purchaseOrdersRouter);
+apps/api/src/index.ts:142:app.use('/api/purchase-orders', purchaseOrdersRouter);
+apps/api/src/index.ts:143:app.use('/api/:tenantSlug/tasks', tasksRouter);
+apps/api/src/index.ts:144:app.use('/api/tasks', tasksRouter);
+apps/api/src/index.ts:145:app.use('/api/:tenantSlug/users', usersRouter);
+apps/api/src/index.ts:146:app.use('/api/users', usersRouter);
+apps/api/src/index.ts:147:app.use('/api/:tenantSlug/security', securityRouter);
+apps/api/src/index.ts:148:app.use('/api/security', securityRouter);
+apps/api/src/index.ts:149:app.get('/api/audit', requireAuth, requireTenantBillingActive, attachTenantCapabilities, requireTenantModule('security'), requireRole('owner'), listAuditLogs);
+apps/api/src/index.ts:150:app.use('/api/:tenantSlug/procurement', procurementRouter);
+apps/api/src/index.ts:151:app.use('/api/procurement', procurementRouter);
+apps/api/src/index.ts:152:app.use('/api/:tenantSlug/reports', reportsRouter);
+apps/api/src/index.ts:153:app.use('/api/reports', reportsRouter);
+apps/api/src/index.ts:154:app.use('/api/:tenantSlug/stock-alerts', stockAlertsRouter);
+apps/api/src/index.ts:155:app.use('/api/stock-alerts', stockAlertsRouter);
+apps/api/src/index.ts:156:app.use('/api/:tenantSlug/pwa', pwaRouter);
+apps/api/src/index.ts:157:app.use('/api/pwa', pwaRouter);
+apps/api/src/index.ts:158:app.use('/api/:tenantSlug/billing', billingRouter);
+apps/api/src/index.ts:159:app.use('/api/billing', billingRouter);
+apps/api/src/index.ts:160:app.use('/api/webhooks', webhookRouter);
+apps/api/src/index.ts:161:app.use('/api/public', publicRouter);
+apps/api/src/index.ts:163:app.get('/', (req, res) => {
+apps/api/src/index.ts:167:app.get('/api', getApiRoot);
+apps/api/src/index.ts:168:app.get('/health', getHealth);
+apps/api/src/index.ts:169:app.get('/healthz', getHealth);
+apps/api/src/index.ts:170:app.get('/api/health', getHealth);
+apps/api/src/index.ts:171:app.use(errorHandler);
+apps/api/src/routes/inventory.ts:18:router.get('/', requireTenantModule('stock'), requireRole('owner', 'manager', 'technician'), listInventory);
+apps/api/src/routes/inventory.ts:19:router.post('/', requireTenantModule('stock'), requireRole('owner', 'manager'), createInventoryItem);
+apps/api/src/routes/inventory.ts:20:router.patch('/:id', requireTenantModule('stock'), requireRole('owner', 'manager'), updateInventoryItem);
+apps/api/src/routes/inventory.ts:21:router.get('/:id/movements', requireTenantModule('stock'), requireRole('owner', 'manager', 'technician'), listInventoryMovements);
+apps/api/src/routes/customers.ts:18:router.get('/', requireTenantModule('customers'), requireRole('owner', 'manager', 'technician'), listCustomers);
+apps/api/src/routes/customers.ts:19:router.post('/', requireTenantModule('customers'), requireRole('owner', 'manager'), createCustomer);
+apps/api/src/routes/requests.ts:18:router.get('/', requireTenantModule('requests'), requireRole('owner', 'manager', 'technician'), listServiceRequests);
+apps/api/src/routes/requests.ts:19:router.get('/:id', requireTenantModule('requests'), requireRole('owner', 'manager', 'technician'), getServiceRequestById);
+apps/api/src/routes/requests.ts:20:router.post('/:id/convert', requireTenantModule('requests'), requireRole('owner', 'manager'), convertServiceRequestToOrder);
+apps/api/src/routes/suppliers.ts:26:router.get('/', requireTenantModule('suppliers'), requireRole('owner', 'manager'), listSuppliers);
+apps/api/src/routes/suppliers.ts:27:router.post('/', requireTenantModule('suppliers'), requireRole('owner', 'manager'), createSupplier);
+apps/api/src/routes/suppliers.ts:28:router.get('/:id', requireTenantModule('suppliers'), requireRole('owner', 'manager'), getSupplierById);
+apps/api/src/routes/suppliers.ts:29:router.put('/:id', requireTenantModule('suppliers'), requireRole('owner', 'manager'), updateSupplier);
+apps/api/src/routes/suppliers.ts:30:router.patch('/:id/status', requireTenantModule('suppliers'), requireRole('owner', 'manager'), updateSupplierStatus);
+apps/api/src/routes/suppliers.ts:31:router.get('/:id/purchase-orders', requireTenantModule('suppliers'), requireRole('owner', 'manager'), listSupplierPurchaseOrders);
+apps/api/src/routes/suppliers.ts:32:router.delete('/:id', requireTenantModule('suppliers'), requireRole('owner', 'manager'), deleteSupplier);
+apps/api/src/routes/reports.ts:18:router.get('/summary', requireTenantModule('reports'), requireRole('owner', 'manager'), getReportsSummary);
+apps/api/src/routes/purchase-orders.ts:26:router.get('/', requireTenantModule('purchase-orders'), requireRole('owner', 'manager'), listPurchaseOrders);
+apps/api/src/routes/purchase-orders.ts:27:router.post('/', requireTenantModule('purchase-orders'), requireRole('owner', 'manager'), createPurchaseOrder);
+apps/api/src/routes/purchase-orders.ts:28:router.get('/:id', requireTenantModule('purchase-orders'), requireRole('owner', 'manager'), getPurchaseOrderById);
+apps/api/src/routes/purchase-orders.ts:29:router.put('/:id', requireTenantModule('purchase-orders'), requireRole('owner', 'manager'), updatePurchaseOrder);
+apps/api/src/routes/purchase-orders.ts:30:router.patch('/:id/status', requireTenantModule('purchase-orders'), requireRole('owner', 'manager'), updatePurchaseOrderStatus);
+apps/api/src/routes/purchase-orders.ts:31:router.post('/:id/receive', requireTenantModule('purchase-orders'), requireRole('owner', 'manager'), receivePurchaseOrder);
+apps/api/src/routes/purchase-orders.ts:32:router.delete('/:id', requireTenantModule('purchase-orders'), requireRole('owner', 'manager'), deletePurchaseOrder);
+apps/api/src/routes/pwa.ts:17:router.get('/push/vapid', getVapidPublicKey);
+apps/api/src/routes/pwa.ts:18:router.post('/push/subscribe', subscribePush);
+apps/api/src/routes/pwa.ts:19:router.post('/push/unsubscribe', unsubscribePush);
+apps/api/src/routes/orders.ts:18:router.get('/', requireTenantModule('orders'), listOrders);
+apps/api/src/routes/orders.ts:19:router.post('/', requireTenantModule('orders'), createOrder);
+apps/api/src/routes/orders.ts:22:router.get('/legacy', requireRole('owner', 'manager'), listOrders);
+apps/api/src/routes/orders.ts:23:router.get('/:id', requireTenantModule('orders'), getOrderById);
+apps/api/src/routes/orders.ts:24:router.post('/:id/attachments', requireTenantModule('documents'), uploadOrderAttachments);
+apps/api/src/routes/orders.ts:25:router.post('/:id/notes', requireTenantModule('orders'), addOrderNote);
+apps/api/src/routes/orders.ts:26:router.post('/:id/messages', requireTenantModule('orders'), addOrderMessage);
+apps/api/src/routes/orders.ts:27:router.patch('/:id/status', requireTenantModule('orders'), updateOrderStatus);
+apps/api/src/routes/orders.ts:28:router.patch('/:id/details', requireTenantModule('orders'), updateOrderDetails);
+apps/api/src/routes/orders.ts:29:router.patch('/:id/financials', requireTenantModule('finance'), updateOrderFinancials);
+apps/api/src/routes/orders.ts:30:router.get('/:id/checklist', requireTenantModule('orders'), getOrderChecklist);
+apps/api/src/routes/orders.ts:31:router.put('/:id/checklist', requireTenantModule('orders'), updateOrderChecklist);
+apps/api/src/routes/orders.ts:32:router.patch('/:id/warranty', requireTenantModule('warranty'), updateOrderWarranty);
+apps/api/src/routes/security.ts:19:router.get('/summary', requireTenantModule('security'), getSecuritySummary);
+apps/api/src/routes/security.ts:20:router.get('/audit', requireTenantModule('security'), requireRole('owner'), listAuditLogs);
+apps/api/src/routes/security.ts:21:router.get('/sessions', requireTenantModule('security'), requireRole('owner'), listActiveSessions);
+apps/api/src/routes/security.ts:22:router.delete('/sessions/:id', requireTenantModule('security'), requireRole('owner'), revokeSession);
+apps/api/src/routes/security.ts:23:router.post('/rotate-keys', requireTenantModule('security'), requireRole('owner'), rotateKeys);
+apps/api/src/routes/security.ts:24:router.get('/mfa/setup', requireTenantModule('security'), requireRole('owner', 'manager'), setupAdminMfa);
+apps/api/src/routes/security.ts:25:router.post('/mfa/verify', requireTenantModule('security'), requireRole('owner', 'manager'), verifyAdminMfa);
+apps/api/src/routes/security.ts:26:router.patch('/mfa/require-admins', requireTenantModule('security'), requireRole('owner'), updateAdminMfaRequirement);
+apps/api/src/routes/security.ts:27:router.post('/users/invite', requireTenantModule('security'), requireRole('owner', 'manager'), inviteUser);
+apps/api/src/routes/users.ts:16:router.get('/', requireTenantModule('users'), requireRole('owner', 'manager'), listUsers);
+apps/api/src/routes/users.ts:17:router.post('/invite', requireTenantModule('users'), requireRole('owner', 'manager'), inviteUser);
+apps/api/src/routes/users.ts:18:router.put('/:id/role', requireTenantModule('users'), requireRole('owner', 'manager'), updateUserRole);
+apps/api/src/routes/users.ts:19:router.delete('/:id', requireTenantModule('users'), requireRole('owner', 'manager'), deactivateUser);
+apps/api/src/routes/users.ts:20:router.get('/:id/purchase-orders', requireTenantModule('users'), requireRole('owner', 'manager'), getUserPurchaseOrders);
+apps/api/src/routes/billing.ts:11:router.post('/checkout', createPublicCheckout);
+apps/api/src/routes/billing.ts:14:router.post('/checkout/protected', requireAuth, validateTenant, attachScope, requireRole('owner', 'manager'), createCheckout);
+apps/api/src/routes/finance.ts:19:router.get('/balance', requireTenantModule('finance'), requireRole('owner'), getBalance);
+apps/api/src/routes/finance.ts:20:router.get('/cashflow/:sucursalId', requireTenantModule('finance'), requireRole('owner', 'manager'), requireFinanceScope, getCashflow);
+apps/api/src/routes/finance.ts:21:router.post('/expense', requireTenantModule('expenses'), requireRole('owner', 'manager'), requireFinanceScope, createExpense);
+apps/api/src/routes/finance.ts:22:router.get('/expense/:id', requireTenantModule('expenses'), requireRole('owner', 'manager'), getExpense);
+apps/api/src/routes/finance.ts:23:router.delete('/expense/:id', requireTenantModule('expenses'), requireRole('owner', 'manager'), deleteExpense);
+apps/api/src/routes/tasks.ts:16:router.get('/', requireRole('owner', 'manager', 'technician'), listTasks);
+apps/api/src/routes/tasks.ts:17:router.post('/', requireRole('owner', 'manager'), createTask);
+apps/api/src/routes/tasks.ts:18:router.get('/:id', requireRole('owner', 'manager', 'technician'), getTaskById);
+apps/api/src/routes/tasks.ts:19:router.put('/:id', requireRole('owner', 'manager'), updateTask);
+apps/api/src/routes/tasks.ts:20:router.patch('/:id/status', requireRole('owner', 'manager', 'technician'), updateTaskStatus);
+apps/api/src/routes/tasks.ts:21:router.get('/:id/history', requireRole('owner', 'manager', 'technician'), getTaskHistory);
+apps/api/src/routes/tasks.ts:22:router.delete('/:id', requireRole('owner', 'manager'), deleteTask);
+apps/api/src/routes/procurement.ts:16:router.get('/summary', requireRole('owner', 'manager'), getProcurementSummary);
+apps/api/src/routes/public.ts:6:router.post('/quotes', createPublicQuote);
+apps/api/src/routes/public.ts:7:router.get('/tracking', trackPublicOrder);
+apps/api/src/routes/public.ts:8:router.get('/tenant/:tenantSlug/landing', getPublicTenantLanding);
+apps/api/src/routes/public.ts:9:router.get('/tenant/:tenantSlug/orders/:folio', getPublicPortalOrder);
+apps/api/src/routes/stock-alerts.ts:14:router.get('/', requireRole('owner', 'manager'), listAlerts);
+apps/api/src/routes/stock-alerts.ts:15:router.patch('/:id/acknowledge', requireRole('owner', 'manager'), acknowledgeAlert);
+apps/api/src/routes/auth.ts:9:router.post('/register', register);
+apps/api/src/routes/auth.ts:10:router.get('/google', redirectGoogleAuth);
+apps/api/src/routes/auth.ts:11:router.post('/google/complete', completeGoogleRegistration);
+apps/api/src/routes/auth.ts:12:router.post('/exchange', exchangeSupabaseSession);
+apps/api/src/routes/auth.ts:13:router.get('/me', requireAuth, getCurrentUser);
+apps/api/src/routes/auth.ts:14:router.get('/session', resolveTenantForSupabaseUser);
+apps/api/src/routes/auth.ts:15:router.get('/tenant/:tenantSlug/settings', requireAuth, validateTenant, getTenantSettings);
+apps/api/src/routes/auth.ts:16:router.put('/tenant/:tenantSlug/settings', requireAuth, validateTenant, updateTenantSettings);
+apps/api/src/routes/sucursales.ts:16:router.get('/', requireTenantModule('sucursales'), requireRole('owner', 'manager', 'technician'), listSucursales);
+apps/api/src/routes/sucursales.ts:17:router.post('/', requireTenantModule('sucursales'), requireRole('owner', 'manager'), createSucursal);
+apps/api/src/routes/sucursales.ts:18:router.put('/:id', requireTenantModule('sucursales'), requireRole('owner', 'manager'), updateSucursal);
+apps/api/src/routes/sucursales.ts:19:router.delete('/:id', requireTenantModule('sucursales'), requireRole('owner'), deleteSucursal);
+apps/api/src/routes/sucursales.ts:20:router.put('/:id/users', requireTenantModule('sucursales'), requireRole('owner', 'manager'), assignUserToSucursal);
+
+============================================================
+14) Buscar posibles throws/500
+============================================================
+apps/api/src/middleware/tenantCapabilities.ts:32:  } catch (error) {
+apps/api/src/middleware/tenantCapabilities.ts:71:    } catch (error) {
+apps/api/src/middleware/scope.ts:8:  } catch (error) {
+apps/api/src/middleware/errorHandler.ts:9:  console.error('Unhandled error:', err);
+apps/api/src/middleware/errorHandler.ts:13:  const message = err.message || 'Internal server error';
+apps/api/src/middleware/auth.ts:29:    throw new Error('Invalid token format');
+apps/api/src/middleware/auth.ts:36:    throw new Error('Invalid token payload');
+apps/api/src/middleware/auth.ts:52:    throw new Error('Invalid token signature');
+apps/api/src/middleware/auth.ts:69:    throw new Error('Invalid token payload');
+apps/api/src/middleware/auth.ts:73:    throw new Error('Token expired');
+apps/api/src/middleware/auth.ts:142:    } catch (error) {
+apps/api/src/middleware/tenantBilling.ts:37:  } catch (error) {
+apps/api/src/lib/resolve-scope.ts:19:    throw new Error('Tenant context is required');
+apps/api/src/controllers/meta.ts:99:  } catch (error) {
+apps/api/src/controllers/meta.ts:100:    const message = error instanceof Error ? error.message : 'Internal server error';
+apps/api/src/controllers/meta.ts:101:    return res.status(500).json({ error: message });
+apps/api/src/controllers/meta.ts:164:  } catch (error) {
+apps/api/src/controllers/meta.ts:165:    const message = error instanceof Error ? error.message : 'Internal server error';
+apps/api/src/controllers/meta.ts:166:    return res.status(500).json({ error: message });
+apps/api/src/controllers/meta.ts:519:  } catch (error) {
+apps/api/src/controllers/meta.ts:520:    const message = error instanceof Error ? error.message : 'Internal server error';
+apps/api/src/controllers/meta.ts:521:    return res.status(500).json({ error: message });
+apps/api/src/controllers/auth.controller.ts:135:    throw new Error('JWT_SECRET is required');
+apps/api/src/controllers/auth.controller.ts:194:    console.error('REGISTER_MISSING_APP_URL', { requestOrigin: requestOrigin, configured: process.env.APP_URL });
+apps/api/src/controllers/auth.controller.ts:221:      console.error('REGISTER_CREATEUSER_FAILED', { error: created?.error });
+apps/api/src/controllers/auth.controller.ts:225:    console.error('REGISTER_CREATEUSER_EXCEPTION', err);
+apps/api/src/controllers/auth.controller.ts:226:    return res.status(500).json({ error: (err as Error).message ?? 'Unable to create auth user' });
+apps/api/src/controllers/auth.controller.ts:255:      throw new Error('Tenant transaction returned no data');
+apps/api/src/controllers/auth.controller.ts:297:  } catch (error) {
+apps/api/src/controllers/auth.controller.ts:299:      console.error('Failed to rollback auth user:', deleteError);
+apps/api/src/controllers/auth.controller.ts:302:    console.error('REGISTER_ROOT_ERROR', error);
+apps/api/src/controllers/auth.controller.ts:303:    console.error((error as any)?.stack);
+apps/api/src/controllers/auth.controller.ts:305:    const message = error instanceof Error ? error.message : 'Internal server error';
+apps/api/src/controllers/auth.controller.ts:306:    return res.status(500).json({ error: message });
+apps/api/src/controllers/auth.controller.ts:316:    return res.status(500).json({ error: 'SUPABASE_URL is required' });
+apps/api/src/controllers/auth.controller.ts:320:    return res.status(500).json({ error: 'APP_URL is required' });
+apps/api/src/controllers/auth.controller.ts:359:    return res.status(500).json({ error: 'APP_URL is required' });
+apps/api/src/controllers/auth.controller.ts:393:    throw new Error('Tenant transaction returned no data');
+apps/api/src/controllers/auth.controller.ts:416:  } catch (error) {
+apps/api/src/controllers/auth.controller.ts:417:    const message = error instanceof Error ? error.message : 'Internal server error';
+apps/api/src/controllers/auth.controller.ts:418:    return res.status(500).json({ error: message });
+apps/api/src/controllers/auth.controller.ts:456:      console.error("EXCHANGE_401", {
+apps/api/src/controllers/auth.controller.ts:592:  } catch (error) {
+apps/api/src/controllers/auth.controller.ts:593:    console.error("EXCHANGE_500_FULL", error);
+apps/api/src/controllers/auth.controller.ts:594:    const message = error instanceof Error ? error.message : 'Internal server error';
+apps/api/src/controllers/auth.controller.ts:595:    return res.status(500).json({ error: message });
+apps/api/src/controllers/requests.ts:45:  } catch (error) {
+apps/api/src/controllers/requests.ts:46:    const message = error instanceof Error ? error.message : 'Internal server error';
+apps/api/src/controllers/requests.ts:47:    return res.status(500).json({ error: message });
+apps/api/src/controllers/requests.ts:83:  } catch (error) {
+apps/api/src/controllers/requests.ts:84:    const message = error instanceof Error ? error.message : 'Internal server error';
+apps/api/src/controllers/requests.ts:85:    return res.status(500).json({ error: message });
+apps/api/src/controllers/requests.ts:231:  } catch (error) {
+apps/api/src/controllers/requests.ts:235:    const message = error instanceof Error ? error.message : 'Internal server error';
+apps/api/src/controllers/requests.ts:236:    return res.status(500).json({ error: message });
+apps/api/src/controllers/suppliers.ts:138:  } catch (error) {
+apps/api/src/controllers/suppliers.ts:139:    console.error('Error listing suppliers:', error);
+apps/api/src/controllers/suppliers.ts:140:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/suppliers.ts:170:  } catch (error) {
+apps/api/src/controllers/suppliers.ts:171:    console.error('Error getting supplier:', error);
+apps/api/src/controllers/suppliers.ts:172:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/suppliers.ts:227:      console.error('Failed to write supplier create audit log:', auditError);
+apps/api/src/controllers/suppliers.ts:231:  } catch (error) {
+apps/api/src/controllers/suppliers.ts:235:    console.error('Error creating supplier:', error);
+apps/api/src/controllers/suppliers.ts:236:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/suppliers.ts:304:      console.error('Failed to write supplier update audit log:', auditError);
+apps/api/src/controllers/suppliers.ts:308:  } catch (error) {
+apps/api/src/controllers/suppliers.ts:312:    console.error('Error updating supplier:', error);
+apps/api/src/controllers/suppliers.ts:313:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/suppliers.ts:365:      console.error('Failed to write supplier status audit log:', auditError);
+apps/api/src/controllers/suppliers.ts:369:  } catch (error) {
+apps/api/src/controllers/suppliers.ts:373:    console.error('Error updating supplier status:', error);
+apps/api/src/controllers/suppliers.ts:374:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/suppliers.ts:417:  } catch (error) {
+apps/api/src/controllers/suppliers.ts:418:    console.error('Error listing supplier purchase orders:', error);
+apps/api/src/controllers/suppliers.ts:419:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/suppliers.ts:467:      console.error('Failed to write supplier delete audit log:', auditError);
+apps/api/src/controllers/suppliers.ts:471:  } catch (error) {
+apps/api/src/controllers/suppliers.ts:472:    console.error('Error deleting supplier:', error);
+apps/api/src/controllers/suppliers.ts:473:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/reports.ts:200:  } catch (error) {
+apps/api/src/controllers/reports.ts:201:    console.error('Error getting reports summary:', error);
+apps/api/src/controllers/reports.ts:202:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/purchase-orders.ts:65:  if (error) throw new Error(error.message);
+apps/api/src/controllers/purchase-orders.ts:76:  if (error) throw new Error(error.message);
+apps/api/src/controllers/purchase-orders.ts:87:  if (error) throw new Error(error.message);
+apps/api/src/controllers/purchase-orders.ts:214:  } catch (error) {
+apps/api/src/controllers/purchase-orders.ts:215:    console.error('Error listing purchase orders:', error);
+apps/api/src/controllers/purchase-orders.ts:216:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/purchase-orders.ts:239:  } catch (error) {
+apps/api/src/controllers/purchase-orders.ts:240:    console.error('Error getting purchase order:', error);
+apps/api/src/controllers/purchase-orders.ts:241:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/purchase-orders.ts:319:  } catch (error) {
+apps/api/src/controllers/purchase-orders.ts:323:    console.error('Error creating purchase order:', error);
+apps/api/src/controllers/purchase-orders.ts:324:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/purchase-orders.ts:370:  } catch (error) {
+apps/api/src/controllers/purchase-orders.ts:374:    console.error('Error updating purchase order:', error);
+apps/api/src/controllers/purchase-orders.ts:375:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/purchase-orders.ts:402:  } catch (error) {
+apps/api/src/controllers/purchase-orders.ts:406:    console.error('Error updating purchase order status:', error);
+apps/api/src/controllers/purchase-orders.ts:407:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/purchase-orders.ts:430:  } catch (error) {
+apps/api/src/controllers/purchase-orders.ts:431:    console.error('Error deleting purchase order:', error);
+apps/api/src/controllers/purchase-orders.ts:432:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/purchase-orders.ts:503:  } catch (error) {
+apps/api/src/controllers/purchase-orders.ts:507:    console.error('Error receiving purchase order:', error);
+apps/api/src/controllers/purchase-orders.ts:508:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/pwa.ts:51:  } catch (error) {
+apps/api/src/controllers/pwa.ts:55:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/pwa.ts:78:  } catch (error) {
+apps/api/src/controllers/pwa.ts:82:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/orders.ts:286:    throw new Error(`Failed to persist service_order_documents: ${error.message}`);
+apps/api/src/controllers/orders.ts:302:    throw new Error(`Failed to persist service_order_events: ${error.message}`);
+apps/api/src/controllers/orders.ts:431:    throw new Error(`Unable to ensure storage bucket ${bucketName}: ${createError.message}`);
+apps/api/src/controllers/orders.ts:453:    throw new Error(`Failed to upload ${options.fileType}: ${uploadError.message}`);
+apps/api/src/controllers/orders.ts:522:      console.error('Supabase insert error:', error.message);
+apps/api/src/controllers/orders.ts:550:      console.error('Supabase checklist insert error:', checklistError.message);
+apps/api/src/controllers/orders.ts:624:    console.error('Error creating order:', error);
+apps/api/src/controllers/orders.ts:625:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/orders.ts:667:  } catch (error) {
+apps/api/src/controllers/orders.ts:668:    console.error('Error listing orders:', error);
+apps/api/src/controllers/orders.ts:669:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/orders.ts:770:  } catch (error) {
+apps/api/src/controllers/orders.ts:771:    console.error('Error getting order by id:', error);
+apps/api/src/controllers/orders.ts:772:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/orders.ts:998:  } catch (error) {
+apps/api/src/controllers/orders.ts:1002:    console.error('Error uploading attachments:', error);
+apps/api/src/controllers/orders.ts:1003:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/orders.ts:1080:  } catch (error) {
+apps/api/src/controllers/orders.ts:1084:    console.error('Error adding note:', error);
+apps/api/src/controllers/orders.ts:1085:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/orders.ts:1187:  } catch (error) {
+apps/api/src/controllers/orders.ts:1191:    console.error('Error updating status:', error);
+apps/api/src/controllers/orders.ts:1192:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/orders.ts:1283:  } catch (error) {
+apps/api/src/controllers/orders.ts:1287:    console.error('Error updating order financials:', error);
+apps/api/src/controllers/orders.ts:1288:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/orders.ts:1352:  } catch (error) {
+apps/api/src/controllers/orders.ts:1356:    console.error('Error updating order details:', error);
+apps/api/src/controllers/orders.ts:1357:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/orders.ts:1383:  } catch (error) {
+apps/api/src/controllers/orders.ts:1384:    console.error('Error getting checklist:', error);
+apps/api/src/controllers/orders.ts:1385:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/orders.ts:1440:  } catch (error) {
+apps/api/src/controllers/orders.ts:1444:    console.error('Error updating checklist:', error);
+apps/api/src/controllers/orders.ts:1445:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/orders.ts:1523:  } catch (error) {
+apps/api/src/controllers/orders.ts:1527:    console.error('Error updating warranty:', error);
+apps/api/src/controllers/orders.ts:1528:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/security.ts:90:  } catch (error) {
+apps/api/src/controllers/security.ts:91:    console.error('Error getting security summary:', error);
+apps/api/src/controllers/security.ts:92:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/security.ts:172:        console.error('Failed to rollback invited auth user:', rollbackError);
+apps/api/src/controllers/security.ts:190:  } catch (error) {
+apps/api/src/controllers/security.ts:194:    console.error('Error inviting user:', error);
+apps/api/src/controllers/security.ts:195:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/security.ts:257:  } catch (error) {
+apps/api/src/controllers/security.ts:258:    console.error('Error listing audit logs:', error);
+apps/api/src/controllers/security.ts:259:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/security.ts:299:  } catch (error) {
+apps/api/src/controllers/security.ts:300:    console.error('Error listing active sessions:', error);
+apps/api/src/controllers/security.ts:301:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/security.ts:343:  } catch (error) {
+apps/api/src/controllers/security.ts:344:    console.error('Error revoking session:', error);
+apps/api/src/controllers/security.ts:345:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/security.ts:402:  } catch (error) {
+apps/api/src/controllers/security.ts:403:    console.error('Error rotating keys:', error);
+apps/api/src/controllers/security.ts:404:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/security.ts:451:  } catch (error) {
+apps/api/src/controllers/security.ts:452:    console.error('Error setting up MFA:', error);
+apps/api/src/controllers/security.ts:453:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/security.ts:512:  } catch (error) {
+apps/api/src/controllers/security.ts:513:    console.error('Error verifying MFA:', error);
+apps/api/src/controllers/security.ts:514:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/security.ts:566:  } catch (error) {
+apps/api/src/controllers/security.ts:567:    console.error('Error updating MFA requirement:', error);
+apps/api/src/controllers/security.ts:568:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/catalogs.ts:178:  } catch (error) {
+apps/api/src/controllers/catalogs.ts:179:    console.error('Error listing customers:', error);
+apps/api/src/controllers/catalogs.ts:180:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/catalogs.ts:200:  } catch (error) {
+apps/api/src/controllers/catalogs.ts:202:    console.error('Error creating customer:', error);
+apps/api/src/controllers/catalogs.ts:203:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/catalogs.ts:255:  } catch (error) {
+apps/api/src/controllers/catalogs.ts:256:    console.error('Error listing inventory:', error);
+apps/api/src/controllers/catalogs.ts:257:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/catalogs.ts:307:  } catch (error) {
+apps/api/src/controllers/catalogs.ts:309:    console.error('Error creating inventory item:', error);
+apps/api/src/controllers/catalogs.ts:310:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/catalogs.ts:408:  } catch (error) {
+apps/api/src/controllers/catalogs.ts:412:    console.error('Error updating inventory item:', error);
+apps/api/src/controllers/catalogs.ts:413:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/catalogs.ts:471:  } catch (error) {
+apps/api/src/controllers/catalogs.ts:472:    console.error('Error listing inventory movements:', error);
+apps/api/src/controllers/catalogs.ts:473:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/users.ts:42:    throw new Error('Invalid role');
+apps/api/src/controllers/users.ts:164:  } catch (error) {
+apps/api/src/controllers/users.ts:165:    const message = error instanceof Error ? error.message : 'Internal server error';
+apps/api/src/controllers/users.ts:166:    return res.status(500).json({ error: message });
+apps/api/src/controllers/users.ts:237:          console.error('Failed to rollback unconfirmed auth user:', rollbackError);
+apps/api/src/controllers/users.ts:308:        console.error('Failed to rollback invited auth user:', rollbackError);
+apps/api/src/controllers/users.ts:328:  } catch (error) {
+apps/api/src/controllers/users.ts:332:    const message = error instanceof Error ? error.message : 'Internal server error';
+apps/api/src/controllers/users.ts:333:    return res.status(500).json({ error: message });
+apps/api/src/controllers/users.ts:403:  } catch (error) {
+apps/api/src/controllers/users.ts:404:    const message = error instanceof Error ? error.message : 'Internal server error';
+apps/api/src/controllers/users.ts:405:    return res.status(500).json({ error: message });
+apps/api/src/controllers/users.ts:453:  } catch (error) {
+apps/api/src/controllers/users.ts:454:    const message = error instanceof Error ? error.message : 'Internal server error';
+apps/api/src/controllers/users.ts:455:    return res.status(500).json({ error: message });
+apps/api/src/controllers/users.ts:505:  } catch (error) {
+apps/api/src/controllers/users.ts:506:    const message = error instanceof Error ? error.message : 'Internal server error';
+apps/api/src/controllers/users.ts:507:    return res.status(500).json({ error: message });
+apps/api/src/controllers/billing.ts:26:  } catch (error) {
+apps/api/src/controllers/billing.ts:27:    const message = error instanceof Error ? error.message : 'Internal server error';
+apps/api/src/controllers/billing.ts:28:    return res.status(500).json({ error: message });
+apps/api/src/controllers/billing.ts:47:  } catch (error) {
+apps/api/src/controllers/billing.ts:48:    const message = error instanceof Error ? error.message : 'Internal server error';
+apps/api/src/controllers/billing.ts:49:    return res.status(500).json({ error: message });
+apps/api/src/controllers/billing.ts:58:    return res.status(500).json({ error: 'MP_ACCESS_TOKEN no configurado' });
+apps/api/src/controllers/billing.ts:64:  } catch (error) {
+apps/api/src/controllers/billing.ts:65:    const message = error instanceof Error ? error.message : 'Internal server error';
+apps/api/src/controllers/billing.ts:66:    return res.status(500).json({ error: message });
+apps/api/src/controllers/finance.ts:30:    throw new Error(error.message);
+apps/api/src/controllers/finance.ts:53:    throw new Error(errors.map((item) => (item as Error).message ?? String(item)).join(', '));
+apps/api/src/controllers/finance.ts:116:  } catch (error) {
+apps/api/src/controllers/finance.ts:117:    console.error('Error getting balance:', error);
+apps/api/src/controllers/finance.ts:118:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/finance.ts:162:  } catch (error) {
+apps/api/src/controllers/finance.ts:163:    console.error('Error getting cashflow:', error);
+apps/api/src/controllers/finance.ts:164:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/finance.ts:205:  } catch (error) {
+apps/api/src/controllers/finance.ts:209:    console.error('Error creating expense:', error);
+apps/api/src/controllers/finance.ts:210:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/finance.ts:243:  } catch (error) {
+apps/api/src/controllers/finance.ts:244:    console.error('Error getting expense:', error);
+apps/api/src/controllers/finance.ts:245:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/finance.ts:284:  } catch (error) {
+apps/api/src/controllers/finance.ts:285:    console.error('Error deleting expense:', error);
+apps/api/src/controllers/finance.ts:286:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/tasks.ts:123:  } catch (error) {
+apps/api/src/controllers/tasks.ts:124:    console.error('Error listing tasks:', error);
+apps/api/src/controllers/tasks.ts:125:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/tasks.ts:143:  } catch (error) {
+apps/api/src/controllers/tasks.ts:144:    console.error('Error getting task:', error);
+apps/api/src/controllers/tasks.ts:145:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/tasks.ts:197:  } catch (error) {
+apps/api/src/controllers/tasks.ts:201:    console.error('Error creating task:', error);
+apps/api/src/controllers/tasks.ts:202:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/tasks.ts:243:  } catch (error) {
+apps/api/src/controllers/tasks.ts:247:    console.error('Error updating task:', error);
+apps/api/src/controllers/tasks.ts:248:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/tasks.ts:287:  } catch (error) {
+apps/api/src/controllers/tasks.ts:291:    console.error('Error updating task status:', error);
+apps/api/src/controllers/tasks.ts:292:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/tasks.ts:311:  } catch (error) {
+apps/api/src/controllers/tasks.ts:312:    console.error('Error deleting task:', error);
+apps/api/src/controllers/tasks.ts:313:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/tasks.ts:333:  } catch (error) {
+apps/api/src/controllers/tasks.ts:334:    console.error('Error getting task history:', error);
+apps/api/src/controllers/tasks.ts:335:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/procurement.ts:58:  } catch (error) {
+apps/api/src/controllers/procurement.ts:59:    console.error('Error getting procurement summary:', error);
+apps/api/src/controllers/procurement.ts:60:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/public.ts:279:  } catch (error) {
+apps/api/src/controllers/public.ts:280:    const message = error instanceof Error ? error.message : 'Internal server error';
+apps/api/src/controllers/public.ts:281:    return res.status(500).json({ error: message });
+apps/api/src/controllers/public.ts:328:  } catch (error) {
+apps/api/src/controllers/public.ts:329:    const message = error instanceof Error ? error.message : 'Internal server error';
+apps/api/src/controllers/public.ts:333:    return res.status(500).json({ error: message });
+apps/api/src/controllers/public.ts:500:  } catch (error) {
+apps/api/src/controllers/public.ts:501:    const message = error instanceof Error ? error.message : 'Internal server error';
+apps/api/src/controllers/public.ts:505:    return res.status(500).json({ error: message });
+apps/api/src/controllers/public.ts:535:  } catch (error) {
+apps/api/src/controllers/public.ts:536:    const message = error instanceof Error ? error.message : 'Internal server error';
+apps/api/src/controllers/public.ts:540:    return res.status(500).json({ error: message });
+apps/api/src/controllers/stock-alerts.ts:16:  } catch (error) {
+apps/api/src/controllers/stock-alerts.ts:17:    console.error('Error listing stock alerts:', error);
+apps/api/src/controllers/stock-alerts.ts:18:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/stock-alerts.ts:33:  } catch (error) {
+apps/api/src/controllers/stock-alerts.ts:37:    console.error('Error acknowledging stock alert:', error);
+apps/api/src/controllers/stock-alerts.ts:38:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/sucursales.ts:74:  } catch (error) {
+apps/api/src/controllers/sucursales.ts:75:    console.error('Error listing sucursales:', error);
+apps/api/src/controllers/sucursales.ts:76:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/sucursales.ts:131:  } catch (error) {
+apps/api/src/controllers/sucursales.ts:135:    console.error('Error creating sucursal:', error);
+apps/api/src/controllers/sucursales.ts:136:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/sucursales.ts:186:  } catch (error) {
+apps/api/src/controllers/sucursales.ts:190:    console.error('Error updating sucursal:', error);
+apps/api/src/controllers/sucursales.ts:191:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/sucursales.ts:228:  } catch (error) {
+apps/api/src/controllers/sucursales.ts:229:    console.error('Error deleting sucursal:', error);
+apps/api/src/controllers/sucursales.ts:230:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/controllers/sucursales.ts:286:  } catch (error) {
+apps/api/src/controllers/sucursales.ts:290:    console.error('Error assigning user to sucursal:', error);
+apps/api/src/controllers/sucursales.ts:291:    return res.status(500).json({ error: 'Error interno del servidor' });
+apps/api/src/services/security-backoffice.ts:89:    throw new Error('JWT_SECRET is required');
+apps/api/src/services/pwa-push.ts:41:    throw new Error(error?.message ?? 'Failed to load push subscriptions');
+apps/api/src/services/tenant-config.ts:639:    throw new Error(tenantResult.error.message);
+apps/api/src/services/tenant-config.ts:643:    throw new Error(industryResult.error.message);
+apps/api/src/services/tenant-config.ts:647:    throw new Error(modulesResult.error.message);
+apps/api/src/services/tenant-config.ts:651:    throw new Error(labelsResult.error.message);
+apps/api/src/services/tenant-config.ts:655:    throw new Error(workflowResult.error.message);
+apps/api/src/services/tenant-config.ts:659:    throw new Error(fieldDefinitionsResult.error.message);
+apps/api/src/services/tenant-config.ts:663:    throw new Error(semaphoreRulesResult.error.message);
+apps/api/src/services/billing.ts:48:    throw new Error('APP_URL is required');
+apps/api/src/services/billing.ts:57:    throw new Error('MP_ACCESS_TOKEN no configurado');
+apps/api/src/services/billing.ts:65:    throw new Error('WEBHOOK_BASE_URL is required');
+apps/api/src/services/billing.ts:131:      throw new Error(tenantError.message);
+apps/api/src/services/billing.ts:135:      throw new Error('Tenant not found');
+apps/api/src/services/billing.ts:145:    throw new Error('No se pudo resolver el tenant de la sesión');
+apps/api/src/services/billing.ts:155:    throw new Error(userError.message);
+apps/api/src/services/billing.ts:159:    throw new Error('No se pudo resolver el tenant de la sesión');
+apps/api/src/services/billing.ts:169:    throw new Error(tenantError.message);
+apps/api/src/services/billing.ts:173:    throw new Error('Tenant not found');
+apps/api/src/services/billing.ts:194:    throw new Error('Plan inválido');
+apps/api/src/services/billing.ts:237:    throw new Error('Mercado Pago rechazó la preferencia');
+apps/api/src/services/billing.ts:242:    throw new Error('Mercado Pago no devolvió init_point');
+apps/api/src/services/billing.ts:277:    throw new Error('Firma inválida');
+apps/api/src/services/billing.ts:286:    throw new Error('No se pudo obtener el pago');
+apps/web-admin/src/app/dashboard/tecnico/page.tsx:80:    } catch (error) {
+apps/web-admin/src/app/dashboard/tecnico/page.tsx:81:      console.error('Failed to load orders:', error);
+apps/web-admin/src/app/dashboard/seguridad/page.tsx:40:    } catch (error) {
+apps/web-admin/src/app/dashboard/seguridad/page.tsx:41:      console.error('Failed to load security data:', error);
+apps/web-admin/src/app/dashboard/seguridad/page.tsx:56:    } catch (error) {
+apps/web-admin/src/app/dashboard/seguridad/page.tsx:57:      console.error('Failed to setup MFA:', error);
+apps/web-admin/src/app/dashboard/seguridad/page.tsx:74:    } catch (error) {
+apps/web-admin/src/app/dashboard/seguridad/page.tsx:75:      console.error('Failed to verify MFA:', error);
+apps/web-admin/src/app/dashboard/seguridad/page.tsx:93:    } catch (error) {
+apps/web-admin/src/app/dashboard/seguridad/page.tsx:94:      console.error('Failed to revoke session:', error);
+apps/web-admin/src/app/dashboard/seguridad/page.tsx:105:    } catch (error) {
+apps/web-admin/src/app/dashboard/seguridad/page.tsx:106:      console.error('Failed to rotate keys:', error);
+apps/web-admin/src/app/dashboard/seguridad/page.tsx:115:    } catch (error) {
+apps/web-admin/src/app/dashboard/seguridad/page.tsx:116:      console.error('Failed to update config:', error);
+apps/web-admin/src/app/dashboard/sucursales/page.tsx:29:    } catch (error) {
+apps/web-admin/src/app/dashboard/sucursales/page.tsx:30:      console.error('Failed to load sucursales:', error);
+apps/web-admin/src/app/dashboard/sucursales/page.tsx:65:    } catch (error) {
+apps/web-admin/src/app/dashboard/sucursales/page.tsx:66:      console.error('Failed to delete sucursal:', error);
+apps/web-admin/src/app/dashboard/solicitudes/page.tsx:25:    } catch (error) {
+apps/web-admin/src/app/dashboard/solicitudes/page.tsx:26:      console.error('Failed to load requests:', error);
+apps/web-admin/src/app/dashboard/solicitudes/page.tsx:50:    } catch (error) {
+apps/web-admin/src/app/dashboard/solicitudes/page.tsx:51:      console.error('Failed to convert request:', error);
+apps/web-admin/src/app/dashboard/tareas/page.tsx:44:    } catch (error) {
+apps/web-admin/src/app/dashboard/tareas/page.tsx:45:      console.error('Failed to load tasks:', error);
+apps/web-admin/src/app/dashboard/tareas/page.tsx:87:    } catch (error) {
+apps/web-admin/src/app/dashboard/tareas/page.tsx:88:      console.error('Failed to delete task:', error);
+apps/web-admin/src/app/dashboard/stock/page.tsx:59:    } catch (error) {
+apps/web-admin/src/app/dashboard/stock/page.tsx:60:      console.error('Failed to load products:', error);
+apps/web-admin/src/app/dashboard/stock/page.tsx:70:    } catch (error) {
+apps/web-admin/src/app/dashboard/stock/page.tsx:71:      console.error('Failed to load alerts:', error);
+apps/web-admin/src/app/dashboard/operativo/page.tsx:79:        console.error('Failed to load draft:', e);
+apps/web-admin/src/app/dashboard/operativo/page.tsx:160:    } catch (error) {
+apps/web-admin/src/app/dashboard/operativo/page.tsx:161:      console.error('Failed to create order:', error);
+apps/web-admin/src/app/dashboard/operativo/page.tsx:236:              } catch (error) {
+apps/web-admin/src/app/dashboard/operativo/page.tsx:237:                console.error('Failed to load quote:', error);
+apps/web-admin/src/app/dashboard/page.tsx:71:    } catch (error) {
+apps/web-admin/src/app/dashboard/page.tsx:72:      console.error('Failed to load dashboard data:', error);
+apps/web-admin/src/app/dashboard/clientes/page.tsx:44:    } catch (error) {
+apps/web-admin/src/app/dashboard/clientes/page.tsx:45:      console.error('Failed to load customers:', error);
+apps/web-admin/src/app/login/page.tsx:25:        throw new Error('Entorno de autenticacion incompleto.');
+apps/web-admin/src/app/login/page.tsx:40:        throw new Error('No se obtuvo access token de Supabase.');
+apps/web-admin/src/components/tecnico/order-modal.tsx:114:    } catch (error) {
+apps/web-admin/src/components/tecnico/order-modal.tsx:115:      console.error('Failed to load order details:', error);
+apps/web-admin/src/components/tecnico/order-modal.tsx:173:    } catch (error) {
+apps/web-admin/src/components/tecnico/order-modal.tsx:174:      console.error('Failed to save order:', error);
+apps/web-admin/src/components/tecnico/order-modal.tsx:192:    } catch (error) {
+apps/web-admin/src/components/tecnico/order-modal.tsx:193:      console.error('Failed to deliver order:', error);
+apps/web-admin/src/components/tecnico/order-modal.tsx:395:                      } catch (error) {
+apps/web-admin/src/components/tecnico/order-modal.tsx:396:                        console.error('Failed to upload photo:', error);
+apps/web-admin/src/components/tenant/tenant-provider.tsx:53:    throw new Error('useTenant must be used within a TenantProvider');
+apps/web-admin/src/components/seguridad/user-modal.tsx:88:    } catch (error) {
+apps/web-admin/src/components/seguridad/user-modal.tsx:89:      console.error('Failed to save user:', error);
+apps/web-admin/src/components/sucursales/sucursal-modal.tsx:90:    } catch (error) {
+apps/web-admin/src/components/sucursales/sucursal-modal.tsx:91:      console.error('Failed to save sucursal:', error);
+apps/web-admin/src/components/sucursales/transfer-modal.tsx:41:    } catch (error) {
+apps/web-admin/src/components/sucursales/transfer-modal.tsx:42:      console.error('Failed to load products:', error);
+apps/web-admin/src/components/sucursales/transfer-modal.tsx:89:    } catch (error) {
+apps/web-admin/src/components/sucursales/transfer-modal.tsx:90:      console.error('Failed to transfer stock:', error);
+apps/web-admin/src/components/solicitudes/quote-modal.tsx:105:    } catch (error) {
+apps/web-admin/src/components/solicitudes/quote-modal.tsx:106:      console.error('Failed to convert quote to order:', error);
+apps/web-admin/src/components/dashboard/branch-selector.tsx:25:    } catch (error) {
+apps/web-admin/src/components/dashboard/branch-selector.tsx:26:      console.error('Failed to load sucursales:', error);
+apps/web-admin/src/components/tareas/task-modal.tsx:83:    } catch (error) {
+apps/web-admin/src/components/tareas/task-modal.tsx:84:      console.error('Failed to save task:', error);
+apps/web-admin/src/components/stock/movement-modal.tsx:57:    } catch (error) {
+apps/web-admin/src/components/stock/movement-modal.tsx:58:      console.error('Failed to register movement:', error);
+apps/web-admin/src/components/stock/product-modal.tsx:107:    } catch (error) {
+apps/web-admin/src/components/stock/product-modal.tsx:108:      console.error('Failed to save product:', error);
+apps/web-admin/src/components/clientes/customer-history.tsx:38:    } catch (error) {
+apps/web-admin/src/components/clientes/customer-history.tsx:39:      console.error('Failed to load customer history:', error);
+apps/web-admin/src/components/clientes/customer-modal.tsx:62:    } catch (error) {
+apps/web-admin/src/components/clientes/customer-modal.tsx:63:      console.error('Failed to save customer:', error);
+apps/web-admin/src/lib/api-client.ts:59:      throw new Error(error.error || `HTTP ${response.status}`);
+apps/web-admin/src/lib/api-client.ts:149:      throw new Error(error.error || `HTTP ${response.status}`);
+apps/web-admin/src/lib/api-base-url.ts:9:    throw new Error('Empty API base URL');
+apps/web-admin/src/lib/api-base-url.ts:27:  throw new Error('Missing required environment variable: NEXT_PUBLIC_API_URL');
+apps/web-admin/src/lib/supabase-browser.ts:12:    throw new Error("Falta configurar NEXT_PUBLIC_SUPABASE_URL");
+apps/web-admin/src/lib/supabase-browser.ts:16:    throw new Error("Falta configurar NEXT_PUBLIC_SUPABASE_ANON_KEY");
+apps/web-admin/src/lib/auth.ts:30:    throw new Error(error.error || 'Authentication failed');
+apps/web-admin/src/services/fixService.ts:323:    throw new Error("Sesión inválida: tenant_id ausente");
+apps/web-admin/src/services/fixService.ts:351:      throw new Error('No hay sesión activa. Vuelve a iniciar sesión.');
+apps/web-admin/src/services/fixService.ts:369:      throw new Error('Acción guardada sin conexión. Se sincronizará al reconectar.');
+apps/web-admin/src/services/fixService.ts:390:      throw new Error(`Network error: ${(err as Error).message}`);
+apps/web-admin/src/services/fixService.ts:412:      throw new Error(`${message}${details}`);
+apps/web-admin/src/services/fixService.ts:778:      throw new Error('Sucursal activa requerida para consultar flujo de caja');
+
+============================================================
+15) Service Worker / PWA
+============================================================
+
+----- apps/web-admin/src/components/pwa/pwa-bootstrap.tsx -----
+8:  const manifestUrl = `/api/pwa/manifest?tenant=${encodeURIComponent(tenantSlug)}`;
+20:async function registerServiceWorker(tenantSlug: string) {
+21:  if (!("serviceWorker" in navigator)) {
+25:  const swUrl = `/api/pwa/sw.js?tenant=${encodeURIComponent(tenantSlug)}`;
+27:    await navigator.serviceWorker.register(swUrl, { scope: "/" });
+34:  if (!("serviceWorker" in navigator)) {
+38:  const registrations = await navigator.serviceWorker.getRegistrations();
+39:  await Promise.all(registrations.map((registration) => registration.unregister().catch(() => undefined)));
+63:    void registerServiceWorker(tenantSlug);
+77:        if (failures.length === 0 && "serviceWorker" in navigator) {
+78:          const registrations = await navigator.serviceWorker.getRegistrations();
+
+----- apps/web-admin/public/sw.js -----
+1:if(!self.define){let e,a={};const s=(s,t)=>(s=new URL(s+".js",t).href,a[s]||new Promise(a=>{if("document"in self){const e=document.createElement("script");e.src=s,e.onload=a,document.head.appendChild(e)}else e=s,importScripts(s),a()}).then(()=>{let e=a[s];if(!e)throw new Error(`Module ${s} didn’t register its module`);return e}));self.define=(t,i)=>{const n=e||("document"in self?document.currentScript.src:"")||location.href;if(a[n])return;let c={};const r=e=>s(e,n),d={module:{uri:n},exports:c,require:r};a[n]=Promise.all(t.map(e=>d[e]||r(e))).then(e=>(i(...e),c))}}define(["./workbox-677e6c4b"],function(e){"use strict";importScripts(),self.skipWaiting(),e.clientsClaim(),e.precacheAndRoute([{url:"/_next/static/chunks/209-4484d15aea8b82f4.js",revision:"4484d15aea8b82f4"},{url:"/_next/static/chunks/43938ccf-932344312462b8af.js",revision:"932344312462b8af"},{url:"/_next/static/chunks/506-4f415ca39f953daa.js",revision:"4f415ca39f953daa"},{url:"/_next/static/chunks/676-e0b710b9717841be.js",revision:"e0b710b9717841be"},{url:"/_next/static/chunks/703-09e34a43edf313be.js",revision:"09e34a43edf313be"},{url:"/_next/static/chunks/980-2a59c69f19fc6349.js",revision:"2a59c69f19fc6349"},{url:"/_next/static/chunks/app/_global-error/page-4ef32155fd9abe59.js",revision:"4ef32155fd9abe59"},{url:"/_next/static/chunks/app/_not-found/page-4ef32155fd9abe59.js",revision:"4ef32155fd9abe59"},{url:"/_next/static/chunks/app/api/pwa/manifest/route-4ef32155fd9abe59.js",revision:"4ef32155fd9abe59"},{url:"/_next/static/chunks/app/api/pwa/sw.js/route-4ef32155fd9abe59.js",revision:"4ef32155fd9abe59"},{url:"/_next/static/chunks/app/auth/bridge/page-b7910bc4e1c1617a.js",revision:"b7910bc4e1c1617a"},{url:"/_next/static/chunks/app/dashboard/archivo/page-8bea1a05a296ebc8.js",revision:"8bea1a05a296ebc8"},{url:"/_next/static/chunks/app/dashboard/clientes/page-57217e379093dcc1.js",revision:"57217e379093dcc1"},{url:"/_next/static/chunks/app/dashboard/compras/page-041d14a3241f9190.js",revision:"041d14a3241f9190"},{url:"/_next/static/chunks/app/dashboard/finanzas/page-3f3ebabc8ad5edd9.js",revision:"3f3ebabc8ad5edd9"},{url:"/_next/static/chunks/app/dashboard/gastos/page-5908a7b9d8a99301.js",revision:"5908a7b9d8a99301"},{url:"/_next/static/chunks/app/dashboard/landing/page-761c542ca2bb8080.js",revision:"761c542ca2bb8080"},{url:"/_next/static/chunks/app/dashboard/layout-4b4be0448c45914c.js",revision:"4b4be0448c45914c"},{url:"/_next/static/chunks/app/dashboard/ordenes/page-aab723df1707d97f.js",revision:"aab723df1707d97f"},{url:"/_next/static/chunks/app/dashboard/page-003cd62a0b47d8ab.js",revision:"003cd62a0b47d8ab"},{url:"/_next/static/chunks/app/dashboard/proveedores/page-d29d670fdeb19434.js",revision:"d29d670fdeb19434"},{url:"/_next/static/chunks/app/dashboard/reportes/page-6126d9d41b8bb226.js",revision:"6126d9d41b8bb226"},{url:"/_next/static/chunks/app/dashboard/seguridad/page-9e9c86f01a05fd5c.js",revision:"9e9c86f01a05fd5c"},{url:"/_next/static/chunks/app/dashboard/solicitudes/page-b6f1a2e96c8dd491.js",revision:"b6f1a2e96c8dd491"},{url:"/_next/static/chunks/app/dashboard/stock/page-fd9d512aaf19545b.js",revision:"fd9d512aaf19545b"},{url:"/_next/static/chunks/app/dashboard/sucursales/page-b914ffb5d6543745.js",revision:"b914ffb5d6543745"},{url:"/_next/static/chunks/app/dashboard/tareas/page-bfd4fda90147a651.js",revision:"bfd4fda90147a651"},{url:"/_next/static/chunks/app/dashboard/tecnico/page-86222396312c4f72.js",revision:"86222396312c4f72"},{url:"/_next/static/chunks/app/dashboard/usuarios/page-127a2a0475ce67f9.js",revision:"127a2a0475ce67f9"},{url:"/_next/static/chunks/app/layout-9ea49ee45f34b503.js",revision:"9ea49ee45f34b503"},{url:"/_next/static/chunks/app/login/page-b74910a0d02f82c8.js",revision:"b74910a0d02f82c8"},{url:"/_next/static/chunks/app/not-found-b050d5103c5e58f4.js",revision:"b050d5103c5e58f4"},{url:"/_next/static/chunks/app/page-4ef32155fd9abe59.js",revision:"4ef32155fd9abe59"},{url:"/_next/static/chunks/bc9d46be-801e7c95da4c65aa.js",revision:"801e7c95da4c65aa"},{url:"/_next/static/chunks/framework-606faae8b0c393c2.js",revision:"606faae8b0c393c2"},{url:"/_next/static/chunks/main-a13270d89ff7f422.js",revision:"a13270d89ff7f422"},{url:"/_next/static/chunks/main-app-67c459eb81ba4711.js",revision:"67c459eb81ba4711"},{url:"/_next/static/chunks/next/dist/client/components/builtin/app-error-4ef32155fd9abe59.js",revision:"4ef32155fd9abe59"},{url:"/_next/static/chunks/next/dist/client/components/builtin/forbidden-4ef32155fd9abe59.js",revision:"4ef32155fd9abe59"},{url:"/_next/static/chunks/next/dist/client/components/builtin/global-error-993881f6d2eb3dcc.js",revision:"993881f6d2eb3dcc"},{url:"/_next/static/chunks/next/dist/client/components/builtin/unauthorized-4ef32155fd9abe59.js",revision:"4ef32155fd9abe59"},{url:"/_next/static/chunks/polyfills-42372ed130431b0a.js",revision:"846118c33b2c0e922d7b3a7676f81f6f"},{url:"/_next/static/chunks/webpack-f6eca41276266b2c.js",revision:"f6eca41276266b2c"},{url:"/_next/static/css/f061b14406749fbf.css",revision:"f061b14406749fbf"},{url:"/_next/static/s0N0LDjjYCw3FfRoNxhZv/_buildManifest.js",revision:"1bc0cf97a3418142e6ef11b794df6048"},{url:"/_next/static/s0N0LDjjYCw3FfRoNxhZv/_ssgManifest.js",revision:"b6652df95db52feb4daf4eca35380933"},{url:"/file.svg",revision:"d09f95206c3fa0bb9bd9fefabfd0ea71"},{url:"/globe.svg",revision:"2aaafa6a49b6563925fe440891e32717"},{url:"/next.svg",revision:"8e061864f388b47f33a1c3780831193e"},{url:"/vercel.svg",revision:"c0af2f507b369b085b35ef4bbe3bcf1e"},{url:"/window.svg",revision:"a2760511c65806022ad20adf74370ff3"}],{ignoreURLParametersMatching:[]}),e.cleanupOutdatedCaches(),e.registerRoute("/",new e.NetworkFirst({cacheName:"start-url",plugins:[{cacheWillUpdate:async({request:e,response:a,event:s,state:t})=>a&&"opaqueredirect"===a.type?new Response(a.body,{status:200,statusText:"OK",headers:a.headers}):a}]}),"GET"),e.registerRoute(/^https?:\/\/.*\/api\/.*$/i,new e.NetworkFirst({cacheName:"api-cache",plugins:[new e.ExpirationPlugin({maxEntries:100,maxAgeSeconds:300})]}),"GET"),e.registerRoute(/^https?:\/\/.*\/dashboard\/.*$/i,new e.NetworkFirst({cacheName:"dashboard-pages",plugins:[new e.ExpirationPlugin({maxEntries:50,maxAgeSeconds:3600})]}),"GET"),e.registerRoute(/^https?:\/\/.*\/portal\/.*$/i,new e.NetworkFirst({cacheName:"portal-pages",plugins:[new e.ExpirationPlugin({maxEntries:50,maxAgeSeconds:3600})]}),"GET")});
+
+----- apps/web-admin/src/app/api/pwa/sw.js/route.ts -----
+24:const CACHEABLE_PATHS = [/\\/dashboard\\//, /\\/portal\\//, /\\/api\\//];
+40:self.addEventListener('fetch', (event) => {
+49:    fetch(request)
+92:      "Cache-Control": "no-store",
+
+============================================================
+16) Typecheck/build rápido
+============================================================
+$ tsc --noEmit
+[WARN] Unsupported engine: wanted: {"node":"22.x"} (current: {"node":"v24.13.1","pnpm":"11.3.0"})
+$ tsc --noEmit
+
+============================================================
+17) Diagnóstico automático
+============================================================
+Revisar arriba:
+- Si POST /api/auth/exchange con token inválido devuelve 401, el endpoint está vivo.
+- Si devuelve 500 con token inválido, el controlador/middleware truena antes de validar token.
+- Si exchange real ya da 200 pero dashboard falla, el culpable es una petición posterior.
+- Si CORS no devuelve Access-Control-Allow-Credentials cuando usas cookies, revisar CORS.
+- Si cookie no llega en requests posteriores, revisar SameSite/Secure/Domain/credentials: include.
+- Si una ruta tenant devuelve 500 sin cookie, revisar middleware auth/tenant.

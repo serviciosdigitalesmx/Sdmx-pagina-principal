@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Plus, Search, RefreshCw, Edit2, Package, AlertTriangle, TrendingUp, TrendingDown } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Plus, Search, RefreshCw, Edit2, Package, AlertTriangle, ArrowUpDown, Filter, Layers3 } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { getApiOptions } from '@/lib/tenant';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,15 @@ export default function StockPage() {
   const [movementModalOpen, setMovementModalOpen] = useState(false);
   const [movementProduct, setMovementProduct] = useState<Product | null>(null);
   const [categories, setCategories] = useState<string[]>([]);
+
+  const stats = useMemo(() => {
+    const totalProducts = products.length;
+    const lowStock = products.filter((p) => p.alerta_stock).length;
+    const outOfStock = products.filter((p) => Number(p.stock_current ?? 0) <= 0).length;
+    const stockValue = products.reduce((sum, product) => sum + (Number(product.stock_current ?? 0) * Number(product.cost ?? 0)), 0);
+
+    return { totalProducts, lowStock, outOfStock, stockValue };
+  }, [products]);
 
   const loadProducts = async () => {
     setLoading(true);
@@ -114,8 +123,6 @@ export default function StockPage() {
     return <span className="badge-listo text-xs">Activo</span>;
   };
 
-  const lowStockCount = products.filter((p) => p.alerta_stock).length;
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -131,7 +138,7 @@ export default function StockPage() {
         <div>
           <h1 className="text-2xl font-orbitron font-bold text-srf-primary">Stock</h1>
           <p className="text-srf-muted text-sm mt-1">
-            {products.length} productos · {lowStockCount} con stock bajo
+            {stats.totalProducts} productos · {stats.lowStock} con stock bajo · {stats.outOfStock} agotados
           </p>
         </div>
         <Button
@@ -146,16 +153,50 @@ export default function StockPage() {
         </Button>
       </div>
 
+      {/* KPI cards */}
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="rounded-2xl border border-srf-primary/20 bg-srf-surface p-4 shadow-soft">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-srf-muted">Productos activos</div>
+            <Layers3 className="h-5 w-5 text-srf-accent" />
+          </div>
+          <div className="mt-3 text-3xl font-semibold text-srf-primary">{stats.totalProducts}</div>
+        </div>
+        <div className="rounded-2xl border border-srf-primary/20 bg-srf-surface p-4 shadow-soft">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-srf-muted">Stock bajo</div>
+            <AlertTriangle className="h-5 w-5 text-amber-400" />
+          </div>
+          <div className="mt-3 text-3xl font-semibold text-amber-400">{stats.lowStock}</div>
+        </div>
+        <div className="rounded-2xl border border-srf-primary/20 bg-srf-surface p-4 shadow-soft">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-srf-muted">Agotados</div>
+            <Package className="h-5 w-5 text-rose-400" />
+          </div>
+          <div className="mt-3 text-3xl font-semibold text-rose-400">{stats.outOfStock}</div>
+        </div>
+        <div className="rounded-2xl border border-srf-primary/20 bg-srf-surface p-4 shadow-soft">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-srf-muted">Valor inventario</div>
+            <ArrowUpDown className="h-5 w-5 text-emerald-400" />
+          </div>
+          <div className="mt-3 text-3xl font-semibold text-srf-primary">
+            ${stats.stockValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </div>
+        </div>
+      </div>
+
       {/* Alert banner */}
-      {lowStockCount > 0 && (
+      {stats.lowStock > 0 && (
         <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 text-sm text-yellow-300 flex items-center gap-2">
           <AlertTriangle className="w-5 h-5" />
-          Hay {lowStockCount} producto(s) con stock bajo o agotado.
+          Hay {stats.lowStock} producto(s) con stock bajo o agotado.
         </div>
       )}
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-col gap-3 rounded-2xl border border-srf-primary/20 bg-srf-surface p-4 shadow-soft lg:flex-row lg:items-center">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-srf-muted" />
           <Input
@@ -182,7 +223,7 @@ export default function StockPage() {
             onChange={(e) => setShowAlertsOnly(e.target.checked)}
             className="accent-srf-accent"
           />
-          <span className="text-sm">Solo alertas</span>
+          <span className="text-sm flex items-center gap-2"><Filter className="h-4 w-4" /> Solo alertas</span>
         </label>
         <Button
           onClick={() => {
@@ -198,9 +239,9 @@ export default function StockPage() {
       </div>
 
       {/* Products table */}
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto rounded-2xl border border-srf-primary/20 bg-srf-surface shadow-soft">
         <table className="w-full text-sm">
-          <thead className="bg-srf-surface border-b border-srf-primary/30">
+          <thead className="bg-srf-bg/60 border-b border-srf-primary/30">
             <tr>
               <th className="text-left py-3 px-4">SKU</th>
               <th className="text-left py-3 px-4">Producto</th>
@@ -256,9 +297,9 @@ export default function StockPage() {
                         setMovementModalOpen(true);
                       }}
                       className="p-1 rounded hover:bg-srf-accent/20 text-srf-accent"
-                      title="Registrar movimiento"
+                      title="Ver Kardex"
                     >
-                      <TrendingUp className="w-4 h-4" />
+                      <ArrowUpDown className="w-4 h-4" />
                     </button>
                   </div>
                 </td>
@@ -269,7 +310,9 @@ export default function StockPage() {
 
         {filteredProducts.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-srf-muted">No hay productos con esos filtros</p>
+            <Package className="mx-auto h-8 w-8 text-srf-muted" />
+            <p className="mt-3 text-srf-primary font-medium">No hay productos con esos filtros</p>
+            <p className="mt-1 text-sm text-srf-muted">La vista usa datos reales del endpoint de inventario.</p>
           </div>
         )}
       </div>
