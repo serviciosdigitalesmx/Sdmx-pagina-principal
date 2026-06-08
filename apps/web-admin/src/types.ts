@@ -50,6 +50,7 @@ export const DASHBOARD_MODULES: DashboardModule[] = [
   { key: 'tecnico', label: 'Técnico', icon: 'Wrench', href: '/dashboard/tecnico', enabled: true },
   { key: 'solicitudes', label: 'Solicitudes', icon: 'FileText', href: '/dashboard/solicitudes', enabled: true },
   { key: 'archivo', label: 'Archivo', icon: 'Archive', href: '/dashboard/archivo', enabled: true },
+  { key: 'landing', label: 'Landing', icon: 'Globe', href: '/dashboard/landing', enabled: true },
   { key: 'clientes', label: 'Clientes', icon: 'Users', href: '/dashboard/clientes', enabled: true },
   { key: 'tareas', label: 'Tareas', icon: 'CheckSquare', href: '/dashboard/tareas', enabled: true },
   { key: 'stock', label: 'Stock', icon: 'Package', href: '/dashboard/stock', enabled: true },

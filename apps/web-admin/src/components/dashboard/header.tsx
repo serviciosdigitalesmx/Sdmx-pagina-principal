@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { User, LogOut, ChevronDown, Building2, Menu } from 'lucide-react';
@@ -47,13 +48,20 @@ export function Header({ user, onMenuClick }: HeaderProps) {
             <Menu className="h-5 w-5" />
           </button>
           <BranchSelector />
+          <Link
+            href="/dashboard"
+            className="hidden items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-srf-muted transition hover:bg-white/10 hover:text-srf-text md:inline-flex"
+            title="Volver al hub"
+          >
+            <Building2 className="h-4 w-4 text-srf-primary" />
+            Hub
+          </Link>
         </div>
 
         <div className="hidden min-w-0 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-srf-muted md:flex">
           <Building2 className="h-4 w-4 text-srf-primary" />
           <span className="truncate">{tenantName || 'Mi taller'}</span>
         </div>
-
         <div className="relative">
           <button
             onClick={() => setShowUserMenu(!showUserMenu)}

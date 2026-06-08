@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { readAuthToken } from "@/lib/auth-storage";
 import { HeroButton, ShellBadge, StatCard, srFixTheme } from "@/components/srfix-theme";
 import { getPublicApiPath } from "@/lib/public-api";
@@ -41,11 +41,7 @@ const plans: Array<{
 export default function BillingPage() {
   const [error, setError] = useState<string | null>(null);
   const [loadingPlan, setLoadingPlan] = useState<BillingPlanCode | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-
-  useEffect(() => {
-    setToken(readAuthToken());
-  }, []);
+  const [token] = useState<string | null>(() => readAuthToken());
 
   const checkout = async (plan: BillingPlanCode) => {
     setError(null);
