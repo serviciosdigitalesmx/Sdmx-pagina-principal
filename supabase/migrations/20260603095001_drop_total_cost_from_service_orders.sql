@@ -7,5 +7,19 @@
 alter table public.service_orders
   drop constraint if exists service_orders_total_cost_check;
 
+drop view if exists public.view_service_orders_detail;
+
 alter table public.service_orders
   drop column if exists total_cost;
+
+create or replace view "public"."view_service_orders_detail" as  SELECT so.id,
+    so.created_at,
+    so.status,
+    (so.device_info ->> 'brand'::text) AS brand,
+    (so.device_info ->> 'model'::text) AS model,
+    so.final_cost,
+    c.name AS customer_name,
+    c.phone AS customer_phone,
+    so.tenant_id
+   FROM (public.service_orders so
+     LEFT JOIN public.customers c ON ((so.customer_id = c.id)));
