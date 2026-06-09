@@ -154,7 +154,6 @@ export default function PortalPage() {
     if (!tenantSlug) {
       return;
     }
-
     void (async () => {
       try {
         const res = await fetch(getPublicApiPath(`/api/public/tenant/${encodeURIComponent(tenantSlug)}/landing`));

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
+  Globe,
   ClipboardList,
   Wrench,
   FileText,
@@ -32,6 +33,7 @@ import { platformBrand } from '@/config/branding';
 const getIcon = (iconName: string) => {
   const icons: Record<string, React.ComponentType<{ className?: string }>> = {
     LayoutDashboard,
+    Globe,
     ClipboardList,
     Wrench,
     FileText,
@@ -99,6 +101,19 @@ export function Sidebar({
           </button>
         )}
       </div>
+
+      {!collapsed && (
+        <div className="px-3 pt-3">
+          <Link
+            href="/dashboard"
+            className="flex items-center gap-3 rounded-2xl border border-srf-accent/30 bg-srf-accent/10 px-3 py-2.5 text-sm font-medium text-srf-text transition hover:bg-srf-accent/15"
+            title="Volver al hub"
+          >
+            <LayoutDashboard className="h-5 w-5 text-srf-accent" />
+            <span>Volver al hub</span>
+          </Link>
+        </div>
+      )}
 
       {/* Sucursal indicator */}
       {!collapsed && !isLoading && identity && (

@@ -1,8 +1,5 @@
 import { Request, Response } from 'express';
 import { getTenantClient } from '@white-label/database';
-import { CustomerService } from '../services/CustomerService';
-import { InventoryService } from '../services/InventoryService';
-import { FinanceService } from '../services/FinanceService';
 
 export const getReportsSummary = async (req: Request, res: Response) => {
   try {
@@ -24,6 +21,9 @@ export const getReportsSummary = async (req: Request, res: Response) => {
     const supabase = getTenantClient(tenantId);
 
     let ordersQuery = supabase.from('service_orders').select('id, status, created_at, final_cost, sucursal_id, promised_date, folio, assigned_user_id').eq('tenant_id', tenantId).limit(500);
+    let customersQuery = supabase.from('customers').select('id, sucursal_id').eq('tenant_id', tenantId).limit(500);
+    let inventoryQuery = supabase.from('sucursal_inventory').select('id, stock_current, product_id, sucursal_id, products:product_id (id, cost)').eq('tenant_id', tenantId).limit(500);
+    let financeQuery = supabase.from('finances').select('id, balance, income, expense, created_at, sucursal_id').eq('tenant_id', tenantId).limit(500);
     let requestsQuery = supabase.from('service_requests').select('id, balance_amount, status, created_at').eq('tenant_id', tenantId).limit(500);
     let usersQuery = supabase.from('users').select('id, full_name, role, sucursal_id').eq('tenant_id', tenantId).limit(500);
     let movementsQuery = supabase
@@ -34,21 +34,41 @@ export const getReportsSummary = async (req: Request, res: Response) => {
 
     if (effectiveSucursalId) {
       ordersQuery = ordersQuery.eq('sucursal_id', effectiveSucursalId);
+      customersQuery = customersQuery.eq('sucursal_id', effectiveSucursalId);
+      inventoryQuery = inventoryQuery.eq('sucursal_id', effectiveSucursalId);
+      financeQuery = financeQuery.eq('sucursal_id', effectiveSucursalId);
       usersQuery = usersQuery.eq('sucursal_id', effectiveSucursalId);
       movementsQuery = movementsQuery.eq('sucursal_id', effectiveSucursalId);
     }
 
-    const [ordersResult, requestsResult, usersResult, movementsResult, customersCount, inventoryMetrics, financeMetrics] = await Promise.all([
+    const [ordersResult, customersResult, inventoryResult, financeResult, requestsResult, usersResult, movementsResult] = await Promise.all([
       ordersQuery,
+      customersQuery,
+      inventoryQuery,
+      financeQuery,
       requestsQuery,
       usersQuery,
       movementsQuery,
-      CustomerService.getCustomersCount(supabase, tenantId, effectiveSucursalId),
-      InventoryService.getInventoryMetrics(supabase, tenantId, effectiveSucursalId),
-      FinanceService.getFinancesMetrics(supabase, tenantId, effectiveSucursalId)
     ]);
 
-    const errors = [ordersResult.error, requestsResult.error, usersResult.error, movementsResult.error].filter(Boolean);
+    const errors = [ordersResult.error, customersResult.error, inventoryResult.error, financeResult.error, requestsResult.error, usersResult.error, movementsResult.error].filter(Boolean);
+
+    console.log('REPORTS_SUMMARY_RESULTS', {
+      ordersError: ordersResult.error?.message,
+      customersError: customersResult.error?.message,
+      inventoryError: inventoryResult.error?.message,
+      financeError: financeResult.error?.message,
+      requestsError: requestsResult.error?.message,
+      usersError: usersResult.error?.message,
+      movementsError: movementsResult.error?.message,
+      ordersRows: ordersResult.data?.length,
+      customersRows: customersResult.data?.length,
+      inventoryRows: inventoryResult.data?.length,
+      financeRows: financeResult.data?.length,
+      requestsRows: requestsResult.data?.length,
+      usersRows: usersResult.data?.length,
+      movementsRows: movementsResult.data?.length,
+    });
 
     if (errors.length > 0) {
       return res.status(502).json({
@@ -58,6 +78,9 @@ export const getReportsSummary = async (req: Request, res: Response) => {
     }
 
     const orders = ordersResult.data ?? [];
+    const customers = customersResult.data ?? [];
+    const inventory = inventoryResult.data ?? [];
+    const finances = financeResult.data ?? [];
     const requests = requestsResult.data ?? [];
     const users = usersResult.data ?? [];
     const movements = movementsResult.data ?? [];
@@ -101,7 +124,19 @@ export const getReportsSummary = async (req: Request, res: Response) => {
         return acc;
       }, {});
 
+    const totalIncome = orders.reduce(
+      (sum, order) => sum + Number((order as { final_cost?: number | null }).final_cost ?? 0),
+      0,
+    );
+    const totalExpense = finances.reduce((sum, item) => sum + Number((item as { expense?: number }).expense ?? 0), 0);
+    const totalBalance = Number((totalIncome - totalExpense).toFixed(2));
+    const lowStockCount = inventory.filter((item) => Number((item as { stock_current?: number }).stock_current ?? 0) <= Number(process.env.LOW_STOCK_THRESHOLD ?? 5)).length;
     const productivity = orders.length > 0 ? Number((orders.filter((order) => String((order as { status?: string }).status ?? '').toLowerCase().includes('entreg')).length / orders.length * 100).toFixed(2)) : 0;
+    const inventoryValuation = inventory.reduce((sum, item) => {
+      const stock = Number((item as { stock_current?: number }).stock_current ?? 0);
+      const productCost = Number(((item as { products?: { cost?: number | null } }).products?.cost ?? 0));
+      return sum + (stock * productCost);
+    }, 0);
     const accountsReceivable = requests.reduce((sum, item) => sum + Number((item as { balance_amount?: number }).balance_amount ?? 0), 0);
     const ordersByTechnician = users.reduce<Record<string, number>>((acc, user) => {
       const userId = String((user as { id?: string }).id ?? '');
@@ -168,14 +203,14 @@ export const getReportsSummary = async (req: Request, res: Response) => {
       success: true,
       data: {
         ordersCount: orders.length,
-        customersCount: customersCount,
-        inventoryCount: inventoryMetrics.inventoryCount,
-        lowStockCount: inventoryMetrics.lowStockCount,
-        totalIncome: financeMetrics.totalIncome,
-        totalExpense: financeMetrics.totalExpense,
-        totalBalance: financeMetrics.totalBalance,
+        customersCount: customers.length,
+        inventoryCount: inventory.length,
+        lowStockCount,
+        totalIncome,
+        totalExpense,
+        totalBalance,
         productivity,
-        inventoryValuation: inventoryMetrics.inventoryValuation,
+        inventoryValuation: Number(inventoryValuation.toFixed(2)),
         accountsReceivable: Number(accountsReceivable.toFixed(2)),
         ordersByTechnician,
         ordersBySucursal,
@@ -184,7 +219,7 @@ export const getReportsSummary = async (req: Request, res: Response) => {
         statusCountsWeek,
         topProductsUsed: topProductsUsedList,
         overduePromisedOrders,
-        lastUpdatedAt: new Date().toISOString(),
+        lastUpdatedAt: finances[0]?.created_at ?? orders[0]?.created_at ?? null,
       },
     });
   } catch (error) {
