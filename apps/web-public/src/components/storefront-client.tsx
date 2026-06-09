@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { fetchJson } from "@white-label/config";
 import { RootAuthHashRedirect } from "@/components/root-auth-hash-redirect";
 import { getPublicApiPath } from "@/lib/public-api";
+import { resolveAdminUrl } from "@/lib/admin-url";
 
 type CatalogItem = {
   id: string;
@@ -165,6 +166,7 @@ export function StorefrontClient({
   };
 
   const landingTitle = tenantSlug ? `Tienda de ${tenantSlug}` : "Tu tienda dropshipping";
+  const adminLoginUrl = resolveAdminUrl() ? `${resolveAdminUrl()}/login` : "/login";
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(234,88,12,0.18),_transparent_28%),radial-gradient(circle_at_80%_10%,_rgba(251,191,36,0.12),_transparent_26%),linear-gradient(180deg,#090909_0%,#111111_45%,#171311_100%)] text-zinc-50">
@@ -184,7 +186,7 @@ export function StorefrontClient({
             <Link href="/portal" className="rounded-full px-4 py-2 transition hover:bg-white/10 hover:text-white">
               Portal
             </Link>
-            <Link href="/login" className="rounded-full px-4 py-2 transition hover:bg-white/10 hover:text-white">
+            <Link href={adminLoginUrl} className="rounded-full px-4 py-2 transition hover:bg-white/10 hover:text-white">
               Entrar
             </Link>
             <Link href="/onboarding" className="rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-amber-100 transition hover:bg-amber-500/20">

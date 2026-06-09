@@ -60,9 +60,13 @@ export default function LoginPage() {
   const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
+    const adminLoginUrl = resolveAdminUrl() ? `${resolveAdminUrl()}/login` : null;
     const existing = readAuthToken();
+
     if (existing) {
       window.location.replace(getAdminBridgeUrl(existing));
+    } else if (adminLoginUrl) {
+      window.location.replace(adminLoginUrl);
     }
   }, []);
 
