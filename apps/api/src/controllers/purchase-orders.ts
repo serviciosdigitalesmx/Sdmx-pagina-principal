@@ -4,7 +4,7 @@ import { randomUUID } from 'crypto';
 import { getTenantClient, supabaseAdmin } from '@white-label/database';
 import { refreshInventoryAlert } from './stock-alerts';
 
-const purchaseOrderStatusSchema = z.enum(['borrador', 'enviada', 'parcial', 'recibida', 'cancelada']);
+const purchaseOrderStatusSchema = z.enum(['borrador', 'emitida', 'recepcion_parcial', 'recibida', 'cancelada']);
 
 const purchaseOrderItemSchema = z.object({
   productId: z.string().uuid().optional().or(z.literal('')),

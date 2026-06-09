@@ -90,15 +90,19 @@ export default function FinanzasPage() {
   }, [scope?.sucursalId]);
 
   const summary = useMemo(() => {
-    const income = rows.reduce((sum, row) => sum + Number(row.income ?? 0), 0);
-    const expense = rows.reduce((sum, row) => sum + Number(row.expense ?? 0), 0);
+    const summaryRow = rows.find((r) => r.type === 'summary');
+    const income = Number(summaryRow?.income ?? 0);
+    const expense = Number(summaryRow?.expense ?? 0);
+    const balance = Number(summaryRow?.balance ?? (income - expense));
+
     const orderRevenue = orders.reduce((sum, order) => sum + Number(order.final_cost ?? order.estimated_cost ?? 0), 0);
     const validatedOrders = orders.filter((order) => Boolean(order.receipt_url)).length;
     const pendingOrders = orders.filter((order) => !order.receipt_url && Number(order.final_cost ?? order.estimated_cost ?? 0) > 0).length;
+    
     return {
       income,
       expense,
-      balance: income - expense,
+      balance,
       orderRevenue,
       validatedOrders,
       pendingOrders,

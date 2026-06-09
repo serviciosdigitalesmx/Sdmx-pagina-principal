@@ -57,6 +57,10 @@ export default function TecnicoPage() {
           diasRestantes = Math.ceil((promise.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
         }
 
+        if (order.operational_risk) {
+          color = order.operational_risk.color === 'red' ? 'rojo' : order.operational_risk.color === 'yellow' ? 'amarillo' : order.operational_risk.color === 'green' ? 'verde' : 'gris';
+        }
+
         if (!color) {
           if (order.status === 'entregado') color = 'gris';
           else if (diasRestantes !== undefined && diasRestantes <= 2) color = 'rojo';
@@ -100,6 +104,7 @@ export default function TecnicoPage() {
       filtered = filtered.filter(
         (o) =>
           o.folio?.toLowerCase().includes(term) ||
+          o.customers?.full_name?.toLowerCase().includes(term) ||
           o.device_info?.customer_name?.toLowerCase().includes(term) ||
           o.device_info?.type?.toLowerCase().includes(term) ||
           o.device_info?.model?.toLowerCase().includes(term)

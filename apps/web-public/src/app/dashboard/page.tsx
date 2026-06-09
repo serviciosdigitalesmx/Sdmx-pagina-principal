@@ -2,23 +2,11 @@
 
 import Link from "next/link";
 import { useEffect } from "react";
+import { resolveAdminUrl } from "@/lib/admin-url";
 
 function resolveDashboardTarget() {
-  const candidates = [process.env.NEXT_PUBLIC_WEB_ADMIN_URL?.trim()].filter((value): value is string => Boolean(value));
-
-  for (const candidate of candidates) {
-    try {
-      const parsed = new URL(candidate);
-      if (parsed.protocol !== "https:") {
-        continue;
-      }
-      return new URL("/", parsed.toString()).toString();
-    } catch {
-      // continue
-    }
-  }
-
-  return null;
+  const adminUrl = resolveAdminUrl();
+  return adminUrl ? new URL("/", adminUrl).toString() : null;
 }
 
 export default function DashboardBridgePage() {

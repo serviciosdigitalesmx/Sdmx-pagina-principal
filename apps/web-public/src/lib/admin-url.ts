@@ -1,3 +1,5 @@
+import { optionalEnv } from "@white-label/config";
+
 function normalizeHttpsUrl(candidate: string) {
   const parsed = new URL(candidate);
 
@@ -9,7 +11,10 @@ function normalizeHttpsUrl(candidate: string) {
 }
 
 export function resolveAdminUrl() {
-  const candidate = process.env.NEXT_PUBLIC_WEB_ADMIN_URL?.trim();
+  const candidate =
+    optionalEnv("NEXT_PUBLIC_WEB_ADMIN_URL") ??
+    optionalEnv("NEXT_PUBLIC_APP_URL") ??
+    optionalEnv("NEXT_PUBLIC_WEB_PUBLIC_URL");
 
   if (!candidate) {
     return null;

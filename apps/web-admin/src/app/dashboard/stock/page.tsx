@@ -312,7 +312,6 @@ export default function StockPage() {
           <div className="text-center py-12">
             <Package className="mx-auto h-8 w-8 text-srf-muted" />
             <p className="mt-3 text-srf-primary font-medium">No hay productos con esos filtros</p>
-            <p className="mt-1 text-sm text-srf-muted">La vista usa datos reales del endpoint de inventario.</p>
           </div>
         )}
       </div>

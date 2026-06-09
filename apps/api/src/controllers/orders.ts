@@ -489,12 +489,48 @@ export const createOrder = async (req: Request, res: Response) => {
     const ivaAmount = validatedData.includeIva ? Number((estimatedCost * 0.16).toFixed(2)) : 0;
     const finalCost = Number((estimatedCost + ivaAmount).toFixed(2));
 
+    // Resolve Customer ID
+    let customerId: string | null = null;
+    let customerQuery = supabase
+      .from('customers')
+      .select('id')
+      .eq('tenant_id', tenantId);
+
+    if (validatedData.clientPhone) {
+      customerQuery = customerQuery.eq('phone', validatedData.clientPhone);
+    } else {
+      customerQuery = customerQuery.eq('full_name', validatedData.clientName);
+    }
+
+    const { data: existingCustomers } = await customerQuery.limit(1);
+
+    if (existingCustomers && existingCustomers.length > 0) {
+      customerId = existingCustomers[0].id;
+    } else {
+      const { data: newCustomer, error: createCustError } = await supabase
+        .from('customers')
+        .insert({
+          tenant_id: tenantId,
+          full_name: validatedData.clientName || 'Cliente Sin Nombre',
+          phone: validatedData.clientPhone || null,
+          email: validatedData.clientEmail || null,
+          tag: 'nuevo'
+        })
+        .select('id')
+        .single();
+      
+      if (!createCustError && newCustomer) {
+        customerId = newCustomer.id;
+      }
+    }
+
     const { data, error } = await supabase
       .from('service_orders')
       .insert([
         {
           tenant_id: tenantId,
           sucursal_id: requestedSucursalId,
+          customer_id: customerId,
           folio: newFolio,
           public_token: randomUUID(),
           status: 'recibido',
@@ -638,7 +674,7 @@ export const listOrders = async (req: Request, res: Response) => {
     const supabase = getTenantClient(tenantId);
     let query = supabase
       .from('service_orders')
-      .select('*, service_order_checklists(*)')
+      .select('*, service_order_checklists(*), customers(*)')
       .eq('tenant_id', tenantId)
       .order('created_at', { ascending: false })
       .limit(50);
@@ -687,7 +723,7 @@ export const getOrderById = async (req: Request, res: Response) => {
     const supabase = getTenantClient(tenantId);
     let orderQuery = supabase
       .from('service_orders')
-      .select('*')
+      .select('*, customers(*)')
       .eq('tenant_id', tenantId)
       .eq('id', orderId);
 
@@ -1328,6 +1364,45 @@ export const updateOrderDetails = async (req: Request, res: Response) => {
       model: body.deviceModel ?? String(currentDeviceInfo.model ?? ''),
     };
 
+    let customerId: string | undefined = undefined;
+    if (body.clientPhone || body.clientName) {
+      let customerQuery = supabase
+        .from('customers')
+        .select('id')
+        .eq('tenant_id', tenantId);
+
+      const phoneToSearch = body.clientPhone ?? String(currentDeviceInfo.customer_phone ?? '');
+      const nameToSearch = body.clientName ?? String(currentDeviceInfo.customer_name ?? '');
+
+      if (phoneToSearch) {
+        customerQuery = customerQuery.eq('phone', phoneToSearch);
+      } else {
+        customerQuery = customerQuery.eq('full_name', nameToSearch);
+      }
+
+      const { data: existingCustomers } = await customerQuery.limit(1);
+
+      if (existingCustomers && existingCustomers.length > 0) {
+        customerId = existingCustomers[0].id;
+      } else {
+        const { data: newCustomer, error: createCustError } = await supabase
+          .from('customers')
+          .insert({
+            tenant_id: tenantId,
+            full_name: nameToSearch || 'Cliente Sin Nombre',
+            phone: phoneToSearch || null,
+            email: nextDeviceInfo.customer_email || null,
+            tag: 'actualizado'
+          })
+          .select('id')
+          .single();
+        
+        if (!createCustError && newCustomer) {
+          customerId = newCustomer.id;
+        }
+      }
+    }
+
     const { data, error } = await supabase
       .from('service_orders')
       .update({
@@ -1338,6 +1413,7 @@ export const updateOrderDetails = async (req: Request, res: Response) => {
         promised_date: body.promisedDate === '' ? null : body.promisedDate,
         metadata: body.metadata ?? undefined,
         updated_by: req.user?.userId ?? null,
+        ...(customerId !== undefined ? { customer_id: customerId } : {}),
       })
       .eq('tenant_id', tenantId)
       .eq('id', orderId)

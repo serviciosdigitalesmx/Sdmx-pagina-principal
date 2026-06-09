@@ -11,6 +11,46 @@ export interface Tenant {
     secondaryColor: string;
     faviconUrl?: string | null;
   };
+  theme_config?: {
+    logoUrl?: string | null;
+    faviconUrl?: string | null;
+    colors?: {
+      primary?: string | null;
+      secondary?: string | null;
+      accent?: string | null;
+      background?: string | null;
+      foreground?: string | null;
+      surface?: string | null;
+      surfaceElevated?: string | null;
+      border?: string | null;
+      success?: string | null;
+      warning?: string | null;
+      danger?: string | null;
+      muted?: string | null;
+    } | null;
+    typography?: {
+      sans?: string | null;
+      display?: string | null;
+      mono?: string | null;
+    } | null;
+    imagery?: {
+      heroImageUrl?: string | null;
+      coverImageUrl?: string | null;
+    } | null;
+    cta?: {
+      primaryRadius?: string | null;
+      secondaryRadius?: string | null;
+      primaryVariant?: "solid" | "outline" | "soft" | null;
+      secondaryVariant?: "solid" | "outline" | "soft" | null;
+      shadow?: string | null;
+    } | null;
+    footer?: {
+      background?: string | null;
+      text?: string | null;
+      border?: string | null;
+      compact?: boolean | null;
+    } | null;
+  } | null;
   config?: {
     templates?: {
       landing?: Partial<LandingContent> | null;
@@ -43,24 +83,51 @@ export interface SocialLink {
   href: string;
 }
 
+export interface GalleryItem {
+  id?: string;
+  url: string;
+  alt?: string;
+  caption?: string;
+  type?: "image" | "video";
+}
+
+export interface FaqItem {
+  question: string;
+  answer: string;
+}
+
 export interface LandingContent {
   heroTitle: string;
   heroSubtitle?: string;
   heroDescription: string;
+  seoTitle?: string;
+  seoDescription?: string;
   primaryCtaLabel: string;
   primaryCtaHref: string;
   secondaryCtaLabel?: string;
   secondaryCtaHref?: string;
   contactLabel?: string;
   contactHref?: string;
+  contactPhone?: string;
+  contactEmail?: string;
+  contactAddress?: string;
+  hours?: string;
   services: Service[];
   benefits?: Benefit[];
   testimonials?: Testimonial[];
   socialLinks?: SocialLink[];
+  gallery?: GalleryItem[];
+  faqs?: FaqItem[];
+  aboutTitle?: string;
+  aboutDescription?: string;
   showMap?: boolean;
   mapEmbedUrl?: string;
   showVideo?: boolean;
   videoUrl?: string;
+  sections?: Array<{
+    id: string;
+    enabled?: boolean;
+  }>;
 }
 
 export interface LandingResponse {

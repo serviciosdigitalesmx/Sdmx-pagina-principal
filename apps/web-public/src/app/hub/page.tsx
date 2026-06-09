@@ -4,9 +4,10 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { readAuthToken, saveAuthToken } from "@/lib/auth-storage";
 import { optionalEnv } from "@white-label/config";
+import { resolveAdminUrl } from "@/lib/admin-url";
 
 const hubName = optionalEnv("NEXT_PUBLIC_HUB_NAME") ?? "Hub";
-const adminUrl = optionalEnv("NEXT_PUBLIC_WEB_ADMIN_URL") ?? "";
+const adminUrl = resolveAdminUrl() ?? "";
 const publicHomeLabel = optionalEnv("NEXT_PUBLIC_SAAS_BRAND_NAME") ?? "FIXI";
 
 function resolveAdminBridgeUrl(token: string) {

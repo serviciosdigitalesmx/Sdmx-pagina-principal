@@ -26,6 +26,8 @@ import {
 } from 'lucide-react';
 import { DASHBOARD_MODULES } from '@/types';
 import { getActiveSucursalId, canUseConsolidatedView } from '@/lib/tenant';
+import { useTenantIdentity } from '@/providers/TenantIdentityProvider';
+import { platformBrand } from '@/config/branding';
 
 const getIcon = (iconName: string) => {
   const icons: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -58,6 +60,7 @@ export function Sidebar({
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const { identity, isLoading } = useTenantIdentity();
 
   useEffect(() => {
     setMounted(true);
@@ -71,11 +74,11 @@ export function Sidebar({
       <div className="flex items-center justify-between border-b border-white/10 p-4">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,rgba(31,126,220,0.95),rgba(255,106,42,0.85))]">
-            <span className="text-xs font-black text-white">FX</span>
+            <span className="text-xs font-black text-white">{platformBrand.substring(0, 2).toUpperCase()}</span>
           </div>
           {!collapsed && (
             <span className="font-orbitron font-bold tracking-[0.16em] text-srf-primary">
-              FI<span className="text-srf-accent">XI</span>
+              {platformBrand.substring(0, 2)}<span className="text-srf-accent">{platformBrand.substring(2)}</span>
             </span>
           )}
         </div>
@@ -98,11 +101,11 @@ export function Sidebar({
       </div>
 
       {/* Sucursal indicator */}
-      {!collapsed && activeSucursalId && (
+      {!collapsed && !isLoading && identity && (
         <div className="mx-4 mt-4 rounded-2xl border border-white/10 bg-white/5 p-3 text-center">
           <p className="text-xs text-srf-muted">Sucursal activa</p>
           <p className="text-sm font-semibold text-srf-primary truncate">
-            {activeSucursalId === 'GLOBAL' ? 'Todas las sucursales' : activeSucursalId.slice(0, 8)}
+            {identity.branchName}
           </p>
           {showConsolidated && activeSucursalId !== 'GLOBAL' && (
             <p className="text-xs text-srf-muted mt-1">Vista consolidada disponible</p>

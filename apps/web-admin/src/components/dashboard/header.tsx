@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { User, LogOut, ChevronDown, Building2, Menu } from 'lucide-react';
 import { BranchSelector } from './branch-selector';
-import { logout, getStoredTenant } from '@/lib/auth';
+import { logout } from '@/lib/auth';
 import type { User as UserType } from '@/types';
+import { useTenantIdentity } from '@/providers/TenantIdentityProvider';
 
 interface HeaderProps {
   user: UserType;
@@ -14,13 +15,8 @@ interface HeaderProps {
 
 export function Header({ user, onMenuClick }: HeaderProps) {
   const router = useRouter();
-  const [tenantName, setTenantName] = useState<string>('');
+  const { identity } = useTenantIdentity();
   const [showUserMenu, setShowUserMenu] = useState(false);
-
-  useEffect(() => {
-    const tenant = getStoredTenant();
-    setTenantName(tenant?.name || 'Mi taller');
-  }, []);
 
   const handleLogout = () => {
     logout();
@@ -51,7 +47,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
 
         <div className="hidden min-w-0 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-srf-muted md:flex">
           <Building2 className="h-4 w-4 text-srf-primary" />
-          <span className="truncate">{tenantName || 'Mi taller'}</span>
+          <span className="truncate">{identity?.tenantName || 'Mi taller'}</span>
         </div>
 
         <div className="relative">
@@ -78,7 +74,7 @@ export function Header({ user, onMenuClick }: HeaderProps) {
               <div className="absolute right-0 z-50 mt-2 w-64 overflow-hidden rounded-2xl border border-white/10 bg-[rgba(24,24,24,0.98)] shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
                 <div className="border-b border-white/10 p-3">
                   <p className="text-sm font-medium truncate">{user.email}</p>
-                  <p className="text-xs text-srf-muted mt-1">Tenant: {tenantName}</p>
+                  <p className="text-xs text-srf-muted mt-1">Tenant: {identity?.tenantName}</p>
                 </div>
                 <button
                   onClick={handleLogout}

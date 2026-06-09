@@ -68,6 +68,7 @@ export interface Order {
   tenant_id: string;
   sucursal_id: string | null;
   customer_id: string | null;
+  customers?: Customer | null;
   folio: string;
   status: string;
   device_info: {
@@ -156,7 +157,7 @@ export interface Customer {
   id: string;
   tenant_id: string;
   sucursal_id: string | null;
-  name: string;
+  full_name: string;
   phone: string;
   email: string | null;
   created_at: string;
@@ -298,7 +299,7 @@ export interface PurchaseOrder {
   sucursal_id: string | null;
   supplier_id: string | null;
   folio: string;
-  status: 'borrador' | 'enviada' | 'parcial' | 'recibida' | 'cancelada';
+  status: 'borrador' | 'emitida' | 'recepcion_parcial' | 'recibida' | 'cancelada';
   reference: string | null;
   payment_terms: string | null;
   expected_date: string | null;

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, useEffect, type FormEvent } from "react";
+import { useMemo, useState, useEffect, useCallback, useRef, type FormEvent } from "react";
 import { fetchJson, type ApiErrorPayload } from "@white-label/config";
 import { srFixTheme } from "@/components/srfix-theme";
 
@@ -117,10 +117,11 @@ export function PublicPortalLookup({
   const [result, setResult] = useState<PublicPortalOrderResponse["data"] | null>(null);
   const [tenant, setTenant] = useState<PublicPortalOrderResponse["tenant"] | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
+  const didRunInitialSearch = useRef(false);
 
   const whatsappHref = useMemo(() => resolveWhatsappHref(tenant?.contact_phone ?? tenant?.contactPhone ?? null), [tenant]);
 
-  const executeSearch = async (targetTenant: string, targetFolio: string) => {
+  const executeSearch = useCallback(async (targetTenant: string, targetFolio: string) => {
     setLoading(true);
     setError(null);
     setHasSearched(true);
@@ -148,13 +149,18 @@ export function PublicPortalLookup({
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    if (initialTenantSlug && initialFolio) {
-      executeSearch(initialTenantSlug, initialFolio);
+    if (didRunInitialSearch.current || !initialTenantSlug || !initialFolio) {
+      return;
     }
-  }, [initialTenantSlug, initialFolio]);
+    didRunInitialSearch.current = true;
+    const timeout = window.setTimeout(() => {
+      void executeSearch(initialTenantSlug, initialFolio);
+    }, 0);
+    return () => window.clearTimeout(timeout);
+  }, [executeSearch, initialTenantSlug, initialFolio]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();

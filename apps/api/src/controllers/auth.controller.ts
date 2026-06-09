@@ -560,7 +560,7 @@ export const exchangeSupabaseSession = async (req: Request, res: Response) => {
       tenant_id: tenantSecurity.id,
       user_id: userRow.id,
       session_key: sessionId,
-      ip_address: typeof req.ip === 'string' ? req.ip : null,
+      ip_address: typeof req.ip === 'string' ? '[REDACTED]' : null,
       user_agent: typeof req.headers['user-agent'] === 'string' ? req.headers['user-agent'] : null,
       last_activity_at: new Date().toISOString(),
     }]);

@@ -7,6 +7,7 @@ import { Header } from '@/components/dashboard/header';
 import { AppShell, ShellContent } from '@/components/base/app-shell';
 import { LoadingState, ErrorState } from '@/components/base/states';
 import { isAuthenticated, getStoredUser } from '@/lib/auth';
+import { TenantIdentityProvider } from '@/providers/TenantIdentityProvider';
 
 export default function DashboardLayout({
   children,
@@ -46,18 +47,20 @@ export default function DashboardLayout({
   }
 
   return (
-    <AppShell>
-      <div className="flex min-h-screen">
-        <Sidebar mobileOpen={menuOpen} onMobileOpenChange={setMenuOpen} />
-        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-          <Header user={user} onMenuClick={() => setMenuOpen(true)} />
-          <main className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 lg:px-8">
-            <div className="mx-auto w-full max-w-[1800px]">
-              {children}
-            </div>
-          </main>
+    <TenantIdentityProvider>
+      <AppShell>
+        <div className="flex min-h-screen">
+          <Sidebar mobileOpen={menuOpen} onMobileOpenChange={setMenuOpen} />
+          <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+            <Header user={user} onMenuClick={() => setMenuOpen(true)} />
+            <main className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 lg:px-8">
+              <div className="mx-auto w-full max-w-[1800px]">
+                {children}
+              </div>
+            </main>
+          </div>
         </div>
-      </div>
-    </AppShell>
+      </AppShell>
+    </TenantIdentityProvider>
   );
 }

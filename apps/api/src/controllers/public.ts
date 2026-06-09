@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { randomUUID } from 'crypto';
 import { z } from 'zod';
 import { getTenantClient, supabaseAdmin } from '@white-label/database';
 import { loadTenantRuntimeConfig } from '../services/tenant-config';
@@ -95,6 +96,28 @@ const publicPortalSchema = z.object({
   folio: z.string().min(1),
 });
 
+const publicCatalogSchema = z.object({
+  tenantSlug: z.string().min(1),
+});
+
+const publicCheckoutItemSchema = z.object({
+  productId: z.string().min(1),
+  quantity: z.coerce.number().int().min(1),
+});
+
+const publicCheckoutSchema = z.object({
+  tenantSlug: z.string().min(1),
+  customerName: z.string().min(1),
+  customerPhone: z.string().min(7),
+  customerEmail: z.string().email().optional().or(z.literal('')),
+  shippingAddress: z.string().min(1),
+  city: z.string().min(1),
+  state: z.string().min(1),
+  postalCode: z.string().min(1),
+  notes: z.string().optional().or(z.literal('')),
+  items: z.array(publicCheckoutItemSchema).min(1),
+});
+
 async function resolveTenantIdBySlug(slug: string) {
   const { data, error } = await supabaseAdmin
     .from('tenants')
@@ -111,6 +134,64 @@ async function resolveTenantIdBySlug(slug: string) {
   }
 
   return data;
+}
+
+async function loadPublicCatalog(tenantId: string) {
+  const supabase = getTenantClient(tenantId);
+  const [productsResult, inventoryResult] = await Promise.all([
+    supabase
+      .from('products')
+      .select('id, tenant_id, sku, name, category, brand, sale_price, cost, minimum_stock, unit, location, notes, is_active, created_at')
+      .eq('tenant_id', tenantId)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(100),
+    supabase
+      .from('sucursal_inventory')
+      .select('product_id, stock_current')
+      .eq('tenant_id', tenantId)
+      .limit(500),
+  ]);
+
+  if (productsResult.error) {
+    throw new Error(`Failed to load products: ${productsResult.error.message}`);
+  }
+
+  if (inventoryResult.error) {
+    throw new Error(`Failed to load inventory: ${inventoryResult.error.message}`);
+  }
+
+  const stockByProductId = new Map<string, number>();
+  for (const row of inventoryResult.data ?? []) {
+    const productId = String((row as { product_id?: string }).product_id ?? '');
+    if (!productId) continue;
+    const currentStock = Number((row as { stock_current?: number }).stock_current ?? 0);
+    stockByProductId.set(productId, (stockByProductId.get(productId) ?? 0) + currentStock);
+  }
+
+  return (productsResult.data ?? []).map((product) => {
+    const salePrice = Number((product as { sale_price?: number | null }).sale_price ?? 0);
+    const cost = Number((product as { cost?: number | null }).cost ?? 0);
+    const minimumStock = Number((product as { minimum_stock?: number | null }).minimum_stock ?? 0);
+    const stockCurrent = stockByProductId.get(String((product as { id?: string }).id ?? '')) ?? 0;
+    return {
+      id: product.id,
+      sku: product.sku,
+      name: product.name,
+      category: product.category ?? null,
+      brand: product.brand ?? null,
+      sale_price: salePrice,
+      cost,
+      minimum_stock: minimumStock,
+      unit: product.unit ?? null,
+      location: product.location ?? null,
+      notes: product.notes ?? null,
+      is_active: product.is_active,
+      stock_current: stockCurrent,
+      in_stock: stockCurrent > 0,
+      inventory_state: stockCurrent <= 0 ? 'agotado' : stockCurrent <= minimumStock ? 'bajo' : 'disponible',
+    };
+  });
 }
 
 function extractContactInfo(input: unknown): ContactInfo {
@@ -499,6 +580,158 @@ export async function getPublicPortalOrder(req: Request, res: Response) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Internal server error';
+    if (error instanceof Error && error.name === 'TenantNotFoundError') {
+      return res.status(404).json({ error: 'No encontramos un tenant con ese slug', details: message });
+    }
+    return res.status(500).json({ error: message });
+  }
+}
+
+export async function getPublicStoreCatalog(req: Request, res: Response) {
+  const parsed = publicCatalogSchema.safeParse(req.params);
+
+  if (!parsed.success) {
+    return res.status(400).json({ error: 'Invalid params', details: parsed.error.flatten() });
+  }
+
+  try {
+    const { tenantSlug } = parsed.data;
+    const tenant = await resolveTenantIdBySlug(tenantSlug);
+    const runtimeConfig = await loadTenantRuntimeConfig(tenant.id);
+    const catalog = await loadPublicCatalog(tenant.id);
+
+    return res.json({
+      success: true,
+      tenant: {
+        id: tenant.id,
+        slug: tenant.slug,
+        name: tenant.name,
+        branding: tenant.branding ?? null,
+        ...extractContactInfo(tenant.landing_content),
+        config: runtimeConfig,
+      },
+      data: {
+        catalog,
+      },
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    if (error instanceof Error && error.name === 'TenantNotFoundError') {
+      return res.status(404).json({ error: 'No encontramos un tenant con ese slug', details: message });
+    }
+    return res.status(500).json({ error: message });
+  }
+}
+
+export async function createPublicStoreOrder(req: Request, res: Response) {
+  const parsed = publicCheckoutSchema.safeParse(req.body);
+
+  if (!parsed.success) {
+    return res.status(400).json({ error: 'Invalid payload', details: parsed.error.flatten() });
+  }
+
+  try {
+    const { tenantSlug, customerName, customerPhone, customerEmail, shippingAddress, city, state, postalCode, notes, items } = parsed.data;
+    const tenant = await resolveTenantIdBySlug(tenantSlug);
+    const supabase = getTenantClient(tenant.id);
+    const catalog = await loadPublicCatalog(tenant.id);
+    const catalogMap = new Map(catalog.map((product) => [product.id, product]));
+    const normalizedItems = items.map((item) => {
+      const product = catalogMap.get(item.productId);
+      if (!product) {
+        throw new Error(`Producto no encontrado: ${item.productId}`);
+      }
+      const quantity = Math.max(1, Number(item.quantity));
+      const unitPrice = Number(product.sale_price ?? 0);
+      return {
+        productId: product.id,
+        sku: product.sku,
+        name: product.name,
+        quantity,
+        unitPrice,
+        subtotal: Number((unitPrice * quantity).toFixed(2)),
+      };
+    });
+
+    const subtotal = Number(normalizedItems.reduce((sum, item) => sum + item.subtotal, 0).toFixed(2));
+    const shipping = subtotal >= 1200 ? 0 : 149;
+    const total = Number((subtotal + shipping).toFixed(2));
+    const orderFolio = `DS-${Date.now().toString(36).toUpperCase()}`;
+    const publicToken = randomUUID();
+    const orderMetadata = {
+      channel: 'dropshipping-store',
+      shipping_address: shippingAddress,
+      city,
+      state,
+      postal_code: postalCode,
+      notes: notes || null,
+      items: normalizedItems,
+      currency: 'MXN',
+      shipping_cost: shipping,
+      subtotal,
+      total,
+    };
+
+    const { data: createdOrder, error: orderError } = await supabase
+      .from('service_orders')
+      .insert([{
+        tenant_id: tenant.id,
+        folio: orderFolio,
+        public_token: publicToken,
+        status: 'recibido',
+        device_info: {
+          customer_name: customerName,
+          customer_phone: customerPhone,
+          customer_email: customerEmail || null,
+          brand: 'Tienda',
+          model: 'Dropshipping',
+          type: 'Ecommerce',
+        },
+        problem_description: `Pedido dropshipping con ${normalizedItems.length} artículo(s)`,
+        metadata: orderMetadata,
+        estimated_cost: subtotal,
+        final_cost: total,
+      }])
+      .select('id, tenant_id, folio, public_token, status, created_at, estimated_cost, final_cost, metadata')
+      .single();
+
+    if (orderError || !createdOrder) {
+      return res.status(502).json({ error: 'Failed to create store order', details: orderError?.message ?? 'Unknown error' });
+    }
+
+    await supabase.from('service_order_events').insert([{
+      id: randomUUID(),
+      tenant_id: tenant.id,
+      service_order_id: createdOrder.id,
+      event_type: 'created',
+      previous_status: null,
+      new_status: 'recibido',
+      note: `Pedido ecommerce creado para ${customerName}`,
+      actor_name: 'storefront',
+    }]);
+
+    return res.status(201).json({
+      success: true,
+      tenant: {
+        id: tenant.id,
+        slug: tenant.slug,
+        name: tenant.name,
+        branding: tenant.branding ?? null,
+        ...extractContactInfo(tenant.landing_content),
+      },
+      data: {
+        order: createdOrder,
+        items: normalizedItems,
+        shipping,
+        subtotal,
+        total,
+      },
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    if (/Producto no encontrado/i.test(message)) {
+      return res.status(400).json({ error: message });
+    }
     if (error instanceof Error && error.name === 'TenantNotFoundError') {
       return res.status(404).json({ error: 'No encontramos un tenant con ese slug', details: message });
     }

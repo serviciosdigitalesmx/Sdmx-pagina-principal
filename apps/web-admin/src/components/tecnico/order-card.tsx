@@ -27,7 +27,7 @@ export function OrderCard({ order, onClick }: OrderCardProps) {
     return date.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
   };
 
-  const customerName = order.device_info?.customer_name || 'Cliente sin nombre';
+  const customerName = order.customers?.full_name || order.device_info?.customer_name || 'Cliente sin nombre';
   const deviceName = `${order.device_info?.type || ''} ${order.device_info?.model || ''}`.trim() || 'Equipo sin especificar';
   const hasPromiseDate = !!order.promised_date;
   const daysLeft = diasRestantes !== undefined && diasRestantes !== null ? diasRestantes : null;

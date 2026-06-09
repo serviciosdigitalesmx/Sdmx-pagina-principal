@@ -1,6 +1,17 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
+function resolveMetadataBase() {
+  const raw = process.env.NEXT_PUBLIC_APP_URL?.trim() || process.env.APP_URL?.trim() || process.env.VERCEL_URL?.trim();
+  if (!raw) return undefined;
+  try {
+    const normalized = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+    return new URL(normalized);
+  } catch {
+    return undefined;
+  }
+}
+
 export const metadata: Metadata = {
   title:
     process.env.NEXT_PUBLIC_CUSTOMER_META_TITLE ??
@@ -8,6 +19,7 @@ export const metadata: Metadata = {
   description:
     process.env.NEXT_PUBLIC_CUSTOMER_META_DESCRIPTION ??
     "Servicios Digitales MX: portal para clientes de taller con seguimiento, soporte y notificaciones.",
+  metadataBase: resolveMetadataBase(),
 };
 
 export default function RootLayout({

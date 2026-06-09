@@ -86,17 +86,17 @@ export function OrderModal({ open, onOpenChange, order, onOrderUpdated }: OrderM
       }>(`/orders/${order.id}`, getApiOptions());
 
       const orderData = data.order;
-      setClienteNombre(orderData.device_info?.customer_name || '');
-      setClienteTelefono(orderData.device_info?.customer_phone || '');
-      setClienteEmail(orderData.device_info?.customer_email || '');
-      setDispositivo(orderData.device_info?.type || '');
-      setModelo(orderData.device_info?.model || '');
-      setFalla(orderData.problem_description || '');
-      setCosto(orderData.estimated_cost?.toString() || '');
-      setFechaPromesa(orderData.promised_date?.split('T')[0] || '');
       setEstado(orderData.status || 'recibido');
       setTecnico(orderData.assigned_user_id || '');
       setNotas(orderData.internal_notes || '');
+      
+      // CRM priority fallback to device_info
+      setClienteNombre(orderData.customers?.full_name || orderData.device_info?.customer_name || '');
+      setClienteTelefono(orderData.customers?.phone || orderData.device_info?.customer_phone || '');
+      setClienteEmail(orderData.customers?.email || orderData.device_info?.customer_email || '');
+      setDispositivo(orderData.device_info?.type || '');
+      setModelo(orderData.device_info?.model || '');
+
       setSeguimiento(((orderData.evidence_metadata?.find((e: any) => e.event_type === 'note') as { note?: string } | undefined)?.note) || '');
       setYoutubeId((orderData.metadata as any)?.youtube_id || '');
 

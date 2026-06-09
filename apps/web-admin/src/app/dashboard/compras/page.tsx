@@ -197,7 +197,15 @@ export default function ComprasPage() {
                 <div className="text-lg font-semibold text-srf-primary">{order.folio || order.id}</div>
                 <div className="text-xs text-srf-muted">{order.expected_date ? new Date(order.expected_date).toLocaleDateString('es-MX') : 'Sin fecha estimada'}</div>
               </div>
-              <span className="badge-recibido">{order.status || 'borrador'}</span>
+              <span className={`px-2 py-1 rounded text-xs font-semibold
+                ${order.status === 'recibida' ? 'bg-green-500/20 text-green-500 border border-green-500/30' : ''}
+                ${order.status === 'recepcion_parcial' ? 'bg-yellow-500/20 text-yellow-500 border border-yellow-500/30' : ''}
+                ${order.status === 'emitida' ? 'bg-blue-500/20 text-blue-500 border border-blue-500/30' : ''}
+                ${!order.status || order.status === 'borrador' ? 'bg-gray-500/20 text-gray-400 border border-gray-500/30' : ''}
+                ${order.status === 'cancelada' ? 'bg-red-500/20 text-red-500 border border-red-500/30' : ''}
+              `}>
+                {(order.status || 'borrador').toUpperCase().replace('_', ' ')}
+              </span>
             </div>
 
             <div className="mt-4 space-y-2 text-sm text-srf-muted">

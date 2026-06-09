@@ -53,16 +53,27 @@ export function Step1({ data, onSubmit, onLoadQuote }: Step1Props) {
     <form onSubmit={handleSubmit} className="card p-6 space-y-6">
       {/* Quote loader */}
       <div className="bg-srf-bg border border-srf-primary rounded-lg p-4">
-        <Label className="text-srf-muted text-sm">
-          <Search className="w-4 h-4 inline mr-1" />
-          Cargar por folio de cotización (opcional)
+        <Label className="text-srf-muted text-sm flex items-center gap-1">
+          <Search className="w-4 h-4" />
+          Cargar por folio de cotización
         </Label>
-        <div className="flex gap-2 mt-2">
+        <p className="text-xs text-srf-muted mt-1 mb-3">
+          Puedes ingresar el folio en mayúsculas o minúsculas. Ej: COT-00001
+        </p>
+        <div className="flex gap-2">
           <Input
             value={folioCotizacion}
-            onChange={(e) => setFolioCotizacion(e.target.value.toUpperCase())}
-            placeholder="Ej: COT-00001"
-            className="flex-1 uppercase"
+            onChange={(e) => {
+              // Permitir pegar o teclear, forzando mayúsculas y formato base
+              let val = e.target.value.toUpperCase().replace(/\s/g, '');
+              if (val && !val.includes('-') && val.length > 3) {
+                // Autocompletar el guión si lo olvidan
+                val = val.substring(0, 3) + '-' + val.substring(3);
+              }
+              setFolioCotizacion(val);
+            }}
+            placeholder="COT-00001"
+            className="flex-1 font-mono uppercase"
           />
           <Button
             type="button"
@@ -100,18 +111,28 @@ export function Step1({ data, onSubmit, onLoadQuote }: Step1Props) {
         </div>
 
         <div>
-          <Label>WhatsApp <span className="text-red-500">*</span> <span className="text-xs text-srf-muted">(10 dígitos)</span></Label>
+          <Label>WhatsApp <span className="text-red-500">*</span> <span className="text-xs text-srf-muted">(Se ajustará a 10 dígitos)</span></Label>
           <Input
             value={localData.clienteTelefono}
-            onChange={(e) =>
+            onChange={(e) => {
+              let val = e.target.value.replace(/\D/g, '');
+              // Limpiar prefijo +52 si el usuario lo pega
+              if (val.startsWith('52') && val.length > 10) {
+                val = val.substring(2);
+              }
+              if (val.startsWith('1') && val.length > 10) {
+                val = val.substring(1);
+              }
+              val = val.slice(0, 10);
+              
               setLocalData((current) => ({
                 ...current,
-                clienteTelefono: e.target.value.replace(/\D/g, '').slice(0, 10),
-              }))
-            }
+                clienteTelefono: val,
+              }));
+            }}
             placeholder="5512345678"
-            maxLength={10}
-            className={errors.clienteTelefono ? 'border-red-500' : ''}
+            maxLength={15}
+            className={`font-mono ${errors.clienteTelefono ? 'border-red-500' : ''}`}
           />
           {errors.clienteTelefono && <p className="text-red-500 text-xs mt-1">{errors.clienteTelefono}</p>}
         </div>
