@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Globe, RefreshCw, Save, Eye } from "lucide-react";
-import { fixService } from "@/services/fixService";
+import { tenantSettingsService } from "@/services/tenant-settings/tenantSettingsService";
 
 type LandingService = {
   title: string;
@@ -136,7 +136,7 @@ export default function LandingSettingsPage() {
     try {
       setLoading(true);
       setError("");
-      const result = await fixService.getTenantLandingSettings();
+      const result = await tenantSettingsService.getTenantLandingSettings();
       setSettings(result.data);
       setLandingContent(normalizeLandingContent(result.data.tenant.landing_content ?? null));
       setIndustryKey(typeof result.data.tenant.industry_profile?.industry_key === "string" ? result.data.tenant.industry_profile.industry_key : DEFAULT_INDUSTRY_KEY);
@@ -186,7 +186,7 @@ export default function LandingSettingsPage() {
 
     try {
       const selectedIndustry = settings?.availableIndustries?.find((item) => item.key === industryKey) ?? null;
-      const result = await fixService.updateTenantLandingSettings({
+      const result = await tenantSettingsService.updateTenantLandingSettings({
         branding: settings?.tenant.branding ?? undefined,
         landingContent,
         industryProfile: {
