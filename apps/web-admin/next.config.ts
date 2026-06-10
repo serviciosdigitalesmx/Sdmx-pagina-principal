@@ -8,7 +8,6 @@ const repoRoot = path.resolve(appRoot, "../..");
 const appDir = path.resolve(appRoot, "..");
 
 const nextConfig: NextConfig = {
-  output: "standalone",
   outputFileTracingRoot: repoRoot,
   turbopack: {
     // must match outputFileTracingRoot per Next/Turbopack requirements
