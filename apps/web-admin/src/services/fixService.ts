@@ -394,7 +394,7 @@ class FixService {
       const payload = await response.json().catch(() => ({} as ApiErrorResponse));
       // prefer structured payload messages when available
       const message =
-        (payload && typeof (payload as any).message === 'string' && (payload as any).message) ||
+        (payload && typeof (payload as { message?: string }).message === 'string' && (payload as { message?: string }).message) ||
         (payload && typeof payload.error === 'string' && payload.error) ||
         `HTTP ${response.status}`;
       const details = (payload as ApiErrorResponse).details ? ` - ${JSON.stringify((payload as ApiErrorResponse).details)}` : '';

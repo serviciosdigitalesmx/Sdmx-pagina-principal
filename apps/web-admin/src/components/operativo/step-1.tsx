@@ -26,10 +26,10 @@ export function Step1({ data, onSubmit, onLoadQuote }: Step1Props) {
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
-    if (!localData.clienteNombre.trim()) newErrors.clienteNombre = 'El nombre es requerido';
-    if (!localData.clienteTelefono.trim()) newErrors.clienteTelefono = 'El teléfono es requerido';
-    else if (!/^\d{10}$/.test(localData.clienteTelefono.replace(/\D/g, ''))) {
-      newErrors.clienteTelefono = 'Teléfono debe tener 10 dígitos';
+    if (!localData.customerName.trim()) newErrors.customerName = 'El nombre es requerido';
+    if (!localData.customerPhone.trim()) newErrors.customerPhone = 'El teléfono es requerido';
+    else if (!/^\d{10}$/.test(localData.customerPhone.replace(/\D/g, ''))) {
+      newErrors.customerPhone = 'Teléfono debe tener 10 dígitos';
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -102,18 +102,18 @@ export function Step1({ data, onSubmit, onLoadQuote }: Step1Props) {
         <div>
           <Label>Nombre completo <span className="text-red-500">*</span></Label>
           <Input
-            value={localData.clienteNombre}
-            onChange={(e) => setLocalData((current) => ({ ...current, clienteNombre: e.target.value }))}
+            value={localData.customerName}
+            onChange={(e) => setLocalData((current) => ({ ...current, customerName: e.target.value }))}
             placeholder="Ej: Juan Pérez"
-            className={errors.clienteNombre ? 'border-red-500' : ''}
+            className={errors.customerName ? 'border-red-500' : ''}
           />
-          {errors.clienteNombre && <p className="text-red-500 text-xs mt-1">{errors.clienteNombre}</p>}
+          {errors.customerName && <p className="text-red-500 text-xs mt-1">{errors.customerName}</p>}
         </div>
 
         <div>
           <Label>WhatsApp <span className="text-red-500">*</span> <span className="text-xs text-srf-muted">(Se ajustará a 10 dígitos)</span></Label>
           <Input
-            value={localData.clienteTelefono}
+            value={localData.customerPhone}
             onChange={(e) => {
               let val = e.target.value.replace(/\D/g, '');
               // Limpiar prefijo +52 si el usuario lo pega
@@ -127,21 +127,21 @@ export function Step1({ data, onSubmit, onLoadQuote }: Step1Props) {
               
               setLocalData((current) => ({
                 ...current,
-                clienteTelefono: val,
+                customerPhone: val,
               }));
             }}
             placeholder="5512345678"
             maxLength={15}
-            className={`font-mono ${errors.clienteTelefono ? 'border-red-500' : ''}`}
+            className={`font-mono ${errors.customerPhone ? 'border-red-500' : ''}`}
           />
-          {errors.clienteTelefono && <p className="text-red-500 text-xs mt-1">{errors.clienteTelefono}</p>}
+          {errors.customerPhone && <p className="text-red-500 text-xs mt-1">{errors.customerPhone}</p>}
         </div>
 
         <div>
           <Label>Email <span className="text-srf-muted">(opcional)</span></Label>
           <Input
-            value={localData.clienteEmail}
-            onChange={(e) => setLocalData((current) => ({ ...current, clienteEmail: e.target.value }))}
+            value={localData.customerEmail}
+            onChange={(e) => setLocalData((current) => ({ ...current, customerEmail: e.target.value }))}
             placeholder="cliente@email.com"
             type="email"
           />

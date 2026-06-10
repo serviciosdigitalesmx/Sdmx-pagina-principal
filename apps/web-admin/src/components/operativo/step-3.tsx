@@ -35,16 +35,16 @@ export function Step3({ data, onSubmit, onBack, loading }: Step3Props) {
       <div className="bg-srf-bg rounded-lg p-4 space-y-3 border border-srf-primary/30">
         <div className="flex justify-between border-b border-srf-primary/20 pb-2">
           <span className="text-srf-muted">Cliente:</span>
-          <span className="font-medium">{data.clienteNombre}</span>
+          <span className="font-medium">{data.customerName}</span>
         </div>
         <div className="flex justify-between border-b border-srf-primary/20 pb-2">
           <span className="text-srf-muted">Teléfono:</span>
-          <span>{data.clienteTelefono}</span>
+          <span>{data.customerPhone}</span>
         </div>
-        {data.clienteEmail && (
+        {data.customerEmail && (
           <div className="flex justify-between border-b border-srf-primary/20 pb-2">
             <span className="text-srf-muted">Email:</span>
-            <span>{data.clienteEmail}</span>
+            <span>{data.customerEmail}</span>
           </div>
         )}
         <div className="flex justify-between border-b border-srf-primary/20 pb-2">

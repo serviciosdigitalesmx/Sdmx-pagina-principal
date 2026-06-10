@@ -80,9 +80,9 @@ export default function ClientesPage() {
   const handleNewOrder = (customer: Customer) => {
     // Guardar en localStorage y redirigir a recepción
     const draft = {
-      clienteNombre: customer.name,
-      clienteTelefono: customer.phone,
-      clienteEmail: customer.email || '',
+      customerName: customer.name,
+      customerPhone: customer.phone,
+      customerEmail: customer.email || '',
       equipoTipo: '',
       equipoModelo: '',
       equipoFalla: '',

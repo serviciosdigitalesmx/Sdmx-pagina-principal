@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@sdmx/contracts": "workspace:*",
     "@white-label/config": "workspace:*",
     "@white-label/ui": "workspace:*",
     "next": "16.2.6",

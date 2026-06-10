@@ -47,9 +47,9 @@ export function OrderModal({ open, onOpenChange, order, onOrderUpdated }: OrderM
   const [activeTab, setActiveTab] = useState('details');
 
   // Form fields
-  const [clienteNombre, setClienteNombre] = useState('');
-  const [clienteTelefono, setClienteTelefono] = useState('');
-  const [clienteEmail, setClienteEmail] = useState('');
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
   const [dispositivo, setDispositivo] = useState('');
   const [modelo, setModelo] = useState('');
   const [falla, setFalla] = useState('');
@@ -91,14 +91,14 @@ export function OrderModal({ open, onOpenChange, order, onOrderUpdated }: OrderM
       setNotas(orderData.internal_notes || '');
       
       // CRM priority fallback to device_info
-      setClienteNombre(orderData.customers?.name || orderData.device_info?.customer_name || '');
-      setClienteTelefono(orderData.customers?.phone || orderData.device_info?.customer_phone || '');
-      setClienteEmail(orderData.customers?.email || orderData.device_info?.customer_email || '');
+      setCustomerName(orderData.customers?.name || orderData.device_info?.customer_name || '');
+      setCustomerPhone(orderData.customers?.phone || orderData.device_info?.customer_phone || '');
+      setCustomerEmail(orderData.customers?.email || orderData.device_info?.customer_email || '');
       setDispositivo(orderData.device_info?.type || '');
       setModelo(orderData.device_info?.model || '');
 
-      setSeguimiento(((orderData.evidence_metadata?.find((e: any) => e.event_type === 'note') as { note?: string } | undefined)?.note) || '');
-      setYoutubeId((orderData.metadata as any)?.youtube_id || '');
+      setSeguimiento(((orderData.evidence_metadata?.find((e: { event_type: string; note?: string }) => e.event_type === 'note'))?.note) || '');
+      setYoutubeId((orderData.metadata as { youtube_id?: string })?.youtube_id || '');
 
       if (data.checklist) {
         setChecklist(data.checklist);
@@ -124,9 +124,9 @@ export function OrderModal({ open, onOpenChange, order, onOrderUpdated }: OrderM
     try {
       // Update order details
       await apiClient.patch(`/orders/${order.id}/details`, {
-        clientName: clienteNombre,
-        clientPhone: clienteTelefono,
-        clientEmail: clienteEmail,
+        clientName: customerName,
+        clientPhone: customerPhone,
+        clientEmail: customerEmail,
         deviceType: dispositivo,
         deviceModel: modelo,
         issue: falla,
@@ -235,15 +235,15 @@ export function OrderModal({ open, onOpenChange, order, onOrderUpdated }: OrderM
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label>Cliente</Label>
-                    <Input value={clienteNombre} onChange={(e) => setClienteNombre(e.target.value)} />
+                    <Input value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
                   </div>
                   <div>
                     <Label>Teléfono</Label>
-                    <Input value={clienteTelefono} onChange={(e) => setClienteTelefono(e.target.value)} />
+                    <Input value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} />
                   </div>
                   <div>
                     <Label>Email</Label>
-                    <Input value={clienteEmail} onChange={(e) => setClienteEmail(e.target.value)} />
+                    <Input value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} />
                   </div>
                   <div>
                     <Label>Dispositivo</Label>
@@ -360,10 +360,11 @@ export function OrderModal({ open, onOpenChange, order, onOrderUpdated }: OrderM
                     .map((doc) => (
                       <div key={doc.id} className="relative aspect-square rounded-lg overflow-hidden border border-srf-primary/30">
                         {doc.public_url && (
-                          <img
+                          <Image
                             src={doc.public_url}
-                            alt={doc.file_name}
-                            className="w-full h-full object-cover"
+                            alt={doc.file_name || "Document"}
+                            fill
+                            className="object-cover"
                           />
                         )}
                       </div>

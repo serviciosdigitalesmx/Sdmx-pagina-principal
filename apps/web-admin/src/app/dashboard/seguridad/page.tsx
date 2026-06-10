@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Shield, Users, Key, RefreshCw, Eye, EyeOff, Copy, Check } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { getApiOptions } from '@/lib/tenant';
@@ -108,7 +109,7 @@ export default function SeguridadPage() {
     }
   };
 
-  const handleUpdateConfig = async (field: string, value: any) => {
+  const handleUpdateConfig = async (field: string, value: unknown) => {
     try {
       await apiClient.patch('/security/config', { [field]: value }, getApiOptions());
       loadData();
@@ -238,10 +239,13 @@ export default function SeguridadPage() {
                   1. Escanea este código QR con Google Authenticator:
                 </p>
                 <div className="flex justify-center mb-4">
-                  <img
+                  <Image
                     src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(mfaUri || '')}`}
                     alt="QR Code"
+                    width={200}
+                    height={200}
                     className="border-2 border-srf-primary rounded-lg"
+                    unoptimized
                   />
                 </div>
                 <p className="text-sm text-srf-muted mb-2">

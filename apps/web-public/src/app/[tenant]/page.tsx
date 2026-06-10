@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { ReactNode } from "react";
 import { srFixTheme } from "@/components/srfix-theme";
 import { resolveApiBaseUrl as getApiBaseUrl } from "@white-label/config";
@@ -102,8 +103,7 @@ export default async function TenantLandingPage({ params }: { params: Promise<{ 
           <div className="flex items-center gap-4">
             <div className="rounded-2xl border border-sky-400/25 bg-white p-2 shadow-[0_0_0_1px_rgba(96,165,250,0.15)]">
               {data.tenant.branding?.logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={data.tenant.branding.logoUrl} alt={data.tenant.name} className="h-11 w-11 rounded-lg object-contain" />
+                <Image src={data.tenant.branding.logoUrl} alt={data.tenant.name} width={44} height={44} className="h-11 w-11 rounded-lg object-contain" />
               ) : (
                 <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-sky-500 text-lg font-black text-white">SF</div>
               )}

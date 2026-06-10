@@ -26,6 +26,8 @@ import { requireTenantBillingActive } from './middleware/tenantBilling';
 import { attachTenantCapabilities, requireTenantModule } from './middleware/tenantCapabilities';
 import { requireRole } from './middleware/requireRole';
 import { errorHandler } from './middleware/errorHandler';
+import { standardizeResponse } from './middleware/standardizeResponse';
+import { setupSwagger } from './swagger';
 
 dotenv.config();
 
@@ -102,6 +104,7 @@ app.use(cors({
   optionsSuccessStatus: 204,
 }));
 app.use(express.json());
+app.use(standardizeResponse);
 
 app.options('*', cors({
   origin: (origin, callback) => {
@@ -165,6 +168,9 @@ app.get('/', (req, res) => {
   res.send(`${apiName} is running`);
 });
 app.get('/api', getApiRoot);
+
+setupSwagger(app);
+
 app.get('/health', getHealth);
 app.get('/healthz', getHealth);
 app.get('/api/health', getHealth);

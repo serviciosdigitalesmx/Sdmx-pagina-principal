@@ -11,6 +11,14 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: repoRoot,
   },
+  images: {
+    remotePatterns: process.env.NEXT_PUBLIC_IMAGE_DOMAINS
+      ? process.env.NEXT_PUBLIC_IMAGE_DOMAINS.split(",").map((domain) => ({
+          protocol: "https",
+          hostname: domain.trim(),
+        }))
+      : [],
+  },
 };
 
 export default nextConfig;

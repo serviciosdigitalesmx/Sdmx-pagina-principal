@@ -11,9 +11,9 @@ import { getApiOptions } from '@/lib/tenant';
 
 export type OrderFormData = {
   // Paso 1: Cliente
-  clienteNombre: string;
-  clienteTelefono: string;
-  clienteEmail: string;
+  customerName: string;
+  customerPhone: string;
+  customerEmail: string;
   folioCotizacion: string;
 
   // Paso 2: Equipo
@@ -43,9 +43,9 @@ export default function OperativoPage() {
   const [loading, setLoading] = useState(false);
   const [savedFolio, setSavedFolio] = useState<string | null>(null);
   const [formData, setFormData] = useState<OrderFormData>({
-    clienteNombre: '',
-    clienteTelefono: '',
-    clienteEmail: '',
+    customerName: '',
+    customerPhone: '',
+    customerEmail: '',
     folioCotizacion: '',
     dispositivo: '',
     modelo: '',
@@ -124,9 +124,9 @@ export default function OperativoPage() {
 
       // Crear orden
       const payload = {
-        clientName: formData.clienteNombre,
-        clientPhone: formData.clienteTelefono,
-        clientEmail: formData.clienteEmail,
+        clientName: formData.customerName,
+        clientPhone: formData.customerPhone,
+        clientEmail: formData.customerEmail,
         deviceType: formData.dispositivo,
         deviceModel: formData.modelo,
         issue: formData.falla,
@@ -167,9 +167,9 @@ export default function OperativoPage() {
 
   const handleNewOrder = () => {
     setFormData({
-      clienteNombre: '',
-      clienteTelefono: '',
-      clienteEmail: '',
+      customerName: '',
+      customerPhone: '',
+      customerEmail: '',
       folioCotizacion: '',
       dispositivo: '',
       modelo: '',
@@ -219,15 +219,15 @@ export default function OperativoPage() {
             // Cargar datos desde cotización
             const loadQuote = async () => {
               try {
-                const response = await apiClient.get<{ data: any }>(
+                const response = await apiClient.get<{ data: { customer_name: string; customer_phone: string; customer_email: string; device_type: string; device_model: string; issue_description: string; } }>(
                   `/requests/${folio}`,
                   getApiOptions()
                 );
                 const request = response.data;
                 saveDraft({
-                  clienteNombre: request.customer_name,
-                  clienteTelefono: request.customer_phone,
-                  clienteEmail: request.customer_email || '',
+                  customerName: request.customer_name,
+                  customerPhone: request.customer_phone,
+                  customerEmail: request.customer_email || '',
                   dispositivo: request.device_type || '',
                   modelo: request.device_model || '',
                   falla: request.issue_description || '',
@@ -264,7 +264,7 @@ export default function OperativoPage() {
       {step === 4 && savedFolio && (
         <Success
           folio={savedFolio}
-          customerPhone={formData.clienteTelefono}
+          customerPhone={formData.customerPhone}
           onNewOrder={handleNewOrder}
         />
       )}

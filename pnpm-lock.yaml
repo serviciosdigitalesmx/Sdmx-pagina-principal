@@ -32,6 +32,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@sdmx/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@supabase/supabase-js':
         specifier: ^2.105.4
         version: 2.105.4
@@ -72,6 +75,12 @@ importers:
       '@types/pdfkit':
         specifier: ^0.17.6
         version: 0.17.6
+      '@types/swagger-jsdoc':
+        specifier: ^6.0.4
+        version: 6.0.4
+      '@types/swagger-ui-express':
+        specifier: ^4.1.8
+        version: 4.1.8
       eslint:
         specifier: ^9
         version: 9.39.4(jiti@2.7.0)
@@ -109,6 +118,9 @@ importers:
 
   apps/web-admin:
     dependencies:
+      '@sdmx/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@supabase/supabase-js':
         specifier: ^2.43.4
         version: 2.105.4
@@ -164,6 +176,9 @@ importers:
 
   apps/web-clientes:
     dependencies:
+      '@sdmx/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@white-label/config':
         specifier: workspace:*
         version: link:../../packages/config
@@ -207,6 +222,9 @@ importers:
 
   apps/web-public:
     dependencies:
+      '@sdmx/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@supabase/supabase-js':
         specifier: ^2.43.4
         version: 2.105.4
@@ -259,6 +277,12 @@ importers:
       '@types/node':
         specifier: ^20.0.0
         version: 20.19.41
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+
+  packages/contracts:
+    devDependencies:
       typescript:
         specifier: ^5.4.5
         version: 5.9.3
@@ -1594,6 +1618,12 @@ packages:
 
   '@types/strip-json-comments@0.0.30':
     resolution: {integrity: sha512-7NQmHra/JILCd1QqpSzl8+mJRc8ZHz3uDm8YV1Ks9IhK0epEiTw8aIErbvH9PI+6XbqhyIQy3462nEsn7UVzjQ==}
+
+  '@types/swagger-jsdoc@6.0.4':
+    resolution: {integrity: sha512-W+Xw5epcOZrF/AooUM/PccNMSAFOKWZA5dasNyMujTwsBkU74njSJBpvCCJhHAJ95XRMzQrrW844Btu0uoetwQ==}
+
+  '@types/swagger-ui-express@4.1.8':
+    resolution: {integrity: sha512-AhZV8/EIreHFmBV5wAs0gzJUNq9JbbSXgJLQubCC0jtIo6prnI9MIRRxnU4MZX9RB9yXxF1V4R7jtLl/Wcj31g==}
 
   '@types/trusted-types@2.0.7':
     resolution: {integrity: sha512-ScaPdn1dQczgbl0QFTeTOmVHFULt394XJgOQNoyVhZ6r2vLnMLJfBPd53SB52T/3G36VI1/g2MZaX0cwDuXsfw==}
@@ -5864,6 +5894,13 @@ snapshots:
   '@types/strip-bom@3.0.0': {}
 
   '@types/strip-json-comments@0.0.30': {}
+
+  '@types/swagger-jsdoc@6.0.4': {}
+
+  '@types/swagger-ui-express@4.1.8':
+    dependencies:
+      '@types/express': 4.17.25
+      '@types/serve-static': 1.15.10
 
   '@types/trusted-types@2.0.7': {}
 

@@ -14,6 +14,14 @@ const nextConfig: NextConfig = {
     // must match outputFileTracingRoot per Next/Turbopack requirements
     root: repoRoot,
   },
+  images: {
+    remotePatterns: process.env.NEXT_PUBLIC_IMAGE_DOMAINS
+      ? process.env.NEXT_PUBLIC_IMAGE_DOMAINS.split(",").map((domain) => ({
+          protocol: "https",
+          hostname: domain.trim(),
+        }))
+      : [],
+  },
 };
 
 const pwaConfig = withPWA({

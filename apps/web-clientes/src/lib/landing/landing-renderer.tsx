@@ -72,8 +72,7 @@ export function LandingRenderer({ tenant, landingContent }: LandingRendererProps
             <div className="flex items-center gap-4">
               <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 text-xl font-black">
                 {tenant.branding.logoUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={tenant.branding.logoUrl} alt={tenant.name} className="h-full w-full object-contain" loading="lazy" decoding="async" />
+                  <Image src={tenant.branding.logoUrl} alt={tenant.name} width={64} height={64} className="h-full w-full object-contain" />
                 ) : (
                   <span>{tenant.name.slice(0, 2).toUpperCase()}</span>
                 )}

@@ -6,6 +6,8 @@ import { requireTenantBillingActive } from '../middleware/tenantBilling';
 import { requireRole } from '../middleware/requireRole';
 import { attachTenantCapabilities, requireTenantModule } from '../middleware/tenantCapabilities';
 import { createCustomer, listCustomers } from '../controllers/catalogs';
+import { validate } from '../middleware/validate';
+import { createCustomerSchema } from '../schemas/customer';
 
 const router = Router({ mergeParams: true });
 
@@ -16,6 +18,6 @@ router.use(requireTenantBillingActive);
 router.use(attachTenantCapabilities);
 
 router.get('/', requireTenantModule('customers'), requireRole('owner', 'manager', 'technician'), listCustomers);
-router.post('/', requireTenantModule('customers'), requireRole('owner', 'manager'), createCustomer);
+router.post('/', requireTenantModule('customers'), requireRole('owner', 'manager'), validate(createCustomerSchema), createCustomer);
 
 export default router;

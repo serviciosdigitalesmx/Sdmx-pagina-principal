@@ -14,6 +14,7 @@
     "test:evidence": "node --test tests/evidence-adapter.integration.mjs"
   },
   "dependencies": {
+    "@sdmx/contracts": "workspace:*",
     "@supabase/supabase-js": "^2.105.4",
     "@white-label/database": "workspace:*",
     "@white-label/types": "workspace:*",
@@ -29,6 +30,8 @@
     "@types/express": "^4.17.21",
     "@types/node": "^20.12.11",
     "@types/pdfkit": "^0.17.6",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.8",
     "eslint": "^9",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.4.5",
