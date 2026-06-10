@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Plus, RefreshCw, ShoppingCart, Package, Truck, CheckCircle2, X } from 'lucide-react';
-import { fixService } from '@/services/fixService';
+import { procurementService } from '@/services/procurement/procurementService';
 
 type PurchaseOrderRow = {
   id?: string;
@@ -56,7 +56,7 @@ export default function ComprasPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [ordersData, suppliersData] = await Promise.all([fixService.getPurchaseOrders(), fixService.getSuppliers()]);
+      const [ordersData, suppliersData] = await Promise.all([procurementService.getPurchaseOrders(), procurementService.getSuppliers()]);
       setOrders(ordersData as PurchaseOrderRow[]);
       setSuppliers(suppliersData as SupplierRow[]);
       setError('');
@@ -80,7 +80,7 @@ export default function ComprasPage() {
     try {
       setSaving(true);
       setError('');
-      await fixService.createPurchaseOrder({
+      await procurementService.createPurchaseOrder({
         supplierId: form.supplierId,
         expectedDate: form.expectedDate || undefined,
         notes: form.notes || undefined,
@@ -110,7 +110,7 @@ export default function ComprasPage() {
     try {
       setReceivingId(order.id);
       setError('');
-      await fixService.receivePurchaseOrder(order.id, { notes: 'Recepción desde panel legacy migrado' });
+      await procurementService.receivePurchaseOrder(order.id, { notes: 'Recepción desde panel legacy migrado' });
       await loadData();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo recibir la orden de compra');
