@@ -97,7 +97,18 @@ export function OrderModal({ open, onOpenChange, order, onOrderUpdated }: OrderM
       setDispositivo(orderData.device_info?.type || '');
       setModelo(orderData.device_info?.model || '');
 
-      setSeguimiento(((orderData.evidence_metadata?.find((e: { event_type: string; note?: string }) => e.event_type === 'note'))?.note) || '');
+      const seguimientoMetadata = Array.isArray(orderData.evidence_metadata)
+        ? orderData.evidence_metadata.find((e: unknown): e is { event_type: string; note?: string } => {
+            return (
+              typeof e === 'object' &&
+              e !== null &&
+              'event_type' in e &&
+              (e as { event_type?: unknown }).event_type === 'note'
+            );
+          })
+        : undefined;
+
+      setSeguimiento(seguimientoMetadata?.note || '');
       setYoutubeId((orderData.metadata as { youtube_id?: string })?.youtube_id || '');
 
       if (data.checklist) {
