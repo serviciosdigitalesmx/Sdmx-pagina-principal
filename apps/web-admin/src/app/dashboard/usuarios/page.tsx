@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Plus, RefreshCw, Search, Shield, UserX, History } from "lucide-react";
-import { fixService } from "@/services/fixService";
+import { usersService } from "@/services/users/usersService";
 
 type UserRow = {
   id: string;
@@ -71,7 +71,7 @@ export default function UsuariosPage() {
     try {
       setLoading(true);
       setError("");
-      const result = await fixService.getUsers({
+      const result = await usersService.getUsers({
         page: 1,
         pageSize: 50,
         q: query.trim() || undefined,
@@ -102,7 +102,7 @@ export default function UsuariosPage() {
     async function loadHistory() {
       try {
         setHistoryLoading(true);
-        const data = await fixService.getUserPurchaseOrders(activeHistoryUser.id);
+        const data = await usersService.getUserPurchaseOrders(activeHistoryUser.id);
         if (!cancelled) setHistoryRows(data as UserHistoryRow[]);
       } catch (err) {
         if (!cancelled) {
@@ -125,7 +125,7 @@ export default function UsuariosPage() {
     try {
       setSaving(true);
       setError("");
-      await fixService.inviteUser({
+      await usersService.inviteUser({
         name: invite.name.trim(),
         email: invite.email.trim(),
         role: invite.role,
@@ -145,7 +145,7 @@ export default function UsuariosPage() {
     if (!window.confirm(`Cambiar el rol de ${user.name} a ${roleLabel(nextRole)}.`)) return;
     try {
       setError("");
-      await fixService.updateUserRole(user.id, nextRole);
+      await usersService.updateUserRole(user.id, nextRole);
       await loadUsers();
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo actualizar el rol");
@@ -156,7 +156,7 @@ export default function UsuariosPage() {
     if (!window.confirm(`Desactivar a ${user.name}?`)) return;
     try {
       setError("");
-      await fixService.deactivateUser(user.id);
+      await usersService.deactivateUser(user.id);
       await loadUsers();
       if (historyUser?.id === user.id) setHistoryUser(null);
     } catch (err) {
