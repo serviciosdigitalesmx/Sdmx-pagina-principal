@@ -1,2 +1,0 @@
-apps/api/dist/controllers/catalogs.js:        branch_id: sucursalId,
-apps/api/src/controllers/catalogs.ts:    branch_id: sucursalId,

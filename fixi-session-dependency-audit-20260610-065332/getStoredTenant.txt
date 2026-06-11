@@ -1,3 +1,0 @@
-apps/web-admin/src/providers/TenantIdentityProvider.tsx
-apps/web-admin/src/lib/tenant.ts
-apps/web-admin/src/lib/auth.ts

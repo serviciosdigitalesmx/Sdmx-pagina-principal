@@ -1,6 +1,0 @@
-apps/web-admin/src/components/tenant/tenant-provider.tsx:  userEmail: string;
-apps/web-admin/src/components/dashboard/dashboard-shell.tsx:  userEmail: string;
-apps/web-admin/src/components/guard/use-auth.ts:  userEmail: string;
-apps/web-admin/src/components/guard/use-auth.ts:        userEmail: tenant.userEmail,
-apps/web-admin/src/components/guard/use-auth.ts:        userEmail: session.email || tenant.userEmail,
-apps/web-admin/src/components/guard/use-auth.ts:      userEmail: tenant.userEmail,

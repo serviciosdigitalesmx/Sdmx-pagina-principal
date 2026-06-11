@@ -1,2 +1,0 @@
-apps/web-clientes/src/lib/theme/tenant-theme-provider.tsx
-apps/web-admin/src/components/tenant/tenant-provider.tsx

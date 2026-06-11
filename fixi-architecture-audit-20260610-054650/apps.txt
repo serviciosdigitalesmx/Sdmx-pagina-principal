@@ -1,5 +1,0 @@
-apps/web-clientes/package.json
-apps/mobile/package.json
-apps/web-public/package.json
-apps/api/package.json
-apps/web-admin/package.json

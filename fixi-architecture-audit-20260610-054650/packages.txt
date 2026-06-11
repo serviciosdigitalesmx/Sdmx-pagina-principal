@@ -1,4 +1,0 @@
-packages/ui/package.json
-packages/database/package.json
-packages/types/package.json
-packages/config/package.json

@@ -1,3 +1,0 @@
-apps/web-admin/src/components/guard/RequireRole.tsx
-apps/web-admin/src/components/guard/use-auth.ts
-apps/web-admin/src/components/guard/ProtectedLink.tsx

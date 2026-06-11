@@ -1,2 +1,0 @@
-apps/web-admin/src/components/tenant/tenant-provider.tsx:  userRole: string;
-apps/web-admin/src/components/dashboard/dashboard-shell.tsx:  userRole: string;

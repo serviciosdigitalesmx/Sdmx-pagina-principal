@@ -1,5 +1,0 @@
-apps/web-admin/src/providers/TenantIdentityProvider.tsx
-apps/web-admin/src/lib/auth.ts
-apps/web-admin/src/lib/session.ts
-apps/web-admin/src/components/guard/use-auth.ts
-apps/web-admin/src/lib/tenant.ts

@@ -1,6 +1,0 @@
-apps/web-admin/src/app/dashboard/layout.tsx:import { TenantIdentityProvider } from '@/providers/TenantIdentityProvider';
-apps/web-admin/src/app/dashboard/layout.tsx:    <TenantIdentityProvider>
-apps/web-admin/src/app/dashboard/layout.tsx:    </TenantIdentityProvider>
-apps/web-admin/src/providers/TenantIdentityProvider.tsx:export function TenantIdentityProvider({ children }: { children: React.ReactNode }) {
-apps/web-admin/src/components/dashboard/header.tsx:import { useTenantIdentity } from '@/providers/TenantIdentityProvider';
-apps/web-admin/src/components/dashboard/sidebar.tsx:import { useTenantIdentity } from '@/providers/TenantIdentityProvider';

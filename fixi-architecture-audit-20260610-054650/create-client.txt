@@ -1,9 +1,0 @@
-apps/web-public/src/lib/supabase-browser.ts:import { createClient } from '@supabase/supabase-js';
-apps/web-public/src/lib/supabase-browser.ts:let browserClient: ReturnType<typeof createClient> | null = null;
-apps/web-public/src/lib/supabase-browser.ts:    browserClient = createClient(supabaseUrl, supabaseAnonKey);
-apps/web-admin/src/lib/supabase-browser.ts:import { createClient } from "@supabase/supabase-js";
-apps/web-admin/src/lib/supabase-browser.ts:let browserClient: ReturnType<typeof createClient> | null = null;
-apps/web-admin/src/lib/supabase-browser.ts:    browserClient = createClient(supabaseUrl, supabaseAnonKey);
-packages/database/src/index.ts:import { createClient } from '@supabase/supabase-js';
-packages/database/src/index.ts:export const supabaseAdmin = createClient(supabaseUrl, supabaseKey);
-packages/database/src/index.ts:  return createClient(supabaseUrl, supabaseKey, {

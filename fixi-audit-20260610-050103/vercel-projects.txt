@@ -1,4 +1,0 @@
-./.vercel/project.json
-./apps/web-clientes/.vercel/project.json
-./apps/web-public/.vercel/project.json
-./apps/web-admin/.vercel/project.json

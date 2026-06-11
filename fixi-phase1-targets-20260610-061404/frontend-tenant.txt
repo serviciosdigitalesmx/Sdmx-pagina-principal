@@ -1,6 +1,0 @@
-apps/web-admin/src/providers/TenantIdentityProvider.tsx
-apps/web-admin/src/lib/scope.ts
-apps/web-admin/src/lib/tenant.ts
-apps/web-admin/src/components/dashboard/branch-selector.tsx
-apps/web-admin/src/components/dashboard/sidebar.tsx
-apps/web-admin/src/app/dashboard/sucursales/page.tsx

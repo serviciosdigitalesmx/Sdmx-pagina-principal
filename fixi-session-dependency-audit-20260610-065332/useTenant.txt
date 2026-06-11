@@ -1,2 +1,0 @@
-apps/web-admin/src/components/tenant/tenant-provider.tsx
-apps/web-admin/src/components/guard/use-auth.ts

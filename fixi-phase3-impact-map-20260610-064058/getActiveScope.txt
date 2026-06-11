@@ -1,9 +1,0 @@
-apps/web-admin/src/app/dashboard/finanzas/page.tsx:import { getActiveScope } from '@/lib/scope';
-apps/web-admin/src/app/dashboard/finanzas/page.tsx:  const scope = getActiveScope();
-apps/web-admin/src/app/dashboard/reportes/page.tsx:import { getActiveScope } from "@/lib/scope";
-apps/web-admin/src/app/dashboard/reportes/page.tsx:  const scope = getActiveScope();
-apps/web-admin/src/components/guard/use-auth.ts:import { getActiveScope } from '@/lib/scope';
-apps/web-admin/src/components/guard/use-auth.ts:    const activeScope = getActiveScope();
-apps/web-admin/src/lib/scope.ts:export function getActiveScope() {
-apps/web-admin/src/services/fixService.ts:import { getActiveScope } from "@/lib/scope";
-apps/web-admin/src/services/fixService.ts:    return getActiveScope()?.sucursalId ?? '';

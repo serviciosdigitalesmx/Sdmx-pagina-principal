@@ -1,4 +1,0 @@
-apps/web-admin/src/app/dashboard/layout.tsx
-apps/web-admin/src/components/dashboard/dashboard-shell.tsx
-apps/web-admin/src/lib/tenant.ts
-apps/web-admin/src/lib/auth.ts

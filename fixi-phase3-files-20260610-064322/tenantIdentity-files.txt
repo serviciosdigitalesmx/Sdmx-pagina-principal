@@ -1,5 +1,0 @@
-apps/web-admin/src/app/dashboard/layout.tsx
-apps/web-admin/src/providers/TenantIdentityProvider.tsx
-apps/web-admin/src/components/dashboard/header.tsx
-apps/web-admin/src/components/dashboard/sidebar.tsx
-apps/web-admin/src/domain/tenant/Identity.ts

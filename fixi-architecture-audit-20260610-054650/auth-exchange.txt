@@ -1,3 +1,0 @@
-apps/web-public/src/app/login/page.tsx:  const response = await fetch(getPublicApiPath("/api/auth/exchange"), {
-apps/web-public/src/components/root-auth-hash-redirect.tsx:  const response = await fetch(getPublicApiPath("/api/auth/exchange"), {
-apps/web-admin/src/lib/auth.ts:  const response = await fetch(`${apiUrl}/api/auth/exchange`, {

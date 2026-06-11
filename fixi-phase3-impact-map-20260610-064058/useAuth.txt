@@ -1,3 +1,0 @@
-apps/web-admin/src/components/guard/RequireRole.tsx:  const auth = useAuth();
-apps/web-admin/src/components/guard/use-auth.ts:export function useAuth(): AuthState {
-apps/web-admin/src/components/guard/ProtectedLink.tsx:  const { role } = useAuth();

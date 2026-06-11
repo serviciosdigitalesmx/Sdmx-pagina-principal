@@ -1,7 +1,0 @@
-apps/web-public/src/app/api/[...path]
-apps/web-public/src/app/api/[...path]/route.ts
-apps/web-admin/src/app/api/pwa
-apps/web-admin/src/app/api/pwa/manifest
-apps/web-admin/src/app/api/pwa/manifest/route.ts
-apps/web-admin/src/app/api/pwa/sw.js
-apps/web-admin/src/app/api/pwa/sw.js/route.ts

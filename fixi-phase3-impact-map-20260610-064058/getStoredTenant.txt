@@ -1,7 +1,0 @@
-apps/web-admin/src/providers/TenantIdentityProvider.tsx:import { getStoredUser, getStoredTenant } from '@/lib/auth';
-apps/web-admin/src/providers/TenantIdentityProvider.tsx:        const tenant = getStoredTenant();
-apps/web-admin/src/providers/TenantIdentityProvider.tsx:        const tenant = getStoredTenant();
-apps/web-admin/src/lib/tenant.ts:import { getStoredUser, getStoredTenant } from './auth';
-apps/web-admin/src/lib/tenant.ts:  const tenant = getStoredTenant();
-apps/web-admin/src/lib/tenant.ts:  const tenant = getStoredTenant();
-apps/web-admin/src/lib/auth.ts:export function getStoredTenant(): Tenant | null {
