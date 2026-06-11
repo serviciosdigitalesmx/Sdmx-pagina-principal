@@ -1,6 +1,7 @@
 import { getCurrentSession } from '@/lib/session';
 import type { PlatformScope } from '@/domain/platform/Scope';
-import { DEFAULT_VERTICAL_CONFIG } from '@/domain/vertical/VerticalConfig';
+import { resolveVertical } from '@/domain/vertical/VerticalRegistry';
+import { getStoredIndustryKey } from '@/lib/tenant-runtime-config';
 
 const ACTIVE_BRANCH_KEY = 'srf_sucursal_activa';
 
@@ -31,6 +32,7 @@ export function setActiveBranchId(branchId: string | null, options?: { skipReloa
 
 export function getPlatformScope(): PlatformScope | null {
   const session = getCurrentSession();
+  const vertical = resolveVertical(getStoredIndustryKey());
   if (!session) return null;
 
   const branchId = getActiveBranchId();
@@ -41,10 +43,10 @@ export function getPlatformScope(): PlatformScope | null {
 
     branchId,
     sucursalId: branchId,
-    branchLabel: DEFAULT_VERTICAL_CONFIG.labels.branch,
+    branchLabel: vertical.labels.branch,
 
-    verticalCode: DEFAULT_VERTICAL_CONFIG.code,
-    verticalName: DEFAULT_VERTICAL_CONFIG.name,
+    verticalCode: vertical.code,
+    verticalName: vertical.name,
 
     mode: branchId ? 'branch' : 'tenant',
   };
