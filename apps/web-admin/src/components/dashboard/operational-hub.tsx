@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { fixService } from "@/services/fixService";
+import { ordersService } from "@/services/orders/ordersService";
+import { reportsService } from "@/services/reports/reportsService";
 
 type OrderRecord = {
   id?: string;
@@ -163,7 +164,7 @@ export function OperationalHub() {
       setError(null);
 
       try {
-        const [ordersResult, reportsResult] = await Promise.all([fixService.getOrders(), fixService.getReportsSummary()]);
+        const [ordersResult, reportsResult] = await Promise.all([ordersService.getOrders(), reportsService.getReportsSummary()]);
         if (cancelled) return;
         setOrders(ordersResult as OrderRecord[]);
         setSummary(reportsResult as ReportsSummary);

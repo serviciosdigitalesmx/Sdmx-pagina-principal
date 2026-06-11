@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { BarChart3, LineChart, RefreshCw, Users, Package, Wallet } from "lucide-react";
 import { getActiveScope } from "@/lib/scope";
-import { fixService } from "@/services/fixService";
+import { reportsService } from "@/services/reports/reportsService";
 
 type ReportsSummary = {
   ordersCount: number;
@@ -36,7 +36,7 @@ export default function ReportesPage() {
     try {
       setLoading(true);
       setError("");
-      const data = (await fixService.getReportsSummary()) as ReportsSummary;
+      const data = (await reportsService.getReportsSummary()) as ReportsSummary;
       setSummary(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al cargar reportes");
