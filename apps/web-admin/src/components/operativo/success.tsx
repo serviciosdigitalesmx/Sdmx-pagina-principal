@@ -2,6 +2,7 @@
 
 import { CheckCircle, Copy, Download, Plus, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { getCreatedSuccessLabel, getNewEntityLabel } from '@/lib/labels';
 
 interface SuccessProps {
   folio: string;
@@ -10,6 +11,8 @@ interface SuccessProps {
 }
 
 export function Success({ folio, customerPhone, onNewOrder }: SuccessProps) {
+  const createdLabel = getCreatedSuccessLabel();
+  const newOrderLabel = getNewEntityLabel();
   const copyFolio = () => {
     navigator.clipboard.writeText(folio);
     alert('Folio copiado al portapapeles');
@@ -32,7 +35,7 @@ export function Success({ folio, customerPhone, onNewOrder }: SuccessProps) {
         <CheckCircle className="w-10 h-10 text-white" />
       </div>
 
-      <h2 className="text-2xl font-bold text-srf-primary mb-2">¡Orden Registrada!</h2>
+      <h2 className="text-2xl font-bold text-srf-primary mb-2">¡{createdLabel}!</h2>
       <p className="text-srf-muted mb-4">El folio generado es:</p>
 
       <div className="card border-2 border-srf-accent rounded-xl p-6 max-w-xs mx-auto mb-6">
@@ -60,7 +63,7 @@ export function Success({ folio, customerPhone, onNewOrder }: SuccessProps) {
 
       <Button onClick={onNewOrder} className="btn-primary gap-2 mx-auto">
         <Plus className="w-4 h-4" />
-        Nueva Orden
+        {newOrderLabel}
       </Button>
     </div>
   );

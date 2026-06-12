@@ -43,3 +43,27 @@ export function getTechnicianLabel(options?: { plural?: boolean }) {
 export function getAssetLabel(options?: { plural?: boolean }) {
   return getLabel('asset', options);
 }
+
+export function getNewEntityLabel(options?: { plural?: boolean }) {
+  const label = getOrderLabel(options);
+  return `Nueva ${options?.plural ? label.toLowerCase() : label}`;
+}
+
+export function getCreateActionLabel(options?: { plural?: boolean }) {
+  const label = getOrderLabel(options);
+  return `Guardar ${options?.plural ? label.toLowerCase() : label}`;
+}
+
+export function getConfirmActionLabel(options?: { plural?: boolean }) {
+  const label = getOrderLabel(options);
+  return `Confirmar ${options?.plural ? label.toLowerCase() : label}`;
+}
+
+export function getCreatedSuccessLabel(options?: { plural?: boolean }) {
+  const label = getOrderLabel(options);
+  return `${options?.plural ? label : label} Registrad${label.endsWith('a') ? 'a' : 'o'}`;
+}
+
+export function getOrderContextLabel() {
+  return getOrderLabel().toLowerCase();
+}

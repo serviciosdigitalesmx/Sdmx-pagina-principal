@@ -8,6 +8,7 @@ import { Step3 } from '@/components/operativo/step-3';
 import { Success } from '@/components/operativo/success';
 import { apiClient } from '@/lib/api-client';
 import { getApiOptions } from '@/lib/tenant';
+import { getAssetLabel, getCustomerLabel, getNewEntityLabel } from '@/lib/labels';
 
 export type OrderFormData = {
   // Paso 1: Cliente
@@ -39,6 +40,9 @@ export type OrderFormData = {
 
 export default function OperativoPage() {
   const router = useRouter();
+  const customerLabel = getCustomerLabel();
+  const assetLabel = getAssetLabel();
+  const newOrderLabel = getNewEntityLabel();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [savedFolio, setSavedFolio] = useState<string | null>(null);
@@ -196,15 +200,15 @@ export default function OperativoPage() {
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-orbitron font-bold text-srf-primary">Recepción</h1>
-        <p className="text-srf-muted text-sm mt-1">Nueva orden de servicio</p>
+        <p className="text-srf-muted text-sm mt-1">{newOrderLabel} de servicio</p>
       </div>
 
       {/* Steps indicator */}
       <div className="flex justify-center mb-8">
         <div className="flex items-center gap-2">
-          <StepIndicator number={1} label="Cliente" active={step === 1} completed={step > 1} />
+          <StepIndicator number={1} label={customerLabel} active={step === 1} completed={step > 1} />
           <div className={`w-12 h-0.5 ${step > 1 ? 'bg-srf-accent' : 'bg-srf-muted/30'}`} />
-          <StepIndicator number={2} label="Equipo" active={step === 2} completed={step > 2} />
+          <StepIndicator number={2} label={assetLabel} active={step === 2} completed={step > 2} />
           <div className={`w-12 h-0.5 ${step > 2 ? 'bg-srf-accent' : 'bg-srf-muted/30'}`} />
           <StepIndicator number={3} label="Confirmar" active={step === 3} completed={step > 3} />
         </div>

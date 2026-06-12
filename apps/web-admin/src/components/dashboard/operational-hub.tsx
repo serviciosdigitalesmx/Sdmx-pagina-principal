@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ordersService } from "@/services/orders/ordersService";
 import { reportsService } from "@/services/reports/reportsService";
 import { isModuleEnabled } from "@/lib/module-access";
+import { getCustomerLabel, getNewEntityLabel, getOrderLabel } from "@/lib/labels";
 
 type OrderRecord = {
   id?: string;
@@ -152,6 +153,9 @@ function BoardCard({ order }: { order: OrderRecord }) {
 }
 
 export function OperationalHub() {
+  const ordersLabel = getOrderLabel({ plural: true });
+  const customerLabel = getCustomerLabel();
+  const newOrderLabel = getNewEntityLabel();
   const [orders, setOrders] = useState<OrderRecord[]>([]);
   const [summary, setSummary] = useState<ReportsSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -187,10 +191,10 @@ export function OperationalHub() {
 
   const metrics = useMemo(() => {
     return [
-      { label: "Órdenes activas", value: String(summary?.ordersCount ?? orders.length), helper: "Trabajo vivo en recepción." },
+      { label: `${ordersLabel} activas`, value: String(summary?.ordersCount ?? orders.length), helper: "Trabajo vivo en recepción." },
       { label: "Listas para entrega", value: String(summary?.statusCounts?.listo ?? 0), helper: "Pendientes de salida o cobro." },
       { label: "Ingresos del mes", value: formatMoney(summary?.totalIncome), helper: "Cobros confirmados en el tenant." },
-      { label: "Clientes nuevos", value: String(summary?.customersCount ?? 0), helper: "Relación comercial del taller." },
+      { label: `${customerLabel}s nuevos`, value: String(summary?.customersCount ?? 0), helper: "Relación comercial del tenant." },
     ];
   }, [orders.length, summary]);
 
@@ -255,7 +259,7 @@ export function OperationalHub() {
           </div>
           <div className="flex flex-wrap gap-3">
             <Link href="/dashboard/ordenes" className="rounded-full bg-[linear-gradient(135deg,#7c3aed_0%,#4f46e5_100%)] px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_35px_rgba(99,102,241,0.25)]">
-              + Nueva orden
+            {newOrderLabel}
             </Link>
             <Link href="/dashboard/reportes" className="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-zinc-100">
               Ver reportes

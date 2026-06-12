@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { DynamicFields, type DynamicFieldDefinition } from "@white-label/ui";
+import { getAssetLabel, getConfirmActionLabel, getCreatedSuccessLabel, getCustomerLabel, getNewEntityLabel } from "@/lib/labels";
 
 export type OrderIntakeFormState = {
   quoteFolio: string;
@@ -94,6 +95,11 @@ export function OrderIntakeModal({
 }: Props) {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [fileInputKey, setFileInputKey] = useState(0);
+  const customerLabel = getCustomerLabel();
+  const assetLabel = getAssetLabel();
+  const newOrderLabel = getNewEntityLabel();
+  const confirmOrderLabel = getConfirmActionLabel();
+  const createdLabel = getCreatedSuccessLabel();
 
   useEffect(() => {
     if (open) {
@@ -155,7 +161,7 @@ export function OrderIntakeModal({
             <>
               <div className="mx-auto mb-6 flex max-w-xl items-center justify-center rounded-full border border-sky-500/20 bg-black/20 px-4 py-3">
                 <div className="flex items-center gap-3">
-                  <div className="rounded-2xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs font-semibold text-slate-200">Nueva Orden de Servicio</div>
+                  <div className="rounded-2xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs font-semibold text-slate-200">{newOrderLabel} de Servicio</div>
                   <div className="text-sm text-zinc-400">Recepción profesional · {formatDate(new Date().toISOString())}</div>
                   <button type="button" onClick={onClose} className="ml-2 text-sm font-semibold text-zinc-400">Salir</button>
                 </div>
@@ -199,7 +205,7 @@ export function OrderIntakeModal({
                     </div>
 
                     <div>
-                      <h3 className="mb-4 text-xl font-semibold text-sky-400">Datos del Cliente</h3>
+                      <h3 className="mb-4 text-xl font-semibold text-sky-400">Datos del {customerLabel}</h3>
                       <div className="grid gap-4">
                         <label className="space-y-2">
                           <span className="text-sm text-zinc-300">Nombre completo *</span>
@@ -227,7 +233,7 @@ export function OrderIntakeModal({
                 {step === 2 ? (
                   <section className="space-y-5">
                     <div>
-                      <h3 className="mb-4 text-xl font-semibold text-sky-400">Información del Equipo</h3>
+                      <h3 className="mb-4 text-xl font-semibold text-sky-400">Información del {assetLabel}</h3>
                       <div className="grid gap-4">
                         <label className="space-y-2">
                           <span className="text-sm text-zinc-300">Tipo de dispositivo *</span>
@@ -257,7 +263,7 @@ export function OrderIntakeModal({
                         {[
                           ["hasCharger", "⚡ Trae cargador"],
                           ["screenCondition", "Pantalla OK"],
-                          ["powersOn", "⏻ Equipo prende"],
+                          ["powersOn", `⏻ ${assetLabel} prende`],
                           ["backupRequired", "🟣 Datos respaldados"],
                         ].map(([key, label]) => (
                           <label key={key} className="flex items-center gap-3 text-zinc-100">
@@ -329,7 +335,7 @@ export function OrderIntakeModal({
                 {step === 3 ? (
                   <section className="space-y-5">
                     <div>
-                      <h3 className="mb-4 text-xl font-semibold text-sky-400">Confirmar Orden</h3>
+                      <h3 className="mb-4 text-xl font-semibold text-sky-400">{confirmOrderLabel}</h3>
                       <div className="rounded-[22px] border border-sky-500/10 bg-black/20 p-4 text-sm text-zinc-200">
                         <div className="grid gap-3">
                           <div className="flex justify-between border-b border-sky-500/10 pb-2"><span className="text-zinc-400">Cliente:</span><span className="font-semibold text-zinc-50">{form.clientName || "-"}</span></div>
@@ -371,7 +377,7 @@ export function OrderIntakeModal({
                         onClick={onSubmit}
                         className="rounded-2xl bg-orange-500 px-8 py-4 text-lg font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
                       >
-                        {saving ? "Guardando..." : "Guardar Orden"}
+                        {saving ? "Guardando..." : `Guardar ${newOrderLabel.replace(/^Nueva\s+/u, '')}`}
                       </button>
                     </div>
                     {validationErrors.length > 0 ? (
@@ -386,7 +392,7 @@ export function OrderIntakeModal({
           ) : (
             <div className="mx-auto flex max-w-[700px] flex-col items-center rounded-[28px] border border-emerald-500/20 bg-slate-950/70 p-10 text-center">
               <div className="flex h-24 w-24 items-center justify-center rounded-full bg-emerald-500/80 text-5xl text-white">✓</div>
-              <h3 className="mt-8 text-3xl font-semibold text-sky-400">¡Orden Registrada!</h3>
+              <h3 className="mt-8 text-3xl font-semibold text-sky-400">¡{createdLabel}!</h3>
               <p className="mt-3 text-zinc-400">El folio generado es:</p>
               <div className="mt-5 rounded-2xl border-2 border-orange-400 px-8 py-6 text-4xl font-bold tracking-[0.08em] text-orange-400">{successSummary.folio}</div>
               <div className="mt-8 flex flex-wrap justify-center gap-3">
@@ -403,7 +409,7 @@ export function OrderIntakeModal({
                 ) : null}
               </div>
               <p className="mt-6 text-sm text-zinc-400">Comparte este folio con el cliente para que pueda consultar el estado.</p>
-              <button type="button" onClick={onResetFlow} className="mt-8 rounded-2xl bg-orange-500 px-8 py-4 text-lg font-semibold text-white">+ Nueva Orden</button>
+              <button type="button" onClick={onResetFlow} className="mt-8 rounded-2xl bg-orange-500 px-8 py-4 text-lg font-semibold text-white">{newOrderLabel}</button>
             </div>
           )}
 
