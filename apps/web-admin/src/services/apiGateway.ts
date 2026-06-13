@@ -1302,13 +1302,13 @@ class ApiGateway {
   }
 
   public async getTenantLandingSettings(): Promise<ApiSingleResponse<TenantLandingSettings>> {
-    return this.request<ApiSingleResponse<TenantLandingSettings>>(`/api/auth/tenant/${encodeURIComponent(this.tenantId)}/settings`, {
+    return this.request<ApiSingleResponse<TenantLandingSettings>>(`/api/auth/tenant/${encodeURIComponent(this.tenantSlug)}/settings`, {
       method: 'GET',
     });
   }
 
   public async getTenantSettings(): Promise<ApiSingleResponse<TenantLandingSettings>> {
-    return this.request<ApiSingleResponse<TenantLandingSettings>>(`/api/auth/tenant/${encodeURIComponent(this.tenantId)}/settings`, {
+    return this.request<ApiSingleResponse<TenantLandingSettings>>(`/api/auth/tenant/${encodeURIComponent(this.tenantSlug)}/settings`, {
       method: 'GET',
     });
   }
@@ -1323,7 +1323,7 @@ class ApiGateway {
     workflowStatuses?: Array<Record<string, unknown>> | null;
     fieldDefinitions?: FieldDefinitionPayload[] | null;
   }): Promise<ApiSingleResponse<TenantLandingSettings>> {
-    return this.request<ApiSingleResponse<TenantLandingSettings>>(`/api/auth/tenant/${encodeURIComponent(this.tenantId)}/settings`, {
+    return this.request<ApiSingleResponse<TenantLandingSettings>>(`/api/auth/tenant/${encodeURIComponent(this.tenantSlug)}/settings`, {
       method: 'PUT',
       body: JSON.stringify(payload),
     });
@@ -1433,7 +1433,7 @@ class ApiGateway {
     fieldDefinitions?: FieldDefinitionPayload[] | null;
     semaphoreRules?: Array<Record<string, unknown>> | null;
   }): Promise<ApiSingleResponse<TenantLandingSettings>> {
-    return this.request<ApiSingleResponse<TenantLandingSettings>>(`/api/auth/tenant/${encodeURIComponent(this.tenantId)}/settings`, {
+    return this.request<ApiSingleResponse<TenantLandingSettings>>(`/api/auth/tenant/${encodeURIComponent(this.tenantSlug)}/settings`, {
       method: 'PUT',
       body: JSON.stringify(payload),
     });
