@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState, useEffect, useRef, useCallback, type FormEvent } from "react";
 import { fetchJson, type ApiErrorPayload } from "@white-label/config";
 import { srFixTheme } from "@/components/srfix-theme";
+import { resolveAdminUrl } from "@/lib/admin-url";
 
 type PublicPortalOrderResponse = {
   success: true;
@@ -167,6 +168,8 @@ export function PublicPortalLookup({
   };
 
   const pdfAttachment = result?.pdf_attachment ?? result?.attachments?.[0] ?? null;
+  const adminBaseUrl = resolveAdminUrl();
+  const adminLoginUrl = adminBaseUrl ? `${adminBaseUrl}/login` : "/login";
 
   return (
     <main className="min-h-screen px-4 py-8 text-zinc-50" style={{ background: srFixTheme.background }}>
@@ -181,7 +184,7 @@ export function PublicPortalLookup({
             <Link href="/" className="rounded-full border border-zinc-700 px-4 py-3 text-sm font-semibold text-zinc-100 transition hover:bg-white/5">
               Inicio
             </Link>
-            <Link href="/login" className="rounded-full bg-sky-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-sky-400">
+            <Link href={adminLoginUrl} className="rounded-full bg-sky-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-sky-400">
               Entrar
             </Link>
           </div>

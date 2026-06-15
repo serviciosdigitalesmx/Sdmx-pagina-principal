@@ -6,7 +6,7 @@ import { ShellBadge, StatCard, srFixTheme } from "@/components/srfix-theme";
 import { getBrowserSupabaseClient } from "@/lib/supabase-browser";
 import { readAuthToken, saveAuthToken } from "@/lib/auth-storage";
 import { getPublicApiPath } from "@/lib/public-api";
-import { resolveAdminBridgeUrl } from "@/lib/admin-url";
+import { resolveAdminBridgeUrl, resolveAdminUrl } from "@/lib/admin-url";
 
 type LoginState = {
   email: string;
@@ -52,21 +52,17 @@ async function exchangeSessionForApiToken(accessToken: string) {
   return payload.token;
 }
 
-const resolveAdminUrl = () => {
-  return process.env.NEXT_PUBLIC_ADMIN_URL?.replace(/\/$/, "") || null;
-};
-
 export default function LoginPage() {
   const [form, setForm] = useState<LoginState>(initialState);
   const [loading, setLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const adminBaseUrl = resolveAdminUrl();
+  const adminLoginUrl = adminBaseUrl ? `${adminBaseUrl}/login` : null;
+  const adminSignupUrl = adminBaseUrl ? `${adminBaseUrl}/login?mode=signup` : null;
 
   useEffect(() => {
-    const adminBaseUrl = resolveAdminUrl();
-    const adminLoginUrl = adminBaseUrl ? `${adminBaseUrl}/login` : null;
-
     const existing = readAuthToken();
 
     if (existing) {
@@ -171,7 +167,7 @@ export default function LoginPage() {
             <Link href="/" className="rounded-full border border-stone-700 bg-white/5 px-5 py-3 font-semibold text-zinc-100 transition hover:border-amber-500/30 hover:bg-white/10">
               Volver al inicio
             </Link>
-            <Link href="/onboarding" className="rounded-full border border-stone-700 bg-white/5 px-5 py-3 font-semibold text-zinc-100 transition hover:border-amber-500/30 hover:bg-white/10">
+            <Link href={adminSignupUrl ?? "/onboarding"} className="rounded-full border border-stone-700 bg-white/5 px-5 py-3 font-semibold text-zinc-100 transition hover:border-amber-500/30 hover:bg-white/10">
               Crear cuenta
             </Link>
           </div>

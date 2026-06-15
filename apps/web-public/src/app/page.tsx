@@ -2,6 +2,7 @@ import Link from "next/link";
 import { optionalEnv } from "@white-label/config";
 import { PublicPortalLookup } from "@/components/public-portal-lookup";
 import { RootAuthHashRedirect } from "@/components/root-auth-hash-redirect";
+import { resolveAdminUrl } from "@/lib/admin-url";
 
 const productName = optionalEnv("NEXT_PUBLIC_SAAS_BRAND_NAME") ?? "FIXI";
 const brandShort = optionalEnv("NEXT_PUBLIC_SAAS_BRAND_SHORT") ?? "FX";
@@ -11,6 +12,9 @@ const publicUrl = optionalEnv("NEXT_PUBLIC_WEB_PUBLIC_URL") ?? "";
 const trialDays = optionalEnv("NEXT_PUBLIC_SAAS_TRIAL_DAYS") ?? "7";
 const contactEmail = optionalEnv("NEXT_PUBLIC_SAAS_CONTACT_EMAIL") ?? "";
 const contactPhone = optionalEnv("NEXT_PUBLIC_SAAS_CONTACT_PHONE") ?? "";
+const adminBaseUrl = resolveAdminUrl();
+const adminLoginUrl = adminBaseUrl ? `${adminBaseUrl}/login` : "/login";
+const adminOnboardingUrl = adminBaseUrl ? `${adminBaseUrl}/login?mode=signup` : "/login?mode=signup";
 
 // FIXI branding is driven by production env vars so the landing stays consistent across deploys.
 
@@ -241,8 +245,8 @@ export default function Home() {
             <Link href="#precios" className="transition hover:text-slate-950">Precios</Link>
             <Link href="#portal" className="transition hover:text-slate-950">Portal</Link>
             <Link href="#contacto" className="transition hover:text-slate-950">Contacto</Link>
-            <Link href="/login" className="rounded-full px-4 py-2 transition hover:bg-slate-100 hover:text-slate-950">Iniciar sesión</Link>
-            <CTA href="/onboarding">Probar {trialDays} días gratis</CTA>
+            <Link href={adminLoginUrl} className="rounded-full px-4 py-2 transition hover:bg-slate-100 hover:text-slate-950">Iniciar sesión</Link>
+            <CTA href={adminOnboardingUrl}>Probar {trialDays} días gratis</CTA>
           </nav>
         </header>
       </section>
@@ -281,7 +285,7 @@ export default function Home() {
           <p className="text-lg text-slate-700">Todo en un solo lugar.</p>
 
           <div className="flex flex-wrap gap-4">
-            <CTA href="/onboarding">Probar {trialDays} días gratis</CTA>
+            <CTA href={adminOnboardingUrl}>Probar {trialDays} días gratis</CTA>
             <GoogleCTA href="/auth/google">Continuar con Google</GoogleCTA>
             <Link href="#portal" className="inline-flex items-center justify-center rounded-2xl border border-slate-300 bg-white px-6 py-4 text-sm font-semibold uppercase tracking-[0.16em] text-slate-900 transition hover:-translate-y-0.5 hover:bg-slate-50">
               Ver demostración
@@ -410,7 +414,7 @@ export default function Home() {
                   </li>
                 ))}
               </ul>
-              <CTA href="/onboarding" variant={plan.featured ? "primary" : "secondary"}>
+            <CTA href={adminOnboardingUrl} variant={plan.featured ? "primary" : "secondary"}>
                 Comenzar ahora
               </CTA>
             </article>
@@ -430,7 +434,7 @@ export default function Home() {
             <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">{trialDays} días gratis</div>
             <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">Sin instalación</div>
             <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">Activación en minutos</div>
-            <CTA href="/onboarding">Crear mi taller ahora</CTA>
+            <CTA href={adminOnboardingUrl}>Crear mi taller ahora</CTA>
             <GoogleCTA href="/auth/google">Crear con Google</GoogleCTA>
           </div>
         </div>
