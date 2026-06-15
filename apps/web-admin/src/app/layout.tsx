@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import '@/styles/globals.css';
 
 export const metadata: Metadata = {
-  title: 'SrFix - Panel de Administración',
+  title: 'FIXI - Panel de Administración',
   description: 'Plataforma de gestión para talleres de reparación',
   manifest: '/api/pwa/manifest',
 };

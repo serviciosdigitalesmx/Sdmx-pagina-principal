@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { getBrowserSupabaseClient } from '@/lib/supabase-browser';
 import { loginWithSupabase } from '@/lib/auth';
 import { setActiveSucursalId } from '@/lib/tenant';
+import { platformBrand } from '@/config/branding';
 
 function LoginScreen() {
   const router = useRouter();
@@ -107,12 +108,12 @@ function LoginScreen() {
           <div className="w-20 h-20 bg-srf-primary rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-3xl font-orbitron font-bold text-white">SF</span>
           </div>
-          <h1 className="text-4xl font-orbitron font-bold text-srf-primary">SrFix</h1>
-          <p className="text-srf-muted mt-2">Panel de administracion</p>
+          <h1 className="text-4xl font-orbitron font-bold text-srf-primary">{platformBrand}</h1>
+          <p className="text-srf-muted mt-2">Panel de administración</p>
         </div>
 
         <div className="card p-8">
-          <h2 className="text-2xl font-bold text-center mb-6">Iniciar Sesion</h2>
+          <h2 className="text-2xl font-bold text-center mb-6">Iniciar sesión</h2>
 
           <form onSubmit={handleSupabaseLogin} className="space-y-4">
             <div>
@@ -134,7 +135,7 @@ function LoginScreen() {
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 className="input w-full"
-                placeholder="Tu contrasena"
+                placeholder="Tu contraseña"
                 autoComplete="current-password"
                 required
               />
