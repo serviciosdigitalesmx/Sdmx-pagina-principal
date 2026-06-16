@@ -174,7 +174,7 @@ export default function TecnicoPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="spinner w-8 h-8" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-sky-500/25 border-t-sky-400" />
       </div>
     );
   }
@@ -183,8 +183,9 @@ export default function TecnicoPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-orbitron font-bold text-srf-primary">Panel Técnico</h1>
-        <p className="text-srf-muted text-sm mt-1">Seguimiento y gestión de órdenes activas</p>
+        <p className="text-xs uppercase tracking-[0.28em] text-sky-400/70">Operación técnica</p>
+        <h1 className="mt-1 text-3xl font-semibold tracking-tight text-slate-50">Panel Técnico</h1>
+        <p className="mt-1 text-sm text-slate-400">Seguimiento y gestión de órdenes activas</p>
       </div>
 
       {/* KPIs */}
@@ -196,11 +197,11 @@ export default function TecnicoPage() {
       </div>
 
       {/* Toolbar */}
-      <div className="card p-4">
+      <div className="rounded-3xl border border-slate-800 bg-slate-950/70 p-4 shadow-[0_24px_70px_rgba(2,6,23,0.32)]">
         <div className="flex flex-col md:flex-row gap-3">
           {/* Search */}
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-srf-muted" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
               placeholder="Buscar por folio, cliente o equipo..."
@@ -252,7 +253,7 @@ export default function TecnicoPage() {
           <button
             onClick={() => loadOrders(true)}
             disabled={refreshing}
-            className="btn-secondary py-2 px-4"
+            className="btn-secondary px-4 py-2"
           >
             <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
             Actualizar
@@ -260,16 +261,16 @@ export default function TecnicoPage() {
         </div>
 
         {/* Last update time */}
-        <div className="mt-3 text-right text-xs text-srf-muted">
+        <div className="mt-3 text-right text-xs text-slate-400">
           Última actualización: {new Date().toLocaleTimeString()}
-          {refreshing && <span className="ml-2 text-srf-accent">Actualizando...</span>}
+          {refreshing && <span className="ml-2 text-sky-400">Actualizando...</span>}
         </div>
       </div>
 
       {/* Orders Grid */}
       {filteredOrders.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-srf-muted">No hay órdenes con esos filtros</p>
+          <p className="text-slate-400">No hay órdenes con esos filtros</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -299,20 +300,20 @@ function KPIBox({ label, value, color }: { label: string; value: number; color: 
     red: 'border-red-500/30 bg-red-500/10',
     yellow: 'border-yellow-500/30 bg-yellow-500/10',
     green: 'border-green-500/30 bg-green-500/10',
-    blue: 'border-srf-primary/30 bg-srf-primary/10',
+    blue: 'border-sky-400/30 bg-sky-500/10',
   };
 
   const textColors = {
     red: 'text-red-500',
     yellow: 'text-yellow-500',
     green: 'text-green-500',
-    blue: 'text-srf-primary',
+    blue: 'text-sky-300',
   };
 
   return (
-    <div className={`card ${colorClasses[color]} text-center`}>
+    <div className={`rounded-3xl border p-5 text-center shadow-[0_24px_70px_rgba(2,6,23,0.32)] ${colorClasses[color]}`}>
       <div className={`text-3xl font-bold ${textColors[color]}`}>{value}</div>
-      <div className="text-xs uppercase tracking-wider text-srf-muted mt-1">{label}</div>
+      <div className="mt-1 text-xs uppercase tracking-[0.24em] text-slate-400">{label}</div>
     </div>
   );
 }

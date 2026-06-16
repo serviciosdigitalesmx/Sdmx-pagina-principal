@@ -1,16 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, RefreshCw, Edit2, Trash2, Building2, Phone, Mail, MapPin, ArrowRightLeft } from 'lucide-react';
+import { Plus, RefreshCw, Edit2, Trash2, Building2, Phone, Mail, MapPin, ArrowRightLeft, Search } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { getApiOptions, getActiveSucursalId, setActiveSucursalId } from '@/lib/tenant';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SucursalModal } from '@/components/sucursales/sucursal-modal';
 import { TransferModal } from '@/components/sucursales/transfer-modal';
+import { RequireRole } from '@/components/guard/RequireRole';
+import { useAuth } from '@/components/guard/use-auth';
 import type { Sucursal } from '@/types';
 
 export default function SucursalesPage() {
+  const auth = useAuth();
   const [loading, setLoading] = useState(true);
   const [sucursales, setSucursales] = useState<Sucursal[]>([]);
   const [filteredSucursales, setFilteredSucursales] = useState<Sucursal[]>([]);
@@ -71,7 +74,7 @@ export default function SucursalesPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="spinner w-8 h-8" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-sky-500/25 border-t-sky-400" />
       </div>
     );
   }
@@ -79,34 +82,40 @@ export default function SucursalesPage() {
   const activeCount = sucursales.filter((s) => s.is_active).length;
 
   return (
+    <RequireRole allowed={['owner', 'manager']}>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-orbitron font-bold text-srf-primary">Sucursales</h1>
-          <p className="text-srf-muted text-sm mt-1">
+          <p className="text-xs uppercase tracking-[0.28em] text-sky-400/70">Operación</p>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-slate-50">Sucursales</h1>
+          <p className="mt-1 text-sm text-slate-400">
             {activeCount} activas · {sucursales.length} total
           </p>
         </div>
         <div className="flex gap-2">
-          <Button
-            onClick={() => {
-              setSelectedSucursal(null);
-              setModalOpen(true);
-            }}
-            className="btn-primary gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            Nueva sucursal
-          </Button>
-          <Button
-            onClick={() => setTransferOpen(true)}
-            variant="outline"
-            className="gap-2"
-          >
-            <ArrowRightLeft className="w-4 h-4" />
-            Transferir stock
-          </Button>
+          {auth.role !== 'technician' && (
+            <>
+              <Button
+                onClick={() => {
+                setSelectedSucursal(null);
+                setModalOpen(true);
+              }}
+                className="gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Nueva sucursal
+              </Button>
+              <Button
+                onClick={() => setTransferOpen(true)}
+                variant="outline"
+                className="gap-2"
+              >
+                <ArrowRightLeft className="w-4 h-4" />
+                Transferir stock
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
@@ -118,21 +127,21 @@ export default function SucursalesPage() {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-9"
         />
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-srf-muted" />
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
       </div>
 
       {/* Sucursales grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredSucursales.map((sucursal) => (
-          <div key={sucursal.id} className="card p-4 space-y-3">
+          <div key={sucursal.id} className="space-y-3 rounded-3xl border border-slate-800 bg-slate-950/70 p-4 shadow-[0_24px_70px_rgba(2,6,23,0.32)]">
             <div className="flex items-start justify-between">
               <div>
                 <div className="flex items-center gap-2">
-                  <Building2 className="w-5 h-5 text-srf-primary" />
-                  <h3 className="font-bold text-lg">{sucursal.name}</h3>
+                  <Building2 className="w-5 h-5 text-sky-300" />
+                  <h3 className="text-lg font-semibold text-slate-50">{sucursal.name}</h3>
                 </div>
                 {sucursal.code && (
-                  <p className="text-xs text-srf-muted mt-1">Código: {sucursal.code}</p>
+                  <p className="mt-1 text-xs text-slate-400">Código: {sucursal.code}</p>
                 )}
               </div>
               <div className="flex gap-1">
@@ -141,7 +150,7 @@ export default function SucursalesPage() {
                     setSelectedSucursal(sucursal);
                     setModalOpen(true);
                   }}
-                  className="p-1 rounded hover:bg-srf-primary/20 text-srf-primary"
+                  className="rounded p-1 text-sky-300 hover:bg-sky-500/10"
                 >
                   <Edit2 className="w-4 h-4" />
                 </button>
@@ -155,27 +164,27 @@ export default function SucursalesPage() {
             </div>
 
             {sucursal.address && (
-              <div className="flex items-start gap-2 text-sm text-srf-muted">
+              <div className="flex items-start gap-2 text-sm text-slate-400">
                 <MapPin className="w-4 h-4 mt-0.5 shrink-0" />
                 <span>{sucursal.address}</span>
               </div>
             )}
 
             {sucursal.phone && (
-              <div className="flex items-center gap-2 text-sm text-srf-muted">
+              <div className="flex items-center gap-2 text-sm text-slate-400">
                 <Phone className="w-4 h-4" />
                 <span>{sucursal.phone}</span>
               </div>
             )}
 
             {('email' in sucursal) && (sucursal as Sucursal & { email?: string | null }).email && (
-              <div className="flex items-center gap-2 text-sm text-srf-muted">
+              <div className="flex items-center gap-2 text-sm text-slate-400">
                 <Mail className="w-4 h-4" />
                 <span>{(sucursal as Sucursal & { email?: string | null }).email}</span>
               </div>
             )}
 
-            <div className="flex items-center justify-between pt-2 border-t border-srf-primary/20">
+            <div className="flex items-center justify-between border-t border-slate-800 pt-2">
               <span className={`text-xs px-2 py-0.5 rounded-full ${sucursal.is_active ? 'badge-listo' : 'badge-cancelado'}`}>
                 {sucursal.is_active ? 'Activa' : 'Inactiva'}
               </span>
@@ -183,8 +192,8 @@ export default function SucursalesPage() {
                 onClick={() => handleSetActive(sucursal.id)}
                 className={`text-xs px-3 py-1 rounded-lg transition-colors ${
                   activeSucursalId === sucursal.id
-                    ? 'bg-srf-accent/20 text-srf-accent'
-                    : 'bg-srf-primary/10 text-srf-primary hover:bg-srf-primary/20'
+                    ? 'bg-sky-400/20 text-sky-300'
+                    : 'bg-sky-500/10 text-sky-300 hover:bg-sky-500/20'
                 }`}
               >
                 {activeSucursalId === sucursal.id ? 'Activa' : 'Usar'}
@@ -196,28 +205,31 @@ export default function SucursalesPage() {
 
       {filteredSucursales.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-srf-muted">No hay sucursales registradas</p>
+          <p className="text-slate-400">No hay sucursales registradas</p>
         </div>
       )}
 
       {/* Modals */}
-      <SucursalModal
-        open={modalOpen}
-        onOpenChange={setModalOpen}
-        sucursal={selectedSucursal}
-        onSucursalSaved={() => loadSucursales()}
-      />
+      {auth.role !== 'technician' && (
+        <>
+          <SucursalModal
+            open={modalOpen}
+            onOpenChange={setModalOpen}
+            sucursal={selectedSucursal}
+            onSucursalSaved={() => loadSucursales()}
+          />
 
-      <TransferModal
-        open={transferOpen}
-        onOpenChange={setTransferOpen}
-        sucursales={sucursales}
-        onTransferComplete={() => {
-          loadSucursales();
-        }}
-      />
+          <TransferModal
+            open={transferOpen}
+            onOpenChange={setTransferOpen}
+            sucursales={sucursales}
+            onTransferComplete={() => {
+              loadSucursales();
+            }}
+          />
+        </>
+      )}
     </div>
+    </RequireRole>
   );
 }
-
-import { Search } from 'lucide-react';

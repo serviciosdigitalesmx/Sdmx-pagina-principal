@@ -95,9 +95,9 @@ export function UserModal({ open, onOpenChange, user, onUserSaved }: UserModalPr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md bg-srf-surface border-srf-primary/40">
+      <DialogContent className="max-w-md border border-slate-800 bg-slate-950/95">
         <DialogHeader>
-          <DialogTitle className="text-srf-primary">
+          <DialogTitle className="text-slate-100">
             {user ? 'Editar usuario' : 'Nuevo usuario'}
           </DialogTitle>
         </DialogHeader>
@@ -161,7 +161,7 @@ export function UserModal({ open, onOpenChange, user, onUserSaved }: UserModalPr
               type="checkbox"
               checked={formData.activo}
               onChange={(e) => setFormData({ ...formData, activo: e.target.checked })}
-              className="accent-srf-accent"
+              className="accent-sky-400"
             />
             <span className="text-sm">Usuario activo</span>
           </label>
@@ -170,7 +170,7 @@ export function UserModal({ open, onOpenChange, user, onUserSaved }: UserModalPr
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit" className="btn-primary" disabled={loading}>
+            <Button type="submit" disabled={loading}>
               {loading ? 'Guardando...' : 'Guardar'}
             </Button>
           </div>

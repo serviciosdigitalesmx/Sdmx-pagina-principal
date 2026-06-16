@@ -66,7 +66,6 @@ export function TransferModal({ open, onOpenChange, sucursales, onTransferComple
 
     setLoading(true);
     try {
-      // Endpoint NO CONFIRMADO - usar con precaución
       await apiClient.post('/inventory/transfer', {
         sku: formData.sku,
         sucursalOrigen: formData.sucursalOrigen,
@@ -98,9 +97,9 @@ export function TransferModal({ open, onOpenChange, sucursales, onTransferComple
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md bg-srf-surface border-srf-primary/40">
+      <DialogContent className="max-w-md border border-slate-800 bg-slate-950/95">
         <DialogHeader>
-          <DialogTitle className="text-srf-primary">
+          <DialogTitle className="text-slate-100">
             Transferir stock entre sucursales
           </DialogTitle>
         </DialogHeader>
@@ -111,7 +110,7 @@ export function TransferModal({ open, onOpenChange, sucursales, onTransferComple
             <select
               value={formData.sku}
               onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
-              className="input w-full"
+            className="input w-full"
               required
             >
               <option value="">Selecciona un producto</option>
@@ -188,7 +187,7 @@ export function TransferModal({ open, onOpenChange, sucursales, onTransferComple
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit" className="btn-primary" disabled={loading}>
+            <Button type="submit" disabled={loading}>
               {loading ? 'Transfiriendo...' : 'Transferir'}
             </Button>
           </div>

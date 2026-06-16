@@ -94,8 +94,11 @@ export function OrderModal({ open, onOpenChange, order, onOrderUpdated }: OrderM
       setClienteNombre(orderData.customers?.name || orderData.device_info?.customer_name || '');
       setClienteTelefono(orderData.customers?.phone || orderData.device_info?.customer_phone || '');
       setClienteEmail(orderData.customers?.email || orderData.device_info?.customer_email || '');
-      setDispositivo(orderData.device_info?.type || '');
-      setModelo(orderData.device_info?.model || '');
+      setDispositivo((orderData as { device_type?: string }).device_type || orderData.device_info?.type || '');
+      setModelo((orderData as { device_model?: string }).device_model || orderData.device_info?.model || '');
+      setFalla(orderData.problem_description || '');
+      setCosto(String(orderData.estimated_cost ?? orderData.final_cost ?? ''));
+      setFechaPromesa(orderData.promised_date ? String(orderData.promised_date).slice(0, 10) : '');
 
       setSeguimiento(((orderData.evidence_metadata?.find((e: any) => e.event_type === 'note') as { note?: string } | undefined)?.note) || '');
       setYoutubeId((orderData.metadata as any)?.youtube_id || '');
@@ -200,9 +203,9 @@ export function OrderModal({ open, onOpenChange, order, onOrderUpdated }: OrderM
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-srf-surface border-srf-primary/40">
+      <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto border border-slate-800 bg-slate-950/95">
         <DialogHeader>
-          <DialogTitle className="text-srf-primary flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-slate-100">
             <FileText className="w-5 h-5" />
             Orden {order.folio}
           </DialogTitle>
@@ -210,23 +213,23 @@ export function OrderModal({ open, onOpenChange, order, onOrderUpdated }: OrderM
 
         {loading ? (
           <div className="flex justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-srf-primary" />
+            <Loader2 className="h-8 w-8 animate-spin text-sky-400" />
           </div>
         ) : (
           <>
             <div className="mt-4">
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="bg-srf-bg border border-srf-primary/30">
-                <TabsTrigger value="details" className="data-[state=active]:bg-srf-accent/20">
+              <TabsList className="border border-slate-800 bg-slate-900/70">
+                <TabsTrigger value="details" className="data-[state=active]:bg-sky-500/15">
                   Detalles
                 </TabsTrigger>
-                <TabsTrigger value="checklist" className="data-[state=active]:bg-srf-accent/20">
+                <TabsTrigger value="checklist" className="data-[state=active]:bg-sky-500/15">
                   Checklist
                 </TabsTrigger>
-                <TabsTrigger value="photos" className="data-[state=active]:bg-srf-accent/20">
+                <TabsTrigger value="photos" className="data-[state=active]:bg-sky-500/15">
                   Fotos
                 </TabsTrigger>
-                <TabsTrigger value="history" className="data-[state=active]:bg-srf-accent/20">
+                <TabsTrigger value="history" className="data-[state=active]:bg-sky-500/15">
                   Historial
                 </TabsTrigger>
               </TabsList>
@@ -358,7 +361,7 @@ export function OrderModal({ open, onOpenChange, order, onOrderUpdated }: OrderM
                   {documents
                     .filter((doc) => doc.file_type === 'intake_photo')
                     .map((doc) => (
-                      <div key={doc.id} className="relative aspect-square rounded-lg overflow-hidden border border-srf-primary/30">
+                      <div key={doc.id} className="relative aspect-square overflow-hidden rounded-lg border border-slate-700">
                         {doc.public_url && (
                           <img
                             src={doc.public_url}
@@ -371,10 +374,10 @@ export function OrderModal({ open, onOpenChange, order, onOrderUpdated }: OrderM
                 </div>
 
                 {documents.filter((doc) => doc.file_type === 'intake_photo').length === 0 && (
-                  <p className="text-center text-srf-muted py-4">No hay fotos de recepción</p>
+                  <p className="py-4 text-center text-slate-400">No hay fotos de recepción</p>
                 )}
 
-                <div className="border-t border-srf-primary/20 pt-4">
+                <div className="border-t border-slate-800 pt-4">
                   <Label>Subir nueva foto</Label>
                   <input
                     type="file"
@@ -403,10 +406,10 @@ export function OrderModal({ open, onOpenChange, order, onOrderUpdated }: OrderM
               <TabsContent value="history" className="space-y-4 mt-4">
                 <div className="space-y-2">
                   {events.map((event) => (
-                    <div key={event.id} className="p-3 rounded-lg bg-srf-bg/50 border border-srf-primary/20">
+                    <div key={event.id} className="rounded-lg border border-slate-800 bg-slate-900/60 p-3">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="font-semibold text-srf-primary">{event.event_type}</span>
-                        <span className="text-xs text-srf-muted">
+                        <span className="font-semibold text-sky-300">{event.event_type}</span>
+                        <span className="text-xs text-slate-400">
                           {new Date(event.created_at).toLocaleString()}
                         </span>
                       </div>
@@ -418,20 +421,20 @@ export function OrderModal({ open, onOpenChange, order, onOrderUpdated }: OrderM
                       )}
                       {event.note && <p className="text-sm mt-1">{event.note}</p>}
                       {event.actor_name && (
-                        <p className="text-xs text-srf-muted mt-1">Por: {event.actor_name}</p>
+                        <p className="mt-1 text-xs text-slate-400">Por: {event.actor_name}</p>
                       )}
                     </div>
                   ))}
                 </div>
 
                 {events.length === 0 && (
-                  <p className="text-center text-srf-muted py-4">Sin historial de eventos</p>
+                  <p className="py-4 text-center text-slate-400">Sin historial de eventos</p>
                 )}
               </TabsContent>
               </Tabs>
             </div>
 
-            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-srf-primary/20">
+            <div className="mt-6 flex justify-end gap-3 border-t border-slate-800 pt-4">
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
@@ -441,7 +444,7 @@ export function OrderModal({ open, onOpenChange, order, onOrderUpdated }: OrderM
                   Entregar
                 </Button>
               )}
-              <Button onClick={handleSave} disabled={saving} className="bg-srf-accent hover:bg-srf-accent/80">
+              <Button onClick={handleSave} disabled={saving}>
                 <Save className="w-4 h-4 mr-2" />
                 {saving ? 'Guardando...' : 'Guardar cambios'}
               </Button>
