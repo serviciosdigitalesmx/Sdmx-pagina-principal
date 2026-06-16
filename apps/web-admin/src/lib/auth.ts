@@ -3,6 +3,7 @@ import { saveAuthToken, clearAuthToken, readAuthToken } from '@/lib/auth-storage
 import { getCurrentSession } from '@/lib/session';
 import { resolveAdminApiBaseUrl } from '@/lib/api-base-url';
 import { extractTenantRuntimeConfig, saveTenantRuntimeConfig } from '@/lib/tenant-runtime-config';
+import { tenantSettingsService } from '@/services/tenant-settings/tenantSettingsService';
 import type { User, Tenant } from '@/types';
 
 interface LoginResponse {
@@ -46,6 +47,15 @@ export async function loginWithSupabase(accessToken: string): Promise<LoginRespo
   apiClient.setToken(token);
   saveAuthToken(token, true);
   saveTenantRuntimeConfig(extractTenantRuntimeConfig({ tenant }));
+
+  try {
+    const tenantSettings = await tenantSettingsService.getTenantSettings();
+    if (tenantSettings) {
+      saveTenantRuntimeConfig(extractTenantRuntimeConfig(tenantSettings));
+    }
+  } catch {
+    // If the settings request fails, keep the session alive with the exchange payload.
+  }
 
   if (typeof window !== 'undefined') {
     window.localStorage.setItem('srf_token', token);
