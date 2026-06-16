@@ -67,6 +67,11 @@ export function resolveApiBaseUrl(): string {
   const value = resolveFirstConfiguredEnv(apiBaseUrlCandidates);
 
   if (!value) {
+    const baseDomain = resolveBaseDomain();
+    if (baseDomain) {
+      return `https://api.${baseDomain}`;
+    }
+
     return fail("API_URL");
   }
 
