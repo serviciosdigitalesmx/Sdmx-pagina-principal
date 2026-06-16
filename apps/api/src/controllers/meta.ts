@@ -234,7 +234,7 @@ export const updateTenantSettings = async (req: Request, res: Response) => {
       const defaultOrderLabel = industryTemplate.labels.order ?? 'Orden';
       const defaultRequestLabel = industryTemplate.labels.request ?? 'Solicitud';
       const defaultCustomerLabel = industryTemplate.labels.customer ?? 'Cliente';
-      const defaultPortalLabel = industryTemplate.labels.portal ?? 'Portal del cliente';
+      const defaultPortalLabel = industryTemplate.labels.portal ?? 'Seguimiento público';
       const defaultQuoteLabel = industryTemplate.labels.quote ?? 'Cotización';
       const industryPayload = {
         tenant_id: tenantRow.id,
