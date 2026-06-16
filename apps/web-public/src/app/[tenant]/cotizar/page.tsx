@@ -94,7 +94,7 @@ export default function TenantQuotePage() {
 
     async function loadSettings() {
       try {
-        const response = await fetch(getPublicApiPath(`/api/public/${encodeURIComponent(tenant)}`));
+        const response = await fetch(getPublicApiPath(`/api/public/tenant/${encodeURIComponent(tenant)}/landing`));
         const payload = (await response.json().catch(() => null)) as { success?: boolean; data?: { tenant?: { config?: PublicTenantConfig } } } | null;
         if (!response.ok || !payload?.success) {
           throw new Error("No se pudo cargar la configuración del tenant");
