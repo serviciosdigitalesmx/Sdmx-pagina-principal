@@ -12,6 +12,7 @@ function normalizeHttpsUrl(candidate: string) {
 }
 
 export function resolveAdminUrl() {
+  // Production resolves the admin URL from explicit env first so onboarding never falls back to the public landing.
   const candidate =
     optionalEnv("NEXT_PUBLIC_WEB_ADMIN_URL") ??
     optionalEnv("NEXT_PUBLIC_APP_URL") ??
