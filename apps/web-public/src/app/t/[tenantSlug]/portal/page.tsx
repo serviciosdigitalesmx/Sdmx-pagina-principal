@@ -247,7 +247,7 @@ export default function PortalPage() {
       <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.13),_transparent_30%),linear-gradient(180deg,#09090b_0%,#111113_48%,#18181b_100%)] px-4 py-8 text-zinc-50 flex items-center justify-center">
         <div className="w-full max-w-xl text-center space-y-6 rounded-[2rem] border border-zinc-800/70 bg-zinc-950/88 p-8 shadow-2xl">
           <div className="w-16 h-16 rounded-3xl border border-zinc-800 bg-zinc-900 flex items-center justify-center mx-auto text-2xl font-bold text-sky-400">FX</div>
-          <h1 className="text-3xl font-black uppercase tracking-tight text-zinc-50">Portal no disponible</h1>
+          <h1 className="text-3xl font-black uppercase tracking-tight text-zinc-50">Seguimiento no disponible</h1>
           <p className="text-zinc-400 leading-relaxed text-sm">
             No pudimos identificar el taller para este enlace.
           </p>
