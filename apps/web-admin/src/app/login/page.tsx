@@ -231,7 +231,13 @@ function LoginScreen() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-srf-bg flex items-center justify-center"><div className="spinner w-8 h-8" /></div>}>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-[#0a0f17] text-white">
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/15 border-t-[#1f7edc]" />
+        </div>
+      }
+    >
       <LoginScreen />
     </Suspense>
   );

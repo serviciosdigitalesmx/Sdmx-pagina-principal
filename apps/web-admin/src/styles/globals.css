@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 :root {
   --srf-bg: #09090b;
   --srf-surface: #111827;
