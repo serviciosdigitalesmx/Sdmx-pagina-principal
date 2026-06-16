@@ -59,7 +59,11 @@ export function extractTenantRuntimeConfig(payload: unknown): TenantRuntimeConfi
     tenant?.industry_profile ??
     tenant?.industryProfile ??
     root?.data?.industry_profile ??
+    root?.data?.config?.industry_profile ??
+    root?.data?.config?.industryProfile ??
     root?.industry_profile ??
+    root?.config?.industry_profile ??
+    root?.config?.industryProfile ??
     null;
 
   return {
@@ -79,8 +83,12 @@ export function extractTenantRuntimeConfig(payload: unknown): TenantRuntimeConfi
 
     activeModules: Array.isArray(root?.data?.capabilities?.active_modules)
       ? (root.data.capabilities.active_modules as unknown[]).filter((item): item is string => typeof item === 'string')
+      : Array.isArray(root?.data?.config?.capabilities?.active_modules)
+        ? (root.data.config.capabilities.active_modules as unknown[]).filter((item): item is string => typeof item === 'string')
       : Array.isArray(root?.capabilities?.active_modules)
         ? (root.capabilities.active_modules as unknown[]).filter((item): item is string => typeof item === 'string')
+        : Array.isArray(root?.config?.capabilities?.active_modules)
+          ? (root.config.capabilities.active_modules as unknown[]).filter((item): item is string => typeof item === 'string')
         : Array.isArray(root?.data?.active_modules)
           ? (root.data.active_modules as unknown[]).filter((item): item is string => typeof item === 'string')
           : Array.isArray(root?.active_modules)
