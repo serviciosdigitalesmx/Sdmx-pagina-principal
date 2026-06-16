@@ -1,19 +1,19 @@
 @import "tailwindcss";
 
 :root {
-  --srf-bg: #09090b;
-  --srf-surface: #111827;
-  --srf-primary: #60a5fa;
-  --srf-accent: #22d3ee;
+  --srf-bg: #050816;
+  --srf-surface: #0b1220;
+  --srf-primary: #f97316;
+  --srf-accent: #38bdf8;
   --srf-text: #f8fafc;
   --srf-muted: #94a3b8;
   --srf-wa: #25d366;
   --srf-green: #22c55e;
   --srf-red: #ef4444;
   --srf-yellow: #f59e0b;
-  --srf-border: rgba(148, 163, 184, 0.16);
-  --srf-border-strong: rgba(96, 165, 250, 0.24);
-  --srf-glow: rgba(96, 165, 250, 0.16);
+  --srf-border: rgba(148, 163, 184, 0.14);
+  --srf-border-strong: rgba(249, 115, 22, 0.22);
+  --srf-glow: rgba(249, 115, 22, 0.14);
 }
 
 @theme inline {
@@ -29,9 +29,9 @@ body {
   margin: 0;
   min-height: 100vh;
   background:
-    radial-gradient(circle at top, rgba(96, 165, 250, 0.16), transparent 28%),
-    radial-gradient(circle at 80% 0%, rgba(34, 211, 238, 0.08), transparent 20%),
-    linear-gradient(180deg, #050608 0%, #09090b 40%, #0f1117 100%);
+    radial-gradient(circle at top, rgba(249, 115, 22, 0.12), transparent 24%),
+    radial-gradient(circle at 80% 0%, rgba(56, 189, 248, 0.08), transparent 22%),
+    linear-gradient(180deg, #050816 0%, #090f1a 42%, #101827 100%);
   color: var(--srf-text);
   font-family: "Inter", sans-serif;
 }
@@ -83,7 +83,7 @@ h1, h2, h3, .font-orbitron {
   justify-content: center;
   gap: 0.5rem;
   border-radius: 0.75rem;
-  background: linear-gradient(135deg, var(--srf-primary) 0%, #2563eb 100%);
+  background: linear-gradient(135deg, #fb923c 0%, #f97316 55%, #ea580c 100%);
   color: white;
   font-weight: 700;
   padding: 0.5rem 1rem;
@@ -92,7 +92,7 @@ h1, h2, h3, .font-orbitron {
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #fdba74 0%, #fb923c 55%, #ea580c 100%);
 }
 
 .btn-secondary {
@@ -125,8 +125,8 @@ h1, h2, h3, .font-orbitron {
 }
 
 .btn-outline {
-  border: 1px solid rgba(31, 126, 220, 0.35);
-  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(249, 115, 22, 0.25);
+  background: rgba(255, 255, 255, 0.03);
   color: var(--srf-text);
   font-weight: 500;
   border-radius: 0.75rem;
@@ -134,7 +134,7 @@ h1, h2, h3, .font-orbitron {
 }
 
 .btn-outline:hover {
-  background: rgba(148, 163, 184, 0.08);
+  background: rgba(249, 115, 22, 0.08);
 }
 
 .btn-ghost {
@@ -149,18 +149,18 @@ h1, h2, h3, .font-orbitron {
 }
 
 .card {
-  background: linear-gradient(180deg, rgba(17, 24, 39, 0.96), rgba(15, 23, 42, 0.96));
+  background: linear-gradient(180deg, rgba(11, 18, 32, 0.96), rgba(15, 23, 42, 0.96));
   border: 1px solid var(--srf-border);
-  border-radius: 1.25rem;
-  padding: 1rem;
-  box-shadow: 0 18px 40px rgba(2, 6, 23, 0.35);
+  border-radius: 1.5rem;
+  padding: 1.1rem;
+  box-shadow: 0 24px 70px rgba(2, 6, 23, 0.42);
 }
 
 .card-base {
-  background: linear-gradient(180deg, rgba(17, 24, 39, 0.95), rgba(15, 23, 42, 0.95));
+  background: linear-gradient(180deg, rgba(11, 18, 32, 0.95), rgba(15, 23, 42, 0.95));
   border: 1px solid var(--srf-border);
-  border-radius: 1.25rem;
-  box-shadow: 0 18px 40px rgba(2, 6, 23, 0.32);
+  border-radius: 1.5rem;
+  box-shadow: 0 24px 70px rgba(2, 6, 23, 0.38);
 }
 
 .card-hover:hover {
@@ -170,11 +170,11 @@ h1, h2, h3, .font-orbitron {
 
 .input {
   width: 100%;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  border-radius: 0.75rem;
-  background: rgba(2, 6, 23, 0.45);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 0.95rem;
+  background: rgba(2, 6, 23, 0.52);
   color: var(--srf-text);
-  padding: 0.5rem 0.75rem;
+  padding: 0.65rem 0.9rem;
   outline: none;
 }
 
@@ -184,7 +184,7 @@ h1, h2, h3, .font-orbitron {
 
 .input:focus {
   border-color: var(--srf-primary);
-  box-shadow: 0 0 0 1px var(--srf-primary);
+  box-shadow: 0 0 0 1px var(--srf-primary), 0 0 0 4px rgba(249, 115, 22, 0.12);
 }
 
 .badge-recibido,
