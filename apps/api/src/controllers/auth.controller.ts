@@ -5,6 +5,7 @@ import { supabaseAdmin } from '@white-label/database';
 import { resolveEffectiveUserRole } from '../lib/user-roles';
 import { getRequestIp } from '../lib/request-ip';
 import { resolveTenantJwtSecret } from '../services/security-backoffice';
+import { loadTenantRuntimeConfig } from '../services/tenant-config';
 
 const registerSchema = z.object({
   workshopName: z.string().trim().min(2),
@@ -508,6 +509,8 @@ export const exchangeSupabaseSession = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Tenant not found' });
     }
 
+    const tenantRuntimeConfig = await loadTenantRuntimeConfig(tenantSecurity.id);
+
     const isAdminRole = resolveEffectiveUserRole(userRow.role) === 'owner';
     if (tenantSecurity.require_admin_mfa && isAdminRole) {
       const { data: mfaRow, error: mfaError } = await supabaseAdmin
@@ -589,6 +592,8 @@ export const exchangeSupabaseSession = async (req: Request, res: Response) => {
         id: tenantSecurity.id,
         slug: tenantSecurity.slug,
         name: tenantSecurity.name,
+        industry_profile: tenantRuntimeConfig.industryProfile,
+        enabled_modules: tenantRuntimeConfig.activeModules,
       },
     });
   } catch (error) {
