@@ -81,6 +81,8 @@ export function Step2({ data, onSubmit, onBack, onUpdate }: Step2Props) {
     const file = e.target.files?.[0];
     if (file) {
       const preview = URL.createObjectURL(file);
+      const next = { ...localData, fotoRecepcion: file, fotoPreview: preview };
+      setLocalData(next);
       onUpdate({ fotoRecepcion: file, fotoPreview: preview });
     }
   };

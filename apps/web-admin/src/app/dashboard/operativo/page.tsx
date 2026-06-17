@@ -9,6 +9,7 @@ import { Success } from '@/components/operativo/success';
 import { apiClient } from '@/lib/api-client';
 import { getApiOptions } from '@/lib/tenant';
 import { getAssetLabel, getCustomerLabel, getNewEntityLabel } from '@/lib/labels';
+import { getTenantSlug } from '@/lib/tenant';
 
 export type OrderFormData = {
   // Paso 1: Cliente
@@ -46,6 +47,7 @@ export default function OperativoPage() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [savedFolio, setSavedFolio] = useState<string | null>(null);
+  const [savedPdfUrl, setSavedPdfUrl] = useState<string | null>(null);
   const [formData, setFormData] = useState<OrderFormData>({
     clienteNombre: '',
     clienteTelefono: '',
@@ -111,21 +113,6 @@ export default function OperativoPage() {
   const handleSubmitOrder = async () => {
     setLoading(true);
     try {
-      // Subir foto primero si existe
-      let fotoUrl = null;
-      if (formData.fotoRecepcion) {
-        const formDataUpload = new FormData();
-        formDataUpload.append('file', formData.fotoRecepcion);
-
-        const uploadResponse = await apiClient.upload<{ publicUrl: string }>(
-          '/orders/upload',
-          formData.fotoRecepcion,
-          { fileType: 'intake_photo' },
-          getApiOptions()
-        );
-        fotoUrl = uploadResponse.publicUrl;
-      }
-
       // Crear orden
       const payload = {
         clientName: formData.clienteNombre,
@@ -144,7 +131,6 @@ export default function OperativoPage() {
           backupRequired: formData.checks.respaldo,
           notes: formData.notas,
         },
-        receiptUrl: fotoUrl || '',
         metadata: {
           internal_notes: formData.notas,
         },
@@ -156,7 +142,30 @@ export default function OperativoPage() {
         getApiOptions()
       );
 
+      let pdfUrl: string | null = null;
+      if (formData.fotoRecepcion) {
+        try {
+          const uploadResponse = await apiClient.upload<{
+            success: boolean;
+            data: Array<{
+              file_type: string;
+              public_url: string | null;
+            }>;
+          }>(
+            `/orders/${response.data.id}/attachments`,
+            formData.fotoRecepcion,
+            { fileType: 'intake_photo' },
+            getApiOptions()
+          );
+
+          pdfUrl = uploadResponse.data.find((document) => document.file_type === 'receipt_pdf')?.public_url ?? null;
+        } catch (uploadError) {
+          console.error('Failed to upload intake photo:', uploadError);
+        }
+      }
+
       setSavedFolio(response.data.folio);
+      setSavedPdfUrl(pdfUrl);
       setStep(4);
 
       // Limpiar borrador
@@ -191,9 +200,16 @@ export default function OperativoPage() {
       fotoPreview: null,
     });
     setSavedFolio(null);
+    setSavedPdfUrl(null);
     setStep(1);
     localStorage.removeItem('srf_borrador_orden');
   };
+
+  const publicBaseUrl = process.env.NEXT_PUBLIC_WEB_PUBLIC_URL?.replace(/\/$/, "") ?? "";
+  const tenantSlug = getTenantSlug();
+  const trackingUrl = savedFolio && publicBaseUrl && tenantSlug
+    ? `${publicBaseUrl}/${encodeURIComponent(tenantSlug)}/tracking?folio=${encodeURIComponent(savedFolio)}`
+    : null;
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -270,6 +286,8 @@ export default function OperativoPage() {
         <Success
           folio={savedFolio}
           customerPhone={formData.clienteTelefono}
+          pdfUrl={savedPdfUrl}
+          trackingUrl={trackingUrl}
           onNewOrder={handleNewOrder}
         />
       )}

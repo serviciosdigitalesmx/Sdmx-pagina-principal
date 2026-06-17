@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { OrderTimeline } from "./order-timeline";
+import { getTenantSlug } from "@/lib/tenant";
 
 export type OrderDetailData = {
   order?: {
@@ -83,8 +84,11 @@ type Props = {
 };
 
 function buildTrackingUrl(customerPortalUrl?: string | null, folio?: string | null) {
-  if (!customerPortalUrl) return "";
-  const trimmed = customerPortalUrl.replace(/\/$/, "");
+  const publicBase = process.env.NEXT_PUBLIC_WEB_PUBLIC_URL?.replace(/\/$/, "") ?? "";
+  const tenantSlug = getTenantSlug();
+  const resolvedBase = customerPortalUrl || (publicBase && tenantSlug ? `${publicBase}/${encodeURIComponent(tenantSlug)}` : "");
+  if (!resolvedBase) return "";
+  const trimmed = resolvedBase.replace(/\/$/, "");
   const trackingUrl = trimmed.endsWith("/portal") ? trimmed.replace(/\/portal$/, "/tracking") : trimmed;
   const separator = trackingUrl.includes("?") ? "&" : "?";
   return `${trackingUrl}${folio ? `${separator}folio=${encodeURIComponent(folio)}` : ""}`;

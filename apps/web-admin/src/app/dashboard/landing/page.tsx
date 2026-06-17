@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Globe, RefreshCw, Save, Eye } from "lucide-react";
+import { Globe, RefreshCw, Save, Eye, Copy, ExternalLink } from "lucide-react";
 import { tenantSettingsService } from "@/services/tenant-settings/tenantSettingsService";
 
 type LandingService = {
@@ -157,6 +157,8 @@ export default function LandingSettingsPage() {
     secondaryHref: toPublicHref(tenantSlug, landingContent.secondaryCtaHref),
     contactHref: toPublicHref(tenantSlug, landingContent.contactHref),
   }), [landingContent.contactHref, landingContent.primaryCtaHref, landingContent.secondaryCtaHref, tenantSlug]);
+  const publicBaseUrl = process.env.NEXT_PUBLIC_WEB_PUBLIC_URL?.replace(/\/$/, "") ?? "";
+  const tenantPublicUrl = publicBaseUrl && tenantSlug ? `${publicBaseUrl}/${encodeURIComponent(tenantSlug)}` : "";
 
   const updateField = <K extends keyof LandingContent>(key: K, value: LandingContent[K]) => {
     setLandingContent((current) => ({ ...current, [key]: value }));
@@ -178,6 +180,11 @@ export default function LandingSettingsPage() {
 
   const addService = () => setLandingContent((current) => ({ ...current, services: [...current.services, { ...emptyService }] }));
   const addSocial = () => setLandingContent((current) => ({ ...current, socialLinks: [...current.socialLinks, { ...emptySocial }] }));
+  const copyTenantPublicUrl = async () => {
+    if (!tenantPublicUrl) return;
+    await navigator.clipboard.writeText(tenantPublicUrl);
+    setSuccess("URL pública copiada al portapapeles.");
+  };
 
   async function handleSave() {
     setSaving(true);
@@ -243,6 +250,39 @@ export default function LandingSettingsPage() {
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(360px,1fr)]">
         <div className="space-y-6">
+          <div className="rounded-3xl border border-sky-500/15 bg-slate-950/70 p-5 shadow-[0_24px_70px_rgba(2,6,23,0.32)]">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-50">URL pública del tenant</h2>
+                <p className="text-sm text-slate-400">Comparte esta URL para abrir la landing pública del negocio.</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => void copyTenantPublicUrl()}
+                  disabled={!tenantPublicUrl}
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-2 text-sm font-medium text-slate-100 transition hover:border-sky-400/30 hover:bg-slate-800/80 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <Copy className="w-4 h-4" />
+                  Copiar URL
+                </button>
+                <a
+                  href={tenantPublicUrl || "#"}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-400 disabled:pointer-events-none disabled:opacity-50"
+                  aria-disabled={!tenantPublicUrl}
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Abrir URL
+                </a>
+              </div>
+            </div>
+            <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-900/60 px-4 py-3 text-sm text-sky-300 break-all">
+              {tenantPublicUrl || "URL pública no disponible"}
+            </div>
+          </div>
+
           <div className="space-y-4 rounded-3xl border border-slate-800 bg-slate-950/70 p-5 shadow-[0_24px_70px_rgba(2,6,23,0.32)]">
             <div className="flex items-center gap-2 text-sky-300"><Globe className="w-5 h-5" /><h2 className="text-lg font-semibold text-slate-50">Hero</h2></div>
             <div className="grid gap-4 md:grid-cols-2">

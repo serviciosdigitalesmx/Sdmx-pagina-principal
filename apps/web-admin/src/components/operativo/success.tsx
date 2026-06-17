@@ -3,30 +3,39 @@
 import { CheckCircle, Copy, Download, Plus, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getCreatedSuccessLabel, getNewEntityLabel } from '@/lib/labels';
+import { getTenantSlug } from '@/lib/tenant';
 
 interface SuccessProps {
   folio: string;
   customerPhone: string;
+  pdfUrl: string | null;
+  trackingUrl: string | null;
   onNewOrder: () => void;
 }
 
-export function Success({ folio, customerPhone, onNewOrder }: SuccessProps) {
+export function Success({ folio, customerPhone, pdfUrl, trackingUrl, onNewOrder }: SuccessProps) {
   const createdLabel = getCreatedSuccessLabel();
   const newOrderLabel = getNewEntityLabel();
+  const tenantSlug = getTenantSlug();
+  const publicBase = process.env.NEXT_PUBLIC_WEB_PUBLIC_URL?.replace(/\/$/, "") ?? "";
+  const fallbackTrackingUrl = trackingUrl || (publicBase && tenantSlug ? `${publicBase}/${encodeURIComponent(tenantSlug)}/tracking?folio=${encodeURIComponent(folio)}` : null);
+
   const copyFolio = () => {
     navigator.clipboard.writeText(folio);
     alert('Folio copiado al portapapeles');
   };
 
   const openWhatsApp = () => {
-    const message = `Hola, tu equipo ha sido registrado en FIXI con el folio ${folio}. Puedes consultar el estado en el seguimiento público.`;
+    const message = `Hola, tu equipo ha sido registrado en FIXI con el folio ${folio}. Puedes consultar el estado en este enlace: ${fallbackTrackingUrl || 'seguimiento público'}`;
     const url = `https://wa.me/52${customerPhone}?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
   };
 
   const downloadPDF = () => {
-    // Implementar generación de PDF
-    alert('Función de PDF en desarrollo');
+    if (!pdfUrl) {
+      return;
+    }
+    window.open(pdfUrl, '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -51,9 +60,9 @@ export function Success({ folio, customerPhone, onNewOrder }: SuccessProps) {
           <MessageCircle className="w-4 h-4" />
           Enviar por WhatsApp
         </Button>
-        <Button onClick={downloadPDF} className="gap-2 bg-sky-500 hover:bg-sky-600">
+        <Button onClick={downloadPDF} disabled={!pdfUrl} className="gap-2 bg-sky-500 hover:bg-sky-600 disabled:cursor-not-allowed disabled:bg-slate-700">
           <Download className="w-4 h-4" />
-          Ver PDF
+          {pdfUrl ? 'Ver PDF' : 'PDF pendiente'}
         </Button>
       </div>
 

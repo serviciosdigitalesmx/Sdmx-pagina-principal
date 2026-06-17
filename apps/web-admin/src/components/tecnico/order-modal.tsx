@@ -81,14 +81,21 @@ export function OrderModal({ open, onOpenChange, order, onOrderUpdated }: OrderM
     setLoading(true);
     setLoadError(null);
     try {
-      const data = await apiClient.get<{
-        order: Order;
-        checklist: OrderChecklist | null;
-        documents: OrderDocument[];
-        events: OrderEvent[];
+      const response = await apiClient.get<{
+        success?: boolean;
+        data?: {
+          order?: Order;
+          checklist: OrderChecklist | null;
+          documents: OrderDocument[];
+          events: OrderEvent[];
+        };
       }>(`/orders/${order.id}`, getApiOptions());
 
-      const orderData = data.order;
+      const payload = response.data ?? null;
+      const orderData = payload?.order ?? null;
+      if (!orderData) {
+        throw new Error('La API no devolvió los datos de la orden');
+      }
       setEstado(orderData.status || 'recibido');
       setTecnico(orderData.assigned_user_id || '');
       setNotas(orderData.internal_notes || '');
@@ -106,17 +113,17 @@ export function OrderModal({ open, onOpenChange, order, onOrderUpdated }: OrderM
       setSeguimiento(((orderData.evidence_metadata?.find((e: any) => e.event_type === 'note') as { note?: string } | undefined)?.note) || '');
       setYoutubeId((orderData.metadata as any)?.youtube_id || '');
 
-      if (data.checklist) {
-        setChecklist(data.checklist);
-        setHasCharger(data.checklist.has_charger);
-        setScreenCondition(data.checklist.screen_condition || '');
-        setPowersOn(data.checklist.powers_on);
-        setBackupRequired(data.checklist.backup_required);
-        setChecklistNotes(data.checklist.notes || '');
+      if (payload?.checklist) {
+        setChecklist(payload.checklist);
+        setHasCharger(payload.checklist.has_charger);
+        setScreenCondition(payload.checklist.screen_condition || '');
+        setPowersOn(payload.checklist.powers_on);
+        setBackupRequired(payload.checklist.backup_required);
+        setChecklistNotes(payload.checklist.notes || '');
       }
 
-      setDocuments(data.documents || []);
-      setEvents(data.events || []);
+      setDocuments(payload?.documents || []);
+      setEvents(payload?.events || []);
     } catch (error) {
       console.error('Failed to load order details:', error);
       setLoadError(error instanceof Error ? error.message : 'No se pudieron cargar los detalles de la orden');

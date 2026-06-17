@@ -127,8 +127,7 @@ export function QuoteModal({ open, onOpenChange, request, onQuoteConverted }: Qu
   };
 
   const handlePrintPDF = () => {
-    // Implementar generación de PDF
-    alert('Función de PDF en desarrollo');
+    window.print();
   };
 
   return (
