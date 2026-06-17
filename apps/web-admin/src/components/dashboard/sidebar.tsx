@@ -20,6 +20,7 @@ import {
   BarChart3,
   Building2,
   Shield,
+  CircleDollarSign,
   Menu,
   X,
   ChevronLeft,
@@ -49,6 +50,7 @@ const getIcon = (iconName: string) => {
     BarChart3,
     Building2,
     Shield,
+    CircleDollarSign,
   };
   return icons[iconName] || LayoutDashboard;
 };
@@ -66,6 +68,7 @@ const DASHBOARD_MODULE_ACCESS: Partial<Record<string, TenantModuleKey>> = {
   gastos: 'finance',
   finanzas: 'finance',
   reportes: 'reports',
+  movivendor: 'movivendor',
   sucursales: 'branches',
   seguridad: 'security',
 };
@@ -103,6 +106,10 @@ export function Sidebar({
     }
 
     if (module.key === 'dashboard' || module.key === 'landing') {
+      return true;
+    }
+
+    if (module.key === 'movivendor') {
       return true;
     }
 

@@ -59,6 +59,7 @@ export const DASHBOARD_MODULES: DashboardModule[] = [
   { key: 'gastos', label: 'Gastos', icon: 'Wallet', href: '/dashboard/gastos', enabled: true },
   { key: 'finanzas', label: 'Finanzas', icon: 'LineChart', href: '/dashboard/finanzas', enabled: true },
   { key: 'reportes', label: 'Reportes', icon: 'BarChart3', href: '/dashboard/reportes', enabled: true },
+  { key: 'movivendor', label: 'Movivendor', icon: 'CircleDollarSign', href: '/dashboard/movivendor', enabled: true },
   { key: 'sucursales', label: 'Sucursales', icon: 'Building2', href: '/dashboard/sucursales', enabled: true },
   { key: 'seguridad', label: 'Seguridad', icon: 'Shield', href: '/dashboard/seguridad', enabled: true },
 ];
@@ -191,6 +192,61 @@ export interface CustomerHistory {
     total: number;
     estado: string;
   }>;
+}
+
+export interface MovivendorActivationRequest {
+  id: string;
+  tenant_id: string;
+  tenant_slug: string;
+  business_name: string;
+  owner_name: string;
+  email: string;
+  phone: string;
+  status: 'pending' | 'reviewing' | 'approved' | 'rejected' | 'active' | 'suspended';
+  review_notes: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MovivendorAccount {
+  id: string;
+  tenant_id: string;
+  movivendor_user: string;
+  movivendor_ident: string;
+  movivendor_terminal: string;
+  token_expires_at: string | null;
+  status: 'pending' | 'active' | 'credentials_error' | 'suspended';
+  last_validation_error: string | null;
+  last_validated_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MovivendorTransaction {
+  id: string;
+  tenant_id: string;
+  user_id: string | null;
+  external_id: string;
+  product: string;
+  subprod: string | null;
+  destination: string;
+  amount: number;
+  confirmation: string | null;
+  trace: string | null;
+  pin: string | null;
+  customer_balance: number | null;
+  status: 'pending' | 'checking' | 'approved' | 'rejected' | 'failed' | 'voided';
+  response_code: string | null;
+  response_message: string | null;
+  raw_request: Record<string, unknown>;
+  raw_response: Record<string, unknown>;
+  payment_method: string | null;
+  branch_id: string | null;
+  commission: number | null;
+  created_at: string;
+  updated_at: string;
 }
 
 // Tipos de tareas
