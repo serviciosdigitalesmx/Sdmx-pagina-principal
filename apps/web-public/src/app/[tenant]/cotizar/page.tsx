@@ -4,10 +4,11 @@ import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { DynamicFields, type DynamicFieldDefinition } from "@white-label/ui";
+import { Badge, SurfaceCard } from "@white-label/ui";
 import { getPublicApiPath } from "@/lib/public-api";
 
 const fieldClassName =
-  "w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-50 outline-none transition placeholder:text-slate-500 focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20";
+  "w-full rounded-[1.25rem] border border-white/10 bg-white/5 px-4 py-3 text-slate-50 outline-none transition placeholder:text-slate-500 focus:border-sky-400/40 focus:ring-2 focus:ring-sky-400/15";
 
 type QuotePayload = {
   fullName: string;
@@ -190,39 +191,40 @@ export default function TenantQuotePage() {
   };
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.12),_transparent_26%),radial-gradient(circle_at_80%_10%,_rgba(14,165,233,0.08),_transparent_24%),linear-gradient(180deg,#020617_0%,#050b16_48%,#0b1220_100%)] px-4 py-8 text-slate-50">
-      <section className="mx-auto grid w-full max-w-5xl gap-8 rounded-[2rem] border border-slate-800 bg-[linear-gradient(180deg,rgba(9,14,26,0.96),rgba(11,18,32,0.98))] p-8 shadow-[0_20px_80px_rgba(0,0,0,0.28)]">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.08),_transparent_26%),radial-gradient(circle_at_80%_10%,_rgba(14,165,233,0.06),_transparent_24%),linear-gradient(180deg,#020617_0%,#050b16_48%,#0b1220_100%)] px-4 py-8 text-slate-50">
+      <section className="mx-auto grid w-full max-w-5xl gap-8 rounded-[2rem] border border-white/8 bg-[linear-gradient(180deg,rgba(9,14,26,0.96),rgba(11,18,32,0.98))] p-5 shadow-[0_20px_80px_rgba(0,0,0,0.22)] sm:p-8">
         <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
           <div>
-            <p className="text-xs uppercase tracking-[0.35em] text-sky-300/80">Cotizador</p>
-            <h1 className="mt-3 text-4xl font-bold tracking-tight text-slate-50 [font-family:var(--font-cormorant)]">
+            <Badge variant="neutral">Cotizador</Badge>
+            <h1 className="mt-3 text-4xl font-semibold tracking-tight text-slate-50 sm:text-5xl">
               {tenantLabels.request ?? "Cuéntanos la falla y te generamos una solicitud real"}
             </h1>
-            <p className="mt-4 max-w-2xl text-lg leading-8 text-slate-300">
+            <p className="mt-4 max-w-2xl text-base leading-8 text-slate-300 sm:text-lg">
               Captura el caso, liga el activo al tenant actual y deja lista la entrada para que recepción lo convierta en servicio.
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
-              <Link href={`/${tenant}`} className="rounded-full border border-slate-700 px-5 py-3 font-semibold text-slate-100 transition hover:bg-white/5">
+              <Link href={`/${tenant}`} className="rounded-full border border-white/10 px-5 py-3 font-medium text-slate-100 transition hover:bg-white/5">
                 Volver al taller
               </Link>
-              <Link href={`/${tenant}/tracking`} className="rounded-full border border-slate-700 px-5 py-3 font-semibold text-slate-100 transition hover:bg-white/5">
+              <Link href={`/${tenant}/tracking`} className="rounded-full border border-white/10 px-5 py-3 font-medium text-slate-100 transition hover:bg-white/5">
                 Ver estatus
               </Link>
             </div>
           </div>
 
-          <aside className="rounded-[1.75rem] border border-slate-800 bg-slate-950/70 p-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-300/80">Qué ocurre al enviar</p>
+          <SurfaceCard elevated className="p-6">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-300/80">Qué ocurre al enviar</p>
             <ul className="mt-4 space-y-3 text-sm leading-7 text-slate-300">
               <li>• La solicitud se envía para registrarse.</li>
               <li>• Se asocia al taller actual.</li>
               <li>• Recepción recibe marca, modelo, serie y urgencia para abrir el caso.</li>
               <li>• Recepción puede convertirla en servicio con un clic.</li>
             </ul>
-          </aside>
+          </SurfaceCard>
         </div>
 
-        <form onSubmit={submit} className="grid gap-4 rounded-[1.5rem] border border-slate-800 bg-slate-950/70 p-6">
+        <SurfaceCard elevated className="p-6">
+          <form onSubmit={submit} className="grid gap-4">
           {[
             ["Nombre", "fullName", "text", "Nombre completo del cliente.", true],
             ["WhatsApp", "phone", "tel", "Número de teléfono de contacto.", true],
@@ -272,7 +274,7 @@ export default function TenantQuotePage() {
           {error ? <p className="rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{error}</p> : null}
           {message ? <p className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">{message}</p> : null}
           {folio ? (
-            <div className="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-4 text-sm text-slate-300">
+            <div className="rounded-2xl border border-white/8 bg-white/4 px-4 py-4 text-sm text-slate-300">
               <div className="font-semibold text-slate-50">Folio real: {folio}</div>
               <Link href={buildTrackingHref(tenant, folio)} className="mt-2 inline-flex font-semibold text-sky-100">
                 Ir al tracking
@@ -281,14 +283,15 @@ export default function TenantQuotePage() {
           ) : null}
 
           <div className="flex flex-wrap items-center gap-3">
-            <button disabled={loading} className="rounded-full bg-sky-50 px-6 py-3 font-semibold text-slate-950 transition hover:bg-sky-100 disabled:opacity-60">
+            <button disabled={loading} className="rounded-full bg-sky-500/15 px-6 py-3 font-medium text-sky-100 transition hover:bg-sky-500/20 disabled:opacity-60">
               {loading ? "Enviando..." : "Enviar solicitud"}
             </button>
             <p className="text-sm leading-6 text-slate-400">
               La solicitud queda ligada al taller actual.
             </p>
           </div>
-        </form>
+          </form>
+        </SurfaceCard>
       </section>
     </main>
   );

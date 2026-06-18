@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { srFixTheme } from "@/components/srfix-theme";
 import { resolveApiBaseUrl as getApiBaseUrl } from "@white-label/config";
+import { Badge, SurfaceCard } from "@white-label/ui";
 
 type LandingResponse = {
   success: true;
@@ -62,12 +63,11 @@ async function getTenantLanding(tenant: string): Promise<LandingResponse["data"]
 }
 
 function CTA({ href, children, variant = "primary" }: { href: string; children: ReactNode; variant?: "primary" | "secondary" }) {
-  const base =
-    "inline-flex items-center justify-center rounded-2xl px-5 py-4 text-center text-sm font-semibold uppercase tracking-[0.18em] transition duration-200";
+  const base = "inline-flex items-center justify-center rounded-full px-5 py-3 text-center text-sm font-semibold transition duration-200";
   const className =
     variant === "primary"
-      ? `${base} border border-sky-400/70 bg-sky-500 text-white shadow-[0_0_0_1px_rgba(96,165,250,0.18),0_18px_45px_rgba(59,130,246,0.35)] hover:-translate-y-0.5 hover:bg-sky-400`
-      : `${base} border border-sky-400/80 bg-sky-50 text-slate-950 shadow-[0_18px_45px_rgba(59,130,246,0.22)] hover:-translate-y-0.5 hover:bg-sky-100`;
+      ? `${base} border border-sky-400/35 bg-sky-500/15 text-sky-100 hover:border-sky-300/45 hover:bg-sky-500/20`
+      : `${base} border border-white/10 bg-white/5 text-slate-100 hover:bg-white/8`;
   return (
     <Link href={href} className={className}>
       {children}
@@ -101,32 +101,33 @@ export default async function TenantLandingPage({ params }: { params: Promise<{ 
 
   return (
     <main className="min-h-screen text-slate-100" style={{ background: srFixTheme.background }}>
-      <section className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-        <header className="flex flex-col gap-4 rounded-[2rem] border border-slate-800/70 bg-[linear-gradient(180deg,rgba(17,17,19,0.98),rgba(10,10,12,0.96))] px-5 py-4 shadow-[0_20px_70px_rgba(0,0,0,0.24)] backdrop-blur-xl lg:flex-row lg:items-center lg:justify-between">
+      <section className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
+        <SurfaceCard elevated className="px-5 py-4 backdrop-blur-xl">
+          <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-4">
-            <div className="rounded-2xl border border-sky-400/25 bg-white p-2 shadow-[0_0_0_1px_rgba(96,165,250,0.15)]">
+            <div className="rounded-2xl border border-white/10 bg-white p-2">
               {data.tenant.branding?.logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={data.tenant.branding.logoUrl} alt={data.tenant.name} className="h-11 w-11 rounded-lg object-contain" />
               ) : (
-                <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-sky-500 text-lg font-black text-white">SF</div>
+                <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-sky-500/15 text-lg font-black text-sky-100">SF</div>
               )}
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-sky-100/75">FIXI</p>
+              <Badge variant="neutral">FIXI</Badge>
               <h1 className="text-2xl font-black tracking-tight text-slate-50 sm:text-3xl">{data.tenant.name}</h1>
               <p className="text-sm text-slate-400">{heroSubtitle}</p>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <Link href="#inicio" className="rounded-full px-4 py-2 text-sm font-semibold uppercase tracking-[0.2em] text-slate-300 transition hover:bg-white/5">
+            <Link href="#inicio" className="rounded-full px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/5">
               Inicio
             </Link>
-            <Link href={quoteHref} className="rounded-full px-4 py-2 text-sm font-semibold uppercase tracking-[0.2em] text-slate-300 transition hover:bg-white/5">
+            <Link href={quoteHref} className="rounded-full px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/5">
               Cotizar
             </Link>
-            <Link href={portalHref} className="rounded-full px-4 py-2 text-sm font-semibold uppercase tracking-[0.2em] text-slate-300 transition hover:bg-white/5">
+            <Link href={portalHref} className="rounded-full px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/5">
               Estado
             </Link>
             {socialLinks.slice(0, 2).map((link) => (
@@ -135,18 +136,18 @@ export default async function TenantLandingPage({ params }: { params: Promise<{ 
                 href={link.href}
                 target="_blank"
                 rel="noreferrer"
-                className="rounded-full px-4 py-2 text-sm font-semibold uppercase tracking-[0.2em] text-slate-300 transition hover:bg-white/5"
+                className="rounded-full px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/5"
               >
                 {link.label}
               </a>
             ))}
           </div>
         </header>
+        </SurfaceCard>
 
         <section id="inicio" className="grid gap-8 px-2 py-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:py-16">
           <div className="space-y-8">
-            <div className="inline-flex items-center gap-3 rounded-2xl border border-sky-500/50 bg-sky-500/10 px-5 py-3 text-xs font-semibold uppercase tracking-[0.26em] text-sky-300">
-              <span className="text-lg">◉</span>
+            <div className="inline-flex items-center gap-3 rounded-full border border-sky-500/25 bg-sky-500/10 px-4 py-2 text-xs font-semibold text-sky-200">
               Operación real del taller conectada al tenant
             </div>
 
@@ -178,16 +179,13 @@ export default async function TenantLandingPage({ params }: { params: Promise<{ 
           </div>
 
           <div className="relative">
-            <div className="absolute inset-0 rounded-[2rem] bg-[radial-gradient(circle_at_50%_20%,rgba(59,130,246,0.25),transparent_40%),linear-gradient(180deg,rgba(30,41,59,0.9),rgba(17,24,39,0.95))] blur-0" />
-            <div className="relative overflow-hidden rounded-[2rem] border border-sky-500/60 bg-[linear-gradient(180deg,rgba(17,24,39,0.92),rgba(3,7,18,0.98))] p-6 shadow-[0_24px_100px_rgba(0,0,0,0.35)]">
+            <div className="absolute inset-0 rounded-[2rem] bg-[radial-gradient(circle_at_50%_20%,rgba(59,130,246,0.16),transparent_40%),linear-gradient(180deg,rgba(30,41,59,0.85),rgba(17,24,39,0.95))]" />
+            <SurfaceCard elevated className="relative p-6">
               <div className="flex items-center justify-between">
-                <div className="inline-flex items-center gap-2 rounded-full border border-sky-400/30 bg-sky-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-sky-200">
-                  <span className="text-base">◉</span>
+                <div className="inline-flex items-center gap-2 rounded-full border border-sky-400/20 bg-sky-500/10 px-4 py-2 text-xs font-semibold text-sky-200">
                   Seguimiento y cotizador
                 </div>
-                <div className="rounded-full border border-sky-400/50 bg-sky-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-sky-200">
-                  En vivo
-                </div>
+                <Badge variant="primary">En vivo</Badge>
               </div>
               <div className="mt-6 grid gap-4 rounded-[1.75rem] border border-slate-700/70 bg-black/25 p-5">
                 <div className="rounded-[1.5rem] border border-slate-700 bg-slate-950 p-5">
@@ -203,27 +201,27 @@ export default async function TenantLandingPage({ params }: { params: Promise<{ 
                   </div>
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="rounded-[1.4rem] border border-slate-800 bg-slate-950/80 p-4">
-                    <p className="text-xs uppercase tracking-[0.24em] text-sky-200">Ver estado</p>
+                  <div className="rounded-[1.4rem] border border-white/8 bg-white/4 p-4">
+                    <p className="text-xs font-semibold text-sky-200">Ver estado</p>
                     <p className="mt-2 text-sm leading-6 text-slate-400">Lleva al seguimiento público para consultar por folio.</p>
                   </div>
-                  <div className="rounded-[1.4rem] border border-slate-800 bg-slate-950/80 p-4">
-                    <p className="text-xs uppercase tracking-[0.24em] text-sky-200">Cotización</p>
+                  <div className="rounded-[1.4rem] border border-white/8 bg-white/4 p-4">
+                    <p className="text-xs font-semibold text-sky-200">Cotización</p>
                     <p className="mt-2 text-sm leading-6 text-slate-400">Solicita una cotización y recibe folio real.</p>
                   </div>
                 </div>
               </div>
-            </div>
+            </SurfaceCard>
           </div>
         </section>
 
         <section className="grid gap-5 py-8 md:grid-cols-3" aria-label="Servicios">
           {services.map((service) => (
-            <article key={service.title} className="rounded-[1.5rem] border border-slate-800 bg-slate-950/70 p-6 shadow-[0_14px_55px_rgba(0,0,0,0.18)]">
+            <SurfaceCard key={service.title} elevated className="p-6">
               <div className="mb-8 text-4xl text-sky-400">▣</div>
               <h3 className="text-xl font-black uppercase tracking-[0.08em] text-slate-50">{service.title}</h3>
               <p className="mt-4 text-sm leading-7 text-slate-400">{service.description}</p>
-            </article>
+            </SurfaceCard>
           ))}
         </section>
 
@@ -234,43 +232,43 @@ export default async function TenantLandingPage({ params }: { params: Promise<{ 
               Sección visible para capturar el problema y disparar el flujo de recepción real.
             </p>
             <div className="grid gap-4">
-              <div className="rounded-[1.5rem] border border-slate-800 bg-slate-950/75 p-5">
-                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-sky-300">Problema detallado</p>
+              <SurfaceCard subtle className="p-5">
+                <p className="text-sm font-semibold text-sky-300">Problema detallado</p>
                 <p className="mt-3 text-sm leading-7 text-slate-400">
                   El cliente describe la falla, urgencia y equipo. Esto prepara la solicitud para recepción.
                 </p>
-              </div>
-              <div className="rounded-[1.5rem] border border-slate-800 bg-slate-950/75 p-5">
-                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-sky-300">Ver estado</p>
+              </SurfaceCard>
+              <SurfaceCard subtle className="p-5">
+                <p className="text-sm font-semibold text-sky-300">Ver estado</p>
                 <p className="mt-3 text-sm leading-7 text-slate-400">
                   Folio real, estado, fechas importantes, seguimiento y PDF listo para imprimir o guardar.
                 </p>
-              </div>
+              </SurfaceCard>
             </div>
           </div>
 
-          <div className="rounded-[2rem] border border-slate-700 bg-slate-950/70 p-6 shadow-[0_16px_70px_rgba(0,0,0,0.26)]">
+          <SurfaceCard elevated className="p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Lo que sigue</p>
             <div className="mt-5 space-y-4">
-              <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
+              <div className="rounded-2xl border border-white/8 bg-white/4 p-4">
                 <p className="text-sm font-semibold text-slate-100">1. Cotizar</p>
                 <p className="mt-1 text-sm leading-6 text-slate-400">El usuario llena datos del equipo y la falla.</p>
               </div>
-              <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
+              <div className="rounded-2xl border border-white/8 bg-white/4 p-4">
                 <p className="text-sm font-semibold text-slate-100">2. Ver estado</p>
                 <p className="mt-1 text-sm leading-6 text-slate-400">Consulta el portal con el folio real.</p>
               </div>
-              <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
+              <div className="rounded-2xl border border-white/8 bg-white/4 p-4">
                 <p className="text-sm font-semibold text-slate-100">3. Imprimir / PDF</p>
                 <p className="mt-1 text-sm leading-6 text-slate-400">Se abre el PDF real de la cotización o reparación.</p>
               </div>
             </div>
-          </div>
+          </SurfaceCard>
         </section>
 
-        <section className="grid gap-6 rounded-[2rem] border border-slate-800 bg-[linear-gradient(180deg,rgba(17,17,19,0.98),rgba(10,10,12,0.95))] p-6 lg:grid-cols-[1fr_0.92fr] lg:p-10">
+        <SurfaceCard elevated className="grid gap-6 p-6 lg:grid-cols-[1fr_0.92fr] lg:p-10">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.28em] text-sky-300">Contacto</p>
+            <p className="text-sm font-semibold text-sky-300">Contacto</p>
             <h2 className="mt-3 text-3xl font-black uppercase tracking-tight text-slate-50 sm:text-4xl">Atención del taller sin inventar datos</h2>
             <p className="mt-4 max-w-xl text-base leading-7 text-slate-400">
               La ubicación, teléfono y enlaces salen de la configuración real del tenant. Si no hay mapa configurado, mostramos contacto directo.
@@ -282,8 +280,8 @@ export default async function TenantLandingPage({ params }: { params: Promise<{ 
                 ["Mapa", landing.showMap && landing.mapEmbedUrl ? "Disponible" : "No configurado"],
                 ["Enlaces", socialLinks.length > 0 ? `${socialLinks.length} publicados` : "Sin enlaces publicados"],
               ].map(([title, value]) => (
-                <div key={title} className="rounded-[1.4rem] border border-sky-400/25 bg-white/4 px-5 py-4">
-                  <p className="text-sm font-semibold uppercase tracking-[0.22em] text-sky-300">{title}</p>
+                <div key={title} className="rounded-[1.4rem] border border-white/8 bg-white/4 px-5 py-4">
+                  <p className="text-sm font-semibold text-sky-300">{title}</p>
                   <p className="mt-2 text-sm leading-7 text-slate-400">{value}</p>
                 </div>
               ))}
@@ -301,7 +299,7 @@ export default async function TenantLandingPage({ params }: { params: Promise<{ 
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-[1.8rem] border border-sky-500/60 bg-slate-950 shadow-[0_20px_70px_rgba(0,0,0,0.35)]">
+          <div className="overflow-hidden rounded-[1.8rem] border border-white/8 bg-slate-950">
             {landing.showMap && landing.mapEmbedUrl ? (
               <iframe
                 title={`${data.tenant.name} ubicación`}
@@ -329,9 +327,9 @@ export default async function TenantLandingPage({ params }: { params: Promise<{ 
               </div>
             )}
           </div>
-        </section>
+        </SurfaceCard>
 
-        <footer className="flex flex-col items-center justify-between gap-4 border-t border-slate-800 py-8 text-center text-sm text-slate-500 md:flex-row md:text-left">
+        <footer className="flex flex-col items-center justify-between gap-4 border-t border-white/8 py-8 text-center text-sm text-slate-500 md:flex-row md:text-left">
           <p>© 2026 FIXI. Todos los derechos reservados.</p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link href={trackingHref} className="text-sky-300 transition hover:text-sky-200">
