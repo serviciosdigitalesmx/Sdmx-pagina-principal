@@ -173,6 +173,43 @@ function ProductMockup() {
   );
 }
 
+function SceneFrame({
+  eyebrow,
+  title,
+  copy,
+  children,
+}: {
+  eyebrow: string;
+  title: string;
+  copy: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <div className="grid gap-6 lg:grid-cols-[0.48fr_0.52fr] lg:items-center">
+        <div className="space-y-4">
+          <SectionLabel>{eyebrow}</SectionLabel>
+          <h3 className="max-w-xl text-4xl font-black tracking-tight text-white sm:text-5xl">{title}</h3>
+          <p className="max-w-xl text-base leading-8 text-slate-300">{copy}</p>
+        </div>
+        <div className="rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.9),rgba(2,6,23,0.95))] p-5 shadow-[0_24px_80px_rgba(2,6,23,0.32)]">
+          {children}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function StatusDot({ tone }: { tone: "green" | "amber" | "red" }) {
+  const classes =
+    tone === "green"
+      ? "bg-emerald-400 shadow-[0_0_0_6px_rgba(34,197,94,0.08)]"
+      : tone === "amber"
+        ? "bg-amber-400 shadow-[0_0_0_6px_rgba(245,158,11,0.08)]"
+        : "bg-rose-400 shadow-[0_0_0_6px_rgba(239,68,68,0.08)]";
+  return <span className={`inline-flex h-3.5 w-3.5 rounded-full ${classes}`} />;
+}
+
 export default function Home() {
   return (
     <main className="min-h-screen bg-[#020617] text-slate-100">
@@ -254,71 +291,239 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="grid gap-4 rounded-[2rem] border border-white/10 bg-white/5 p-6 lg:grid-cols-4">
-          {featureRows.map(([label, copy]) => (
-            <div key={label} className="rounded-[1.4rem] border border-white/10 bg-black/20 p-4">
-              <p className="text-[11px] uppercase tracking-[0.28em] text-sky-300/80">{label}</p>
-              <p className="mt-2 text-sm leading-7 text-slate-300">{copy}</p>
+      <SceneFrame
+        eyebrow="Orden en riesgo"
+        title="Detecta retrasos antes de que el cliente reclame."
+        copy="Una orden próxima a vencer debe verse diferente: clara, silenciosa y sin confundir estados con marketing."
+      >
+        <div className="space-y-4">
+          <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.28em] text-sky-300/80">Folio</p>
+              <p className="mt-2 text-2xl font-black tracking-tight text-white">SRF-00214</p>
+              <p className="mt-1 text-sm text-slate-400">Cliente: Juan Pérez · iPhone 13</p>
+            </div>
+            <div className="text-right">
+              <StatusDot tone="red" />
+              <p className="mt-2 text-sm font-semibold text-rose-200">En reparación</p>
+              <p className="mt-1 text-xs uppercase tracking-[0.22em] text-slate-500">Promesa: hoy 6:00 PM</p>
+            </div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-[1.3rem] border border-white/10 bg-black/20 p-4"><StatusDot tone="green" /><p className="mt-3 text-sm text-slate-300">Recepción completa</p></div>
+            <div className="rounded-[1.3rem] border border-white/10 bg-black/20 p-4"><StatusDot tone="amber" /><p className="mt-3 text-sm text-slate-300">Diagnóstico pendiente</p></div>
+            <div className="rounded-[1.3rem] border border-white/10 bg-black/20 p-4"><StatusDot tone="red" /><p className="mt-3 text-sm text-slate-300">Riesgo de atraso</p></div>
+          </div>
+        </div>
+      </SceneFrame>
+
+      <SceneFrame
+        eyebrow="Timeline real"
+        title="Cada reparación tiene un historial completo."
+        copy="Estados, fechas y evidencias deberían vivir juntos. El taller ve contexto, el cliente entiende el avance."
+      >
+        <div className="space-y-3">
+          {[
+            ["Recepción", "12 jun · 09:42", "Equipo ingresado con fotos y diagnóstico inicial.", "green"],
+            ["Diagnóstico", "12 jun · 11:10", "Se detectó batería degradada y puerto sucio.", "green"],
+            ["Cotización", "12 jun · 12:35", "Cotización enviada por WhatsApp y portal.", "amber"],
+            ["Reparación", "13 jun · 10:20", "Pieza en espera con alerta de inventario.", "red"],
+            ["Entrega", "Pendiente", "Aún no liberado para cobro y entrega.", "red"],
+          ].map(([label, date, note, tone]) => (
+            <div key={label} className="flex items-start gap-4 rounded-[1.35rem] border border-white/10 bg-black/20 p-4">
+              <div className="mt-1"><StatusDot tone={tone as "green" | "amber" | "red"} /></div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-4">
+                  <p className="font-semibold text-white">{label}</p>
+                  <p className="text-xs uppercase tracking-[0.22em] text-slate-500">{date}</p>
+                </div>
+                <p className="mt-1 text-sm leading-7 text-slate-400">{note}</p>
+              </div>
             </div>
           ))}
         </div>
-      </section>
+      </SceneFrame>
 
-      <section id="producto" className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="grid gap-6 rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.88),rgba(2,6,23,0.95))] p-6 shadow-[0_30px_100px_rgba(2,6,23,0.35)] lg:grid-cols-[0.9fr_1.1fr] lg:p-8">
-          <div className="space-y-5">
-            <SectionLabel>Operación real</SectionLabel>
-            <h3 className="text-4xl font-black tracking-tight text-white sm:text-5xl">Un solo flujo para todo el taller.</h3>
-            <p className="max-w-xl text-base leading-8 text-slate-300">
-              La experiencia del cliente y la operación interna comparten la misma base visual y la misma estructura de información.
-            </p>
-            <div className="space-y-3">
-              {coreModules.slice(0, 4).map((module) => (
-                <div key={module.name} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
-                  <p className="font-semibold text-white">{module.name}</p>
-                  <p className="mt-1 text-sm leading-7 text-slate-400">{module.copy}</p>
-                </div>
-              ))}
+      <SceneFrame
+        eyebrow="Seguimiento público"
+        title="Tus clientes consultan el estado sin llamar ni mandar mensajes."
+        copy="La pantalla del cliente debe ser limpia, confiable y rápida. Un folio, un estado, un historial."
+      >
+        <div className="rounded-[1.6rem] border border-white/10 bg-black/25 p-5">
+          <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-4">
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.28em] text-sky-300/80">Portal del cliente</p>
+              <p className="mt-2 text-2xl font-black tracking-tight text-white">Ver estado</p>
+            </div>
+            <Link href="/cliente" className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-slate-100">
+              Abrir portal
+            </Link>
+          </div>
+          <div className="mt-5 grid gap-4 lg:grid-cols-[0.85fr_1.15fr]">
+            <div className="rounded-[1.3rem] border border-white/10 bg-white/5 p-4">
+              <p className="text-xs uppercase tracking-[0.24em] text-sky-300/80">Consultar folio</p>
+              <div className="mt-4 space-y-3">
+                <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-slate-300">Tenant: sr-fixi</div>
+                <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white">Folio: SRF-00214</div>
+                <div className="rounded-2xl border border-white/10 bg-[linear-gradient(135deg,rgba(96,165,250,0.16),rgba(37,99,235,0.16))] px-4 py-3 text-center text-sm font-semibold text-sky-100">Consultar</div>
+              </div>
+            </div>
+            <div className="rounded-[1.3rem] border border-white/10 bg-black/20 p-5">
+              <p className="text-xs uppercase tracking-[0.24em] text-sky-300/80">Estado actual</p>
+              <p className="mt-3 text-3xl font-black tracking-tight text-white">En reparación</p>
+              <p className="mt-3 text-sm leading-7 text-slate-400">Tu equipo está en proceso. La fecha prometida se mantiene visible y la información se actualiza sin ruido visual.</p>
             </div>
           </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            {coreModules.map((module) => (
-              <article key={module.name} className="rounded-[1.6rem] border border-white/10 bg-black/20 p-5">
-                <div className="h-10 w-10 rounded-2xl border border-sky-400/20 bg-sky-500/10" />
-                <h4 className="mt-4 text-xl font-semibold text-white">{module.name}</h4>
-                <p className="mt-2 text-sm leading-7 text-slate-400">{module.copy}</p>
-              </article>
-            ))}
-          </div>
         </div>
-      </section>
+      </SceneFrame>
 
-      <section className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="grid gap-6 rounded-[2rem] border border-white/10 bg-white/5 p-6 lg:grid-cols-[1fr_1fr] lg:p-8">
-          <div>
-            <SectionLabel>Proceso</SectionLabel>
-            <h3 className="mt-3 text-4xl font-black tracking-tight text-white">Recepción → diagnóstico → reparación → entrega → cobro</h3>
-            <p className="mt-4 max-w-xl text-base leading-8 text-slate-300">
-              Cada orden conserva contexto, evidencias y trazabilidad para que tu taller opere con disciplina y el cliente entienda qué pasa con su equipo.
-            </p>
-          </div>
-          <div className="grid gap-3">
-            {featureRows.map(([label, copy], index) => (
-              <div key={label} className="flex items-start gap-4 rounded-[1.4rem] border border-white/10 bg-black/20 p-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-sky-400/20 bg-sky-500/10 text-sm font-semibold text-sky-300">
-                  0{index + 1}
-                </div>
-                <div>
-                  <p className="font-semibold text-white">{label}</p>
-                  <p className="mt-1 text-sm leading-7 text-slate-400">{copy}</p>
-                </div>
+      <SceneFrame
+        eyebrow="Evidencias"
+        title="Documenta cada etapa del proceso."
+        copy="Las fotografías del equipo deben vivir en la orden, no dispersas en chats o galerías externas."
+      >
+        <div className="grid gap-4 sm:grid-cols-2">
+          {["Frontal del equipo", "Puerto de carga", "Batería reemplazada", "Prueba final"].map((label, index) => (
+            <div key={label} className="overflow-hidden rounded-[1.3rem] border border-white/10 bg-black/20">
+              <div className="aspect-[4/3] bg-[radial-gradient(circle_at_top,rgba(96,165,250,0.2),transparent_40%),linear-gradient(180deg,rgba(30,41,59,0.9),rgba(15,23,42,0.95))]" />
+              <div className="px-4 py-3">
+                <p className="text-sm font-semibold text-white">{label}</p>
+                <p className="mt-1 text-xs uppercase tracking-[0.22em] text-slate-500">Evidencia {index + 1}</p>
               </div>
-            ))}
+            </div>
+          ))}
+        </div>
+      </SceneFrame>
+
+      <SceneFrame
+        eyebrow="WhatsApp"
+        title="Envía el seguimiento en segundos."
+        copy="El enlace debe salir del folio real y llevar al cliente a su propio estado sin fricción."
+      >
+        <div className="grid gap-4 lg:grid-cols-[1fr_0.9fr]">
+          <div className="rounded-[1.3rem] border border-white/10 bg-black/20 p-4">
+            <p className="text-xs uppercase tracking-[0.24em] text-sky-300/80">Mensaje generado</p>
+            <div className="mt-4 rounded-[1.4rem] border border-white/10 bg-white/5 p-4 text-sm leading-7 text-slate-300">
+              Hola, tu equipo fue registrado en FIXI con el folio <span className="text-white">SRF-00214</span>. Puedes consultar el estado en el portal del cliente.
+            </div>
+            <div className="mt-4 rounded-full border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-center text-sm font-semibold text-emerald-200">
+              wa.me/521XXXXXXXXXX
+            </div>
+          </div>
+          <div className="rounded-[1.3rem] border border-white/10 bg-black/20 p-4">
+            <p className="text-xs uppercase tracking-[0.24em] text-sky-300/80">Acción</p>
+            <p className="mt-3 text-2xl font-black tracking-tight text-white">Compartir enlace</p>
+            <p className="mt-3 text-sm leading-7 text-slate-400">Un solo clic para avisar al cliente sin copiar y pegar texto o perseguir chats.</p>
           </div>
         </div>
-      </section>
+      </SceneFrame>
+
+      <SceneFrame
+        eyebrow="Inventario"
+        title="Evita quedarte sin piezas críticas."
+        copy="El stock bajo tiene que verse de inmediato y con suficiente espacio para que no pase desapercibido."
+      >
+        <div className="space-y-3">
+          {[
+            ["Batería iPhone 13", "2 unidades", "red"],
+            ["Pantalla Samsung A54", "4 unidades", "amber"],
+            ["Conector de carga", "1 unidad", "red"],
+          ].map(([name, stock, tone]) => (
+            <div key={name} className="flex items-center justify-between rounded-[1.25rem] border border-white/10 bg-black/20 px-4 py-4">
+              <div>
+                <p className="font-semibold text-white">{name}</p>
+                <p className="mt-1 text-xs uppercase tracking-[0.22em] text-slate-500">Stock crítico</p>
+              </div>
+              <div className={`rounded-full px-3 py-1 text-xs font-semibold ${tone === "red" ? "bg-rose-500/10 text-rose-200" : "bg-amber-500/10 text-amber-200"}`}>{stock}</div>
+            </div>
+          ))}
+        </div>
+      </SceneFrame>
+
+      <SceneFrame
+        eyebrow="Cobros"
+        title="No pierdas seguimiento de tus ingresos."
+        copy="Órdenes pendientes y cobradas en la misma vista, con el estado financiero siempre visible."
+      >
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div className="rounded-[1.3rem] border border-white/10 bg-black/20 p-4">
+            <p className="text-xs uppercase tracking-[0.24em] text-sky-300/80">Pendientes</p>
+            <div className="mt-4 space-y-3">
+              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">SRF-00214 · $1,250.00</div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">SRF-00219 · $680.00</div>
+            </div>
+          </div>
+          <div className="rounded-[1.3rem] border border-white/10 bg-black/20 p-4">
+            <p className="text-xs uppercase tracking-[0.24em] text-sky-300/80">Cobradas</p>
+            <div className="mt-4 space-y-3">
+              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">SRF-00210 · $2,100.00</div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">SRF-00208 · $950.00</div>
+            </div>
+          </div>
+        </div>
+      </SceneFrame>
+
+      <SceneFrame
+        eyebrow="Multi-sucursal"
+        title="Controla toda la operación desde un solo lugar."
+        copy="Varias sucursales dentro del mismo tenant, con espacios claros para no mezclar datos."
+      >
+        <div className="grid gap-3 sm:grid-cols-3">
+          {["sr fixi", "Hub", "Otriz Valle"].map((branch, index) => (
+            <div key={branch} className={`rounded-[1.3rem] border p-4 ${index === 1 ? "border-sky-400/25 bg-sky-500/10" : "border-white/10 bg-black/20"}`}>
+              <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Sucursal</p>
+              <p className="mt-2 text-lg font-semibold text-white">{branch}</p>
+              <p className="mt-3 text-sm text-slate-400">Activa</p>
+            </div>
+          ))}
+        </div>
+      </SceneFrame>
+
+      <SceneFrame
+        eyebrow="Dashboard operativo"
+        title="Visualiza tu operación en tiempo real."
+        copy="Métricas reales del taller sin adornos: órdenes activas, entregadas, pendientes y piezas críticas."
+      >
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+          {[
+            ["Órdenes activas", "18"],
+            ["Órdenes entregadas", "42"],
+            ["Pendientes de cobro", "9"],
+            ["Equipos en reparación", "14"],
+            ["Refacciones críticas", "5"],
+          ].map(([label, value]) => (
+            <div key={label} className="rounded-[1.2rem] border border-white/10 bg-black/20 p-4">
+              <p className="text-xs uppercase tracking-[0.24em] text-slate-500">{label}</p>
+              <p className="mt-3 text-3xl font-black tracking-tight text-white">{value}</p>
+            </div>
+          ))}
+        </div>
+      </SceneFrame>
+
+      <SceneFrame
+        eyebrow="Portal cliente"
+        title="Más confianza para el cliente y menos llamadas para tu equipo."
+        copy="La consulta por folio debe sentirse simple y confiable, con la misma identidad visual del resto de FIXI."
+      >
+        <div className="rounded-[1.4rem] border border-white/10 bg-black/20 p-5">
+          <div className="flex items-center justify-between border-b border-white/10 pb-4">
+            <p className="text-xs uppercase tracking-[0.24em] text-sky-300/80">Portal del cliente</p>
+            <p className="text-xs uppercase tracking-[0.24em] text-slate-500">SRF-00214</p>
+          </div>
+          <div className="mt-4 grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
+            <div className="rounded-[1.25rem] border border-white/10 bg-white/5 p-4">
+              <p className="text-sm font-semibold text-white">Consultar por folio</p>
+              <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-slate-300">Tenant + folio</div>
+              <div className="mt-3 rounded-2xl bg-sky-500/90 px-4 py-3 text-center text-sm font-semibold text-white">Consultar</div>
+            </div>
+            <div className="rounded-[1.25rem] border border-white/10 bg-white/5 p-4">
+              <p className="text-xs uppercase tracking-[0.24em] text-sky-300/80">Estado</p>
+              <p className="mt-3 text-3xl font-black tracking-tight text-white">En reparación</p>
+              <p className="mt-3 text-sm leading-7 text-slate-400">El cliente ve su avance, sus evidencias y su información sin fricción.</p>
+            </div>
+          </div>
+        </div>
+      </SceneFrame>
 
       <section id="precios" className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
