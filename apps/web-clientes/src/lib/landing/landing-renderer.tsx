@@ -53,11 +53,9 @@ export function LandingRenderer({ tenant, landingContent }: LandingRendererProps
   const secondaryCtaHref = landingContent.secondaryCtaHref || `/t/${tenant.slug}/portal`;
   const contactHref = landingContent.contactHref || tenant.contactEmail || tenant.contactPhone || null;
   const contactLabel = landingContent.contactLabel || "Contacto";
-  const whatsapp = whatsappHref(landingContent.contactPhone || tenant.contactPhone || null);
-  const gallery = landingContent.gallery ?? [];
-  const aboutTitle = landingContent.aboutTitle?.trim() || "Nosotros";
-  const aboutDescription = landingContent.aboutDescription?.trim() || "";
+  const whatsapp = whatsappHref(tenant.contactPhone || null);
   const socialLinks = landingContent.socialLinks ?? [];
+  const heroImage = theme.imagery.heroImage || theme.imagery.coverImage || tenant.branding.heroImageUrl || tenant.branding.coverImageUrl || tenant.branding.logoUrl || null;
 
   return (
     <main
@@ -115,85 +113,36 @@ export function LandingRenderer({ tenant, landingContent }: LandingRendererProps
             </div>
           </div>
 
-          <aside className="rounded-[2rem] border border-white/10 bg-zinc-950/70 p-6" style={{ borderColor: theme.colors.border }}>
-            <p className="text-xs font-semibold uppercase tracking-[0.3em]" style={{ color: theme.colors.accent }}>Servicios</p>
-            <div className="mt-5 grid gap-4">
-              {(landingContent.services ?? []).length > 0 ? (landingContent.services ?? []).map((service) => (
-                <div key={service.title} className="rounded-2xl border bg-white/5 p-4" style={{ borderColor: theme.colors.border }}>
-                  <p className="font-semibold text-zinc-50">{service.title}</p>
-                  <p className="mt-1 text-sm leading-6 text-zinc-300">{service.description}</p>
+          <aside className="space-y-4">
+            <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-zinc-950/70" style={{ borderColor: theme.colors.border }}>
+              {heroImage ? (
+                <div className="relative min-h-[18rem] w-full">
+                  <Image src={heroImage} alt={tenant.name} fill className="object-cover" sizes="(max-width: 1024px) 100vw, 45vw" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/10 to-transparent" />
                 </div>
-              )) : (
-                <div className="rounded-2xl border border-dashed bg-white/5 p-4 text-sm text-zinc-300" style={{ borderColor: theme.colors.border }}>
-                  No hay servicios configurados para este tenant.
+              ) : (
+                <div className="flex min-h-[18rem] items-center justify-center p-8 text-center text-zinc-400">
+                  Sube una imagen del tenant para mostrarla aquí.
                 </div>
               )}
+            </div>
+            <div className="rounded-[2rem] border border-white/10 bg-zinc-950/70 p-6" style={{ borderColor: theme.colors.border }}>
+              <p className="text-xs font-semibold uppercase tracking-[0.3em]" style={{ color: theme.colors.accent }}>Servicios</p>
+              <div className="mt-5 grid gap-4">
+                {(landingContent.services ?? []).length > 0 ? (landingContent.services ?? []).map((service) => (
+                  <div key={service.title} className="rounded-2xl border bg-white/5 p-4" style={{ borderColor: theme.colors.border }}>
+                    <p className="font-semibold text-zinc-50">{service.title}</p>
+                    <p className="mt-1 text-sm leading-6 text-zinc-300">{service.description}</p>
+                  </div>
+                )) : (
+                  <div className="rounded-2xl border border-dashed bg-white/5 p-4 text-sm text-zinc-300" style={{ borderColor: theme.colors.border }}>
+                    No hay servicios configurados para este tenant.
+                  </div>
+                )}
+              </div>
             </div>
           </aside>
         </section>
-
-        {aboutDescription ? (
-            <section className="rounded-[2rem] border bg-white/5 p-6" style={{ borderColor: theme.colors.border }}>
-            <p className="text-xs font-semibold uppercase tracking-[0.3em]" style={{ color: theme.colors.accent }}>{aboutTitle}</p>
-            <p className="mt-4 max-w-4xl text-base leading-8 text-zinc-300">{aboutDescription}</p>
-          </section>
-        ) : null}
-
-        {gallery.length > 0 ? (
-          <section className="space-y-4">
-              <div className="flex items-end justify-between gap-3">
-                <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.3em]" style={{ color: theme.colors.accent }}>Galería</p>
-                <h3 className="mt-2 text-2xl font-black tracking-tight">Evidencia visual del taller</h3>
-              </div>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {gallery.length > 0 ? gallery.map((item, index) => (
-                <figure key={item.id ?? `${item.url}-${index}`} className="overflow-hidden rounded-[1.75rem] border bg-white/5" style={{ borderColor: theme.colors.border }}>
-                  <div className="relative aspect-[4/3]">
-                    <Image src={item.url} alt={item.alt || item.caption || `Galería ${index + 1}`} fill className="object-cover" />
-                  </div>
-                  {item.caption ? <figcaption className="px-4 py-3 text-sm text-zinc-300">{item.caption}</figcaption> : null}
-                </figure>
-              )) : (
-                <div className="rounded-[1.75rem] border border-dashed bg-white/5 p-6 text-sm text-zinc-300 sm:col-span-2 lg:col-span-3" style={{ borderColor: theme.colors.border }}>
-                  La galería no tiene contenido real todavía.
-                </div>
-              )}
-            </div>
-          </section>
-        ) : null}
-
-        {landingContent.testimonials?.length ? (
-          <section className="space-y-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em]" style={{ color: theme.colors.accent }}>Testimonios</p>
-            <div className="grid gap-4 lg:grid-cols-3">
-              {landingContent.testimonials.map((testimonial) => (
-                <article key={`${testimonial.clientName}-${testimonial.date}`} className="rounded-[1.75rem] border border-white/10 bg-white/5 p-5">
-                  <p className="text-sm leading-7 text-zinc-300">{testimonial.comment}</p>
-                  <div className="mt-4">
-                    <p className="font-semibold text-zinc-50">{testimonial.clientName}</p>
-                    <p className="text-xs uppercase tracking-[0.18em] text-zinc-400">{testimonial.date}</p>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </section>
-        ) : null}
-
-        {landingContent.faqs?.length ? (
-          <section className="space-y-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em]" style={{ color: theme.colors.accent }}>FAQ</p>
-            <div className="grid gap-3">
-              {landingContent.faqs.map((faq) => (
-                <details key={faq.question} className="rounded-2xl border border-white/10 bg-white/5 px-5 py-4">
-                  <summary className="cursor-pointer font-semibold text-zinc-50">{faq.question}</summary>
-                  <p className="mt-3 text-sm leading-7 text-zinc-300">{faq.answer}</p>
-                </details>
-              ))}
-            </div>
-          </section>
-        ) : null}
 
         <section className="rounded-[2rem] border bg-white/5 p-6" style={{ borderColor: theme.colors.border }}>
           <p className="text-xs font-semibold uppercase tracking-[0.3em]" style={{ color: theme.colors.accent }}>Redes sociales</p>
@@ -212,8 +161,8 @@ export function LandingRenderer({ tenant, landingContent }: LandingRendererProps
           <LeadForm
             tenantSlug={tenant.slug}
             tenantName={tenant.name}
-            contactPhone={landingContent.contactPhone || tenant.contactPhone || null}
-            contactEmail={landingContent.contactEmail || tenant.contactEmail || null}
+            contactPhone={tenant.contactPhone || null}
+            contactEmail={tenant.contactEmail || null}
           />
 
           <div className="space-y-4 rounded-[2rem] border bg-white/5 p-6" style={{ borderColor: theme.colors.border }}>

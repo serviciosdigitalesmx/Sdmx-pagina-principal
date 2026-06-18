@@ -10,6 +10,8 @@ export interface Tenant {
     primaryColor: string;
     secondaryColor: string;
     faviconUrl?: string | null;
+    heroImageUrl?: string | null;
+    coverImageUrl?: string | null;
   };
   theme_config?: {
     logoUrl?: string | null;

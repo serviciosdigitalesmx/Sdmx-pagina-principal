@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Globe, RefreshCw, Save, Eye, Copy, ExternalLink } from "lucide-react";
+import { apiGateway } from "@/services/apiGateway";
 import { tenantSettingsService } from "@/services/tenant-settings/tenantSettingsService";
 
 type LandingService = {
@@ -46,7 +47,15 @@ type TenantLandingSettings = {
     id: string;
     slug: string;
     name: string;
-    branding?: Record<string, unknown> | null;
+    branding?: {
+      logoUrl?: string | null;
+      faviconUrl?: string | null;
+      heroImageUrl?: string | null;
+      coverImageUrl?: string | null;
+      primaryColor?: string | null;
+      secondaryColor?: string | null;
+      [key: string]: unknown;
+    } | null;
     landing_content?: Partial<LandingContent> | null;
     industry_profile?: {
       industry_key?: string | null;
@@ -131,6 +140,7 @@ export default function LandingSettingsPage() {
   const [settings, setSettings] = useState<TenantLandingSettings | null>(null);
   const [landingContent, setLandingContent] = useState<LandingContent>(defaultLandingContent);
   const [industryKey, setIndustryKey] = useState<string>(DEFAULT_INDUSTRY_KEY);
+  const branding = settings?.tenant.branding ?? null;
 
   async function load() {
     try {
@@ -184,6 +194,22 @@ export default function LandingSettingsPage() {
     if (!tenantPublicUrl) return;
     await navigator.clipboard.writeText(tenantPublicUrl);
     setSuccess("URL pública copiada al portapapeles.");
+  };
+
+  const uploadBrandingAsset = async (assetType: "logo" | "favicon" | "heroImage" | "coverImage", file: File) => {
+    setSaving(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const uploadResult = await apiGateway.uploadTenantBrandingAsset({ assetType, file });
+      setSettings((current) => current ? { ...current, tenant: uploadResult.data.tenant } : current);
+      setSuccess("Archivo subido correctamente.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al subir el archivo");
+    } finally {
+      setSaving(false);
+    }
   };
 
   async function handleSave() {
@@ -280,6 +306,94 @@ export default function LandingSettingsPage() {
             </div>
             <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-900/60 px-4 py-3 text-sm text-sky-300 break-all">
               {tenantPublicUrl || "URL pública no disponible"}
+            </div>
+          </div>
+
+          <div className="space-y-4 rounded-3xl border border-slate-800 bg-slate-950/70 p-5 shadow-[0_24px_70px_rgba(2,6,23,0.32)]">
+            <h2 className="text-lg font-semibold text-slate-50">Branding del tenant</h2>
+            <p className="text-sm text-slate-400">Sube logo, favicon y piezas visuales para la landing del cliente.</p>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <label className="space-y-2 rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm font-medium text-slate-100">Logo</span>
+                  {branding?.logoUrl ? <a href={branding.logoUrl} target="_blank" rel="noreferrer" className="text-xs text-sky-300">Ver actual</a> : null}
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="input"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      void uploadBrandingAsset("logo", file);
+                      e.currentTarget.value = "";
+                    }
+                  }}
+                />
+              </label>
+
+              <label className="space-y-2 rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm font-medium text-slate-100">Favicon</span>
+                  {branding?.faviconUrl ? <a href={branding.faviconUrl} target="_blank" rel="noreferrer" className="text-xs text-sky-300">Ver actual</a> : null}
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="input"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      void uploadBrandingAsset("favicon", file);
+                      e.currentTarget.value = "";
+                    }
+                  }}
+                />
+              </label>
+
+              <label className="space-y-2 rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm font-medium text-slate-100">Imagen hero</span>
+                  {branding?.heroImageUrl ? <a href={branding.heroImageUrl} target="_blank" rel="noreferrer" className="text-xs text-sky-300">Ver actual</a> : null}
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="input"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      void uploadBrandingAsset("heroImage", file);
+                      e.currentTarget.value = "";
+                    }
+                  }}
+                />
+              </label>
+
+              <label className="space-y-2 rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm font-medium text-slate-100">Imagen cover</span>
+                  {branding?.coverImageUrl ? <a href={branding.coverImageUrl} target="_blank" rel="noreferrer" className="text-xs text-sky-300">Ver actual</a> : null}
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="input"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      void uploadBrandingAsset("coverImage", file);
+                      e.currentTarget.value = "";
+                    }
+                  }}
+                />
+              </label>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2">
+              {branding?.logoUrl ? <img src={branding.logoUrl} alt="Logo actual" className="h-24 w-full rounded-2xl border border-slate-800 bg-slate-900/60 object-contain p-3" /> : null}
+              {branding?.heroImageUrl ? <img src={branding.heroImageUrl} alt="Imagen hero actual" className="h-24 w-full rounded-2xl border border-slate-800 bg-slate-900/60 object-cover" /> : null}
             </div>
           </div>
 

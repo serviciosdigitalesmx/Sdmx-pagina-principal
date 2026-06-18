@@ -88,8 +88,8 @@ export function resolveTenantTheme(tenant: Tenant): ResolvedTenantTheme {
       mono: normalizeColor(typography.mono, FALLBACK_THEME.typography.mono),
     },
     imagery: {
-      heroImage: normalizeColor(imagery.heroImageUrl, ""),
-      coverImage: normalizeColor(imagery.coverImageUrl, ""),
+      heroImage: normalizeColor(imagery.heroImageUrl, tenant.branding.heroImageUrl ?? ""),
+      coverImage: normalizeColor(imagery.coverImageUrl, tenant.branding.coverImageUrl ?? ""),
     },
     cta: {
       primaryRadius: normalizeColor(cta.primaryRadius, FALLBACK_THEME.cta.primaryRadius),

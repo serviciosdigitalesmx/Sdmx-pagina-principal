@@ -1,4 +1,6 @@
 import { Request, Response } from 'express';
+import { randomUUID } from 'crypto';
+import { z } from 'zod';
 import { supabaseAdmin } from '@white-label/database';
 import { loadTenantBillingSummary } from '../services/tenant-billing';
 import { getIndustryTemplate, listAvailableIndustries, loadTenantRuntimeConfig } from '../services/tenant-config';
@@ -17,6 +19,47 @@ export const getApiRoot = (_req: Request, res: Response) => {
     },
   });
 };
+
+const brandingAssetSchema = z.object({
+  assetType: z.enum(['logo', 'favicon', 'heroImage', 'coverImage']),
+  fileName: z.string().min(1),
+  mimeType: z.string().min(1),
+  base64: z.string().min(1),
+});
+
+function getBrandingBucketName() {
+  return process.env.SUPABASE_BRANDING_BUCKET ?? 'tenant-branding-assets';
+}
+
+function getFileExtension(fileName: string, mimeType: string) {
+  if (mimeType === 'image/svg+xml') return 'svg';
+  if (mimeType === 'image/png') return 'png';
+  if (mimeType === 'image/jpeg') return 'jpg';
+  if (mimeType === 'image/webp') return 'webp';
+  const lower = fileName.toLowerCase();
+  const dotIndex = lower.lastIndexOf('.');
+  return dotIndex >= 0 ? lower.slice(dotIndex + 1) : mimeType.split('/').pop() ?? 'bin';
+}
+
+function decodeBase64File(base64: string) {
+  const cleaned = base64.includes(',') ? base64.split(',').pop() ?? '' : base64;
+  return Buffer.from(cleaned, 'base64');
+}
+
+async function ensureBucketExists(bucketName: string) {
+  const { error } = await supabaseAdmin.storage.getBucket(bucketName);
+  if (!error) return;
+
+  const { error: createError } = await supabaseAdmin.storage.createBucket(bucketName, {
+    public: true,
+    allowedMimeTypes: ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'],
+    fileSizeLimit: 5 * 1024 * 1024,
+  });
+
+  if (createError) {
+    throw new Error(`Unable to ensure storage bucket ${bucketName}: ${createError.message}`);
+  }
+}
 
 export const getHealth = (_req: Request, res: Response) => {
   return res.status(200).json({
@@ -513,6 +556,94 @@ export const updateTenantSettings = async (req: Request, res: Response) => {
         config: {
           ...config,
           capabilities,
+        },
+      },
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    return res.status(500).json({ error: message });
+  }
+};
+
+export const uploadTenantBrandingAsset = async (req: Request, res: Response) => {
+  const tenantSlug = req.params.tenantSlug;
+  const tenantId = req.tenantId ?? null;
+
+  if (!tenantSlug && !tenantId) {
+    return res.status(400).json({ error: 'Tenant slug is required' });
+  }
+
+  try {
+    const parsed = brandingAssetSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({
+        error: 'Invalid branding asset payload',
+        details: parsed.error.flatten(),
+      });
+    }
+
+    const tenantQuery = supabaseAdmin.from('tenants').select('id, slug, branding');
+    const { data: tenantRow, error: tenantError } = tenantId
+      ? await tenantQuery.eq('id', tenantId).maybeSingle()
+      : await tenantQuery.eq('slug', tenantSlug).maybeSingle();
+
+    if (tenantError || !tenantRow) {
+      return res.status(404).json({ error: 'Tenant not found', details: tenantError?.message ?? 'Not found' });
+    }
+
+    const bucketName = getBrandingBucketName();
+    await ensureBucketExists(bucketName);
+
+    const fileBuffer = decodeBase64File(parsed.data.base64);
+    const safeName = parsed.data.fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const extension = getFileExtension(parsed.data.fileName, parsed.data.mimeType);
+    const storagePath = `tenant/${tenantRow.id}/branding/${parsed.data.assetType}/${Date.now()}-${randomUUID()}-${safeName}.${extension}`;
+
+    const { error: uploadError } = await supabaseAdmin.storage.from(bucketName).upload(storagePath, fileBuffer, {
+      contentType: parsed.data.mimeType,
+      upsert: false,
+    });
+
+    if (uploadError) {
+      return res.status(502).json({
+        error: 'Failed to upload branding asset',
+        details: uploadError.message,
+      });
+    }
+
+    const { data: publicData } = supabaseAdmin.storage.from(bucketName).getPublicUrl(storagePath);
+    const publicUrl = publicData.publicUrl ?? null;
+    const currentBranding = (tenantRow.branding && typeof tenantRow.branding === 'object') ? tenantRow.branding as Record<string, unknown> : {};
+    const brandingPatch: Record<string, unknown> = { ...currentBranding };
+
+    if (parsed.data.assetType === 'logo') brandingPatch.logoUrl = publicUrl ?? '';
+    if (parsed.data.assetType === 'favicon') brandingPatch.faviconUrl = publicUrl ?? '';
+    if (parsed.data.assetType === 'heroImage') brandingPatch.heroImageUrl = publicUrl ?? '';
+    if (parsed.data.assetType === 'coverImage') brandingPatch.coverImageUrl = publicUrl ?? '';
+
+    const { data: updatedTenant, error: updateError } = await supabaseAdmin
+      .from('tenants')
+      .update({ branding: brandingPatch })
+      .eq('id', tenantRow.id)
+      .select('id, slug, name, branding, landing_content, trial_expires_at, billing_exempt')
+      .single();
+
+    if (updateError || !updatedTenant) {
+      return res.status(502).json({
+        error: 'Failed to persist branding asset',
+        details: updateError?.message ?? 'Unknown error',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        tenant: updatedTenant,
+        asset: {
+          assetType: parsed.data.assetType,
+          publicUrl,
+          bucketName,
+          storagePath,
         },
       },
     });

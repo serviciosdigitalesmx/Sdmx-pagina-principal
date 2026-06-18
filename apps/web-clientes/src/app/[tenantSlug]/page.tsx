@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { LandingSectionFactory } from "@/lib/landing/landing-section-factory";
 import { loadTenantLanding } from "@/lib/landing/tenant-landing-loader";
-import { TenantThemeProvider } from "@/lib/theme/tenant-theme-provider";
+import { TenantBrandingProvider } from "@/lib/theme/tenant-branding-provider";
 import { resolveTenantTheme } from "@/lib/theme/theme-resolver";
 import type { Metadata } from "next";
 
@@ -20,7 +20,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const content = payload?.landingContent;
   const tenant = payload?.tenant;
   const theme = tenant ? resolveTenantTheme(tenant) : null;
-  const image = toAbsoluteUrl(theme?.imagery.heroImage || theme?.imagery.coverImage || tenant?.branding.logoUrl || null);
+  const image = toAbsoluteUrl(
+    theme?.imagery.heroImage ||
+      theme?.imagery.coverImage ||
+      tenant?.branding.heroImageUrl ||
+      tenant?.branding.coverImageUrl ||
+      tenant?.branding.logoUrl ||
+      null,
+  );
   const icon = toAbsoluteUrl(theme?.faviconUrl || tenant?.branding.faviconUrl || null);
   const canonicalPath = `/t/${tenantSlug}`;
 
@@ -82,8 +89,8 @@ export default async function TenantLandingPage({ params }: PageProps) {
   }
 
   return (
-    <TenantThemeProvider tenantSlug={payload.tenant.slug} theme={resolveTenantTheme(payload.tenant)}>
+    <TenantBrandingProvider tenant={payload.tenant}>
       <LandingSectionFactory tenant={payload.tenant} landingContent={payload.landingContent} />
-    </TenantThemeProvider>
+    </TenantBrandingProvider>
   );
 }

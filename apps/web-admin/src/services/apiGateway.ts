@@ -49,6 +49,8 @@ type FieldDefinitionPayload = {
   metadata?: Record<string, unknown>;
 };
 
+type BrandingAssetType = 'logo' | 'favicon' | 'heroImage' | 'coverImage';
+
 type SemaphoreRulePayload = {
   id?: string;
   tenant_id?: string;
@@ -1436,6 +1438,38 @@ class ApiGateway {
     return this.request<ApiSingleResponse<TenantLandingSettings>>(`/api/auth/tenant/${encodeURIComponent(this.tenantSlug)}/settings`, {
       method: 'PUT',
       body: JSON.stringify(payload),
+    });
+  }
+
+  public async uploadTenantBrandingAsset(payload: {
+    file: File;
+    assetType: BrandingAssetType;
+  }): Promise<ApiSingleResponse<{
+    tenant: TenantLandingSettings['tenant'];
+    asset: {
+      assetType: BrandingAssetType;
+      publicUrl: string | null;
+      bucketName: string;
+      storagePath: string;
+    };
+  }>> {
+    const base64 = await this.fileToBase64(payload.file);
+    return this.request<ApiSingleResponse<{
+      tenant: TenantLandingSettings['tenant'];
+      asset: {
+        assetType: BrandingAssetType;
+        publicUrl: string | null;
+        bucketName: string;
+        storagePath: string;
+      };
+    }>>(`/api/auth/tenant/${encodeURIComponent(this.tenantSlug)}/assets`, {
+      method: 'POST',
+      body: JSON.stringify({
+        assetType: payload.assetType,
+        fileName: payload.file.name,
+        mimeType: payload.file.type || 'application/octet-stream',
+        base64,
+      }),
     });
   }
 
