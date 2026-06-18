@@ -11,6 +11,7 @@ import { TenantBrandingProvider } from "@/lib/theme/tenant-branding-provider";
 import { OrderTimeline } from "@/components/portal/order-timeline";
 import { EvidenceGallery } from "@/components/portal/evidence-gallery";
 import { DocumentList } from "@/components/portal/document-list";
+import { Badge, SurfaceCard } from "@white-label/ui";
 
 function resolveWhatsappHref(phone?: string | null, folio?: string) {
   if (!phone) return undefined;
@@ -163,8 +164,8 @@ export function PortalView({ tenantSlug, initialFolio = "" }: PortalViewProps) {
     return (
       <main className="min-h-screen bg-[#020617] px-4 py-6 text-slate-50">
         <div className="mx-auto max-w-6xl space-y-6">
-          <header className="rounded-[1.75rem] border border-white/10 bg-white/5 p-5 shadow-[0_20px_70px_rgba(0,0,0,0.2)]">
-            <div className="flex items-center justify-between gap-4">
+        <SurfaceCard elevated className="p-5">
+          <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-sky-400/20 bg-white/5">
                   <span className="text-xl font-black text-sky-300">FX</span>
@@ -176,12 +177,12 @@ export function PortalView({ tenantSlug, initialFolio = "" }: PortalViewProps) {
                 </div>
               </div>
             </div>
-          </header>
+        </SurfaceCard>
 
-          <section className="rounded-[1.5rem] border border-rose-400/20 bg-white/5 p-6 text-center shadow-[0_20px_70px_rgba(0,0,0,0.2)]">
+          <SurfaceCard elevated className="p-6 text-center border border-rose-400/20 bg-rose-500/5">
             <p className="text-lg font-semibold text-slate-50">No se pudo cargar la información del taller.</p>
             <p className="mt-2 text-sm text-slate-400">{tenantError || "El taller especificado no se encuentra registrado en el sistema."}</p>
-          </section>
+          </SurfaceCard>
         </div>
       </main>
     );
@@ -191,7 +192,7 @@ export function PortalView({ tenantSlug, initialFolio = "" }: PortalViewProps) {
     <TenantBrandingProvider tenant={tenant}>
       <main className="min-h-screen bg-[#020617] px-4 py-6 text-slate-50">
         <div className="mx-auto max-w-6xl space-y-6">
-          <header className="rounded-[1.75rem] border border-white/10 bg-white/5 p-5 shadow-[0_20px_70px_rgba(0,0,0,0.2)]">
+          <SurfaceCard elevated className="p-5">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex items-center gap-4">
                 <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-sky-400/20 bg-white/5">
@@ -212,7 +213,7 @@ export function PortalView({ tenantSlug, initialFolio = "" }: PortalViewProps) {
                 <div className="mt-1 text-sm font-semibold text-slate-200">{currentDate}</div>
               </div>
             </div>
-          </header>
+          </SurfaceCard>
 
           <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
             <form
@@ -241,15 +242,15 @@ export function PortalView({ tenantSlug, initialFolio = "" }: PortalViewProps) {
 
               <div className="mt-4 grid grid-cols-2 gap-3 text-center text-xs text-slate-400">
                 {["Datos reales", "Tenant aislado", "Documentos", "Timeline"].map((badge) => (
-                  <span key={badge} className="rounded-2xl border border-white/10 bg-black/20 px-3 py-4">
+                  <Badge key={badge} variant="neutral" className="justify-center py-4">
                     {badge}
-                  </span>
+                  </Badge>
                 ))}
               </div>
             </form>
 
             {result ? (
-              <aside className="rounded-[1.75rem] border border-sky-400/15 bg-white/5 p-6 shadow-[0_20px_70px_rgba(0,0,0,0.2)]">
+              <SurfaceCard elevated className="p-6">
                 <div className="space-y-5">
                   <div className="rounded-[1.5rem] border border-sky-400/20 bg-sky-500/10 p-5">
                     <div className="text-sm uppercase tracking-[0.2em] text-sky-500">Folio</div>
@@ -298,15 +299,15 @@ export function PortalView({ tenantSlug, initialFolio = "" }: PortalViewProps) {
                     </div>
                   </div>
                 </div>
-              </aside>
+              </SurfaceCard>
             ) : (
-              <aside className="flex min-h-[300px] flex-col items-center justify-center rounded-[1.75rem] border border-sky-400/15 bg-white/5 p-6 text-center shadow-[0_20px_70px_rgba(0,0,0,0.2)]">
+              <SurfaceCard elevated className="flex min-h-[300px] flex-col items-center justify-center p-6 text-center">
                 <div className="mb-4 rounded-full border border-sky-400/20 bg-sky-500/10 p-4 text-2xl font-black text-sky-300">SR</div>
                 <h3 className="text-xl font-black text-slate-50">Seguimiento técnico</h3>
                 <p className="mt-2 max-w-sm text-sm leading-6 text-slate-400">
                   Ingresa el folio para consultar el estado de tu reparación, ver fotografías, documentos y mensajes del taller.
                 </p>
-              </aside>
+              </SurfaceCard>
             )}
           </section>
 
