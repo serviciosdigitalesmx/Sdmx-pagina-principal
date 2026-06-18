@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { optionalEnv } from "@white-label/config";
-import { PublicPortalLookup } from "@/components/public-portal-lookup";
 import { RootAuthHashRedirect } from "@/components/root-auth-hash-redirect";
 import { resolveAdminUrl } from "@/lib/admin-url";
 
@@ -41,7 +40,7 @@ const featureCards = [
   },
   {
     title: "WhatsApp",
-    description: "Notificaciones y enlaces directos al seguimiento público.",
+    description: "Notificaciones y enlaces directos al cliente.",
     icon: "✆",
   },
   {
@@ -56,8 +55,8 @@ const pricingPlans = [
     name: "Básico",
     price: "$300",
     period: "MXN / mes",
-    description: "Para talleres que quieren arrancar con recepción y seguimiento público.",
-    features: ["Órdenes ilimitadas", "Seguimiento público", "WhatsApp integrado"],
+    description: "Para talleres que quieren arrancar con recepción y operación básica.",
+    features: ["Órdenes ilimitadas", "WhatsApp integrado", "Panel administrativo"],
     featured: false,
   },
   {
@@ -175,7 +174,7 @@ function DashboardPreview() {
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50 p-4">
             <p className="text-xs uppercase tracking-[0.24em] text-sky-500">Seguimiento</p>
-            <p className="mt-2 text-sm leading-6 text-slate-600">Seguimiento público, timeline y PDF real en un solo flujo.</p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Flujos operativos reales conectados al backend.</p>
           </div>
           <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50 p-4">
             <p className="text-xs uppercase tracking-[0.24em] text-sky-500">Inventario</p>
@@ -190,35 +189,6 @@ function DashboardPreview() {
             <p className="mt-2 text-sm leading-6 text-slate-600">El enlace lleva al seguimiento con el folio precargado.</p>
           </div>
         </div>
-      </div>
-    </div>
-  );
-}
-
-function MobilePortalPreview() {
-  return (
-    <div className="mx-auto w-full max-w-[20rem] rounded-[2.4rem] border-[10px] border-slate-950 bg-slate-950 shadow-[0_30px_80px_rgba(15,23,42,0.24)]">
-      <div className="rounded-[1.9rem] bg-white p-4 text-slate-950">
-        <p className="text-xs uppercase tracking-[0.28em] text-sky-500">Seguimiento público</p>
-        <h4 className="mt-2 text-xl font-black tracking-tight">Consulta tu reparación</h4>
-        <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-3">
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Folio</p>
-          <p className="mt-1 font-mono text-sm font-semibold text-slate-900">FIX-00214</p>
-        </div>
-        <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-3">
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Estado</p>
-          <p className="mt-1 text-sm font-semibold text-emerald-700">En reparación</p>
-        </div>
-        <div className="mt-4 grid grid-cols-4 gap-2 text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-          <div className="rounded-xl bg-emerald-100 px-2 py-2 text-emerald-700">Recibido</div>
-          <div className="rounded-xl bg-emerald-100 px-2 py-2 text-emerald-700">Diagnóstico</div>
-          <div className="rounded-xl bg-sky-100 px-2 py-2 text-sky-700">Proceso</div>
-          <div className="rounded-xl bg-slate-100 px-2 py-2">Entrega</div>
-        </div>
-        <button className="mt-4 w-full rounded-2xl bg-[linear-gradient(135deg,#7c3aed_0%,#4f46e5_100%)] px-4 py-3 text-sm font-semibold text-white shadow-[0_16px_35px_rgba(99,102,241,0.25)]">
-          Consultar
-        </button>
-        <p className="mt-3 text-xs leading-5 text-slate-500">Acceso público para que el cliente vea el estado de su orden sin iniciar sesión.</p>
       </div>
     </div>
   );
@@ -243,7 +213,6 @@ export default function Home() {
           <nav className="flex flex-wrap items-center gap-4 text-sm font-medium text-slate-300">
             <Link href="#funciones" className="transition hover:text-white">Funciones</Link>
             <Link href="#precios" className="transition hover:text-white">Precios</Link>
-            <Link href="#seguimiento" className="transition hover:text-white">Seguimiento</Link>
             <Link href="#contacto" className="transition hover:text-white">Contacto</Link>
             <Link href={adminLoginUrl} className="rounded-full px-4 py-2 transition hover:bg-white/5 hover:text-white">Iniciar sesión</Link>
             <CTA href={adminOnboardingUrl}>Probar {trialDays} días gratis</CTA>
@@ -287,7 +256,7 @@ export default function Home() {
           <div className="flex flex-wrap gap-4">
             <CTA href={adminOnboardingUrl}>Probar {trialDays} días gratis</CTA>
             <GoogleCTA href="/auth/google">Continuar con Google</GoogleCTA>
-            <Link href="#seguimiento" className="inline-flex items-center justify-center rounded-2xl border border-slate-700 bg-slate-950 px-6 py-4 text-sm font-semibold uppercase tracking-[0.16em] text-slate-100 transition hover:-translate-y-0.5 hover:bg-slate-900">
+            <Link href="#contacto" className="inline-flex items-center justify-center rounded-2xl border border-slate-700 bg-slate-950 px-6 py-4 text-sm font-semibold uppercase tracking-[0.16em] text-slate-100 transition hover:-translate-y-0.5 hover:bg-slate-900">
               Ver demostración
             </Link>
           </div>
@@ -347,35 +316,6 @@ export default function Home() {
                 </article>
               ))}
             </div>
-          </div>
-        </div>
-      </section>
-
-      <section id="seguimiento" className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
-          <div className="space-y-5 rounded-[2.2rem] border border-slate-800 bg-slate-950/90 p-6 shadow-[0_20px_70px_rgba(2,6,23,0.45)] lg:p-8">
-            <SectionLabel>Tus clientes siempre informados</SectionLabel>
-            <h3 className="text-4xl font-black tracking-tight text-slate-50 sm:text-5xl">Seguimiento público sin complicaciones.</h3>
-            <p className="max-w-xl text-base leading-8 text-slate-300">
-              El cliente consulta el estatus de su reparación con su número de folio, sin registro y sin apps extra. El seguimiento usa datos reales del backend.
-            </p>
-            <ul className="space-y-3 text-slate-200">
-              {[
-                "Consulta en tiempo real",
-                "Fotos de cada etapa",
-                "Notificaciones automáticas",
-                "Más confianza, más clientes",
-              ].map((item) => (
-                <li key={item} className="flex items-center gap-3">
-              <span className="text-sky-500">◌</span>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="rounded-[2.2rem] border border-slate-800 bg-slate-950/90 p-5 shadow-[0_20px_70px_rgba(2,6,23,0.45)] sm:p-6">
-            <MobilePortalPreview />
           </div>
         </div>
       </section>
@@ -465,13 +405,6 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-7xl px-4 pb-12 pt-2 sm:px-6 lg:px-8">
-        <PublicPortalLookup
-          title="Seguimiento público"
-          subtitle="Consulta el folio real de una reparación para ver el estado actualizado, documentos y timeline."
-          showTenantInput={true}
-        />
-      </section>
     </main>
   );
 }
