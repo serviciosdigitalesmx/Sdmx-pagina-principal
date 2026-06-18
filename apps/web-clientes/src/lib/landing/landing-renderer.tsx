@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Badge, SurfaceCard } from "@white-label/ui";
 import { LeadForm } from "../lead/lead-form";
 import { resolveTenantTheme } from "../theme/theme-resolver";
 import type { LandingContent, Tenant } from "../types";
@@ -65,7 +66,7 @@ export function LandingRenderer({ tenant, landingContent }: LandingRendererProps
       }}
     >
       <section className="mx-auto w-full max-w-7xl space-y-8">
-        <header className="rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-[0_24px_90px_rgba(0,0,0,0.24)] backdrop-blur" style={{ borderColor: theme.colors.border }}>
+        <SurfaceCard elevated className="p-6 backdrop-blur" style={{ borderColor: theme.colors.border }}>
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-4">
               <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 text-xl font-black">
@@ -96,7 +97,7 @@ export function LandingRenderer({ tenant, landingContent }: LandingRendererProps
               ) : null}
             </div>
           </div>
-        </header>
+        </SurfaceCard>
 
         <section className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
           <div className="space-y-6">
@@ -114,7 +115,7 @@ export function LandingRenderer({ tenant, landingContent }: LandingRendererProps
           </div>
 
           <aside className="space-y-4">
-            <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-zinc-950/70" style={{ borderColor: theme.colors.border }}>
+            <SurfaceCard elevated className="overflow-hidden p-0" style={{ borderColor: theme.colors.border }}>
               {heroImage ? (
                 <div className="relative min-h-[18rem] w-full">
                   <Image src={heroImage} alt={tenant.name} fill className="object-cover" sizes="(max-width: 1024px) 100vw, 45vw" />
@@ -125,12 +126,12 @@ export function LandingRenderer({ tenant, landingContent }: LandingRendererProps
                   Sube una imagen del tenant para mostrarla aquí.
                 </div>
               )}
-            </div>
-            <div className="rounded-[2rem] border border-white/10 bg-zinc-950/70 p-6" style={{ borderColor: theme.colors.border }}>
+            </SurfaceCard>
+            <SurfaceCard elevated className="p-6" style={{ borderColor: theme.colors.border }}>
               <p className="text-xs font-semibold uppercase tracking-[0.3em]" style={{ color: theme.colors.accent }}>Servicios</p>
               <div className="mt-5 grid gap-4">
                 {(landingContent.services ?? []).length > 0 ? (landingContent.services ?? []).map((service) => (
-                  <div key={service.title} className="rounded-2xl border bg-white/5 p-4" style={{ borderColor: theme.colors.border }}>
+                  <div key={service.title} className="rounded-2xl border border-white/10 bg-white/5 p-4" style={{ borderColor: theme.colors.border }}>
                     <p className="font-semibold text-zinc-50">{service.title}</p>
                     <p className="mt-1 text-sm leading-6 text-zinc-300">{service.description}</p>
                   </div>
@@ -140,22 +141,22 @@ export function LandingRenderer({ tenant, landingContent }: LandingRendererProps
                   </div>
                 )}
               </div>
-            </div>
+            </SurfaceCard>
           </aside>
         </section>
 
-        <section className="rounded-[2rem] border bg-white/5 p-6" style={{ borderColor: theme.colors.border }}>
+        <SurfaceCard elevated className="p-6" style={{ borderColor: theme.colors.border }}>
           <p className="text-xs font-semibold uppercase tracking-[0.3em]" style={{ color: theme.colors.accent }}>Redes sociales</p>
           <div className="mt-4 flex flex-wrap gap-3">
             {socialLinks.length > 0 ? socialLinks.map((link) => (
-              <a key={link.label} href={link.href} target="_blank" rel="noreferrer" className="rounded-full border px-4 py-2 text-sm font-semibold text-zinc-100 transition hover:bg-white/10" style={{ borderColor: theme.colors.border }}>
+              <Badge key={link.label} variant="neutral" className="rounded-full px-4 py-2 text-[11px]">
                 {link.label}
-              </a>
+              </Badge>
             )) : (
               <p className="text-sm text-zinc-300">No hay redes sociales configuradas para este tenant.</p>
             )}
           </div>
-        </section>
+        </SurfaceCard>
 
         <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
           <LeadForm
@@ -165,7 +166,7 @@ export function LandingRenderer({ tenant, landingContent }: LandingRendererProps
             contactEmail={tenant.contactEmail || null}
           />
 
-          <div className="space-y-4 rounded-[2rem] border bg-white/5 p-6" style={{ borderColor: theme.colors.border }}>
+          <SurfaceCard elevated className="space-y-4 p-6" style={{ borderColor: theme.colors.border }}>
             <p className="text-xs font-semibold uppercase tracking-[0.3em]" style={{ color: theme.colors.accent }}>Acciones rápidas</p>
             <a href={whatsapp ?? undefined} target="_blank" rel="noreferrer" className="block rounded-full px-5 py-3 text-center text-sm font-semibold text-white transition hover:opacity-95" style={{ backgroundColor: theme.colors.success, borderRadius: theme.cta.primaryRadius, pointerEvents: whatsapp ? "auto" : "none", opacity: whatsapp ? 1 : 0.5 }}>
               Abrir WhatsApp
@@ -183,7 +184,7 @@ export function LandingRenderer({ tenant, landingContent }: LandingRendererProps
             <Link href={`/t/${tenant.slug}/portal`} className="block rounded-full px-5 py-3 text-center text-sm font-semibold text-white transition hover:opacity-95" style={{ backgroundColor: theme.colors.primary, borderRadius: theme.cta.primaryRadius }}>
               Consultar portal
             </Link>
-          </div>
+          </SurfaceCard>
         </section>
 
         <script
@@ -193,7 +194,7 @@ export function LandingRenderer({ tenant, landingContent }: LandingRendererProps
         />
 
         <section className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
-          <div className="rounded-[2rem] border bg-white/5 p-6" style={{ borderColor: theme.colors.border }}>
+          <SurfaceCard elevated className="p-6" style={{ borderColor: theme.colors.border }}>
             <p className="text-xs font-semibold uppercase tracking-[0.3em]" style={{ color: theme.colors.accent }}>Contacto</p>
             <div className="mt-4 space-y-2 text-zinc-300">
               {landingContent.hours ? <p>Horario: {landingContent.hours}</p> : null}
@@ -213,9 +214,9 @@ export function LandingRenderer({ tenant, landingContent }: LandingRendererProps
                 </a>
               ) : null}
             </div>
-          </div>
+          </SurfaceCard>
 
-          <div className="rounded-[2rem] border bg-white/5 p-6" style={{ borderColor: theme.colors.border }}>
+          <SurfaceCard elevated className="p-6" style={{ borderColor: theme.colors.border }}>
             <p className="text-xs font-semibold uppercase tracking-[0.3em]" style={{ color: theme.colors.accent }}>Cotización</p>
             <p className="mt-4 text-sm leading-7 text-zinc-300">
               Si el backend expone un endpoint real de solicitud o cotización, aquí se conecta el flujo de alta sin contenido falso.
@@ -223,7 +224,7 @@ export function LandingRenderer({ tenant, landingContent }: LandingRendererProps
             <Link href={primaryCtaHref} className="mt-5 inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-semibold text-white transition hover:opacity-95" style={{ backgroundColor: theme.colors.primary, borderRadius: theme.cta.primaryRadius }}>
               {primaryCtaLabel}
             </Link>
-          </div>
+          </SurfaceCard>
         </section>
       </section>
     </main>

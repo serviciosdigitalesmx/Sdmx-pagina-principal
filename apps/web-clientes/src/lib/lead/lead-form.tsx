@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ChangeEvent, type FormEvent } from "react";
+import { SurfaceCard } from "@white-label/ui";
 import { submitPublicQuote } from "../api/leads";
 
 type LeadFormProps = {
@@ -81,7 +82,8 @@ export function LeadForm({ tenantSlug, tenantName, contactPhone, contactEmail }:
   };
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-[2rem] border bg-white/5 p-6" style={{ borderColor: "var(--tenant-border)" }}>
+    <SurfaceCard elevated className="p-6" style={{ borderColor: "var(--tenant-border)" }}>
+      <form onSubmit={handleSubmit}>
       <p className="text-xs font-semibold uppercase tracking-[0.3em]" style={{ color: "var(--tenant-accent)" }}>Solicitar reparación</p>
       <h3 className="mt-2 text-2xl font-black tracking-tight text-zinc-50">Envío real de solicitud</h3>
       <p className="mt-2 text-sm leading-7 text-zinc-300">La solicitud se envía al backend real del tenant. Si falla, verás el error real del API.</p>
@@ -120,6 +122,7 @@ export function LeadForm({ tenantSlug, tenantName, contactPhone, contactEmail }:
         ) : null}
       </div>
       <p className="mt-4 text-xs uppercase tracking-[0.2em] text-zinc-400">{tenantName}</p>
-    </form>
+      </form>
+    </SurfaceCard>
   );
 }
