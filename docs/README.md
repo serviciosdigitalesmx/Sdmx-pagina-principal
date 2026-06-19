@@ -1,26 +1,28 @@
-# Historical Docs
+# Documentación Oficial de Fixi
 
-> Legacy SrFix documentation retained for context only.
+Este directorio contiene documentación histórica y documentación canónica vigente del producto Fixi.
 
-Proyecto web + Google Apps Script para gestionar recepción, diagnóstico y seguimiento de equipos.
+## Source of Truth
 
-## Enlaces finales (solo 2)
+- `docs/canonical/especificacion_aprobada.md` es el **SOURCE OF TRUTH funcional** de Fixi.
+- `docs/canonical/spec_00_modelo_datos_maestro.md` es el **SOURCE OF TRUTH técnico de datos** de Fixi.
+- `docs/canonical/index_documentacion_canonica.md` es el índice oficial de la documentación canónica.
+- `docs/canonical/analisis_destructivo_fixi.md` conserva el análisis crítico usado para consolidar la especificación vigente.
 
-1. Clientes: `index.html`
-2. Interno (integrador): `integrador.html`
+## Estado de T04
 
-## Cómo funciona
+T04, Auditoría crítica inmutable, ya está aprobado para producción temprana.
 
-- `index.html`
-  - Vista pública principal.
-  - Incluye botón directo al panel del cliente (`portal-cliente.html`).
+## Documentación Superseded
 
-- `integrador.html`
-  - Entrada interna única.
-  - Permite alternar entre módulos Operativo y Técnico sin repartir más enlaces.
+La documentación anterior dentro de `docs/` se conserva solo como referencia histórica. Queda marcada como **superseded** por la documentación canónica en `docs/canonical/`.
 
-## Archivos principales
+No se debe usar documentación histórica para definir comportamiento futuro cuando contradiga los documentos canónicos.
 
-- Front cliente: `Pagina-principal.html`, `portal-cliente.html`
-- Front interno: `panel-operativo.html`, `panel-tecnico.html`, `integrador.html`
-- Backend GAS: `codigo.gs`
+## Regla para Implementaciones Futuras
+
+Cualquier implementación futura debe respetar los documentos canónicos. Si existe conflicto entre documentos, prevalecen:
+
+1. `docs/canonical/especificacion_aprobada.md`
+2. `docs/canonical/spec_00_modelo_datos_maestro.md`
+3. `docs/canonical/index_documentacion_canonica.md`
