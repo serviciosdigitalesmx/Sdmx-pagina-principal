@@ -8,13 +8,13 @@ Fuente canónica:
 
 ## Compatibilidad con Canonical
 
-- **Tablas canónicas usadas:** `tenants`, `repair_orders`, `users`, `audit_logs`, `parts`, `stock_movements`, `repair_log`, `warranty_claims`, `quotations`, `quotation_items`, `customers`, `service_order_documents`, `service_order_events`.
-- **Nota de alcance:** `quotations` y `quotation_items` siguen siendo nombres canónicos de dominio; en el repositorio actual no existe su tabla física y no bloquean T01/T03/T02.
+- **Tablas físicas actuales usadas:** `products`, `sucursal_inventory`, `inventory_movements`, `stock_alerts`, `purchase_orders`, `purchase_order_items`, `service_orders`, `customers`, `service_order_documents`, `service_order_events`, `audit_logs`.
+- **Nota de alcance:** en el modelo canónico, `parts` y `stock_movements` son nombres de dominio; en este repositorio su implementación física actual vive como `products` y `inventory_movements`. `quotations` y `quotation_items` siguen siendo nombres canónicos de dominio; en el repositorio actual no existe su tabla física y no bloquean T01/T03/T02.
 - **Cambios de esquema propuestos:**
-  - `inventory_reservations`: Para soportar reserva estricta de piezas por orden sin consumir inmediatamente el stock (T07). Impacto: Medio. Hasta su aprobación, las piezas pasan de disponible a consumido directo, o se maneja a nivel de aplicación con un estado temporal en `stock_movements`.
-  - `device_history_views`: Vistas especializadas o tablas separadas si la consolidación por `repair_orders.serial_number` es ineficiente en despliegues muy grandes (T09). Impacto: Medio-Bajo.
+  - `inventory_reservations`: Para soportar reserva estricta de piezas por orden sin perder trazabilidad ni sobredibujar stock. Impacto: Medio. Aún no existe en el repo.
+  - `inventory_availability_view` o cálculo equivalente: solo si la disponibilidad derivada se vuelve costosa en tenants grandes.
 - **Dependencias:** Fundaciones (Spec 01), Recepción y Finanzas (Spec 02).
-- **Decisiones abiertas:** Ninguna. Se respetan estrictamente los nombres físicos canónicos y el ciclo de vida de órdenes.
+- **Decisiones abiertas:** Ninguna para el bloque T07/T08; la reserva se resuelve sobre inventario físico real del repo.
 
 ---
 
@@ -27,15 +27,18 @@ Distinguir stock disponible de reservado sin afectar los niveles financieros.
 ### Tablas Utilizadas
 
 - `tenants`
-- `repair_orders`
-- `parts`
-- `stock_movements`
+- `repair_orders` / `service_orders`
+- `products`
+- `sucursal_inventory`
+- `inventory_movements`
 - `audit_logs`
 
 ### Contratos Del Sistema
 
-- Se reutiliza la tabla canónica `parts` para el catálogo.
-- *CAMBIO DE ESQUEMA PROPUESTO:* Tabla separada para las reservas, o extender temporalmente `stock_movements` con un tipo `reserved`.
+- `products` es el catálogo de refacciones/productos.
+- `sucursal_inventory` mantiene el stock físico por sucursal.
+- `inventory_movements` conserva el historial de entradas, salidas, transferencias y ajustes.
+- La relación actual entre orden y piezas no existe como tabla propia; hoy solo se puede anclar de forma indirecta mediante `inventory_movements.service_order_id` o flujo de compra.
 
 ## T08 — Consumo Atómico De Inventario
 
@@ -46,15 +49,17 @@ Garantizar el consumo de piezas atómicamente, sin duplicados ni stock negativo.
 ### Tablas Utilizadas
 
 - `tenants`
-- `repair_orders`
-- `parts`
-- `stock_movements`
+- `repair_orders` / `service_orders`
+- `products`
+- `sucursal_inventory`
+- `inventory_movements`
 - `audit_logs`
 
 ### Contratos Del Sistema
 
-- Todo consumo escribe en `stock_movements`.
-- El saldo actual se calcula o materializa sobre `parts`.
+- Todo consumo debe escribir en `inventory_movements`.
+- El stock físico base vive en `sucursal_inventory.stock_current`.
+- La disponibilidad real se deriva del stock físico menos reservas activas.
 
 ## T09 — Historial Clínico Por Dispositivo
 
