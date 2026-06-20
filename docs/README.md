@@ -6,23 +6,20 @@ Este directorio contiene documentación histórica y documentación canónica vi
 
 - `docs/canonical/especificacion_aprobada.md` es el **SOURCE OF TRUTH funcional** de Fixi.
 - `docs/canonical/spec_00_modelo_datos_maestro.md` es el **SOURCE OF TRUTH técnico de datos** de Fixi.
-- `docs/canonical/index_documentacion_canonica.md` es el índice oficial de la documentación canónica.
-- `docs/canonical/analisis_destructivo_fixi.md` conserva el análisis crítico usado para consolidar la especificación vigente.
-
-## Estado de T04
-
-T04, Auditoría crítica inmutable, ya está aprobado para producción temprana.
+- `docs/specs/` contiene las **especificaciones técnicas aprobadas** para la implementación de T01-T20.
 
 ## Documentación Superseded
 
-La documentación anterior dentro de `docs/` se conserva solo como referencia histórica. Queda marcada como **superseded** por la documentación canónica en `docs/canonical/`.
+La documentación anterior dentro de `docs/` se conserva solo como referencia histórica. Queda marcada como **superseded** por la documentación canónica en `docs/canonical/` y las especificaciones técnicas en `docs/specs/`.
 
-No se debe usar documentación histórica para definir comportamiento futuro cuando contradiga los documentos canónicos.
+## Estado de T04
 
-## Regla para Implementaciones Futuras
+- **T04, Auditoría crítica inmutable, ya está aprobado para producción temprana.** Manda sobre toda la operación crítica del sistema.
 
-Cualquier implementación futura debe respetar los documentos canónicos. Si existe conflicto entre documentos, prevalecen:
+## Orden de Implementación Inicial
 
-1. `docs/canonical/especificacion_aprobada.md`
-2. `docs/canonical/spec_00_modelo_datos_maestro.md`
-3. `docs/canonical/index_documentacion_canonica.md`
+- La implementación en código debe iniciar obligatoriamente por **T01, T03 y T02**, en ese orden, cerrando las fundaciones de recepción, trazabilidad de dispositivos y evidencias seguras.
+
+## Reglas de Implementación
+
+Cualquier implementación futura debe respetar los documentos canónicos. Si existe conflicto, prevalece el modelo canónico y las especificaciones técnicas en `docs/specs/` deben adaptarse a este.
