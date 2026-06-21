@@ -164,6 +164,7 @@ export function LandingRenderer({ tenant, landingContent }: LandingRendererProps
             tenantName={tenant.name}
             contactPhone={tenant.contactPhone || null}
             contactEmail={tenant.contactEmail || null}
+            fieldDefinitions={tenant.config?.fieldDefinitions ?? []}
           />
 
           <SurfaceCard elevated className="space-y-4 p-6" style={{ borderColor: theme.colors.border }}>

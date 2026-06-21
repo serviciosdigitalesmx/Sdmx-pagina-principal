@@ -58,10 +58,27 @@ export interface Tenant {
       landing?: Partial<LandingContent> | null;
       portal?: Record<string, unknown> | null;
     } | null;
+    fieldDefinitions?: TenantFieldDefinition[] | null;
     labels?: Record<string, string> | null;
     statusLabels?: Record<string, string> | null;
   } | null;
 }
+
+export type TenantFieldDefinition = {
+  id?: string;
+  entity: string;
+  field_key: string;
+  field_label: string;
+  field_type: "text" | "textarea" | "number" | "select" | "boolean" | "date" | "money";
+  required?: boolean;
+  options?: Array<string | { label?: string; value?: string | number | boolean }>;
+  field_order?: number;
+  placeholder?: string | null;
+  help_text?: string | null;
+  visible?: boolean;
+  validation?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
+};
 
 export interface Service {
   title: string;

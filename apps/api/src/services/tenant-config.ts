@@ -162,6 +162,7 @@ const CELLPHONE_REPAIR_TEMPLATE: IndustryTemplate = {
     templateField('service_orders', 'repair_estimate', 'Estimado de reparación', 'number', [], { required: false, field_order: 2, placeholder: 'Monto estimado' }),
     templateField('service_orders', 'parts_required', 'Refacciones necesarias', 'textarea', [], { required: false, field_order: 3, placeholder: 'Lista de partes y consumibles' }),
     templateField('service_orders', 'warranty_days', 'Días de garantía', 'number', [], { required: false, field_order: 4, placeholder: 'Ej. 30' }),
+    templateField('service_orders', 'serial_number', 'Serie / IMEI', 'text', [], { required: false, field_order: 5, placeholder: 'IMEI o número de serie' }),
   ],
   semaphoreRules: [
     templateSemaphoreRule('recibido', 'minutes_since_status_changed', { green: 24 * 60, yellow: 48 * 60, red: 48 * 60 }, 'Pendiente de diagnóstico', 'Asignar técnico o actualizar diagnóstico', {

@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { getTenantClient, supabaseAdmin } from '@white-label/database';
 import { getRequestIp } from '../lib/request-ip';
 import { loadTenantRuntimeConfig } from '../services/tenant-config';
+import { cleanTenantTextField, getMissingRequiredTextField } from '../services/tenant-fields';
 import { getEvidenceMetadata } from '../services/evidence-adapter';
 import { FEATURE_EVIDENCE_MODE } from '../config/feature-flags';
 
@@ -589,12 +590,22 @@ export async function createPublicQuote(req: Request, res: Response) {
     const tenant = await resolveTenantIdBySlug(tenantSlug);
     const runtimeConfig = await loadTenantRuntimeConfig(tenant.id);
     const supabase = getTenantClient(tenant.id);
+    const normalizedSerialNumber = cleanTenantTextField(serialNumber);
+    const missingSerialField = getMissingRequiredTextField(runtimeConfig, 'service_requests', 'serial_number', normalizedSerialNumber);
+
+    if (missingSerialField) {
+      return res.status(400).json({
+        error: 'Required device field is missing',
+        details: { entity: 'service_requests', fields: [missingSerialField] },
+      });
+    }
+
     const requestMetadata = {
       ...metadata,
       device_type: deviceType || deviceBrand,
       device_brand: deviceBrand,
       device_model: deviceModel,
-      serial_number: serialNumber || null,
+      serial_number: normalizedSerialNumber,
       priority_level: priorityLevel || null,
       password_or_pin: passwordOrPin || null,
     };
@@ -610,6 +621,7 @@ export async function createPublicQuote(req: Request, res: Response) {
           customer_email: email || null,
           device_type: deviceBrand,
           device_model: deviceModel,
+          serial_number: normalizedSerialNumber,
           issue_description: issue,
           metadata: requestMetadata,
           status: 'pendiente',

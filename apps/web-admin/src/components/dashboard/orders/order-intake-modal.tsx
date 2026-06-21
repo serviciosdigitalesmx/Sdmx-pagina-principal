@@ -11,6 +11,7 @@ export type OrderIntakeFormState = {
   clientEmail: string;
   deviceType: string;
   deviceModel: string;
+  serialNumber: string;
   issue: string;
   hasCharger: boolean;
   screenCondition: boolean;
@@ -132,7 +133,10 @@ export function OrderIntakeModal({
   }
 
   const stepOneComplete = Boolean(form.clientName.trim() && form.clientPhone.trim());
-  const stepTwoComplete = Boolean(form.deviceType.trim() && form.deviceModel.trim() && form.issue.trim());
+  const serialFieldDefinition = dynamicFieldDefinitions.find((definition) => definition.entity === "service_orders" && definition.field_key === "serial_number" && definition.visible !== false) ?? null;
+  const visibleDynamicFieldDefinitions = dynamicFieldDefinitions.filter((definition) => !(definition.entity === "service_orders" && definition.field_key === "serial_number"));
+  const serialComplete = !serialFieldDefinition?.required || Boolean(form.serialNumber.trim());
+  const stepTwoComplete = Boolean(form.deviceType.trim() && form.deviceModel.trim() && form.issue.trim() && serialComplete);
   const stepThreeComplete = Boolean(form.promisedDate.trim() && form.estimatedCost.trim());
 
   const dateLabel = form.promisedDate ? form.promisedDate.split("-").reverse().join("/") : "";
@@ -141,6 +145,7 @@ export function OrderIntakeModal({
   const validationErrors = [
     !stepOneComplete ? "Cliente incompleto" : null,
     !stepTwoComplete ? "Información del dispositivo incompleta" : null,
+    serialFieldDefinition?.required && !form.serialNumber.trim() ? `${serialFieldDefinition.field_label} requerido` : null,
     !stepThreeComplete ? "Fecha prometida o costo estimado faltante" : null,
     stepThreeComplete && !estimatedCostValid ? "Costo estimado inválido" : null,
   ].filter(Boolean) as string[];
@@ -258,6 +263,13 @@ export function OrderIntakeModal({
                           <input value={form.deviceModel} onChange={(e) => onChange("deviceModel", e.target.value)} placeholder="Ej: iPhone 13 Pro" className="w-full rounded-2xl border border-sky-400/30 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none placeholder:text-zinc-500" />
                         </label>
                         <label className="space-y-2">
+                          <span className="text-sm text-zinc-300">
+                            {serialFieldDefinition?.field_label ?? "Serie / IMEI"} {serialFieldDefinition?.required ? "*" : ""}
+                          </span>
+                          <input value={form.serialNumber} onChange={(e) => onChange("serialNumber", e.target.value)} placeholder={serialFieldDefinition?.placeholder ?? "IMEI o número de serie"} className="w-full rounded-2xl border border-sky-400/30 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none placeholder:text-zinc-500" />
+                          {serialFieldDefinition?.help_text ? <span className="block text-xs text-zinc-500">{serialFieldDefinition.help_text}</span> : null}
+                        </label>
+                        <label className="space-y-2">
                           <span className="text-sm text-zinc-300">Falla reportada *</span>
                           <textarea value={form.issue} onChange={(e) => onChange("issue", e.target.value)} placeholder="Describe el problema que comenta el cliente" rows={5} className="w-full rounded-2xl border border-sky-400/30 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none placeholder:text-zinc-500" />
                         </label>
@@ -350,10 +362,10 @@ export function OrderIntakeModal({
                       ) : null}
                     </div>
 
-                    {dynamicFieldDefinitions.length > 0 && onDynamicFieldChange ? (
+                    {visibleDynamicFieldDefinitions.length > 0 && onDynamicFieldChange ? (
                       <DynamicFields
                         title="Campos del tenant"
-                        definitions={dynamicFieldDefinitions}
+                        definitions={visibleDynamicFieldDefinitions}
                         values={dynamicFieldValues}
                         onChange={onDynamicFieldChange}
                         className="rounded-[22px] border border-sky-500/10 bg-black/20 p-4"
@@ -381,6 +393,7 @@ export function OrderIntakeModal({
                           <div className="flex justify-between border-b border-sky-500/10 pb-2"><span className="text-zinc-400">Teléfono:</span><span className="font-semibold text-zinc-50">{form.clientPhone || "-"}</span></div>
                           <div className="flex justify-between border-b border-sky-500/10 pb-2"><span className="text-zinc-400">Email:</span><span className="font-semibold text-zinc-50">{form.clientEmail || "(no proporcionado)"}</span></div>
                           <div className="flex justify-between border-b border-sky-500/10 pb-2"><span className="text-zinc-400">Equipo:</span><span className="font-semibold text-zinc-50">{`${form.deviceType || "-"} - ${form.deviceModel || "-"}`}</span></div>
+                          <div className="flex justify-between border-b border-sky-500/10 pb-2"><span className="text-zinc-400">Serie / IMEI:</span><span className="font-semibold text-zinc-50">{form.serialNumber || "-"}</span></div>
                           <div className="flex justify-between border-b border-sky-500/10 pb-2"><span className="text-zinc-400">Falla:</span><span className="font-semibold text-zinc-50">{form.issue || "-"}</span></div>
                           <div className="flex justify-between border-b border-sky-500/10 pb-2"><span className="text-zinc-400">Checklist:</span><span className="font-semibold text-zinc-50">{[form.hasCharger ? "⚡ Cargador" : null, form.powersOn ? "⏻ Prende" : null, form.screenCondition ? "Pantalla OK" : null, form.backupRequired ? "Respaldado" : null].filter(Boolean).join(" • ") || "Sin marcar"}</span></div>
                           <div className="flex justify-between border-b border-sky-500/10 pb-2"><span className="text-zinc-400">Condición cosmética:</span><span className="max-w-[55%] text-right font-semibold text-zinc-50">{form.cosmeticCondition || "-"}</span></div>

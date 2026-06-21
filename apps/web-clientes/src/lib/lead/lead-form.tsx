@@ -3,12 +3,14 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { SurfaceCard } from "@white-label/ui";
 import { submitPublicQuote } from "../api/leads";
+import type { TenantFieldDefinition } from "../types";
 
 type LeadFormProps = {
   tenantSlug: string;
   tenantName: string;
   contactPhone?: string | null;
   contactEmail?: string | null;
+  fieldDefinitions?: TenantFieldDefinition[];
 };
 
 type FormState = {
@@ -37,7 +39,11 @@ const initialState: FormState = {
   passwordOrPin: "",
 };
 
-export function LeadForm({ tenantSlug, tenantName, contactPhone, contactEmail }: LeadFormProps) {
+function findSerialFieldDefinition(definitions: TenantFieldDefinition[]) {
+  return definitions.find((definition) => definition.entity === "service_requests" && definition.field_key === "serial_number" && definition.visible !== false) ?? null;
+}
+
+export function LeadForm({ tenantSlug, tenantName, contactPhone, contactEmail, fieldDefinitions = [] }: LeadFormProps) {
   const [form, setForm] = useState<FormState>(initialState);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,6 +58,14 @@ export function LeadForm({ tenantSlug, tenantName, contactPhone, contactEmail }:
     setLoading(true);
     setError(null);
     setSuccess(null);
+
+    const serialFieldDefinition = findSerialFieldDefinition(fieldDefinitions);
+
+    if (serialFieldDefinition?.required && !form.serialNumber.trim()) {
+      setLoading(false);
+      setError(`Falta completar el campo requerido: ${serialFieldDefinition.field_label}`);
+      return;
+    }
 
     try {
       const payload = await submitPublicQuote({
@@ -81,6 +95,8 @@ export function LeadForm({ tenantSlug, tenantName, contactPhone, contactEmail }:
     }
   };
 
+  const serialFieldDefinition = findSerialFieldDefinition(fieldDefinitions);
+
   return (
     <SurfaceCard elevated className="p-6" style={{ borderColor: "var(--tenant-border)" }}>
       <form onSubmit={handleSubmit}>
@@ -94,7 +110,13 @@ export function LeadForm({ tenantSlug, tenantName, contactPhone, contactEmail }:
         <input value={form.deviceBrand} onChange={update("deviceBrand")} required placeholder="Marca" className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-zinc-50 outline-none" />
         <input value={form.deviceModel} onChange={update("deviceModel")} required placeholder="Modelo" className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-zinc-50 outline-none" />
         <input value={form.deviceType} onChange={update("deviceType")} placeholder="Tipo de equipo" className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-zinc-50 outline-none" />
-        <input value={form.serialNumber} onChange={update("serialNumber")} placeholder="Serie / IMEI" className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-zinc-50 outline-none" />
+        <input
+          value={form.serialNumber}
+          onChange={update("serialNumber")}
+          required={Boolean(serialFieldDefinition?.required)}
+          placeholder={serialFieldDefinition?.placeholder ?? "Serie / IMEI"}
+          className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-zinc-50 outline-none"
+        />
         <select value={form.priorityLevel} onChange={update("priorityLevel")} className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-zinc-50 outline-none">
           <option value="">Nivel de urgencia</option>
           <option value="Normal">Normal</option>

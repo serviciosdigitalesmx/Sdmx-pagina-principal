@@ -11,6 +11,16 @@ import { getApiOptions } from '@/lib/tenant';
 import { getAssetLabel, getCustomerLabel, getNewEntityLabel } from '@/lib/labels';
 import { getTenantSlug } from '@/lib/tenant';
 
+export type SerialFieldDefinition = {
+  entity: string;
+  field_key: string;
+  field_label: string;
+  required?: boolean;
+  visible?: boolean;
+  placeholder?: string | null;
+  help_text?: string | null;
+};
+
 export type OrderFormData = {
   // Paso 1: Cliente
   clienteNombre: string;
@@ -21,6 +31,7 @@ export type OrderFormData = {
   // Paso 2: Equipo
   dispositivo: string;
   modelo: string;
+  serialNumber: string;
   falla: string;
   fechaPromesa: string;
   costo: number;
@@ -56,6 +67,7 @@ export default function OperativoPage() {
   const [loading, setLoading] = useState(false);
   const [savedFolio, setSavedFolio] = useState<string | null>(null);
   const [savedPdfUrl, setSavedPdfUrl] = useState<string | null>(null);
+  const [serialFieldDefinition, setSerialFieldDefinition] = useState<SerialFieldDefinition | null>(null);
   const [formData, setFormData] = useState<OrderFormData>({
     clienteNombre: '',
     clienteTelefono: '',
@@ -63,6 +75,7 @@ export default function OperativoPage() {
     folioCotizacion: '',
     dispositivo: '',
     modelo: '',
+    serialNumber: '',
     falla: '',
     fechaPromesa: '',
     costo: 0,
@@ -103,6 +116,42 @@ export default function OperativoPage() {
     }
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadTenantFieldDefinitions() {
+      const tenantSlug = getTenantSlug();
+      if (!tenantSlug) return;
+
+      try {
+        const response = await apiClient.get<{
+          data?: {
+            tenant?: { field_definitions?: SerialFieldDefinition[] };
+            config?: { fieldDefinitions?: SerialFieldDefinition[] };
+          };
+        }>(`/auth/tenant/${encodeURIComponent(tenantSlug)}/settings`);
+        const definitions = response.data?.config?.fieldDefinitions ?? response.data?.tenant?.field_definitions ?? [];
+        const serialDefinition = definitions.find(
+          (field) => field.entity === 'service_orders' && field.field_key === 'serial_number' && field.visible !== false,
+        ) ?? null;
+        if (!cancelled) {
+          setSerialFieldDefinition(serialDefinition);
+        }
+      } catch (error) {
+        console.error('Failed to load tenant field definitions:', error);
+        if (!cancelled) {
+          setSerialFieldDefinition(null);
+        }
+      }
+    }
+
+    void loadTenantFieldDefinitions();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // Guardar borrador en localStorage
   const saveDraft = (data: Partial<OrderFormData>) => {
     const updated = { ...formData, ...data };
@@ -136,6 +185,7 @@ export default function OperativoPage() {
         clientEmail: formData.clienteEmail,
         deviceType: formData.dispositivo,
         deviceModel: formData.modelo,
+        serialNumber: formData.serialNumber,
         issue: formData.falla,
         estimatedCost: formData.costo,
         promisedDate: formData.fechaPromesa || undefined,
@@ -210,6 +260,7 @@ export default function OperativoPage() {
       folioCotizacion: '',
       dispositivo: '',
       modelo: '',
+      serialNumber: '',
       falla: '',
       fechaPromesa: '',
       costo: 0,
@@ -283,6 +334,7 @@ export default function OperativoPage() {
                   clienteEmail: request.customer_email || '',
                   dispositivo: request.device_type || '',
                   modelo: request.device_model || '',
+                  serialNumber: request.serial_number || request.metadata?.serial_number || '',
                   falla: request.issue_description || '',
                   folioCotizacion: folio,
                 });
@@ -299,6 +351,7 @@ export default function OperativoPage() {
       {step === 2 && (
         <Step2
           data={formData}
+          serialFieldDefinition={serialFieldDefinition}
           onSubmit={handleStep2Submit}
           onBack={() => setStep(1)}
           onUpdate={saveDraft}

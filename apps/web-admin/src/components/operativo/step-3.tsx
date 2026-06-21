@@ -59,6 +59,10 @@ export function Step3({ data, onSubmit, onBack, loading }: Step3Props) {
           <span className="text-slate-100">{data.dispositivo} - {data.modelo}</span>
         </div>
         <div className="flex justify-between border-b border-slate-800 pb-2">
+          <span className="text-slate-400">Serie / IMEI:</span>
+          <span className="text-slate-100">{data.serialNumber || 'Sin dato'}</span>
+        </div>
+        <div className="flex justify-between border-b border-slate-800 pb-2">
           <span className="text-slate-400">Falla:</span>
           <span className="max-w-[60%] text-right text-slate-100">{data.falla}</span>
         </div>

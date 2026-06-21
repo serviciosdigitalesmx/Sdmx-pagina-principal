@@ -80,8 +80,10 @@ export interface Order {
     customer_name?: string;
     customer_phone?: string;
     customer_email?: string;
+    serial_number?: string | null;
   };
   problem_description: string;
+  serial_number?: string | null;
   estimated_cost: number;
   final_cost: number;
   promised_date: string | null;

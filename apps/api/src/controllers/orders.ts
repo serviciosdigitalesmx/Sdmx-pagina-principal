@@ -8,6 +8,7 @@ import { getRequestIp } from '../lib/request-ip';
 import { calculateOperationalRisk } from '../services/operational-risk';
 import { sendTenantPushNotification } from '../services/pwa-push';
 import { writeAuditLog } from '../services/security-backoffice';
+import { cleanTenantTextField, getMissingRequiredTextField } from '../services/tenant-fields';
 import { getEvidenceMetadata, type EvidenceEntry } from '../services/evidence-adapter';
 import { FEATURE_EVIDENCE_MODE } from '../config/feature-flags';
 
@@ -48,6 +49,7 @@ const orderDetailsUpdateSchema = z.object({
   clientEmail: z.string().email().optional().or(z.literal('')),
   deviceType: z.string().min(1).optional(),
   deviceModel: z.string().min(1).optional(),
+  serialNumber: z.string().optional().or(z.literal('')),
   issue: z.string().min(1).optional(),
   promisedDate: z.string().optional().or(z.literal('')),
   metadata: z.record(z.unknown()).optional(),
@@ -196,6 +198,7 @@ const createOrderSchema = z.object({
   clientEmail: z.string().email('Email inválido').optional().or(z.literal('')),
   deviceType: z.string().min(1, 'El tipo de dispositivo es requerido'),
   deviceModel: z.string().min(1, 'La marca y modelo son requeridos'),
+  serialNumber: z.string().optional().or(z.literal('')),
   issue: z.string().min(1, 'La falla es requerida'),
   quoteFolio: z.string().optional(),
   estimatedCost: z.coerce.number().min(0).default(0),
@@ -639,6 +642,17 @@ export const createOrder = async (req: Request, res: Response) => {
 
     const folioPrefix = process.env.ORDER_FOLIO_PREFIX ?? 'ORD';
     const newFolio = `${folioPrefix}-${Date.now().toString(36).toUpperCase()}`;
+    const runtimeConfig = await loadTenantRuntimeConfig(tenantId);
+    const serialNumber = cleanTenantTextField(validatedData.serialNumber);
+    const missingSerialField = getMissingRequiredTextField(runtimeConfig, 'service_orders', 'serial_number', serialNumber);
+
+    if (missingSerialField) {
+      return res.status(400).json({
+        error: 'Required device field is missing',
+        details: { entity: 'service_orders', fields: [missingSerialField] },
+      });
+    }
+
     const estimatedCost = Number.isFinite(validatedData.estimatedCost) ? validatedData.estimatedCost : 0;
     const ivaAmount = validatedData.includeIva ? Number((estimatedCost * 0.16).toFixed(2)) : 0;
     const finalCost = Number((estimatedCost + ivaAmount).toFixed(2));
@@ -702,10 +716,12 @@ export const createOrder = async (req: Request, res: Response) => {
             brand: validatedData.deviceModel,
             model: validatedData.deviceModel,
             type: validatedData.deviceType,
+            serial_number: serialNumber,
             customer_name: validatedData.clientName,
             customer_phone: validatedData.clientPhone,
             customer_email: validatedData.clientEmail || null,
           },
+          serial_number: serialNumber,
           problem_description: validatedData.issue,
           metadata: validatedData.metadata ?? {},
           estimated_cost: estimatedCost,
@@ -1541,6 +1557,7 @@ export const updateOrderDetails = async (req: Request, res: Response) => {
       type: body.deviceType ?? String(currentDeviceInfo.type ?? ''),
       brand: body.deviceModel ?? String(currentDeviceInfo.brand ?? ''),
       model: body.deviceModel ?? String(currentDeviceInfo.model ?? ''),
+      serial_number: body.serialNumber === undefined ? currentDeviceInfo.serial_number ?? null : cleanTenantTextField(body.serialNumber),
     };
 
     let customerId: string | undefined = undefined;
@@ -1589,6 +1606,7 @@ export const updateOrderDetails = async (req: Request, res: Response) => {
         device_info: nextDeviceInfo,
         device_type: body.deviceType ?? undefined,
         device_model: body.deviceModel ?? undefined,
+        serial_number: body.serialNumber === undefined ? undefined : cleanTenantTextField(body.serialNumber),
         problem_description: body.issue ?? undefined,
         promised_date: body.promisedDate === '' ? null : body.promisedDate,
         metadata: body.metadata ?? undefined,

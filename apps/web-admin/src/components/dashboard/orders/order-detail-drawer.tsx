@@ -12,6 +12,7 @@ export type OrderDetailData = {
     receipt_url?: string | null;
     device_type?: string;
     device_model?: string;
+    serial_number?: string | null;
     problem_description?: string;
     promised_date?: string | null;
     received_at?: string | null;
@@ -82,6 +83,7 @@ type Props = {
     clientEmail?: string;
     deviceType?: string;
     deviceModel?: string;
+    serialNumber?: string;
     issue?: string;
     promisedDate?: string;
   }) => Promise<void>;
@@ -225,7 +227,7 @@ export function OrderDetailDrawer({
   const metadataEntries = Object.entries((order?.metadata as Record<string, unknown> | undefined) ?? {}).filter(([, value]) => value !== undefined && value !== null && value !== "");
   const operationalRisk = order?.operational_risk ?? null;
 
-  function getDeviceInfoValue(key: "customer_name" | "customer_phone" | "customer_email" | "type" | "brand" | "model") {
+  function getDeviceInfoValue(key: "customer_name" | "customer_phone" | "customer_email" | "type" | "brand" | "model" | "serial_number") {
     return String((order?.device_info as Record<string, unknown> | undefined)?.[key] ?? "");
   }
 
@@ -243,11 +245,13 @@ export function OrderDetailDrawer({
               ? { deviceType: value.trim() }
               : field === "deviceModel"
                 ? { deviceModel: value.trim() }
-                : field === "issue"
-                  ? { issue: value.trim() }
-                  : field === "promisedDate"
-                    ? { promisedDate: value.trim() }
-                    : {};
+                : field === "serialNumber"
+                  ? { serialNumber: value.trim() }
+                  : field === "issue"
+                    ? { issue: value.trim() }
+                    : field === "promisedDate"
+                      ? { promisedDate: value.trim() }
+                      : {};
     await onEditDetails(payload);
     setEditingField(null);
   }
@@ -385,6 +389,23 @@ export function OrderDetailDrawer({
                         label="Tipo de dispositivo"
                         value={order?.device_type ?? getDeviceInfoValue("type") ?? ""}
                         field="deviceType"
+                        editingField={editingField}
+                        drafts={drafts}
+                        onStartEdit={(field, value) => {
+                          setEditingField(field);
+                          setDrafts((currentDrafts) => ({ ...currentDrafts, [field]: currentDrafts[field] ?? value }));
+                        }}
+                        onCancelEdit={(field, value) => {
+                          setEditingField(null);
+                          setDrafts((currentDrafts) => ({ ...currentDrafts, [field]: value }));
+                        }}
+                        onSave={saveField}
+                        onDraftChange={(field, value) => setDrafts((currentDrafts) => ({ ...currentDrafts, [field]: value }))}
+                      />
+                      <InlineField
+                        label="Serie / IMEI"
+                        value={order?.serial_number ?? getDeviceInfoValue("serial_number") ?? ""}
+                        field="serialNumber"
                         editingField={editingField}
                         drafts={drafts}
                         onStartEdit={(field, value) => {

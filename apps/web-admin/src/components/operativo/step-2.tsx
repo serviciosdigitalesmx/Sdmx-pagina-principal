@@ -8,16 +8,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { getAssetLabel } from '@/lib/labels';
-import type { OrderFormData } from '@/app/dashboard/operativo/page';
+import type { OrderFormData, SerialFieldDefinition } from '@/app/dashboard/operativo/page';
 
 interface Step2Props {
   data: OrderFormData;
+  serialFieldDefinition?: SerialFieldDefinition | null;
   onSubmit: (data: Partial<OrderFormData>) => void;
   onBack: () => void;
   onUpdate: (data: Partial<OrderFormData>) => void;
 }
 
-export function Step2({ data, onSubmit, onBack, onUpdate }: Step2Props) {
+export function Step2({ data, serialFieldDefinition, onSubmit, onBack, onUpdate }: Step2Props) {
   const assetLabel = getAssetLabel();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [localData, setLocalData] = useState<OrderFormData>(data);
@@ -38,6 +39,7 @@ export function Step2({ data, onSubmit, onBack, onUpdate }: Step2Props) {
     console.log('STEP2_VALIDATE_INPUT', JSON.stringify({
       dispositivo: localData.dispositivo,
       modelo: localData.modelo,
+      serialNumber: localData.serialNumber,
       falla: localData.falla,
       fechaPromesaState: fechaPromesa,
       fechaPromesa: localData.fechaPromesa,
@@ -47,6 +49,7 @@ export function Step2({ data, onSubmit, onBack, onUpdate }: Step2Props) {
     }));
     if (!localData.dispositivo) newErrors.dispositivo = 'Selecciona tipo de dispositivo';
     if (!localData.modelo) newErrors.modelo = 'Completa marca y modelo';
+    if (serialFieldDefinition?.required && !localData.serialNumber.trim()) newErrors.serialNumber = `Completa ${serialFieldDefinition.field_label}`;
     if (!localData.falla) newErrors.falla = 'Describe la falla';
     if (!fechaPromesa) newErrors.fechaPromesa = 'Selecciona fecha de entrega';
     else {
@@ -65,6 +68,7 @@ export function Step2({ data, onSubmit, onBack, onUpdate }: Step2Props) {
     console.log('STEP2_HANDLE_SUBMIT', JSON.stringify({
       dispositivo: localData.dispositivo,
       modelo: localData.modelo,
+      serialNumber: localData.serialNumber,
       falla: localData.falla,
       fechaPromesaState: fechaPromesa,
       fechaPromesa: localData.fechaPromesa,
@@ -139,7 +143,26 @@ export function Step2({ data, onSubmit, onBack, onUpdate }: Step2Props) {
           placeholder="Ej: iPhone 13 Pro, Dell XPS 15"
           className={errors.modelo ? 'border-red-500' : ''}
         />
-        {errors.modelo && <p className="text-red-500 text-xs mt-1">{errors.modelo}</p>}
+      {errors.modelo && <p className="text-red-500 text-xs mt-1">{errors.modelo}</p>}
+      </div>
+
+      <div>
+        <Label>
+          {serialFieldDefinition?.field_label ?? 'Serie / IMEI'}{' '}
+          {serialFieldDefinition?.required ? <span className="text-red-500">*</span> : null}
+        </Label>
+        <Input
+          value={localData.serialNumber}
+          onChange={(e) => {
+            const next = { ...localData, serialNumber: e.target.value };
+            setLocalData(next);
+            onUpdate({ serialNumber: e.target.value });
+          }}
+          placeholder={serialFieldDefinition?.placeholder ?? 'IMEI o número de serie'}
+          className={errors.serialNumber ? 'border-red-500' : ''}
+        />
+        {serialFieldDefinition?.help_text ? <p className="text-slate-500 text-xs mt-1">{serialFieldDefinition.help_text}</p> : null}
+        {errors.serialNumber && <p className="text-red-500 text-xs mt-1">{errors.serialNumber}</p>}
       </div>
 
       {/* Issue */}

@@ -68,6 +68,10 @@ function coerceDynamicValue(definition: DynamicFieldDefinition, value: string | 
   return value;
 }
 
+function findSerialFieldDefinition(definitions: DynamicFieldDefinition[]) {
+  return definitions.find((definition) => definition.entity === "service_requests" && definition.field_key === "serial_number" && definition.visible !== false) ?? null;
+}
+
 export default function TenantQuotePage() {
   const params = useParams<{ tenant: string }>();
   const tenant = params?.tenant ?? "";
@@ -127,7 +131,10 @@ export default function TenantQuotePage() {
     setMessage(null);
     setFolio(null);
 
-    for (const definition of dynamicFieldDefinitions) {
+    const serialFieldDefinition = findSerialFieldDefinition(dynamicFieldDefinitions);
+    const visibleDynamicFieldDefinitions = dynamicFieldDefinitions.filter((definition) => !(definition.entity === "service_requests" && definition.field_key === "serial_number"));
+
+    for (const definition of visibleDynamicFieldDefinitions) {
       if (!definition.required || definition.visible === false) continue;
       const value = dynamicFieldValues[definition.field_key];
       const missing =
@@ -143,7 +150,7 @@ export default function TenantQuotePage() {
       }
     }
 
-    const dynamicMetadata = dynamicFieldDefinitions.reduce<Record<string, string | boolean | number>>((acc, definition) => {
+    const dynamicMetadata = visibleDynamicFieldDefinitions.reduce<Record<string, string | boolean | number>>((acc, definition) => {
       const value = coerceDynamicValue(definition, dynamicFieldValues[definition.field_key]);
       if (value !== undefined) {
         acc[definition.field_key] = value;
@@ -152,6 +159,12 @@ export default function TenantQuotePage() {
     }, {});
 
     try {
+      if (serialFieldDefinition?.required && !form.serialNumber.trim()) {
+        setLoading(false);
+        setError(`Falta completar el campo requerido: ${serialFieldDefinition.field_label}`);
+        return;
+      }
+
       const response = await fetch(getPublicApiPath("/api/public/quotes"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -225,17 +238,28 @@ export default function TenantQuotePage() {
 
         <SurfaceCard elevated className="p-6">
           <form onSubmit={submit} className="grid gap-4">
-          {[
+          {(() => {
+            const serialFieldDefinition = findSerialFieldDefinition(dynamicFieldDefinitions);
+            const fields = [
             ["Nombre", "fullName", "text", "Nombre completo del cliente.", true],
             ["WhatsApp", "phone", "tel", "Número de teléfono de contacto.", true],
             ["Correo", "email", "email", "Dirección de correo electrónico.", true],
             ["Tipo de equipo", "deviceType", "text", "Tipo de dispositivo (Celular, Laptop, Consola).", true],
             ["Marca", "deviceBrand", "text", "Marca del fabricante.", true],
             ["Modelo", "deviceModel", "text", "Modelo específico.", true],
-            ["Serie / IMEI", "serialNumber", "text", "Número de serie o identificador único (opcional).", false],
+            [
+              serialFieldDefinition?.field_label ?? "Serie / IMEI",
+              "serialNumber",
+              "text",
+              serialFieldDefinition?.help_text ?? "Número de serie o identificador único.",
+              Boolean(serialFieldDefinition?.required),
+              serialFieldDefinition?.placeholder ?? "IMEI o número de serie",
+            ],
             ["Nivel de urgencia", "priorityLevel", "text", "Prioridad (Normal, Alta o Urgente).", true],
             ["PIN / contraseña", "passwordOrPin", "password", "Clave o patrón de desbloqueo (opcional y confidencial).", false],
-          ].map(([label, key, type, helperText, isRequired]) => (
+            ];
+
+            return fields.map(([label, key, type, helperText, isRequired, placeholder]) => (
             <div key={key as string}>
               <label className="mb-2 block text-sm font-medium text-slate-300">{label}</label>
               <input
@@ -243,11 +267,13 @@ export default function TenantQuotePage() {
                 value={(form as Record<string, string>)[key as string]}
                 onChange={(e) => setForm((current) => ({ ...current, [key as string]: e.target.value }))}
                 className={fieldClassName}
+                placeholder={placeholder as string | undefined}
                 required={isRequired as boolean}
               />
               <p className="mt-1 text-xs text-slate-500">{helperText as string}</p>
             </div>
-          ))}
+            ));
+          })()}
 
           <div>
             <label className="mb-2 block text-sm font-medium text-slate-300">{tenantLabels.diagnosis ?? "Problema"}</label>
@@ -261,10 +287,10 @@ export default function TenantQuotePage() {
             <p className="mt-1 text-xs text-slate-500">Describe detalladamente la falla o desperfecto del equipo.</p>
           </div>
 
-          {dynamicFieldDefinitions.length > 0 ? (
+          {dynamicFieldDefinitions.filter((definition) => !(definition.entity === "service_requests" && definition.field_key === "serial_number")).length > 0 ? (
             <DynamicFields
               title={tenantLabels.request ? `Campos de ${tenantLabels.request.toLowerCase()}` : "Campos del tenant"}
-              definitions={dynamicFieldDefinitions}
+              definitions={dynamicFieldDefinitions.filter((definition) => !(definition.entity === "service_requests" && definition.field_key === "serial_number"))}
               values={dynamicFieldValues}
               onChange={(fieldKey, value) => setDynamicFieldValues((current) => ({ ...current, [fieldKey]: value }))}
               className="grid gap-4 rounded-[1.5rem] border border-slate-800 bg-slate-950/70 p-6"

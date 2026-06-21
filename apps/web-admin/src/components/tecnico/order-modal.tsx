@@ -54,6 +54,7 @@ export function OrderModal({ open, onOpenChange, order, onOrderUpdated }: OrderM
   const [clienteEmail, setClienteEmail] = useState('');
   const [dispositivo, setDispositivo] = useState('');
   const [modelo, setModelo] = useState('');
+  const [serialNumber, setSerialNumber] = useState('');
   const [falla, setFalla] = useState('');
   const [costo, setCosto] = useState('');
   const [fechaPromesa, setFechaPromesa] = useState('');
@@ -112,6 +113,7 @@ export function OrderModal({ open, onOpenChange, order, onOrderUpdated }: OrderM
       setClienteEmail(orderData.customers?.email || orderData.device_info?.customer_email || '');
       setDispositivo((orderData as { device_type?: string }).device_type || orderData.device_info?.type || '');
       setModelo((orderData as { device_model?: string }).device_model || orderData.device_info?.model || '');
+      setSerialNumber(orderData.serial_number || orderData.device_info?.serial_number || '');
       setFalla(orderData.problem_description || '');
       setCosto(String(orderData.estimated_cost ?? orderData.final_cost ?? ''));
       setFechaPromesa(orderData.promised_date ? String(orderData.promised_date).slice(0, 10) : '');
@@ -156,6 +158,7 @@ export function OrderModal({ open, onOpenChange, order, onOrderUpdated }: OrderM
         clientEmail: clienteEmail,
         deviceType: dispositivo,
         deviceModel: modelo,
+        serialNumber,
         issue: falla,
         promisedDate: fechaPromesa,
         metadata: { youtube_id: youtubeId },
@@ -302,6 +305,10 @@ export function OrderModal({ open, onOpenChange, order, onOrderUpdated }: OrderM
                   <div>
                     <Label>Modelo</Label>
                     <Input value={modelo} onChange={(e) => setModelo(e.target.value)} />
+                  </div>
+                  <div>
+                    <Label>Serie / IMEI</Label>
+                    <Input value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} />
                   </div>
                   <div>
                     <Label>Costo estimado</Label>
