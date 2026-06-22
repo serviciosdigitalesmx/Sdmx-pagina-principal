@@ -108,6 +108,14 @@ type OrderEventRow = {
   created_at: string;
 };
 
+
+const createPaymentSchema = z.object({
+  amount: z.number().positive('El monto debe ser mayor a 0'),
+  paymentMethod: z.string().min(1, 'El método de pago es requerido'),
+  reference: z.string().optional(),
+  notes: z.string().optional(),
+});
+
 type OrderChecklistPayload = {
   hasCharger?: boolean;
   screenCondition?: string;
@@ -903,7 +911,7 @@ export const getOrderById = async (req: Request, res: Response) => {
 
     orderQuery = applyOrderAccessScope(orderQuery, req);
 
-    const [orderResult, checklistResult, documentsResult, eventsResult, runtimeConfig] = await Promise.all([
+    const [orderResult, checklistResult, documentsResult, eventsResult, paymentsResult, runtimeConfig] = await Promise.all([
       orderQuery.select('*, metadata').single(),
       supabase
         .from('service_order_checklists')
@@ -923,6 +931,12 @@ export const getOrderById = async (req: Request, res: Response) => {
         .eq('tenant_id', tenantId)
         .eq('service_order_id', orderId)
         .order('created_at', { ascending: true }),
+      supabase
+        .from('customer_payments')
+        .select('id, amount, payment_method, reference, notes, paid_at, created_by, source')
+        .eq('tenant_id', tenantId)
+        .eq('service_order_id', orderId)
+        .order('paid_at', { ascending: false }),
       loadTenantRuntimeConfig(tenantId),
     ]);
 
@@ -962,6 +976,15 @@ export const getOrderById = async (req: Request, res: Response) => {
       orderResult.data.receipt_url || documents.find((document) => document.file_type === 'receipt_pdf' && document.public_url)?.public_url || null
     );
 
+    if (paymentsResult.error) {
+      console.error('Failed to fetch order payments:', paymentsResult.error);
+    }
+
+    const validPayments = paymentsResult.data || [];
+    const totalCobrado = validPayments.reduce((sum, p) => sum + Number(p.amount), 0);
+    const finalCost = Number(orderResult.data.final_cost) > 0 ? Number(orderResult.data.final_cost) : Number(orderResult.data.estimated_cost || 0);
+    const saldoPendiente = Math.max(0, finalCost - totalCobrado);
+
     return res.json({
       success: true,
       data: {
@@ -975,6 +998,12 @@ export const getOrderById = async (req: Request, res: Response) => {
         checklist: normalizeChecklistRow(checklistResult.data as Partial<OrderChecklistRow> | null),
         pdf_attachment: pdfAttachment,
         attachments: pdfAttachment ? [pdfAttachment] : [],
+        financialSummary: {
+          total_aplicable: finalCost,
+          total_cobrado: totalCobrado,
+          saldo_pendiente: saldoPendiente,
+        },
+        payments: validPayments,
       },
     });
   } catch (error) {
@@ -1845,3 +1874,90 @@ export const updateOrderWarranty = async (req: Request, res: Response) => {
     return res.status(500).json({ error: 'Error interno del servidor' });
   }
 };
+
+export const createOrderPayment = async (req: Request, res: Response) => {
+  try {
+    const tenantId = req.tenantId;
+    if (!tenantId) return res.status(401).json({ error: 'Tenant context is required' });
+    const orderId = req.params.id;
+    if (!orderId) return res.status(400).json({ error: 'Order id is required' });
+
+    const body = createPaymentSchema.parse(req.body);
+    const scope = getRequestScope(req);
+    const supabase = getTenantClient(tenantId);
+
+    const { data: order, error: orderError } = await supabase
+      .from('service_orders')
+      .select('id, sucursal_id, customer_id, final_cost, estimated_cost, status')
+      .eq('tenant_id', tenantId)
+      .eq('id', orderId)
+      .eq(
+        scope?.mode === 'branch' && isUuid(scope.sucursalId) ? 'sucursal_id' : 'tenant_id',
+        scope?.mode === 'branch' && isUuid(scope.sucursalId) ? scope.sucursalId : tenantId,
+      )
+      .single();
+
+    if (orderError || !order) return res.status(404).json({ error: 'Order not found' });
+
+    const statusLow = order.status.toLowerCase();
+    if (statusLow.includes('cancel') || statusLow.includes('anulada')) {
+      return res.status(400).json({ error: 'No se pueden registrar cobros sobre una orden cancelada o anulada' });
+    }
+
+    const { data: payments, error: paymentsError } = await supabase
+      .from('customer_payments')
+      .select('amount')
+      .eq('tenant_id', tenantId)
+      .eq('service_order_id', orderId);
+
+    if (paymentsError) return res.status(502).json({ error: 'Error al consultar pagos previos', details: paymentsError.message });
+
+    const totalCobrado = (payments || []).reduce((sum, p) => sum + Number(p.amount), 0);
+    const finalCost = Number(order.final_cost) > 0 ? Number(order.final_cost) : Number(order.estimated_cost || 0);
+    const saldoPendiente = Math.max(0, finalCost - totalCobrado);
+
+    if (body.amount > saldoPendiente) {
+      return res.status(400).json({ error: `El monto (${body.amount}) excede el saldo pendiente (${saldoPendiente})` });
+    }
+
+    // Insert payment
+    const { data: newPayment, error: insertError } = await supabase
+      .from('customer_payments')
+      .insert([{
+        tenant_id: tenantId,
+        branch_id: order.sucursal_id,
+        customer_id: order.customer_id,
+        service_order_id: orderId,
+        payment_type: 'cobro',
+        amount: body.amount,
+        payment_method: body.paymentMethod,
+        reference: body.reference || null,
+        notes: body.notes || null,
+        created_by: req.user?.userId ?? null,
+        source: 'manual'
+      }])
+      .select()
+      .single();
+
+    if (insertError) return res.status(502).json({ error: 'Failed to record payment', details: insertError.message });
+
+    // Use existing insertOrderEvent mechanism for order history
+    await insertOrderEvent(supabase, {
+      id: randomUUID(),
+      tenant_id: tenantId,
+      service_order_id: orderId,
+      event_type: 'payment_registered',
+      previous_status: null,
+      new_status: null,
+      note: `Cobro registrado por $${body.amount} via ${body.paymentMethod}`,
+      actor_name: req.user?.email ?? req.user?.role ?? 'system',
+    });
+
+    return res.status(201).json({ success: true, data: newPayment });
+  } catch (error) {
+    if (error instanceof z.ZodError) return res.status(400).json({ error: 'Invalid payload', details: error.errors });
+    console.error('Error creating order payment:', error);
+    return res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
