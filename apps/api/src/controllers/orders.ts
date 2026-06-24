@@ -178,6 +178,40 @@ type DeviceHistoryMovementRow = {
   created_at: string;
 };
 
+type WarrantyClaimRow = {
+  id: string;
+  tenant_id: string;
+  original_order_id: string;
+  claim_order_id: string | null;
+  warranty_until: string | null;
+  eligibility_status: string;
+  status: string;
+  coverage_scope: string;
+  claim_reason: string;
+  reported_issue: string | null;
+  requested_resolution: string | null;
+  resolution_notes: string | null;
+  created_by: string | null;
+  approved_by: string | null;
+  rejected_by: string | null;
+  resolved_by: string | null;
+  cancelled_by: string | null;
+  created_at: string;
+  updated_at: string;
+  approved_at: string | null;
+  rejected_at: string | null;
+  resolved_at: string | null;
+  cancelled_at: string | null;
+};
+
+type WarrantyOrderRow = {
+  id: string;
+  tenant_id: string;
+  status: string | null;
+  serial_number: string | null;
+  warranty_until: string | null;
+};
+
 
 const createPaymentSchema = z.object({
   amount: z.number().positive('El monto debe ser mayor a 0'),
@@ -191,6 +225,19 @@ const refundPaymentSchema = z.object({
   amount: z.coerce.number().positive(),
   reason: z.string().trim().min(3),
   reference: z.string().trim().optional().or(z.literal('')),
+});
+
+const warrantyClaimSchema = z.object({
+  claimOrderId: z.string().uuid().optional().nullable(),
+  claimReason: z.string().trim().min(1),
+  reportedIssue: z.string().trim().optional().or(z.literal('')),
+  requestedResolution: z.string().trim().optional().or(z.literal('')),
+  coverageScope: z.enum(['full', 'labor', 'parts', 'diagnosis', 'other']).default('full'),
+});
+
+const warrantyClaimStatusSchema = z.object({
+  status: z.enum(['under_review', 'approved', 'rejected', 'resolved', 'cancelled']),
+  resolutionNotes: z.string().trim().optional().or(z.literal('')),
 });
 
 type OrderChecklistPayload = {
@@ -513,6 +560,37 @@ function normalizeOrderEvents(rows: OrderEventRow[] | null | undefined, metadata
 function toNumber(value: number | string | null | undefined) {
   const parsed = Number(value ?? 0);
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function requestIdFrom(req: Request) {
+  return String(req.headers['x-request-id'] ?? req.headers['x-correlation-id'] ?? randomUUID());
+}
+
+function normalizeWarrantyClaim(row: WarrantyClaimRow) {
+  return {
+    id: row.id,
+    originalOrderId: row.original_order_id,
+    claimOrderId: row.claim_order_id,
+    warrantyUntil: row.warranty_until,
+    eligibilityStatus: row.eligibility_status,
+    status: row.status,
+    coverageScope: row.coverage_scope,
+    claimReason: row.claim_reason,
+    reportedIssue: row.reported_issue,
+    requestedResolution: row.requested_resolution,
+    resolutionNotes: row.resolution_notes,
+    createdBy: row.created_by,
+    approvedBy: row.approved_by,
+    rejectedBy: row.rejected_by,
+    resolvedBy: row.resolved_by,
+    cancelledBy: row.cancelled_by,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    approvedAt: row.approved_at,
+    rejectedAt: row.rejected_at,
+    resolvedAt: row.resolved_at,
+    cancelledAt: row.cancelled_at,
+  };
 }
 
 function normalizeDeviceHistoryTimeline(rows: DeviceHistoryStatusRow[] | null | undefined) {
@@ -2237,6 +2315,210 @@ export const updateOrderChecklist = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Invalid payload', details: error.errors });
     }
     console.error('Error updating checklist:', error);
+    return res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
+export const getOrderWarrantySummary = async (req: Request, res: Response) => {
+  try {
+    const tenantId = req.tenantId;
+    const orderId = req.params.id;
+
+    if (!tenantId) {
+      return res.status(401).json({ error: 'Tenant context is required' });
+    }
+
+    if (!orderId) {
+      return res.status(400).json({ error: 'Order id is required' });
+    }
+
+    const orderResult = await supabaseAdmin
+      .from('service_orders')
+      .select('id, tenant_id, status, serial_number, warranty_until')
+      .eq('tenant_id', tenantId)
+      .eq('id', orderId)
+      .maybeSingle();
+
+    if (orderResult.error) {
+      return res.status(502).json({ error: 'Failed to fetch order', details: orderResult.error.message });
+    }
+
+    if (!orderResult.data) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    const order = orderResult.data as WarrantyOrderRow;
+    const [claimsResult, documentsResult, movementsResult, historyResult] = await Promise.all([
+      supabaseAdmin
+        .from('service_order_warranties')
+        .select('*')
+        .eq('tenant_id', tenantId)
+        .or(`original_order_id.eq.${orderId},claim_order_id.eq.${orderId}`)
+        .order('created_at', { ascending: false }),
+      supabaseAdmin
+        .from('service_order_documents')
+        .select('id, tenant_id, service_order_id, file_name, file_type, mime_type, source, is_customer_visible, created_at')
+        .eq('tenant_id', tenantId)
+        .eq('service_order_id', orderId)
+        .order('created_at', { ascending: false }),
+      supabaseAdmin
+        .from('inventory_movements')
+        .select('id, tenant_id, service_order_id, product_id, movement_type, quantity, unit_cost, reference, notes, created_at')
+        .eq('tenant_id', tenantId)
+        .eq('service_order_id', orderId)
+        .eq('movement_type', 'service_order_consumed')
+        .order('created_at', { ascending: true }),
+      order.serial_number
+        ? supabaseAdmin.rpc('find_device_history_by_serial', {
+          p_tenant_id: tenantId,
+          p_serial_number: order.serial_number,
+          p_limit: 100,
+        })
+        : Promise.resolve({ data: [], error: null }),
+    ]);
+
+    if (claimsResult.error) {
+      return res.status(502).json({ error: 'Failed to fetch warranty claims', details: claimsResult.error.message });
+    }
+
+    if (documentsResult.error) {
+      return res.status(502).json({ error: 'Failed to fetch warranty documents', details: documentsResult.error.message });
+    }
+
+    if (movementsResult.error) {
+      return res.status(502).json({ error: 'Failed to fetch consumed inventory', details: movementsResult.error.message });
+    }
+
+    const warrantyUntil = order.warranty_until;
+    const warrantyUntilTime = warrantyUntil ? new Date(warrantyUntil).getTime() : Number.NaN;
+    const isWarrantyActive = Number.isFinite(warrantyUntilTime) ? warrantyUntilTime >= Date.now() : false;
+    const documents = normalizeDeviceHistoryDocuments((documentsResult.data ?? []) as DeviceHistoryDocumentRow[]);
+    const consumedItems = normalizeDeviceHistoryMovements((movementsResult.data ?? []) as DeviceHistoryMovementRow[]);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        orderId,
+        warrantyUntil,
+        isWarrantyActive,
+        serialNumber: order.serial_number,
+        status: order.status,
+        claims: ((claimsResult.data ?? []) as WarrantyClaimRow[]).map(normalizeWarrantyClaim),
+        deviceHistorySummary: {
+          serialNumber: order.serial_number,
+          totalOrders: Array.isArray(historyResult.data) ? historyResult.data.length : 0,
+          available: !historyResult.error,
+        },
+        documents: {
+          total: documents.length,
+          customerVisible: documents.filter((document) => document.isCustomerVisible).length,
+          items: documents,
+        },
+        inventory: {
+          consumedItems,
+        },
+      },
+    });
+  } catch (error) {
+    console.error('Error getting warranty summary:', error);
+    return res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
+export const createOrderWarrantyClaim = async (req: Request, res: Response) => {
+  try {
+    const tenantId = req.tenantId;
+    const orderId = req.params.id;
+
+    if (!tenantId) {
+      return res.status(401).json({ error: 'Tenant context is required' });
+    }
+
+    if (!orderId) {
+      return res.status(400).json({ error: 'Order id is required' });
+    }
+
+    const body = warrantyClaimSchema.parse(req.body);
+    const { data, error } = await supabaseAdmin.rpc('create_service_order_warranty_claim', {
+      p_tenant_id: tenantId,
+      p_original_order_id: orderId,
+      p_claim_order_id: body.claimOrderId ?? null,
+      p_claim_reason: body.claimReason,
+      p_reported_issue: body.reportedIssue || null,
+      p_requested_resolution: body.requestedResolution || null,
+      p_coverage_scope: body.coverageScope,
+      p_created_by: req.user?.userId ?? null,
+      p_request_id: requestIdFrom(req),
+    });
+
+    if (error) {
+      return res.status(409).json({ error: 'Failed to create warranty claim', details: error.message });
+    }
+
+    return res.status(201).json({ success: true, data });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: 'Invalid payload', details: error.errors });
+    }
+    console.error('Error creating warranty claim:', error);
+    return res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
+export const updateOrderWarrantyClaimStatus = async (req: Request, res: Response) => {
+  try {
+    const tenantId = req.tenantId;
+    const orderId = req.params.id;
+    const claimId = req.params.claimId;
+
+    if (!tenantId) {
+      return res.status(401).json({ error: 'Tenant context is required' });
+    }
+
+    if (!orderId || !claimId) {
+      return res.status(400).json({ error: 'Order id and claim id are required' });
+    }
+
+    const body = warrantyClaimStatusSchema.parse(req.body);
+    const existingClaim = await supabaseAdmin
+      .from('service_order_warranties')
+      .select('id, original_order_id, claim_order_id')
+      .eq('tenant_id', tenantId)
+      .eq('id', claimId)
+      .maybeSingle();
+
+    if (existingClaim.error) {
+      return res.status(502).json({ error: 'Failed to fetch warranty claim', details: existingClaim.error.message });
+    }
+
+    if (!existingClaim.data) {
+      return res.status(404).json({ error: 'Warranty claim not found' });
+    }
+
+    const claim = existingClaim.data as Pick<WarrantyClaimRow, 'id' | 'original_order_id' | 'claim_order_id'>;
+    if (claim.original_order_id !== orderId && claim.claim_order_id !== orderId) {
+      return res.status(404).json({ error: 'Warranty claim not found for order' });
+    }
+
+    const { data, error } = await supabaseAdmin.rpc('update_service_order_warranty_claim_status', {
+      p_tenant_id: tenantId,
+      p_claim_id: claimId,
+      p_status: body.status,
+      p_resolution_notes: body.resolutionNotes || null,
+      p_actor_id: req.user?.userId ?? null,
+      p_request_id: requestIdFrom(req),
+    });
+
+    if (error) {
+      return res.status(409).json({ error: 'Failed to update warranty claim status', details: error.message });
+    }
+
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: 'Invalid payload', details: error.errors });
+    }
+    console.error('Error updating warranty claim status:', error);
     return res.status(500).json({ error: 'Error interno del servidor' });
   }
 };
