@@ -6,7 +6,7 @@ import { requireTenantBillingActive } from '../middleware/tenantBilling';
 import { requireRole } from '../middleware/requireRole';
 import { attachTenantCapabilities, requireTenantModule } from '../middleware/tenantCapabilities';
 import { createInventoryItem, listInventory, listInventoryMovements, transferInventoryItem, updateInventoryItem } from '../controllers/catalogs';
-import { createInventoryReservation, listInventoryReservations, releaseInventoryReservation } from '../controllers/inventory-reservations';
+import { consumeInventoryReservation, createInventoryReservation, listInventoryReservations, releaseInventoryReservation } from '../controllers/inventory-reservations';
 
 const router = Router({ mergeParams: true });
 
@@ -22,6 +22,7 @@ router.post('/transfer', requireTenantModule('stock'), requireRole('owner', 'man
 router.get('/reservations', requireTenantModule('stock'), requireRole('owner', 'manager', 'technician'), listInventoryReservations);
 router.post('/reservations', requireTenantModule('stock'), requireRole('owner', 'manager'), createInventoryReservation);
 router.patch('/reservations/:id/release', requireTenantModule('stock'), requireRole('owner', 'manager'), releaseInventoryReservation);
+router.post('/reservations/:id/consume', requireTenantModule('stock'), requireRole('owner', 'manager', 'technician'), consumeInventoryReservation);
 router.patch('/:id', requireTenantModule('stock'), requireRole('owner', 'manager'), updateInventoryItem);
 router.get('/:id/movements', requireTenantModule('stock'), requireRole('owner', 'manager', 'technician'), listInventoryMovements);
 

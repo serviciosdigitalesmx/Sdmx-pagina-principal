@@ -16,6 +16,12 @@ const releaseReservationSchema = z.object({
   reason: z.string().trim().optional().or(z.literal('')),
 });
 
+const consumeReservationSchema = z.object({
+  quantity: z.coerce.number().positive(),
+  idempotencyKey: z.string().trim().min(8),
+  reason: z.string().trim().optional().or(z.literal('')),
+});
+
 function requestIdFrom(req: Request) {
   return String(req.headers['x-request-id'] ?? req.headers['x-correlation-id'] ?? randomUUID());
 }
@@ -115,6 +121,38 @@ export const releaseInventoryReservation = async (req: Request, res: Response) =
       return res.status(400).json({ error: 'Invalid payload', details: error.errors });
     }
     console.error('Error releasing inventory reservation:', error);
+    return res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
+export const consumeInventoryReservation = async (req: Request, res: Response) => {
+  try {
+    const tenantId = req.tenantId;
+    if (!tenantId) return res.status(401).json({ error: 'Tenant context is required' });
+
+    const body = consumeReservationSchema.parse(req.body);
+    const requestId = requestIdFrom(req);
+
+    const { data, error } = await supabaseAdmin.rpc('consume_inventory_reservation', {
+      p_tenant_id: tenantId,
+      p_reservation_id: req.params.id,
+      p_quantity: body.quantity,
+      p_idempotency_key: body.idempotencyKey,
+      p_consumed_by: userIdFrom(req),
+      p_request_id: requestId,
+      p_consume_reason: body.reason?.trim() || null,
+    });
+
+    if (error) {
+      return res.status(409).json({ error: 'Failed to consume reservation', details: error.message });
+    }
+
+    return res.json({ success: true, data });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: 'Invalid payload', details: error.errors });
+    }
+    console.error('Error consuming inventory reservation:', error);
     return res.status(500).json({ error: 'Error interno del servidor' });
   }
 };
