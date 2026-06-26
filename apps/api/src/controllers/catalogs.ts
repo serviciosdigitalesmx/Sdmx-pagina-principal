@@ -140,14 +140,25 @@ async function findMatchingCustomer(
 
 const createInventorySchema = z.object({
   sku: z.string().min(1),
-  description: z.string().min(1),
-  stock: z.number().int().nonnegative(),
+  description: z.string().min(1).optional(),
+  name: z.string().min(1).optional(),
+  stock: z.coerce.number().nonnegative().optional(),
+  stock_current: z.coerce.number().nonnegative().optional(),
   sucursalId: z.string().min(1).optional(),
+}).superRefine((value, ctx) => {
+  if (!resolveInventoryDescription(value)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['description'], message: 'description or name is required' });
+  }
+  if (typeof value.stock !== 'number' && typeof value.stock_current !== 'number') {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['stock'], message: 'stock or stock_current is required' });
+  }
 });
 
 const updateInventorySchema = z.object({
   description: z.string().min(1).optional(),
-  stock: z.number().int().nonnegative().optional(),
+  name: z.string().min(1).optional(),
+  stock: z.coerce.number().nonnegative().optional(),
+  stock_current: z.coerce.number().nonnegative().optional(),
   sucursalId: z.string().min(1).optional().nullable(),
   note: z.string().optional().or(z.literal('')),
 });
@@ -163,6 +174,14 @@ const transferInventorySchema = z.object({
 
 function isUuid(value: unknown) {
   return typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
+function resolveInventoryDescription(value: { description?: string | null; name?: string | null }) {
+  return (value.description ?? value.name ?? '').trim();
+}
+
+function resolveInventoryStock(value: { stock?: number; stock_current?: number }, fallback = 0) {
+  return Number(value.stock ?? value.stock_current ?? fallback);
 }
 
 async function ensureProductCatalogRecord(
@@ -635,7 +654,9 @@ export const listInventory = async (req: Request, res: Response) => {
       return {
         ...row,
         sku: product?.sku ?? null,
+        name: product?.name ?? null,
         description: product?.name ?? null,
+        stock_current: Number((row as { stock_current?: number }).stock_current ?? 0),
         stock: Number((row as { stock_current?: number }).stock_current ?? 0),
       };
     });
@@ -666,7 +687,9 @@ export const createInventoryItem = async (req: Request, res: Response) => {
       return res.status(403).json({ error: 'Sucursal mismatch' });
     }
 
-    const productRow = await ensureProductCatalogRecord(supabase, tenantId, body.sku, body.description, body.description);
+    const resolvedDescription = resolveInventoryDescription(body);
+    const resolvedStock = resolveInventoryStock(body);
+    const productRow = await ensureProductCatalogRecord(supabase, tenantId, body.sku, resolvedDescription, resolvedDescription);
     const resolvedSucursalId = body.sucursalId ?? scope?.sucursalId ?? null;
     const changedBy = req.user?.userId ?? req.user?.sub ?? null;
     if (scope?.mode === 'branch' && !resolvedSucursalId) {
@@ -677,20 +700,22 @@ export const createInventoryItem = async (req: Request, res: Response) => {
       tenantId,
       sucursalId: resolvedSucursalId,
       productId: productRow.id,
-      stock: Number(body.stock),
+      stock: resolvedStock,
       reference: 'inventory_seed',
-      notes: body.description,
+      notes: resolvedDescription,
       changedBy,
     });
 
-    await refreshInventoryAlert(tenantId, productRow.id, resolvedSucursalId, Number((inventoryRow as { stock_current?: number }).stock_current ?? body.stock));
+    await refreshInventoryAlert(tenantId, productRow.id, resolvedSucursalId, Number((inventoryRow as { stock_current?: number }).stock_current ?? resolvedStock));
     return res.status(201).json({
       success: true,
       data: {
         ...inventoryRow,
         sku: body.sku,
-        description: body.description,
-        stock: Number(body.stock),
+        name: resolvedDescription,
+        description: resolvedDescription,
+        stock_current: Number((inventoryRow as { stock_current?: number }).stock_current ?? resolvedStock),
+        stock: resolvedStock,
       },
     });
   } catch (error) {
@@ -721,7 +746,7 @@ export const updateInventoryItem = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Inventory item not found', details: currentError?.message ?? 'Not found' });
     }
 
-    const nextStock = typeof body.stock === 'number' ? body.stock : Number(currentRow.stock_current ?? 0);
+    const nextStock = resolveInventoryStock(body, Number(currentRow.stock_current ?? 0));
     const nextSucursalId = body.sucursalId === null
       ? null
       : (body.sucursalId ?? scope?.sucursalId ?? currentRow.sucursal_id ?? null);
