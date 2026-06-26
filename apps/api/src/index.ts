@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import adminRouter from './routes/admin';
 import authRouter from './routes/auth';
 import ordersRouter from './routes/orders';
 import requestsRouter from './routes/requests';
@@ -121,6 +122,7 @@ app.options('*', cors({
 }));
 
 // Routes
+app.use('/api/admin', adminRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/:tenantSlug/auth', authRouter); // Support for tenant-prefixed auth
 
