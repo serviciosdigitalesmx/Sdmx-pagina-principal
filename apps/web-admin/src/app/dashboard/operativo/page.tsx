@@ -53,6 +53,8 @@ export type OrderFormData = {
     acceptedByName: string;
   };
 
+  includeIva: boolean;
+
   // Foto
   fotoRecepcion: File | null;
   fotoPreview: string | null;
@@ -94,6 +96,7 @@ export default function OperativoPage() {
       acceptedAt: '',
       acceptedByName: '',
     },
+    includeIva: false,
     fotoRecepcion: null,
     fotoPreview: null,
   });
@@ -188,8 +191,8 @@ export default function OperativoPage() {
         serialNumber: formData.serialNumber,
         issue: formData.falla,
         estimatedCost: formData.costo,
+        includeIva: formData.includeIva,
         promisedDate: formData.fechaPromesa || undefined,
-        includeIva: false,
         checklist: {
           hasCharger: formData.checks.cargador,
           screenCondition: formData.checks.pantalla ? 'OK' : '',
@@ -279,6 +282,7 @@ export default function OperativoPage() {
         acceptedAt: '',
         acceptedByName: '',
       },
+      includeIva: false,
       fotoRecepcion: null,
       fotoPreview: null,
     });

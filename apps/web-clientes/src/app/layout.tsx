@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 function resolveMetadataBase() {
-  const raw = process.env.NEXT_PUBLIC_APP_URL?.trim() || process.env.APP_URL?.trim() || process.env.VERCEL_URL?.trim();
+  const raw =
+    process.env.NEXT_PUBLIC_APP_URL?.trim() ||
+    process.env.APP_URL?.trim() ||
+    "https://clientes.serviciosdigitalesmx.online";
   if (!raw) return undefined;
   try {
     const normalized = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;

@@ -99,7 +99,7 @@ function LoginScreen() {
     }
   };
 
-  const publicUrl = process.env.NEXT_PUBLIC_WEB_PUBLIC_URL || '';
+  const publicUrl = process.env.NEXT_PUBLIC_WEB_PUBLIC_URL || 'https://app.serviciosdigitalesmx.online';
 
   return (
     <div className="min-h-screen bg-[#0a0f17] px-4 py-8 text-white sm:px-6 lg:px-8">

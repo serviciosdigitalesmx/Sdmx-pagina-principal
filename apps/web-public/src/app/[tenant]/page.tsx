@@ -363,7 +363,7 @@ export default async function TenantLandingPage({
                 {landing.primaryCtaLabel || "Cotizar ahora"}
               </Link>
               <Link
-                href={landing.secondaryCtaHref || `/${slug}/portal`}
+                href={landing.secondaryCtaHref || `/${slug}/tracking`}
                 className="inline-flex items-center justify-center rounded-full border border-sky-400/35 bg-sky-500/15 px-5 py-3 text-center text-sm font-semibold text-sky-100 transition duration-200 hover:border-sky-300/45 hover:bg-sky-500/20"
               >
                 {landing.secondaryCtaLabel || "Ver estado"}
@@ -514,7 +514,7 @@ export default async function TenantLandingPage({
                     Abrir panel
                   </Link>
                   <Link
-                    href={`/${slug}/portal`}
+                    href={`/${slug}/tracking`}
                     className="inline-flex items-center justify-center rounded-full border border-sky-400/35 bg-sky-500/15 px-5 py-3 text-sm font-semibold text-sky-100 transition hover:bg-sky-500/20"
                   >
                     Ver estado
@@ -573,7 +573,7 @@ export default async function TenantLandingPage({
                     Ver estado
                   </p>
                   <p className="mt-2 text-sm leading-7 text-[color:var(--text-secondary)]">
-                    Lleva al seguimiento público para consultar por folio.
+                    Lleva al portal del cliente para consultar por folio.
                   </p>
                 </div>
                 <div className="rounded-[1.25rem] border border-white/10 bg-black/20 p-4">

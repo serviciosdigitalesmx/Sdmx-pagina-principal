@@ -6,7 +6,10 @@ import { optionalEnv } from "@white-label/config";
 import { getPublicApiPath } from "@/lib/public-api";
 
 export default async function AuthGooglePage() {
-  const explicitPublicUrl = optionalEnv("NEXT_PUBLIC_WEB_PUBLIC_URL") ?? optionalEnv("NEXT_PUBLIC_APP_URL");
+  const explicitPublicUrl =
+    optionalEnv("NEXT_PUBLIC_WEB_PUBLIC_URL") ??
+    optionalEnv("NEXT_PUBLIC_APP_URL") ??
+    "https://app.serviciosdigitalesmx.online";
   const requestHeaders = await headers();
   const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host");
   const proto = requestHeaders.get("x-forwarded-proto") ?? "https";

@@ -418,6 +418,21 @@ export function OrderIntakeModal({
                       </label>
                     </div>
 
+                    <div className="rounded-[22px] border border-sky-500/10 bg-black/20 p-4">
+                      <label className="flex items-center justify-between gap-4">
+                        <div>
+                          <span className="block text-sm font-semibold text-zinc-100">Aplicar IVA (16%)</span>
+                          <p className="mt-1 text-sm text-zinc-400">Actívalo solo si el cliente requiere factura.</p>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={form.includeIva}
+                          onChange={(e) => onChange("includeIva", e.target.checked)}
+                          className="h-5 w-5 rounded border-zinc-700 accent-sky-400"
+                        />
+                      </label>
+                    </div>
+
                     <label className="space-y-2 block">
                       <span className="text-sm text-zinc-300">Notas adicionales (opcional)</span>
                       <input value={form.intakeNotes} onChange={(e) => onChange("intakeNotes", e.target.value)} placeholder="Ej: Cliente dejó funda, teléfono con contraseña..." className="w-full rounded-2xl border border-sky-400/30 bg-zinc-950 px-4 py-3 text-zinc-100 outline-none placeholder:text-zinc-500" />

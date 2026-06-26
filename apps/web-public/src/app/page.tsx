@@ -9,7 +9,7 @@ const brandShort = optionalEnv("NEXT_PUBLIC_SAAS_BRAND_SHORT") ?? "FX";
 const hubName = optionalEnv("NEXT_PUBLIC_HUB_NAME") ?? "Hub";
 const publicUrl =
   optionalEnv("NEXT_PUBLIC_WEB_PUBLIC_URL") ??
-  "https://serviciosdigitalesmx.online";
+  "https://app.serviciosdigitalesmx.online";
 const adminUrl =
   optionalEnv("NEXT_PUBLIC_WEB_ADMIN_URL") ??
   "https://admin.serviciosdigitalesmx.online";
