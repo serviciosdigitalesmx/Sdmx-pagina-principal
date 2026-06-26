@@ -4,6 +4,7 @@ import { useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { saveAuthToken } from "@/lib/auth-storage";
 import { resolveAdminApiBaseUrl } from "@/lib/api-base-url";
+import { clearBillingExpiredState } from "@/lib/billing-expired";
 import {
   extractTenantRuntimeConfig,
   saveTenantRuntimeConfig,
@@ -33,6 +34,7 @@ export function OnboardingSuccessRedirect() {
 
     async function prepareDashboardSession() {
       saveAuthToken(sessionToken);
+      clearBillingExpiredState();
 
       if (tenantSlug) {
         try {

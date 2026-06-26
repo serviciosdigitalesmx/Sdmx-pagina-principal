@@ -1,5 +1,6 @@
 import { readAuthToken } from '@/lib/auth-storage';
 import { resolveAdminApiBaseUrl } from '@/lib/api-base-url';
+import { setBillingExpiredState } from '@/lib/billing-expired';
 
 interface ApiOptions {
   tenantSlug?: string;
@@ -56,6 +57,9 @@ class ApiClient {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ error: 'Request failed' }));
+      if (response.status === 402) {
+        setBillingExpiredState(true);
+      }
       throw new Error(error.error || `HTTP ${response.status}`);
     }
 

@@ -10,6 +10,8 @@ import { isAuthenticated } from '@/lib/auth';
 import { getCurrentSession } from '@/lib/session';
 import { TenantIdentityProvider } from '@/providers/TenantIdentityProvider';
 import { ModuleRouteGuard } from '@/components/guard/module-route-guard';
+import { BillingExpiredScreen } from '@/components/billing/billing-expired-screen';
+import { isBillingExpired, onBillingExpired } from '@/lib/billing-expired';
 
 function getSessionUser() {
   const session = getCurrentSession();
@@ -37,6 +39,7 @@ export default function DashboardLayout({
   const [user, setUser] = useState(getSessionUser());
   const [menuOpen, setMenuOpen] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [billingExpired, setBillingExpired] = useState(isBillingExpired());
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -47,6 +50,12 @@ export default function DashboardLayout({
       setAuthError(null);
     }
   }, [router, pathname]);
+
+  useEffect(() => onBillingExpired(setBillingExpired), []);
+
+  if (billingExpired) {
+    return <BillingExpiredScreen />;
+  }
 
   if (!user) {
     return authError ? (

@@ -3,6 +3,7 @@ import { saveAuthToken, clearAuthToken, readAuthToken } from '@/lib/auth-storage
 import { getCurrentSession } from '@/lib/session';
 import { resolveAdminApiBaseUrl } from '@/lib/api-base-url';
 import { extractTenantRuntimeConfig, saveTenantRuntimeConfig } from '@/lib/tenant-runtime-config';
+import { clearBillingExpiredState } from '@/lib/billing-expired';
 import type { User, Tenant } from '@/types';
 
 interface LoginResponse {
@@ -46,6 +47,7 @@ export async function loginWithSupabase(accessToken: string): Promise<LoginRespo
   apiClient.setToken(token);
   saveAuthToken(token, true);
   saveTenantRuntimeConfig(extractTenantRuntimeConfig({ tenant }));
+  clearBillingExpiredState();
 
   try {
     if (tenant?.slug) {
@@ -81,6 +83,7 @@ export async function loginWithSupabase(accessToken: string): Promise<LoginRespo
 export function logout() {
   apiClient.clearToken();
   clearAuthToken();
+  clearBillingExpiredState();
 
   if (typeof window !== 'undefined') {
     window.localStorage.removeItem('srf_token');
