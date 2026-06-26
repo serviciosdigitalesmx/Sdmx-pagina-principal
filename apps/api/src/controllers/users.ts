@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@white-label/database';
 import { resolveDisplayUserRole, resolveEffectiveUserRole, normalizeStoredUserRole } from '../lib/user-roles';
 import { getRequestIp } from '../lib/request-ip';
 import { writeAuditLog } from '../services/security-backoffice';
+import { assertTenantPlanLimit, PlanLimitExceededError } from '../services/tenant-plan-limits';
 
 const userListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
@@ -187,6 +188,13 @@ export const inviteUser = async (req: Request, res: Response) => {
     const body = parsed.data;
     const role = ensureAllowedStoredRole(body.role);
 
+    await assertTenantPlanLimit({
+      tenantId,
+      resource: 'users',
+      increment: 1,
+      requestId: req.requestId ?? null,
+    });
+
     if (body.sucursalId) {
       const ownsSucursal = await assertSucursalOwnership(tenantId, body.sucursalId);
       if (!ownsSucursal) {
@@ -329,6 +337,17 @@ export const inviteUser = async (req: Request, res: Response) => {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: 'Invalid payload', details: error.errors });
+    }
+    if (error instanceof PlanLimitExceededError) {
+      return res.status(error.statusCode).json({
+        error: error.message,
+        code: error.code,
+        resource: error.resource,
+        limit: error.limit,
+        used: error.used,
+        requested: error.requested,
+        requestId: error.requestId ?? req.requestId ?? null,
+      });
     }
     const message = error instanceof Error ? error.message : 'Internal server error';
     return res.status(500).json({ error: message });

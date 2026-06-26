@@ -1,5 +1,10 @@
 import { supabaseAdmin } from '@white-label/database';
 import { writeAuditLog } from './security-backoffice';
+import {
+  assertTenantPlanLimit,
+  getTenantLimitDiagnostics,
+  listPlanDefinitions,
+} from './tenant-plan-limits';
 
 type TenantRow = {
   id: string;
@@ -88,6 +93,23 @@ export async function listPlatformTenants(params: { search?: string | null; limi
     })),
     limit,
   };
+}
+
+export function listPlatformPlanDefinitions() {
+  return listPlanDefinitions();
+}
+
+export async function getPlatformTenantLimitDiagnostics(params: { tenantId: string }) {
+  return getTenantLimitDiagnostics(params);
+}
+
+export async function validatePlatformTenantPlanLimit(params: {
+  tenantId: string;
+  resource: 'users' | 'sucursales';
+  increment?: number;
+  requestId?: string | null;
+}) {
+  return assertTenantPlanLimit(params);
 }
 
 export async function getPlatformTenantAudit(params: { tenantId: string; limit?: unknown; action?: string | null }) {
