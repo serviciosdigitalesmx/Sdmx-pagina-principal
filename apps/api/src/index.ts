@@ -102,7 +102,7 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-sucursal-id', 'x-fixi-sucursal-id', 'x-tenant-id'],
   optionsSuccessStatus: 204,
 }));
 app.use(express.json());
@@ -118,7 +118,7 @@ app.options('*', cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-sucursal-id', 'x-fixi-sucursal-id', 'x-tenant-id'],
   optionsSuccessStatus: 204,
 }));
 

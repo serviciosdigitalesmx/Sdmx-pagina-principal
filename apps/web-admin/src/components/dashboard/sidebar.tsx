@@ -155,10 +155,10 @@ export function Sidebar({
           <Link
             href="/dashboard"
             className="flex items-center gap-3 rounded-2xl border border-sky-500/20 bg-sky-500/10 px-3 py-2.5 text-sm font-medium text-slate-100 transition hover:bg-sky-500/15"
-            title="Volver al hub"
+            title="Ir al tablero"
           >
             <LayoutDashboard className="h-5 w-5 text-sky-400" />
-            <span>Volver al hub</span>
+            <span>Ir al tablero</span>
           </Link>
         </div>
       )}
@@ -171,7 +171,7 @@ export function Sidebar({
             {identity.branchName}
           </p>
           {showConsolidated && activeSucursalId !== 'GLOBAL' && (
-            <p className="mt-1 text-xs text-slate-400">Vista consolidada disponible</p>
+            <p className="mt-1 text-xs text-slate-400">Puedes volver a la vista general</p>
           )}
         </div>
       )}

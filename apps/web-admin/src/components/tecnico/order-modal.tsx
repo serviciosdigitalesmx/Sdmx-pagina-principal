@@ -31,6 +31,19 @@ import { getApiOptions } from '@/lib/tenant';
 import type { Order, OrderChecklist, OrderDocument, OrderEvent } from '@/types';
 import Image from 'next/image';
 
+function buildDeliveryWhatsAppUrl(phone?: string | null, folio?: string | null, warrantyUntil?: string | null) {
+  if (!phone) return null;
+  const digits = phone.replace(/\D/g, '');
+  if (!digits) return null;
+
+  const warrantyText = warrantyUntil
+    ? ` Tu garantía queda vigente hasta ${new Date(warrantyUntil).toLocaleDateString('es-MX', { dateStyle: 'long' })}.`
+    : ' Tu garantía quedó registrada en el sistema.';
+
+  const message = encodeURIComponent(`Hola, tu equipo ${folio ?? ''} ya fue entregado.${warrantyText} Gracias por confiar en FIXI.`);
+  return `https://wa.me/${digits}?text=${message}`;
+}
+
 interface OrderModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -236,6 +249,7 @@ export function OrderModal({ open, onOpenChange, order, onOrderUpdated }: OrderM
   };
 
   if (!order) return null;
+  const deliveryWhatsAppUrl = buildDeliveryWhatsAppUrl(clienteTelefono, order.folio, order.warranty_until);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -554,6 +568,16 @@ export function OrderModal({ open, onOpenChange, order, onOrderUpdated }: OrderM
                   Entregar
                 </Button>
               )}
+              {deliveryWhatsAppUrl ? (
+                <a
+                  href={deliveryWhatsAppUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center justify-center rounded-md border border-emerald-400/40 px-4 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-500/10"
+                >
+                  Avisar entrega por WhatsApp
+                </a>
+              ) : null}
               <Button onClick={handleSave} disabled={saving}>
                 <Save className="w-4 h-4 mr-2" />
                 {saving ? 'Guardando...' : 'Guardar cambios'}

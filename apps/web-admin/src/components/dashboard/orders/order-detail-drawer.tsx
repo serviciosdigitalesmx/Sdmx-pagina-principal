@@ -10,6 +10,7 @@ export type OrderDetailData = {
     folio?: string;
     status?: string;
     receipt_url?: string | null;
+    warranty_until?: string | null;
     device_type?: string;
     device_model?: string;
     serial_number?: string | null;
@@ -115,6 +116,18 @@ function whatsappLink(phone?: string | null, folio?: string | null, customerPort
   if (!normalized) return null;
   const portalUrl = buildTrackingUrl(customerPortalUrl, folio, publicToken);
   const message = encodeURIComponent(`Bienvenido a FIXI. Aquí puedes consultar el estatus de tu equipo: ${portalUrl}`);
+  return `https://wa.me/${normalized}?text=${message}`;
+}
+
+function deliveryWhatsappLink(phone?: string | null, folio?: string | null, warrantyUntil?: string | null) {
+  if (!phone) return null;
+  const normalized = phone.replace(/\D/g, "");
+  if (!normalized) return null;
+
+  const warrantyText = warrantyUntil
+    ? ` Tu garantía queda vigente hasta ${new Date(warrantyUntil).toLocaleDateString("es-MX", { dateStyle: "long" })}.`
+    : " Tu garantía quedó registrada en el sistema.";
+  const message = encodeURIComponent(`Hola, tu equipo ${folio ?? ""} ya fue entregado.${warrantyText} Gracias por confiar en FIXI.`);
   return `https://wa.me/${normalized}?text=${message}`;
 }
 
@@ -230,6 +243,7 @@ export function OrderDetailDrawer({
   const phone = (order?.device_info as { customer_phone?: string } | undefined)?.customer_phone ?? null;
   const publicToken = order?.public_token ?? order?.publicToken ?? null;
   const waLink = whatsappLink(phone, order?.folio, customerPortalUrl, publicToken);
+  const deliveryWaLink = deliveryWhatsappLink(phone, order?.folio, order?.warranty_until ?? null);
   const pdfUrl = order?.receipt_url ?? data?.documents?.find((document) => document.file_type === "receipt_pdf" && document.public_url)?.public_url ?? null;
   const portalUrl = buildTrackingUrl(customerPortalUrl, order?.folio, publicToken);
   const metadataEntries = Object.entries((order?.metadata as Record<string, unknown> | undefined) ?? {}).filter(([, value]) => value !== undefined && value !== null && value !== "");
@@ -642,6 +656,16 @@ export function OrderDetailDrawer({
                     >
                       Enviar a archivo
                     </button>
+                  ) : null}
+                  {deliveryWaLink ? (
+                    <a
+                      href={deliveryWaLink}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="rounded-full border border-emerald-400/40 px-4 py-2 text-sm font-semibold text-emerald-100"
+                    >
+                      Avisar entrega por WhatsApp
+                    </a>
                   ) : null}
                   <a
                     href={waLink ?? "#"}

@@ -40,7 +40,7 @@ export function BranchSelector() {
   };
 
   const getActiveLabel = () => {
-    if (activeId === 'GLOBAL') return 'Todas las sucursales';
+    if (activeId === 'GLOBAL') return 'Vista general';
     const found = sucursales.find((s) => s.id === activeId);
     return found?.name || activeId?.slice(0, 8) || 'Seleccionar';
   };
@@ -82,7 +82,7 @@ export function BranchSelector() {
                   `}
                 >
                   <Globe className="w-4 h-4" />
-                  <span className="text-sm">Todas las sucursales</span>
+                  <span className="text-sm">Vista general</span>
                   {activeId === 'GLOBAL' && <Check className="w-4 h-4 ml-auto" />}
                 </button>
               )}

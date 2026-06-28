@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { User, LogOut, ChevronDown, Building2, Menu } from 'lucide-react';
 import { BranchSelector } from './branch-selector';
@@ -9,6 +9,8 @@ import { logout } from '@/lib/auth';
 import { getCustomerLabel } from '@/lib/labels';
 import type { User as UserType } from '@/types';
 import { useTenantIdentity } from '@/providers/TenantIdentityProvider';
+import { readAuthToken } from '@/lib/auth-storage';
+import { listOfflineRequests, replayOfflineRequests } from '@/lib/pwa/offline-queue';
 
 interface HeaderProps {
   user: UserType;
@@ -19,6 +21,8 @@ export function Header({ user, onMenuClick }: HeaderProps) {
   const router = useRouter();
   const { identity } = useTenantIdentity();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
+  const [queuedOfflineRequests, setQueuedOfflineRequests] = useState(0);
   const customerLabel = getCustomerLabel();
 
   const handleLogout = () => {
@@ -32,6 +36,48 @@ export function Header({ user, onMenuClick }: HeaderProps) {
     technician: 'Técnico',
     client: customerLabel,
   };
+
+  const refreshOfflineState = useCallback(async () => {
+    if (typeof window === 'undefined') return;
+
+    setIsOnline(window.navigator.onLine);
+
+    try {
+      const pending = await listOfflineRequests();
+      setQueuedOfflineRequests(pending.length);
+    } catch {
+      setQueuedOfflineRequests(0);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    void refreshOfflineState();
+
+    const handleOnline = () => {
+      setIsOnline(true);
+      const token = readAuthToken();
+      if (token) {
+        void replayOfflineRequests(() => token).finally(() => void refreshOfflineState());
+        return;
+      }
+      void refreshOfflineState();
+    };
+
+    const handleOffline = () => {
+      setIsOnline(false);
+      void refreshOfflineState();
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [refreshOfflineState]);
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-800/80 bg-slate-950/70 backdrop-blur-xl">
@@ -60,6 +106,12 @@ export function Header({ user, onMenuClick }: HeaderProps) {
           <Building2 className="h-4 w-4 text-sky-400" />
           <span className="truncate">{identity?.tenantName || 'Mi taller'}</span>
         </div>
+        {(queuedOfflineRequests > 0 || !isOnline) ? (
+          <div className="hidden items-center gap-2 rounded-full border border-amber-400/20 bg-amber-500/10 px-3 py-2 text-[11px] font-semibold text-amber-100 md:flex">
+            <span className={`h-2 w-2 rounded-full ${isOnline ? 'bg-emerald-400' : 'bg-amber-400'} animate-pulse`} />
+            {isOnline ? `${queuedOfflineRequests} cambios pendientes` : `Sin conexión${queuedOfflineRequests ? ` · ${queuedOfflineRequests} pendientes` : ''}`}
+          </div>
+        ) : null}
         <div className="relative">
           <button
             onClick={() => setShowUserMenu(!showUserMenu)}

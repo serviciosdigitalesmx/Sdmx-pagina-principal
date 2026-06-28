@@ -105,6 +105,12 @@ export function Step2({ data, serialFieldDefinition, onSubmit, onBack, onUpdate 
         <FileText className="w-5 h-5" />
         Información del {assetLabel}
       </h3>
+      {!data.fotoPreview ? (
+        <div className="rounded-2xl border border-amber-400/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+          <p className="font-semibold">No olvides subir foto de evidencia de recepción.</p>
+          <p className="mt-1 text-amber-50/80">Te ayuda a evitar malentendidos si el equipo llega con rayones, golpes o humedad.</p>
+        </div>
+      ) : null}
 
       {/* Device type */}
       <div>
@@ -299,6 +305,20 @@ export function Step2({ data, serialFieldDefinition, onSubmit, onBack, onUpdate 
               className="h-4 w-4 accent-sky-400"
             />
             <span className="text-sm">Requiere aceptación del cliente</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={localData.legalChecklist.warrantyAcknowledged}
+              onChange={(e) => {
+                const legalChecklist = { ...localData.legalChecklist, warrantyAcknowledged: e.target.checked };
+                const next = { ...localData, legalChecklist };
+                setLocalData(next);
+                onUpdate({ legalChecklist });
+              }}
+              className="h-4 w-4 accent-sky-400"
+            />
+            <span className="text-sm">Garantía explicada al cliente</span>
           </label>
           <div className="grid gap-4 md:grid-cols-2">
             <div>

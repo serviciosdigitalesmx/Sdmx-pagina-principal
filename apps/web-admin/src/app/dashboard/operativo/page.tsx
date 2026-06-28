@@ -49,6 +49,7 @@ export type OrderFormData = {
     reportedPhysicalDamage: string;
     accessoriesReceived: string;
     customerAcceptanceRequired: boolean;
+    warrantyAcknowledged: boolean;
     acceptedAt: string;
     acceptedByName: string;
   };
@@ -93,6 +94,7 @@ export default function OperativoPage() {
       reportedPhysicalDamage: '',
       accessoriesReceived: '',
       customerAcceptanceRequired: false,
+      warrantyAcknowledged: false,
       acceptedAt: '',
       acceptedByName: '',
     },
@@ -203,6 +205,7 @@ export default function OperativoPage() {
           reportedPhysicalDamage: formData.legalChecklist.reportedPhysicalDamage,
           accessoriesReceived: formData.legalChecklist.accessoriesReceived,
           customerAcceptanceRequired: formData.legalChecklist.customerAcceptanceRequired,
+          warrantyAcknowledged: formData.legalChecklist.warrantyAcknowledged,
           acceptedAt: formData.legalChecklist.acceptedAt
             ? new Date(formData.legalChecklist.acceptedAt).toISOString()
             : '',
@@ -274,14 +277,15 @@ export default function OperativoPage() {
         prende: false,
         respaldo: false,
       },
-      legalChecklist: {
-        cosmeticCondition: '',
-        reportedPhysicalDamage: '',
-        accessoriesReceived: '',
-        customerAcceptanceRequired: false,
-        acceptedAt: '',
-        acceptedByName: '',
-      },
+    legalChecklist: {
+      cosmeticCondition: '',
+      reportedPhysicalDamage: '',
+      accessoriesReceived: '',
+      customerAcceptanceRequired: false,
+      warrantyAcknowledged: false,
+      acceptedAt: '',
+      acceptedByName: '',
+    },
       includeIva: false,
       fotoRecepcion: null,
       fotoPreview: null,

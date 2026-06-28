@@ -168,6 +168,7 @@ export function PublicPortalLookup({
   };
 
   const pdfAttachment = result?.pdf_attachment ?? result?.attachments?.[0] ?? null;
+  const isDelivered = String(result?.order.status ?? "").toLowerCase().includes("entreg");
   const adminBaseUrl = resolveAdminUrl();
   const adminLoginUrl = adminBaseUrl ? `${adminBaseUrl}/login` : "/login";
 
@@ -292,7 +293,7 @@ export function PublicPortalLookup({
                   <section className="rounded-[1.4rem] border border-zinc-800 bg-zinc-950 p-4">
                     <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-200">Documentos</p>
                     <div className="mt-3 space-y-3 text-sm">
-                      <p><span className="text-zinc-400">PDF:</span> {pdfAttachment?.url ? "Disponible" : "Pendiente"}</p>
+                      <p><span className="text-zinc-400">PDF:</span> {pdfAttachment?.url ? (isDelivered ? "Entrega y garantía" : "Disponible") : "Pendiente"}</p>
                       <p><span className="text-zinc-400">Mensajes:</span> {result.messages.length}</p>
                       <p><span className="text-zinc-400">Eventos:</span> {result.events.length}</p>
                       <p><span className="text-zinc-400">Fecha:</span> {result.order.created_at ? new Date(result.order.created_at).toLocaleString("es-MX") : "No disponible"}</p>
@@ -320,7 +321,7 @@ export function PublicPortalLookup({
                       rel="noreferrer"
                       className="rounded-full bg-sky-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-400"
                     >
-                      Abrir PDF
+                      {isDelivered ? "Abrir PDF de entrega" : "Abrir PDF"}
                     </a>
                   ) : null}
                   {whatsappHref ? (

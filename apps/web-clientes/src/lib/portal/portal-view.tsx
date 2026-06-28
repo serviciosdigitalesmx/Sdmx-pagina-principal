@@ -68,6 +68,7 @@ export function PortalView({ tenantSlug, initialFolio = "", initialLookupMode = 
   const whatsappHref = useMemo(() => resolveWhatsappHref(contactPhone, result?.order.folio), [contactPhone, result?.order.folio]);
   const currentDate = useMemo(() => new Date().toLocaleDateString("es-MX", { weekday: "long", year: "numeric", month: "long", day: "numeric" }), []);
   const remainingDays = daysRemaining(result?.order.promisedDate ?? null);
+  const isDelivered = String(result?.order.status ?? "").toLowerCase().includes("entreg");
   const hasLiveCam = Boolean((portalContent as Record<string, unknown>).showVideo || (tenant?.config?.templates?.landing as Record<string, unknown> | undefined)?.showVideo);
   const liveCamUrl = String((portalContent as Record<string, unknown>).videoUrl ?? (tenant?.config?.templates?.landing as Record<string, unknown> | undefined)?.videoUrl ?? "");
   const mapUrl = String((tenant?.config?.templates?.landing as Record<string, unknown> | undefined)?.mapEmbedUrl ?? "");
@@ -457,6 +458,15 @@ export function PortalView({ tenantSlug, initialFolio = "", initialLookupMode = 
                   </section>
                 ) : null}
 
+                {isDelivered ? (
+                  <section className="rounded-[1.75rem] border border-emerald-400/15 bg-emerald-500/10 p-6 shadow-[0_20px_70px_rgba(0,0,0,0.18)]">
+                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-300">Entrega completada</p>
+                    <p className="mt-3 text-sm leading-7 text-emerald-50/90">
+                      Tu equipo ya fue entregado y el comprobante/garantía quedó listo para descarga.
+                    </p>
+                  </section>
+                ) : null}
+
                 <section className="rounded-[1.75rem] border border-sky-400/15 bg-white/5 p-6 shadow-[0_20px_70px_rgba(0,0,0,0.2)]">
                   <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-500">Acciones</p>
                   <div className="mt-4 space-y-3">
@@ -477,7 +487,7 @@ export function PortalView({ tenantSlug, initialFolio = "", initialLookupMode = 
                         rel="noreferrer"
                         className="block rounded-2xl border border-sky-400/20 bg-sky-500/10 px-4 py-3 text-center text-sm font-semibold text-sky-700 transition hover:bg-sky-100"
                       >
-                        Imprimir / Guardar PDF
+                        {isDelivered ? "Imprimir / Guardar PDF de entrega" : "Imprimir / Guardar PDF"}
                       </a>
                     ) : null}
                     {mapUrl ? (

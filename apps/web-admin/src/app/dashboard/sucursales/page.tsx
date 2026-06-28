@@ -62,7 +62,7 @@ export default function SucursalesPage() {
   }, [searchTerm, sucursales]);
 
   const handleSetActive = (sucursalId: string | null) => {
-    setActiveSucursalId(sucursalId);
+    setActiveSucursalId(sucursalId, { skipReload: true });
     router.push('/dashboard');
   };
 

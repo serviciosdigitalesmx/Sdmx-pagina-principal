@@ -91,6 +91,12 @@ export function Step3({ data, onSubmit, onBack, loading }: Step3Props) {
               {data.legalChecklist.customerAcceptanceRequired ? data.legalChecklist.acceptedByName || 'Requerida' : 'No requerida'}
             </span>
           </div>
+          <div className="flex justify-between gap-4">
+            <span className="text-slate-400">Garantía:</span>
+            <span className="max-w-[60%] text-right text-slate-100">
+              {data.legalChecklist.warrantyAcknowledged ? 'Explicada y validada' : 'Pendiente de validar'}
+            </span>
+          </div>
         </div>
         <div className="flex justify-between border-b border-slate-800 pb-2">
           <span className="text-slate-400">Foto recepción:</span>

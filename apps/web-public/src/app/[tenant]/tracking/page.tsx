@@ -130,6 +130,7 @@ export default function TenantTrackingPage() {
   };
 
   const pdfAttachment = result?.pdf_attachment ?? result?.attachments?.[0] ?? null;
+  const isDelivered = String(result?.order.status ?? "").toLowerCase().includes("entreg");
   const whatsappHref = resolveWhatsappHref(tenantInfo?.contact_phone ?? tenantInfo?.contactPhone ?? null, result?.order.folio ?? null);
 
   return (
@@ -232,7 +233,7 @@ export default function TenantTrackingPage() {
                   <div className="mt-4 space-y-3 text-sm text-slate-300">
                     {pdfAttachment ? (
                         <a href={pdfAttachment.url} target="_blank" rel="noreferrer" className="block rounded-2xl border border-sky-500/20 bg-sky-500/10 px-4 py-3 font-medium text-sky-100 transition hover:bg-sky-500/20">
-                          Ver PDF de recepción
+                          {isDelivered ? "Ver PDF de entrega y garantía" : "Ver PDF de recepción"}
                         </a>
                     ) : (
                       <p className="rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-slate-400">Todavía no hay PDF disponible.</p>
@@ -246,6 +247,11 @@ export default function TenantTrackingPage() {
 
               <div className="mt-6">
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-200">Seguimiento detallado</p>
+                {isDelivered ? (
+                  <p className="mt-3 rounded-2xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+                    Tu equipo ya fue entregado. Conserva este PDF como comprobante y garantía.
+                  </p>
+                ) : null}
                 <div className="mt-4 space-y-3">
                   {result.timeline.map((step) => (
                     <div key={step.label} className="flex items-start justify-between gap-4 rounded-2xl border border-white/8 bg-white/4 px-4 py-3">

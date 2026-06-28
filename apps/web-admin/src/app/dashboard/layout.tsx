@@ -80,8 +80,8 @@ export default function DashboardLayout({
           <Sidebar mobileOpen={menuOpen} onMobileOpenChange={setMenuOpen} />
           <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
             <Header user={user} onMenuClick={() => setMenuOpen(true)} />
-            <main className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 lg:px-8">
-              <div className="mx-auto w-full max-w-[1800px]">
+            <main className="flex-1 overflow-y-auto px-3 py-3 sm:px-4 sm:py-4 lg:px-6">
+              <div className="mx-auto w-full max-w-[1720px]">
                 <ModuleRouteGuard>{children}</ModuleRouteGuard>
               </div>
             </main>

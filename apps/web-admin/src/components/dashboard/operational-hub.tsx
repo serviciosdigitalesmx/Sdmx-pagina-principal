@@ -225,15 +225,15 @@ export function OperationalHub() {
   }, [orders]);
 
   return (
-    <div className="space-y-6">
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <div className="space-y-4">
+      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         {metrics.map((metric, index) => (
           <article
             key={metric.label}
-            className={`rounded-[1.6rem] border border-white/10 bg-[linear-gradient(180deg,rgba(16,18,27,0.95),rgba(9,10,16,0.98))] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.22)] ${topMetricTone(index)}`}
+            className={`rounded-[1.45rem] border border-white/10 bg-[linear-gradient(180deg,rgba(16,18,27,0.95),rgba(9,10,16,0.98))] p-4 shadow-[0_18px_60px_rgba(0,0,0,0.22)] ${topMetricTone(index)}`}
           >
             <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-400">{metric.label}</p>
-            <p className="mt-3 text-3xl font-black tracking-tight text-zinc-50">{metric.value}</p>
+            <p className="mt-2 text-2xl font-black tracking-tight text-zinc-50">{metric.value}</p>
             <p className="mt-2 text-sm leading-6 text-zinc-300">{metric.helper}</p>
           </article>
         ))}
@@ -251,7 +251,7 @@ export function OperationalHub() {
         </section>
       ) : null}
 
-      <section className="rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,12,18,0.98),rgba(6,8,14,0.98))] p-4 shadow-[0_24px_90px_rgba(0,0,0,0.3)]">
+      <section className="rounded-[1.75rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,12,18,0.98),rgba(6,8,14,0.98))] p-4 shadow-[0_24px_90px_rgba(0,0,0,0.3)]">
         <div className="flex flex-col gap-4 border-b border-white/10 px-2 py-3 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.34em] text-sky-300/70">Órdenes de trabajo</p>
@@ -270,11 +270,11 @@ export function OperationalHub() {
           </div>
         </div>
 
-        <div className="mt-5 overflow-x-auto pb-2">
+        <div className="mt-4 overflow-x-auto pb-2">
           <div className="grid min-w-[1280px] gap-4 xl:grid-cols-6">
             {boardColumns.map((column) => {
               const items = groupedOrders[column.key];
-              const visibleItems = items.slice(0, 4);
+              const visibleItems = items.slice(0, 3);
 
               return (
                 <section key={column.key} className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-3">
@@ -306,7 +306,7 @@ export function OperationalHub() {
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-        <article className="rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,12,18,0.98),rgba(6,8,14,0.98))] p-6 shadow-[0_24px_90px_rgba(0,0,0,0.26)]">
+        <article className="rounded-[1.75rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,12,18,0.98),rgba(6,8,14,0.98))] p-5 shadow-[0_24px_90px_rgba(0,0,0,0.26)]">
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-sky-300/70">Resumen del día</p>
@@ -317,14 +317,14 @@ export function OperationalHub() {
             </Link>
           </div>
 
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {[
               ["Órdenes creadas", String(summary?.ordersCount ?? 0), "+20% vs ayer"],
               ["Ingresos del día", formatMoney(summary?.totalIncome), "+15% vs ayer"],
               ["Reparaciones completadas", String(summary?.statusCounts?.entregado ?? 0), "+33% vs ayer"],
               ["Ticket promedio", formatMoney(summary?.ordersCount ? (summary.totalIncome ?? 0) / Math.max(summary.ordersCount, 1) : 0), "+8% vs ayer"],
             ].map(([title, value, delta]) => (
-              <div key={title} className="rounded-[1.4rem] border border-white/10 bg-white/[0.03] p-4">
+                <div key={title} className="rounded-[1.35rem] border border-white/10 bg-white/[0.03] p-4">
                 <p className="text-xs uppercase tracking-[0.24em] text-zinc-400">{title}</p>
                 <p className="mt-3 text-2xl font-black text-zinc-50">{value}</p>
                 <p className="mt-2 text-sm text-emerald-400">{delta}</p>
@@ -333,7 +333,7 @@ export function OperationalHub() {
           </div>
         </article>
 
-        <article className="rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,12,18,0.98),rgba(6,8,14,0.98))] p-6 shadow-[0_24px_90px_rgba(0,0,0,0.26)]">
+        <article className="rounded-[1.75rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,12,18,0.98),rgba(6,8,14,0.98))] p-5 shadow-[0_24px_90px_rgba(0,0,0,0.26)]">
           <p className="text-xs uppercase tracking-[0.3em] text-sky-300/70">Actividad reciente</p>
           <h3 className="mt-2 text-2xl font-black tracking-tight text-zinc-50">Últimas señales</h3>
           <div className="mt-5 space-y-3">
