@@ -16,10 +16,13 @@ const userListQuerySchema = z.object({
 });
 
 const inviteUserSchema = z.object({
-  email: z.string().email(),
+  email: z.string().trim().toLowerCase().email(),
   name: z.string().trim().min(2),
   role: z.string().trim().min(1),
-  sucursalId: z.string().uuid().nullable().optional(),
+  sucursalId: z.preprocess(
+    (value) => typeof value === 'string' && !value.trim() ? undefined : value,
+    z.string().uuid().nullable().optional(),
+  ),
   password: z.string().min(8).optional(),
 });
 

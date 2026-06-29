@@ -4,6 +4,8 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Plus, RefreshCw, Search, Shield, UserX, History } from "lucide-react";
 import { Badge, SurfaceCard } from "@white-label/ui";
 import { usersService } from "@/services/users/usersService";
+import { getActiveSucursalId } from "@/lib/tenant";
+import type { Sucursal } from "@/types";
 
 type UserRow = {
   id: string;
@@ -63,6 +65,7 @@ export default function UsuariosPage() {
   const [roleFilter, setRoleFilter] = useState("");
   const [showInvite, setShowInvite] = useState(false);
   const [invite, setInvite] = useState<InviteFormState>(INITIAL_INVITE);
+  const [sucursales, setSucursales] = useState<Sucursal[]>([]);
   const [saving, setSaving] = useState(false);
   const [historyUser, setHistoryUser] = useState<UserRow | null>(null);
   const [historyRows, setHistoryRows] = useState<UserHistoryRow[]>([]);
@@ -91,6 +94,26 @@ export default function UsuariosPage() {
   useEffect(() => {
     void loadUsers();
   }, [query, roleFilter, status]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadSucursales() {
+      try {
+        const rows = await usersService.getSucursales();
+        if (!cancelled) setSucursales(rows as unknown as Sucursal[]);
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "No se pudieron cargar las sucursales");
+        }
+      }
+    }
+
+    void loadSucursales();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!historyUser) {
@@ -142,6 +165,16 @@ export default function UsuariosPage() {
     }
   }
 
+  function openInviteForm() {
+    const activeSucursalId = getActiveSucursalId();
+    const validActiveSucursal = sucursales.some((sucursal) => sucursal.id === activeSucursalId);
+    setInvite({
+      ...INITIAL_INVITE,
+      sucursalId: validActiveSucursal && activeSucursalId ? activeSucursalId : "",
+    });
+    setShowInvite(true);
+  }
+
   async function changeRole(user: UserRow, nextRole: string) {
     if (!window.confirm(`Cambiar el rol de ${user.name} a ${roleLabel(nextRole)}.`)) return;
     try {
@@ -187,7 +220,7 @@ export default function UsuariosPage() {
             <RefreshCw className="w-4 h-4" />
             Actualizar
           </button>
-          <button onClick={() => setShowInvite((value) => !value)} className="btn-primary inline-flex items-center gap-2">
+          <button onClick={() => showInvite ? setShowInvite(false) : openInviteForm()} className="btn-primary inline-flex items-center gap-2">
             <Plus className="w-4 h-4" />
             Invitar usuario
           </button>
@@ -234,7 +267,14 @@ export default function UsuariosPage() {
               <option value="manager">Manager</option>
               <option value="owner">Owner</option>
             </select>
-            <input value={invite.sucursalId} onChange={(event) => setInvite((current) => ({ ...current, sucursalId: event.target.value }))} className="input" placeholder="Sucursal ID opcional" />
+            <select value={invite.sucursalId} onChange={(event) => setInvite((current) => ({ ...current, sucursalId: event.target.value }))} className="input">
+              <option value="">Todas las sucursales</option>
+              {sucursales.filter((sucursal) => sucursal.is_active).map((sucursal) => (
+                <option key={sucursal.id} value={sucursal.id}>
+                  {sucursal.name}{sucursal.code ? ` (${sucursal.code})` : ""}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="flex gap-2">
             <button type="submit" className="btn-primary" disabled={saving}>{saving ? "Enviando..." : "Enviar invitación"}</button>

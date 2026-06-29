@@ -1,6 +1,8 @@
 import { apiGateway } from '../apiGateway';
 
 export const usersService = {
+  getSucursales: () => apiGateway.getSucursales(),
+
   getUsers: (...args: Parameters<typeof apiGateway.getUsers>) =>
     apiGateway.getUsers(...args),
 

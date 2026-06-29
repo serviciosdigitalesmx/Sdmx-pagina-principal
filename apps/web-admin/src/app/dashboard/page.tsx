@@ -229,9 +229,9 @@ export default function DashboardPage() {
           <h3 className="mb-4 text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
             Distribución por estado
           </h3>
-          <div className="h-64">
+          <div className="h-64 min-h-64 min-w-0">
             {mounted ? (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height={256} minWidth={0} minHeight={256}>
                 <PieChart>
                   <Pie
                     data={statusData}
@@ -266,9 +266,9 @@ export default function DashboardPage() {
           <h3 className="mb-4 text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
             {ordersLabel} por {technicianLabel.toLowerCase()}
           </h3>
-          <div className="h-64">
+          <div className="h-64 min-h-64 min-w-0">
             {mounted ? (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height={256} minWidth={0} minHeight={256}>
                 <BarChart data={technicianData} layout="vertical" margin={{ left: 40 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#3a3a3a" />
                   <XAxis type="number" stroke="#8A8F95" />
